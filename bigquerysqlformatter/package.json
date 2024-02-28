@@ -1,8 +1,9 @@
 {
   "name": "bigquerysqlformatter",
-  "displayName": "BigQuerySQLFormatter",
+  "displayName": "BigQuery SQL Formatter",
   "description": "VS Code extension providing BigQuery SQL syntax checking",
   "author": "sean-conkie",
+  "license": "MIT",
   "version": "0.0.1",
   "repository": {
     "type": "git",
@@ -10,45 +11,62 @@
   },
   "publisher": "sean-conkie",
   "categories": [
-    "Other"
+    "Programming Languages",
+    "Linters"
   ],
   "keywords": [
     "multi-root ready",
+    "language server",
     "bigquery",
     "sql"
   ],
   "engines": {
-    "vscode": "^1.86.0"
+    "vscode": "^1.75.0"
   },
   "activationEvents": [
     "onLanguage:sql"
   ],
-  "main": "./out/extension.js",
+  "main": "./client/out/extension",
   "contributes": {
-    "commands": [
-      {
-        "command": "bigquerysqlformatter.helloWorld",
-        "title": "Hello World"
+    "configuration": {
+      "type": "object",
+      "title": "BigQuerySQLFormatter",
+      "properties": {
+        "bigquerySQLFormatter.maxNumberOfProblems": {
+          "scope": "resource",
+          "type": "number",
+          "default": 100,
+          "description": "Controls the maximum number of problems produced by the server."
+        },
+        "bigquerySQLFormatter.trace.server": {
+          "scope": "window",
+          "type": "string",
+          "enum": [
+            "off",
+            "messages",
+            "verbose"
+          ],
+          "default": "off",
+          "description": "Traces the communication between VS Code and the language server."
+        }
       }
-    ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
-    "pretest": "npm run compile && npm run lint",
-    "lint": "eslint src --ext ts",
-    "test": "vscode-test"
+    "compile": "tsc -b",
+    "watch": "tsc -b -w",
+    "lint": "eslint ./client/src ./server/src --ext .ts,.tsx",
+    "postinstall": "cd client && npm install && cd ../server && npm install && cd ..",
+    "test": "sh ./scripts/e2e.sh"
   },
   "devDependencies": {
-    "@types/vscode": "^1.86.0",
     "@types/mocha": "^10.0.6",
-    "@types/node": "18.x",
-    "@typescript-eslint/eslint-plugin": "^7.0.2",
-    "@typescript-eslint/parser": "^7.0.2",
+    "@types/node": "^18.14.6",
+    "@typescript-eslint/eslint-plugin": "^6.14.0",
+    "@typescript-eslint/parser": "^6.14.0",
     "eslint": "^8.56.0",
-    "typescript": "^5.3.3",
-    "@vscode/test-cli": "^0.0.6",
-    "@vscode/test-electron": "^2.3.9"
+    "mocha": "^10.2.0",
+    "typescript": "^5.3.3"
   }
 }
