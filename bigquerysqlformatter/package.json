@@ -2,14 +2,27 @@
   "name": "bigquerysqlformatter",
   "displayName": "BigQuerySQLFormatter",
   "description": "VS Code extension providing BigQuery SQL syntax checking",
+  "author": "sean-conkie",
   "version": "0.0.1",
-  "engines": {
-    "vscode": "^1.86.0"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sean-conkie/BigQuerySQLFormatter-extension.git"
   },
+  "publisher": "sean-conkie",
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "keywords": [
+    "multi-root ready",
+    "bigquery",
+    "sql"
+  ],
+  "engines": {
+    "vscode": "^1.86.0"
+  },
+  "activationEvents": [
+    "onLanguage:sql"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
