@@ -22,7 +22,7 @@
   // "forwardPorts": [],
 
   // Use 'postCreateCommand' to run commands after the container is created.
-  "postCreateCommand": "sudo .devcontainer/setup.sh"
+  "postCreateCommand": "npm install --global yo generator-code"
 
   // Configure tool-specific properties.
   // "customizations": {},
