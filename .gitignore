@@ -134,3 +134,5 @@ dist
 .devcontainer/*
 .vscode
 *.code-workspace
+
+.venv

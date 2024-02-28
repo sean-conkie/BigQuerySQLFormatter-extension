@@ -1,5 +1,6 @@
-# This workflow executes several linters on changed files based on languages used in your code base whenever
-# you push a code or open a pull request.
+---
+# This workflow executes several linters on changed files based on languages used in your code
+# base whenever you push a code or open a pull request.
 #
 # You can adjust the behavior by modifying this file.
 # For more information, see:
@@ -8,9 +9,9 @@ name: Lint Code Base
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 jobs:
   run-lint:
     runs-on: ubuntu-latest
@@ -27,3 +28,5 @@ jobs:
           VALIDATE_ALL_CODEBASE: false
           DEFAULT_BRANCH: "main"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LINTER_RULES_PATH: .github/linters
+          YAML_CONFIG_FILE: .github/linters/.yamllint

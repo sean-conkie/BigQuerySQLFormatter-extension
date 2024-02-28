@@ -1,0 +1,14 @@
+---
+
+# Default state for all rules
+default: true
+
+# Path to configuration file to extend
+extends: null
+
+MD013:
+  line_length: 120
+MD029:
+  style: one_or_ordered
+MD033:
+  enabled: false
