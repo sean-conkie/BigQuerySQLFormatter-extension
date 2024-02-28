@@ -3,6 +3,6 @@
 
 # These owners are be the default owners for everything in
 # the repo. Unless a later match takes precedence,
-# @sky-uk/dta-customer-admins will be requested for
-# review when someone opens a pull request.
+# @sean-conkie will be requested for review when someone opens 
+# a pull request.
 *       @sean-conkie
