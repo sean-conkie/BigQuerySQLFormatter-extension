@@ -29,4 +29,3 @@ jobs:
           DEFAULT_BRANCH: "main"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           LINTER_RULES_PATH: .github/linters
-          YAML_CONFIG_FILE: .github/linters/.yamllint
