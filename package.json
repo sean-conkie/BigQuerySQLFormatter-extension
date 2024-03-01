@@ -24,7 +24,10 @@
     "vscode": "^1.75.0"
   },
   "activationEvents": [
-    "onLanguage:sql"
+    "onLanguage:sql",
+    "onLanguage:sql-biqquery",
+    "onLanguage:legacy-sql",
+    "onLanguage:bigquery-sql"
   ],
   "main": "./client/out/extension",
   "contributes": {

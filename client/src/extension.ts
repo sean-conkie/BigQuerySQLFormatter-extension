@@ -34,7 +34,7 @@ export function activate(context: ExtensionContext) {
 
 	// Options to control the language client
 	const clientOptions: LanguageClientOptions = {
-		// Register the server for plain text documents
+		// Register the server for sql documents
 		documentSelector: [
 			{ scheme: 'file', language: 'sql' },
 			{ scheme: 'file', language: 'sql-bigquery' },
