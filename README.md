@@ -1,8 +1,8 @@
 
 # BigQuerySQLFormatter-extension
 
-[![Super-Linter](https://github.com/sean-conkie/BigQuerySQLFormatter-extension/actions/workflows/Lint%20Code%20Base/badge.svg)](https://github.com/marketplace/actions/super-linter)
-[![CodeQL](https://github.com/sean-conkie/BigQuerySQLFormatter/actions/workflows/CodeQL/badge.svg)](https://github.com/sean-conkie/BigQuerySQLFormatter/actions/workflows/codeql.yml)
+[![Lint Code Base](https://github.com/sean-conkie/BigQuerySQLFormatter-extension/actions/workflows/super-linter.yml/badge.svg)](https://github.com/sean-conkie/BigQuerySQLFormatter-extension/actions/workflows/super-linter.yml)
+[![CodeQL](https://github.com/sean-conkie/BigQuerySQLFormatter-extension/actions/workflows/codeql.yml/badge.svg)](https://github.com/sean-conkie/BigQuerySQLFormatter-extension/actions/workflows/codeql.yml)
 [![Node.js Test](https://github.com/sean-conkie/BigQuerySQLFormatter-extension/actions/workflows/node.js.yml/badge.svg)](https://github.com/sean-conkie/BigQuerySQLFormatter-extension/actions/workflows/node.js.yml)
 
 VS Code extension providing BigQuery SQL syntax checking
