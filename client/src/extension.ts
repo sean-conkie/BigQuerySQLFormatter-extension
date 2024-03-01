@@ -1,7 +1,8 @@
-/* --------------------------------------------------------------------------------------------
- * Copyright (c) Microsoft Corporation. All rights reserved.
- * Licensed under the MIT License. See License.txt in the project root for license information.
- * ------------------------------------------------------------------------------------------ */
+/*
+Extension.ts is the entry point for the extension. It is responsible for activating the extension and starting the language server. 
+The extension is activated when the user opens a file with the .sql extension. The language server is started when the extension is activated.
+The language server is implemented in the server folder.
+*/
 
 import * as path from 'path';
 import { workspace, ExtensionContext } from 'vscode';
