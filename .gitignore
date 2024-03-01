@@ -128,3 +128,11 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# VS Code and dev containers
+
+.devcontainer/*
+.vscode
+*.code-workspace
+
+.venv
