@@ -1,12 +1,12 @@
-/* --------------------------------------------------------------------------------------------
- * Copyright (c) Microsoft Corporation. All rights reserved.
- * Licensed under the MIT License. See License.txt in the project root for license information.
- * ------------------------------------------------------------------------------------------ */
+/**
+ * @fileoverview Language Server for BigQuery SQL Formatter
+ * 
+ */
+
 import {
 	createConnection,
 	TextDocuments,
 	Diagnostic,
-	DiagnosticSeverity,
 	ProposedFeatures,
 	InitializeParams,
 	DidChangeConfigurationNotification,
@@ -20,6 +20,12 @@ import {
 import {
 	TextDocument
 } from 'vscode-languageserver-textdocument';
+
+import {
+	Linter
+} from './linter/linter';
+
+import { defaultSettings, ServerSettings } from './settings';
 
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -80,13 +86,7 @@ connection.onInitialized(() => {
 	}
 });
 
-// The server settings
-interface ServerSettings {
-	maxNumberOfProblems: number;
-}
-
 // The global settings, used when the `workspace/configuration` request is not supported by the client.
-const defaultSettings: ServerSettings = { maxNumberOfProblems: 1000 };
 let globalSettings: ServerSettings = defaultSettings;
 
 // Cache the settings of all open documents
@@ -132,48 +132,19 @@ documents.onDidChangeContent(change => {
 	validateTextDocument(change.document);
 });
 
+/**
+ * Validates the text document and sends diagnostics to VSCode
+ * @name validateTextDocument
+ * @param textDocument 
+ */
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	// we get the settings for every validate run.
 	const settings = await getDocumentSettings(textDocument.uri);
 
-	// The validator creates diagnostics for all uppercase words length 2 and more
-	const text = textDocument.getText();
-	const pattern = /\b[A-Z]{2,}\b/g;
-	let m: RegExpExecArray | null;
+	// Create the linter
+	const linter = new Linter(settings);
 
-	let problems = 0;
-	const diagnostics: Diagnostic[] = [];
-	while ((m = pattern.exec(text)) && problems < settings.maxNumberOfProblems) {
-		problems++;
-		const diagnostic: Diagnostic = {
-			severity: DiagnosticSeverity.Warning,
-			range: {
-				start: textDocument.positionAt(m.index),
-				end: textDocument.positionAt(m.index + m[0].length)
-			},
-			message: `${m[0]} is all uppercase.`,
-			source: 'ex'
-		};
-		if (hasDiagnosticRelatedInformationCapability) {
-			diagnostic.relatedInformation = [
-				{
-					location: {
-						uri: textDocument.uri,
-						range: Object.assign({}, diagnostic.range)
-					},
-					message: 'Spelling matters'
-				},
-				{
-					location: {
-						uri: textDocument.uri,
-						range: Object.assign({}, diagnostic.range)
-					},
-					message: 'Particularly for names'
-				}
-			];
-		}
-		diagnostics.push(diagnostic);
-	}
+	const diagnostics: Diagnostic[] = linter.verify(textDocument.getText());
 
 	// Send the computed diagnostics to VSCode.
 	connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
