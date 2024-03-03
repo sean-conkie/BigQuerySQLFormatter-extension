@@ -25,9 +25,7 @@
   },
   "activationEvents": [
     "onLanguage:sql",
-    "onLanguage:sql-biqquery",
-    "onLanguage:legacy-sql",
-    "onLanguage:bigquery-sql"
+    "onLanguage:sql-biqquery"
   ],
   "main": "./client/out/extension",
   "contributes": {
@@ -53,7 +51,32 @@
           "description": "Traces the communication between VS Code and the language server."
         }
       }
-    }
+    },
+    "languages": [
+      {
+        "id": "googlesql",
+        "aliases": [
+          "googlesql",
+          "GoogleSQL"
+        ],
+        "extensions": [
+          ".sql",
+          ".ddl",
+          ".dml",
+          ".bqsql",
+          ".bqddl",
+          ".bqdml"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "googlesql",
+        "scopeName": "source.googlesql",
+        "path": ".server/src/linter/syntaxes/googlesql.tmLanguage.json"
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
