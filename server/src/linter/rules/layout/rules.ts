@@ -6,13 +6,12 @@
  * @requires Rule
  */
 
-import { start_of_file } from './LT13';
+import { StartOfFile } from './LT13';
 import { Rule } from '../base';
 import { ServerSettings } from '../../../settings';
-import { integer } from 'vscode-languageserver';
 
-export function layoutRules(settings: ServerSettings, problems: integer): Rule[] {
+export function layoutRules(settings: ServerSettings, problems: number): Rule[] {
 	return [
-		new start_of_file(settings, problems)
+		new StartOfFile(settings, problems)
 	];
 }

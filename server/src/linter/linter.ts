@@ -8,9 +8,7 @@
 
 import { ServerSettings } from '../settings';
 
-import {
-	Diagnostic, integer,
-} from 'vscode-languageserver/node';
+import { Diagnostic } from 'vscode-languageserver/node';
 import { Rule } from './rules/base';
 import { initialiseRules } from './rules/rules';
 import { RuleType } from './rules/enums';
@@ -26,7 +24,7 @@ export class Linter {
 	settings: ServerSettings;
 	regexRules: Rule[] = [];
 	parserRules: Rule[] = [];
-	problems: integer = 0;
+	problems: number = 0;
 
 	constructor(settings: ServerSettings) {
 		this.settings = settings;
@@ -57,7 +55,7 @@ export class Linter {
 		const diagnostics: Diagnostic[] = [];
 
 		for (const rule of this.regexRules) {
-			const result = rule.evalute(source);
+			const result = rule.evaluate(source);
 			if (result !== null) {
 				diagnostics.push(result);
 				this.problems++;

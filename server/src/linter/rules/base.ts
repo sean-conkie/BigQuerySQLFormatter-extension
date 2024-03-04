@@ -26,17 +26,19 @@ export abstract class Rule{
 	severity: DiagnosticSeverity = DiagnosticSeverity.Error;
 	enabled: boolean = true;
 	settings: ServerSettings;
+	problems: number;
 
 	constructor(settings: ServerSettings, problems: number) {
 
 		this.settings = settings;
+		this.problems = problems;
 
-		if (problems >= settings.maxNumberOfProblems) {
+		if (this.problems >= this.settings.maxNumberOfProblems) {
 			console.log(`${this.name}: Too many problems, disabling.`);
 			this.enabled = false;
 		}
 
 	}
 
-	abstract evalute(test: string): Diagnostic | null;
+	abstract evaluate(test: string): Diagnostic | null;
 }

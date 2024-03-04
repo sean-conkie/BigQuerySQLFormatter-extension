@@ -7,11 +7,9 @@
  */
 
 import { ServerSettings } from '../../settings';
-import {
-	integer
-} from 'vscode-languageserver/node';
 import { layoutRules } from './layout/rules';
 import { Rule } from './base';
+
 
 /**
  * Initialise the rules
@@ -21,7 +19,7 @@ import { Rule } from './base';
  * @memberof Linter
  * @name initialiseRuls
  */
-export function initialiseRules(settings: ServerSettings, problems: integer): Rule[] {
+export function initialiseRules(settings: ServerSettings, problems: number): Rule[] {
 	return [
 		...layoutRules(settings, problems)
 	];
