@@ -1,0 +1,42 @@
+/**
+ * @fileoverview Base class for a rule
+ * @module linter/rules/base
+ * @requires vscode-languageserver
+ * @requires settings
+ * @requires RuleType
+ */
+
+import { Diagnostic, DiagnosticSeverity } from 'vscode-languageserver/node';
+import { RuleType } from './enums';
+import { ServerSettings } from '../../settings';
+
+
+/**
+ * Abstract class for a rule
+ * @class Rule
+ * @memberof Linter.Rules
+ */
+export abstract class Rule{
+	readonly is_fix_compatible: boolean = true;
+	readonly name: string = "";
+	readonly code: string = "";
+	readonly type: RuleType = RuleType.REGEX;
+	readonly message: string = "";
+	readonly pattern: RegExp = /./;
+	severity: DiagnosticSeverity = DiagnosticSeverity.Error;
+	enabled: boolean = true;
+	settings: ServerSettings;
+
+	constructor(settings: ServerSettings, problems: number) {
+
+		this.settings = settings;
+
+		if (problems >= settings.maxNumberOfProblems) {
+			console.log(`${this.name}: Too many problems, disabling.`);
+			this.enabled = false;
+		}
+
+	}
+
+	abstract evalute(test: string): Diagnostic | null;
+}
