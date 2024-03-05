@@ -129,6 +129,8 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
+*.sql
+
 # VS Code and dev containers
 
 .devcontainer/*
