@@ -25,7 +25,7 @@ describe('Linter', () => {
     });
 
     it('should verify source code and return diagnostics', () => {
-        const source = 'your source code'; // replace with your actual source code
+        const source = 'select * from table';
         const diagnostics: Diagnostic[] = [];
         for (const rule of linter.regexRules) {
             const result = rule.evaluate(source);
@@ -38,7 +38,7 @@ describe('Linter', () => {
     });
 
     it('should increment problems for each diagnostic', () => {
-        const source = 'your source code'; // replace with your actual source code
+        const source = '\nselect *\nfrom table';
         const diagnostics: Diagnostic[] = [];
         for (const rule of linter.regexRules) {
             const result = rule.evaluate(source);
