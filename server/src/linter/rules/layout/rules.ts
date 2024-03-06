@@ -13,7 +13,7 @@ import { StartOfFile } from './LT13';
 
 export function layoutRules(settings: ServerSettings, problems: number): Rule[] {
 	return [
-		new StartOfFile(settings, problems),
-		new EndofFile(settings, problems)
+		new EndofFile(settings, problems),
+		new StartOfFile(settings, problems)
 	];
 }
