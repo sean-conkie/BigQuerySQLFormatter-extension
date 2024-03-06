@@ -9,9 +9,7 @@ export class EndofFile extends Rule{
   readonly code: string = "LT12";
   readonly type: RuleType = RuleType.REGEX;
   readonly message: string = "Files must end with a single trailing newline.";
-  readonly pattern: RegExp = /./;
-	strPattern = new OnigRegExp('\\S\n\\z'); // eslint-disable-line no-useless-escape
-	matches: boolean = false;
+  readonly pattern: RegExp = /\S\n$/;
 	
 
 	constructor(settings: any, problems: number) {
@@ -24,11 +22,7 @@ export class EndofFile extends Rule{
 			return null;
 		}
 
-		this.strPattern.test(test, (error, matches) => {
-			this.matches = matches;
-		});
-
-		if (this.matches === false) {
+		if (this.pattern.test(test) === false) {
 
 			const sourceLines: string[] = test.split(/\n|\r\n|\r/);
 
