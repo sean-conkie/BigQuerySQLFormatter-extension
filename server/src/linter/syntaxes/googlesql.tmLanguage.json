@@ -6,6 +6,7 @@
       "match": "(?i)\\b(array|boolean|bytes|date(?!\\s*\\()|datetime(?!\\s*\\()|geography|numeric|decimal|bignumeric|bigdecimal|float|float64|int64|int|smallint|integer|bigint|tinyint|byteint|bool|record|any\\s+type|string(?!\\s*\\()|struct|time(?!\\s*\\(|\\s+as\\s+of|\\s+zone)|timestamp(?!\\s*\\())\\b",
       "name": "storage.type.sql"
     },
+    { "include": "#custom" },
     { "include": "#comments" },
     { "include": "#ddl" },
     { "include": "#dml" },
@@ -633,6 +634,19 @@
             "1": { "name": "entity.name.tag" }
           },
           "match": "(?i)(?>^(?: *\\w+,? *$)|(?: +(?!\\b(?:in|is|null|distinct)\\b)(\\w+),? *$))"
+        }
+      ]
+    },
+    "custom": {
+      "patterns": [
+        {
+          "captures": {
+            "1": { "name": "entity.name.dataset.sql" },
+            "2": { "name": "entity.name.object.sql" },
+            "3": { "name": "keyword.write_disposition.sql" }
+          },
+          "match": "(?i)(?:(\\w+)\\.(\\w+)\\:(\\w+)\\:)",
+          "name": "meta.dml.write_disposition.sql"
         }
       ]
     }
