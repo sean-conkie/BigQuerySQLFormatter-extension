@@ -3,241 +3,23 @@
   "name": "GoogleSQL",
   "patterns": [
     {
-      "include": "#comments"
-    },
-    {
-      "include": "#strings"
-    },
-    {
-      "include": "#functions"
-    },
-    {
-      "include": "#punctuation"
-    },
-    {
-      "include": "#regexps"
-    },
-    {
-      "include": "#javascript"
-    },
-    {
-      "captures": {
-        "1": {
-          "name": "keyword.other.create.sql"
-        },
-        "2": {
-          "name": "keyword.other.sql"
-        },
-        "3": {
-          "name": "keyword.other.DML.sql"
-        },
-        "5": {
-          "name": "entity.name.function.sql"
-        },
-        "6": {
-          "name": "invalid.illegal.table.delimiter.sql"
-        }
-      },
-      "match": "(?i:^\\s*(create(?:\\s+or\\s+replace)?(?:\\s+temporary|\\s+temp)?|drop|alter)\\s+(schema|table(?:\\s+function)?|view|materialized\\s+view|(?:external|snapshot)\\s+table|model|function|procedure|column)\\b(?:\\s+(if(?:\\s+not)?\\s+exists)\\b)?)(?:\\s+(`?)((?:(?:[\\w\\-]*(?:\\{+\\s*[\\w\\-]+\\s*\\}+[\\w\\-]*)?)(?:\\.|(\\:)))?(?:(?:\\w*(?:\\{+\\s*[\\w\\-]+\\s*\\}+\\w*)?)\\.)?(?:[\\w\\{\\}]+|\\{\\{\\s*[\\w]+\\s*\\}\\}))\\4)?",
-      "name": "meta.create.sql"
-    },
-    {
-      "captures": {
-        "1": {
-          "name": "keyword.other.insert.sql"
-        },
-        "3": {
-          "name": "entity.name.function.table.standard.sql"
-        },
-        "4": {
-          "name": "invalid.illegal.table.delimiter.sql"
-        },
-        "5": {
-          "name": "variable.parameter.table.partition_decorator.sql"
-        }
-      },
-      "match": "(?i:^\\b((?:insert|merge)(?:\\s+into)?|truncate\\s+table)(?:\\s+(`?)((?:(?:[\\w\\-]*(?:\\{+\\s*[\\w\\-]+\\s*\\}+[\\w\\-]*)?)(?:\\.|(\\:)))?(?:(?:\\w*(?:\\{+\\s*[\\w\\-]+\\s*\\}+\\w*)?)\\.)?(?:\\w*(?:\\{+\\s*[\\w\\-]+\\s*\\}+\\w*)?))(\\*|\\$\\w+)?\\2)?)",
-      "name": "meta.create.DML.insert.sql"
-    },
-    {
-      "captures": {
-        "1": {
-          "name": "keyword.other.select.sql"
-        },
-        "4": {
-          "name": "entity.name.function.table.standard.sql"
-        },
-        "5": {
-          "name": "invalid.illegal.table.delimiter.sql"
-        },
-        "6": {
-          "name": "variable.parameter.table.partition_decorator.sql"
-        },
-        "7": {
-          "name": "entity.name.function.table.legacy.sql"
-        },
-        "8": {
-          "name": "invalid.illegal.table.delimiter.sql"
-        },
-        "9": {
-          "name": "variable.parameter.table.partition_decorator.legacy.sql"
-        }
-      },
-      "match": "(?i)(from|join|delete\\s+from|delete(?!\\s+from)|update|using(?!\\s+message)|clone|on\\s+(?:schema|table|view))\\s+((`?)((?:(?:[\\w\\-]*(?:\\{+\\s*[\\w\\-]+\\s*\\}+[\\w\\-]*)?)(?:\\.|(\\:)))?(?:(?:\\w*(?:\\{+\\s*[\\w\\-]+\\s*\\}+\\w*)?)\\.)?(?:INFORMATION_SCHEMA\\.\\w+|\\w*(?:\\{+\\s*[\\w\\-]+\\s*\\}+\\w*)?))(\\*|\\$\\w+)?\\3?|\\[((?:(?:[\\w\\-]*(?:\\{+\\s*[\\w\\-]+\\s*\\}+[\\w\\-]*)?)(?:\\:|(\\.)))?(?:(?:\\w*(?:\\{+\\s*[\\w\\-]+\\s*\\}+\\w*)?)\\.)?(?:\\w*(?:\\{+\\s*[\\w\\-]+\\s*\\}+\\w*)?))(\\*|\\$\\w+)?\\])",
-      "name": "meta.create.from.sql"
-    },
-    {
-      "captures": {
-        "1": {
-          "name": "keyword.other.insert.sql"
-        },
-        "3": {
-          "name": "entity.name.function.table.standard.sql"
-        },
-        "4": {
-          "name": "invalid.illegal.table.delimiter.sql"
-        },
-        "5": {
-          "name": "variable.parameter.table.partition_decorator.sql"
-        }
-      },
-      "match": "(?i:\\b(model|call)\\s+(?:(`?)((?:(?:[\\w\\-]*(?:\\{+\\s*[\\w\\-]+\\s*\\}+[\\w\\-]*)?)(?:\\.|(\\:)))?(?:(?:\\w*(?:\\{+\\s*[\\w\\-]+\\s*\\}+\\w*)?)\\.)?(?:\\w*(?:\\{+\\s*[\\w\\-]+\\s*\\}+\\w*)?))(\\*|\\$\\w+)?\\2)?)",
-      "name": "meta.other.table.ml_procedure.sql"
-    },
-    {
-      "captures": {
-        "2": {
-          "name": "entity.name.function.table.standard.sql"
-        },
-        "3": {
-          "name": "invalid.illegal.table.delimiter.sql"
-        },
-        "4": {
-          "name": "variable.parameter.table.partition_decorator.sql"
-        },
-        "5": {
-          "name": "entity.name.function.table.legacy.sql"
-        },
-        "6": {
-          "name": "invalid.illegal.table.delimiter.sql"
-        },
-        "7": {
-          "name": "variable.parameter.table.partition_decorator.legacy.sql"
-        }
-      },
-      "match": "^\\s*(?:(`)((?:(?:[\\w\\-]*(?:\\{+\\s*[\\w\\-]+\\s*\\}+[\\w\\-]*)?)(?:\\.|(\\:)))?(?:(?:\\w*(?:\\{+\\s*[\\w\\-]+\\s*\\}+\\w*)?)\\.)?(?:INFORMATION_SCHEMA\\.\\w+|(?:\\w*(?:\\{+\\s*[\\w\\-]+\\s*\\}+\\w*)?)))(\\*|\\$\\w+)?\\1|\\[((?:(?:[\\w\\-]*(?:\\{+\\s*[\\w\\-]+\\s*\\}+[\\w\\-]*)?)(?:\\:|(\\.)))?(?:(?:\\w*(?:\\{+\\s*[\\w\\-]+\\s*\\}+\\w*)?)\\.)?(?:\\w*(?:\\{+\\s*[\\w\\-]+\\s*\\}+\\w*)?))(\\*|\\$\\w+)?\\])",
-      "name": "meta.other.table.sql"
-    },
-    {
-      "captures": {
-        "1": {
-          "name": "keyword.other.merge.sql"
-        }
-      },
-      "match": "(?i)(\\b(?:by)\\s+(?:target|source)\\b)",
-      "name": "meta.create.DML.merge.sql"
-    },
-    {
       "match": "(?i)\\b(array|boolean|bytes|date(?!\\s*\\()|datetime(?!\\s*\\()|geography|numeric|decimal|bignumeric|bigdecimal|float|float64|int64|int|smallint|integer|bigint|tinyint|byteint|bool|record|any\\s+type|string(?!\\s*\\()|struct|time(?!\\s*\\(|\\s+as\\s+of|\\s+zone)|timestamp(?!\\s*\\())\\b",
       "name": "storage.type.sql"
     },
+    { "include": "#comments" },
+    { "include": "#ddl" },
+    { "include": "#dml" },
+    { "include": "#from" },
+    { "include": "#functions" },
+    { "include": "#keywords" },
+    { "include": "#columns" },
+    { "include": "#strings" },
+    { "include": "#punctuation" },
+    { "include": "#regexps" },
+    { "include": "#javascript" },
     {
       "match": "\\b(\\d+\\.\\d+)|(\\d+\\.)|(\\.\\d+)|\\b(\\d+)|(?i:(true|false))\\b",
       "name": "constant.numeric.sql"
-    },
-    {
-      "match": "(?i)\\bAS\\b",
-      "name": "keyword.other.alias.sql"
-    },
-    {
-      "match": "(?i)\\b(desc|asc)\\b",
-      "name": "keyword.other.order.sql"
-    },
-    {
-      "match": "(?i)\\b(case|when|then|else|end)\\b",
-      "name": "keyword.other.case.sql"
-    },
-    {
-      "match": "\\*",
-      "name": "keyword.operator.star.sql"
-    },
-    {
-      "match": "[!<>]?=|<>|<|>",
-      "name": "keyword.operator.comparison.sql"
-    },
-    {
-      "match": "-|\\+|/|~",
-      "name": "keyword.operator.math.sql"
-    },
-    {
-      "match": "\\|\\|",
-      "name": "keyword.operator.concatenator.sql"
-    },
-    {
-      "match": "<<|>>|\\&|\\^|\\|",
-      "name": "keyword.operator.byte.sql"
-    },
-    {
-      "match": "%",
-      "name": "invalid.deprecated.legacy.operator.sql"
-    },
-    {
-      "match": "(?i:\\b(select|all|distinct|except|replace|from|where|in|is|null|like|between|and|or|with|group|by|rollup|order|limit|having|window)\\b)",
-      "name": "keyword.other.select.sql"
-    },
-    {
-      "match": "(?i:\\b(union|intersect|for|system|time|of|offset|system_time|tablesample|percent)\\b)",
-      "name": "keyword.other.select.set_op.sql"
-    },
-    {
-      "match": "(?i:\\b(inner|cross|full|left|right|outer|join|on|using)\\b)",
-      "name": "keyword.other.select.join.sql"
-    },
-    {
-      "match": "(?i:\\bfor\\s+system\\s+time\\s+as\\s+of\\b)",
-      "name": "keyword.other.select.other.sql"
-    },
-    {
-      "match": "(?i:\\b(insert|into|values|delete|update|set)\\b)",
-      "name": "keyword.other.DML.sql"
-    },
-    {
-      "match": "(?i:\\b(create(\\s+(temporary|temp))?|drop(\\s+column)?|schema|table(?:\\s+function)?|view|materialized(\\s+view)?|external\\s+table|snapshot|clone|if|not|exists|partition|cluster|options|data\\s+type|rows|range|unbounded|preceding|following|current|row|returns|language|deterministic|(\\s*or\\s+replace\\s+)?(function|procedure|model)(\\s*if\\s+not\\s+exists\\s+)?|(add|drop)\\s+column|cascade|restrict|rename|to)\\b)",
-      "name": "keyword.other.DDL.sql"
-    },
-    {
-      "match": "(?i:\\b(grant|revoke)\\b)",
-      "name": "keyword.other.DCL.sql"
-    },
-    {
-      "match": "(?i:\\b(merge|matched|default|truncate)\\b)",
-      "name": "keyword.other.DML.merge.sql"
-    },
-    {
-      "match": "(?i:\\b(assert|export\\s+data|pivot|unpivot|qualify|include|exclude)\\b)",
-      "name": "keyword.other.statement.sql"
-    },
-    {
-      "match": "(?i:\\b(over|ignore|respect|nulls|first|last|interval|at|zone|at\\s+time\\s+zone)\\b)",
-      "name": "keyword.other.function.sql"
-    },
-    {
-      "match": "(?i:\\b(procedure|begin|exception|error[^\\.\\(]|out|inout|call|declare|if|elseif|end\\s+if|loop|while|do|break|leave|continue|iterate|return|execute|immediate|raise|message)\\b)",
-      "name": "keyword.other.procedure.sql"
-    },
-    {
-      "captures": {
-        "1": {
-          "name": "constant.other.database-name.sql"
-        },
-        "2": {
-          "name": "punctuation.separator.period.sql"
-        },
-        "3": {
-          "name": "constant.other.table-name.sql"
-        }
-      },
-      "match": "(\\w+?)(\\.)(\\w+)"
     }
   ],
   "repository": {
@@ -342,13 +124,13 @@
           "begin": "r[\"]",
           "beginCaptures": {
             "0": {
-              "name": "storage.type.string.regex.begin.sql"
+              "name": "string.regex.begin.sql"
             }
           },
           "end": "[\"]",
           "endCaptures": {
             "0": {
-              "name": "storage.type.string.regex.end.sql"
+              "name": "string.regex.end.sql"
             }
           },
           "name": "meta.regex.sql",
@@ -366,13 +148,13 @@
           "begin": "r[']",
           "beginCaptures": {
             "0": {
-              "name": "storage.type.string.regex.begin.sql"
+              "name": "string.regex.begin.sql"
             }
           },
           "end": "[']",
           "endCaptures": {
             "0": {
-              "name": "storage.type.string.regex.end.sql"
+              "name": "string.regex.end.sql"
             }
           },
           "name": "meta.regex.sql",
@@ -681,6 +463,176 @@
         {
           "match": "(?i)\\b(EVERY|HASH|POSITION|SOME)(?=\\s*\\()",
           "name": "invalid.deprecated.legacy.other.sql"
+        }
+      ]
+    },
+    "ddl": {
+      "patterns": [
+        {
+          "captures": {
+            "1": { "name": "keyword.ddl.sql" },
+            "2": { "name": "keyword.ddl.object.sql" },
+            "3": { "name": "keyword.ddl.if.sql" },
+            "4": { "name": "punctuation.definition.string.begin.sql" },
+            "5": { "name": "entity.name.project.sql" },
+            "6": { "name": "entity.name.dataset.sql" },
+            "7": { "name": "entity.name.object.sql" },
+            "8": { "name": "punctuation.definition.string.end.sql" },
+            "9": { "name": "keyword.ddl.as.sql" }
+          },
+          "match": "(?i:)^\\s*(create(?:\\s+or\\s+replace)?(?:\\s+temporary|\\s+temp)?|drop|alter)\\s+(schema|table(?:\\s+function)?|view|materialized\\s+view|(?:external|snapshot)\\s+table|model|function|procedure|column)\\b(?:\\s+(if(?:\\s+not)?\\s+exists)\\b)?(?:\\s+(`?)(?:(\\w+)\\.)?(?:(\\w+)\\.(\\w+)(`?)))(?:\\s+(as))?",
+          "name": "meta.ddl.sql"
+        },
+        {
+          "match": "(?i:\\b(create(\\s+(temporary|temp))?|drop(\\s+column)?|schema|table(?:\\s+function)?|view|materialized(\\s+view)?|external\\s+table|snapshot|clone|if|not|exists|partition|cluster|options|data\\s+type|rows|range|unbounded|preceding|following|current|row|returns|language|deterministic|(\\s*or\\s+replace\\s+)?(function|procedure|model)(\\s*if\\s+not\\s+exists\\s+)?|(add|drop)\\s+column|cascade|restrict|rename|to)\\b)",
+          "name": "keyword.ddl.sql"
+        }
+      ]
+    },
+    "dml": {
+      "patterns": [
+        {
+          "captures": {
+            "1": { "name": "keyword.dml.sql" },
+            "2": { "name": "punctuation.definition.string.begin.sql" },
+            "3": { "name": "entity.name.project.sql" },
+            "4": { "name": "entity.name.dataset.sql" },
+            "5": { "name": "entity.name.object.sql" },
+            "6": { "name": "entity.name.tag" },
+            "7": { "name": "punctuation.definition.string.end.sql" }
+          },
+          "match": "(?i)^\\b((?:insert|merge)(?:\\s+into)?|truncate\\s+table|update|delete\\s+from|delete(?!\\s+from))(?:\\s+(`?)(?:(\\w+)\\.)?(?:(?>(\\w+)\\.(\\w+)|(?<!\\.)(\\w+))(`?)))",
+          "name": "meta.dml.sql"
+        },
+        {
+          "match": "(?i:\\b(insert|into|values|delete|update|set)\\b)",
+          "name": "keyword.dml.sql"
+        },
+        {
+          "match": "(?i:\\b(merge|matched|default|truncate)\\b)",
+          "name": "keyword.dml.merge.sql"
+        }
+      ]
+    },
+    "from": {
+      "patterns": [
+        {
+          "captures": {
+            "1": { "name": "keyword.from.sql" },
+            "2": { "name": "keyword.join.sql" },
+            "3": { "name": "punctuation.definition.string.begin.sql" },
+            "4": { "name": "entity.name.project.sql" },
+            "5": { "name": "entity.name.dataset.sql" },
+            "6": { "name": "entity.name.object.sql" },
+            "7": { "name": "punctuation.definition.string.end.sql" },
+            "8": { "name": "keyword.as.sql" },
+            "9": { "name": "entity.name.table.alias.sql" }
+          },
+          "match": "(?i)(?:(from)|((?:(?:(?:inner|cross|(?:left|right|full)(?:\\s+outer)?)\\s+)join)))(?:\\s+(`?)(?:(\\w+)\\.)?(?:(\\w+)\\.(\\w+))(`?)(?:\\s+(?:(as)\\s+)?(\\w+))?)",
+          "name": "meta.from.sql"
+        },
+        {
+          "captures": {
+            "1": { "name": "keyword.select.sql" }
+          },
+          "match": "(?i)(?:\\b(in)\\b\\s+(?:\\())",
+          "name": "meta.select.sql"
+        },
+        {
+          "captures": {
+            "1": { "name": "keyword.select.sql" }
+          },
+          "match": "(?i:\\b(select|all|distinct|except|replace|from|where|in|is|null|like|between|and|or|with|group|by|rollup|order|limit|having|window)\\b)",
+          "name": "meta.select.sql"
+        },
+        {
+          "match": "(?i:\\b(union|intersect|for|system|time|of|offset|system_time|tablesample|percent)\\b)",
+          "name": "keyword.select.set_op.sql"
+        },
+        {
+          "match": "(?i:\\b(inner|cross|full|left|right|outer|join|on|using)\\b)",
+          "name": "keyword.select.join.sql"
+        },
+        {
+          "match": "(?i:\\bfor\\s+system\\s+time\\s+as\\s+of\\b)",
+          "name": "keyword.select.other.sql"
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "match": "(?i)\\b(desc|asc)\\b",
+          "name": "keyword.order.sql"
+        },
+        {
+          "match": "(?i)\\b(case|when|then|else|end)\\b",
+          "name": "keyword.case.sql"
+        },
+        {
+          "match": "\\*",
+          "name": "keyword.operator.star.sql"
+        },
+        {
+          "match": "[!<>]?=|<>|<|>",
+          "name": "keyword.operator.comparison.sql"
+        },
+        {
+          "match": "-|\\+|/|~",
+          "name": "keyword.operator.math.sql"
+        },
+        {
+          "match": "\\|\\|",
+          "name": "keyword.operator.concatenator.sql"
+        },
+        {
+          "match": "<<|>>|\\&|\\^|\\|",
+          "name": "keyword.operator.byte.sql"
+        },
+        {
+          "match": "%",
+          "name": "invalid.deprecated.legacy.operator.sql"
+        },
+        {
+          "match": "(?i:\\b(grant|revoke)\\b)",
+          "name": "keyword.dcl.sql"
+        },
+        {
+          "match": "(?i:\\b(assert|export\\s+data|pivot|unpivot|qualify|include|exclude)\\b)",
+          "name": "keyword.statement.sql"
+        },
+        {
+          "match": "(?i:\\b(over|ignore|respect|nulls|first|last|interval|at|zone|at\\s+time\\s+zone)\\b)",
+          "name": "keyword.function.sql"
+        },
+        {
+          "match": "(?i:\\b(procedure|begin|exception|error[^\\.\\(]|out|inout|call|declare|if|elseif|end\\s+if|loop|while|do|break|leave|continue|iterate|return|execute|immediate|raise|message)\\b)",
+          "name": "keyword.procedure.sql"
+        }
+      ]
+    },
+    "columns": {
+      "patterns": [
+        {
+          "captures": {
+            "1": {
+              "name": "entity.name.table.alias.sql"
+            },
+            "2": {
+              "name": "other.column.name.sql"
+            },
+            "3": {
+              "name": "entity.name.tag"
+            }
+          },
+          "match": "(?i)(?:(?<!\\.)(?:(\\w+)\\.)?(\\w+)(?: +(?!\\b(?:in|is|null)\\b)(\\w+))?)",
+          "name": "meta.column.sql"
+        },
+        {
+          "captures": {
+            "1": { "name": "entity.name.tag" }
+          },
+          "match": "(?i)(?>^(?: *\\w+,? *$)|(?: +(?!\\b(?:in|is|null)\\b)(\\w+),? *$))"
         }
       ]
     }
