@@ -632,7 +632,7 @@
           "captures": {
             "1": { "name": "entity.name.tag" }
           },
-          "match": "(?i)(?>^(?: *\\w+,? *$)|(?: +(?!\\b(?:in|is|null)\\b)(\\w+),? *$))"
+          "match": "(?i)(?>^(?: *\\w+,? *$)|(?: +(?!\\b(?:in|is|null|distinct)\\b)(\\w+),? *$))"
         }
       ]
     }
