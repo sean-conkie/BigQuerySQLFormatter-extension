@@ -13,7 +13,7 @@ describe('layoutRules', () => {
     it('should return an array with a single instance of each rule', () => {
         const problems = 0;
         const result = layoutRules(defaultSettings, problems);
-        expect(result).to.be.an('array').that.has.lengthOf(2);
+        expect(result).to.be.an('array').that.has.lengthOf(3);
         expect(result[0]).to.be.an.instanceOf(UnionCheck);
         expect(result[1]).to.be.an.instanceOf(EndofFile);
         expect(result[2]).to.be.an.instanceOf(StartOfFile);
