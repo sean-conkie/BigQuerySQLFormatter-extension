@@ -26,7 +26,7 @@ export class UnionCheck extends Rule{
   readonly code: string = "LT11";
   readonly type: RuleType = RuleType.REGEX;
   readonly message: string = "Union operators should be surrounded by newlines.";
-  readonly pattern: RegExp =/(?<!\n)\bunion( (all|distinct)|(?!( (all|distinct))))|\bunion( (all|distinct)|(?!( (all|distinct))))(?!\n)/g;
+  readonly pattern: RegExp =/(?<!\n)\bunion( (all|distinct)|(?!( (all|distinct))))|\bunion( (all|distinct)|(?!( (all|distinct))))(?!\n)/gi;
 
   /**
    * Creates an instance of UnionCheck.
