@@ -12,6 +12,7 @@ import { Diagnostic } from 'vscode-languageserver/node';
 import { Rule } from './rules/base';
 import { initialiseRules } from './rules/rules';
 import { RuleType } from './rules/enums';
+import { Parser } from './parser';
 
 
 
@@ -51,6 +52,10 @@ export class Linter {
 	 * @memberof Linter
 	 */
 	verify(source: string): Diagnostic[] {
+
+		// Parse the source code
+		const parser = new Parser();
+		const abstractSyntaxTree = parser.parse(source);
 
 		const diagnostics: Diagnostic[] = [];
 
