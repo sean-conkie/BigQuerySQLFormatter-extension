@@ -593,7 +593,7 @@
           "captures": {
             "1": { "name": "keyword.expression.comparison.sql" }
           },
-          "match": "(?i)(?:\\b((?:not\\b\\s+\\b)in|is(?:\\b\\s+\bnot))\\b\\s+(?:\\())",
+          "match": "(?i)(?:\\b((?:not\\b\\s+\\b)?in|is(?:\\b\\s+\bnot)?)\\b\\s+(?:\\())",
           "name": "meta.comparison.sql"
         },
         {

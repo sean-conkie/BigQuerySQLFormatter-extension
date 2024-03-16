@@ -57,14 +57,14 @@ interface LineToken extends ASTPosition {
 }
 
 interface AST extends ASTPosition {
-	"tokens": LineToken[] | Token[]
+	"tokens": Token[]
 }
 
 class ColumnAST implements AST {
 	source: string | null = null;
 	column: string | null = null;
 	alias: string | null = null;
-	tokens: LineToken[] | Token[] = [];
+	tokens: Token[] = [];
 	line: number | null = null;
 	start: number | null = null;
 	end: number | null = null;
@@ -95,7 +95,7 @@ class ComparisonAST implements AST {
 	left: Column | null = null;
 	operator: string | null = null;
 	right: Column | null = null;
-	tokens: LineToken[] | Token[] = [];
+	tokens: Token[] = [];
 	line: number | null = null;
 	start: number | null = null;
 	end: number | null = null;
@@ -139,7 +139,7 @@ type ParenthesisGroup = {strings: string[], tokens: LineToken[][], parts: number
 class ComparisonGroupAST implements AST {
 	logicalOperator: LogicalOperator | null = null;
 	comparisons: (ComparisonGroupAST|ComparisonAST)[] = [];
-	tokens: LineToken[] | Token[] = [];
+	tokens: Token[] = [];
 	line: number | null = null;
 	start: number | null = null;
 	end: number | null = null;
@@ -168,7 +168,6 @@ class ComparisonGroupAST implements AST {
 				
 				if (group.nested.length > i) {
 					if (group.strings.length > i) {
-						let logicalOperator = null;
 						const match = group.strings[i].split("").reverse().join("").match(pattern);
 						if (match) {
 							const operatorString = match[0].split("").reverse().join("");
@@ -179,18 +178,17 @@ class ComparisonGroupAST implements AST {
 				}
 			}			
 		}
+
+		this.tokens = this.comparisons.map((comparison) => comparison.tokens).flat();
 	}
 
-	_createScanner(): OnigScanner {
-		return new OnigScanner(['(?i)(?<main>\\b(on|or|and)\\b\\s+\\((?:[^()]|(\\g<main>))\\))']);
-	}
 }
 
 class JoinAST implements AST {
 	"join": JoinType | null = null;
 	"source": ObjectAST | StatementAST | null = null;
 	"on": ComparisonGroupAST | null = null;
-	"tokens": LineToken[] | Token[] = [];
+	"tokens": Token[] = [];
 	"line": number | null = null;
 	"start": number | null = null;
 	"end": number | null = null;
@@ -198,8 +196,11 @@ class JoinAST implements AST {
 	constructor(source: ObjectAST | StatementAST, tokens: LineToken[]) {
 		this.source = source;
 		this.on = new ComparisonGroupAST(Parser.mapParenthesis(tokens));
-		// const joinTokens;
-
+		this.tokens.push(...source.tokens);
+		this.tokens.push(...this.on.tokens);
+		this.start = this.tokens[0].start;
+		this.end = this.tokens[this.tokens.length - 1].end;
+		this.line = this.tokens[0].line;
 	}
 }
 
@@ -209,7 +210,7 @@ class ObjectAST implements AST {
 	"dataset": string | null = null;
 	"object": string | null = null;
 	"alias": string | null = null;
-	"tokens": LineToken[] | Token[] = [];
+	"tokens": Token[] = [];
 	"line": number | null = null;
 	"start": number | null = null;
 	"end": number | null = null;
@@ -240,7 +241,7 @@ class ObjectAST implements AST {
 class SourceAST implements AST {
 	"source": ObjectAST | StatementAST | null = null;
 	"joins": JoinAST[] = [];
-	"tokens": LineToken[] | Token[] = [];
+	"tokens": Token[] = [];
 	"line": number | null = null;
 	"start": number | null = null;
 	"end": number | null = null;
@@ -296,7 +297,18 @@ class SourceAST implements AST {
 							this.source = objectAST;
 						}
 			
-					});
+		});
+		
+		this.tokens.push(...this.source?.tokens??[]);
+		this.start = this.tokens[0].start;
+		this.line = this.tokens[0].line;
+
+		if (this.joins.length > 0) {
+			this.tokens.push(...this.joins.map((join) => join.tokens).flat());
+		}
+
+		this.end = this.tokens[this.tokens.length - 1].end;
+
 	}
 }
 
@@ -317,7 +329,7 @@ class StatementAST implements AST {
   "orderby": ColumnAST[] = [];
   "limit": number | null = null;
 	"statement": string | null = null;
-	"tokens": LineToken[] | Token[] = [];
+	"tokens": Token[] = [];
 	"line": number | null = null;
 	"start": number | null = null;
 	"end": number | null = null;
@@ -501,6 +513,17 @@ export class Parser {
 		const matches: number[][] = Parser.pairParenthesis(startPosition, value);
 		const parts: number[][][] = matches.sort((a, b) => a[0] - b[0])
 																			.map((match) => Parser.createParenthesisGroupPairs(match, matches));
+
+		// check parts for any we aren't interested in
+		parts.map((part) => part.map((p) => {
+			const str = value.substring(p[0], p[1]);
+			if (/^\((?:\s*(?:\d+|"\w+"|'\w+')\s*,?)+\s*\)$/gm.test(str)) {
+				parts.map((iPart) => iPart.map((ip) => p[0] == ip[1]?ip[1] = p[1]:null));
+				part.splice(part.indexOf(p),1);
+			}
+		}));
+
+
 		const flatParts: number[][] = parts.flat().sort((a, b) => a[0] - b[0]);
 		const strings: Map<number,ParenthesisGroup > = new Map();
 		let inputLine: number = tokens[0].line ?? 1;
@@ -515,7 +538,7 @@ export class Parser {
 			return rt;
 		});
 
-		parts.map((part) => strings.set(part[0][0], {
+		parts.map((part) => part.length > 0?strings.set(part[0][0], {
 			"strings": part.map((p) => value.substring(p[0], p[1])),
 			"tokens": part.map((p) => Parser.tokenize(value.substring(p[0], p[1]))),
 			"parts": part,
@@ -523,7 +546,7 @@ export class Parser {
 			"end": (part[part.length - 1][0] + inputStart),
 			"line": inputLine,
 			"nested": []
-		}));
+		}):null);
 
 		lineNumbers.map((line, index) => {
 			const key = flatParts[index][0];
@@ -551,9 +574,9 @@ export class Parser {
 		const adddNestedGroups = (obj: ParenthesisGroup): ParenthesisGroup => {
 			if (obj.parts.length > 1) {
 				obj.parts.map((part) => {
-					if (strings.has(part[1] + 1)) {
-						obj.nested.push(adddNestedGroups(strings.get(part[1] + 1) as ParenthesisGroup));
-						strings.delete(part[1] + 1);
+					if (strings.has(part[1])) {
+						obj.nested.push(adddNestedGroups(strings.get(part[1]) as ParenthesisGroup));
+						strings.delete(part[1]);
 					}
 				});
 			}
@@ -616,7 +639,7 @@ export class Parser {
 
 		for(const m of matches) {
 			if (m[0] > start && m[1] < end) {
-				parts.push([start, m[0] - 1]);
+				parts.push([start, m[0]]);
 				start = m[1];
 			}
 		}
