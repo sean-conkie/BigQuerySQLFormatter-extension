@@ -268,7 +268,6 @@ class SourceAST implements AST {
 						const objectAST = new ObjectAST(line.tokens);
 						const joinToken = findToken([line], "keyword.join.sql");
 
-
 						const index = tokens.indexOf(line);
 						const onTokens: LineToken[] = [];
 			
@@ -517,10 +516,27 @@ export class Parser {
 		// check parts for any we aren't interested in
 		parts.map((part) => part.map((p) => {
 			const str = value.substring(p[0], p[1]);
-			if (/^\((?:\s*(?:\d+|"\w+"|'\w+')\s*,?)+\s*\)$/gm.test(str)) {
+			const pop = (p: number[]) => {
 				parts.map((iPart) => iPart.map((ip) => p[0] == ip[1]?ip[1] = p[1]:null));
 				part.splice(part.indexOf(p),1);
+			};
+
+			if (/^\((?:\s*(?:\d+|"\w+"|'\w+')\s*,?)+\s*\)$/gm.test(str)) {
+				return pop(p);
+			} 
+			
+			if (/^\(\s*\)/gm.test(str)) {
+				return pop(p);
 			}
+			// tokenize the previous string and check if group preceded by function
+			const token = Parser.tokenize(value.substring(0, p[0]))
+												.reverse()
+												.find((token) => !(token.scopes?.includes("punctuation.whitespace.sql") || token.scopes?.join() == "source.sql-bigquery"));
+
+			if ((token && token.scopes?.includes("meta.function.sql")) ?? false) {
+				return pop(p);
+			}
+
 		}));
 
 

@@ -29,6 +29,10 @@
     {
       "match": " *$",
       "name": "punctuation.whitespace.trailing.sql"
+    },
+    {
+      "match": " ",
+      "name": "punctuation.whitespace.sql"
     }
   ],
   "repository": {
