@@ -9,11 +9,12 @@ import { mergeArrayToUnique } from '../utils';
 import { OnigScanner } from 'oniguruma';
 import syntaxJson from './syntaxes/syntax.json';
 
-const punctuation = syntaxJson.punctuation;
-const skipTokens = syntaxJson.skipTokens;
-const recursiveGroupBegin = syntaxJson.recursiveGroupBegin;
-const recursiveGroupEnd = syntaxJson.recursiveGroupEnd;
-const syntaxRules = syntaxJson.rules;
+const punctuation: string[] = syntaxJson.punctuation;
+const skipTokens: string[] = syntaxJson.skipTokens;
+const ignoreTokens: string[] = syntaxJson.ignore;
+const recursiveGroupBegin: string[] = syntaxJson.recursiveGroupBegin;
+const recursiveGroupEnd: string[] = syntaxJson.recursiveGroupEnd;
+const syntaxRules: Rule[] = syntaxJson.rules;
 
 // region Types
 
@@ -51,8 +52,9 @@ type Rule = {
 	"scopes": string[],
 	"type": string,
 	"lookahead": number,
-	"negativeLookahead": string[],
-	"recursive": boolean
+	"negativeLookahead": string[] | null,
+	"recursive": boolean,
+	"children": string[] | null
 }
 
 type Column = ColumnAST | ColumnFunctionAST | StatementAST | string | number;
@@ -123,6 +125,8 @@ class ColumnFunctionAST implements AST {
 				this.parameters.push(match.tokens.join(''));
 			} else if (match.rule?.type === 'number') {
 				this.parameters.push(Number(match.tokens.join('')));
+			} else if (match.rule?.type === 'alias') {
+				this.alias = findToken(match.tokens, "entity.name.tag")?.value ?? null;
 			}
 			this.tokens.push(...match.tokens);
 		}
@@ -141,40 +145,11 @@ class ComparisonAST implements AST {
 	start: number | null = null;
 	end: number | null = null;
 
-	constructor(tokens: Token[]) {
-		const operator = tokens.filter((token) => token.scopes?.includes("meta.comparison.sql"));
-
-		if (operator.length === 0) {
-			return;
-		}
-
-		const logicalOperator = findToken(tokens, "meta.operator.sql")?.value;
-		if (logicalOperator) {
-			this.logicalOperator = LogicalOperator[logicalOperator.toUpperCase() as keyof typeof LogicalOperator];
-		}
-		this.operator = operator[0].value;
-		this.tokens = tokens;
-
-		const left = tokens.slice(0, tokens.indexOf(operator[0]));
-		const right = tokens.slice(tokens.indexOf(operator[0]) + 1);
-
-		this.left = extractColumn(left);
-		this.right = extractColumn(right);
-
-		this.line = tokens[0].line;
-		this.start = tokens[0].start;
-		this.end = tokens[tokens.length - 1].end;
-
+	constructor() {
+		
 	}
 
 }
-
-type ComparisonGroup = {
-	"logicalOperator"?: LogicalOperator,
-	"comparisons": ComparisonAST | ComparisonGroupAST
-}
-
-type ParenthesisGroup = {strings: string[], tokens: LineToken[][], parts: number[][], nested: ParenthesisGroup[], start: number, end: number, line?: number};
 
 
 class ComparisonGroupAST implements AST {
@@ -185,44 +160,8 @@ class ComparisonGroupAST implements AST {
 	start: number | null = null;
 	end: number | null = null;
 
-	constructor(groups: ParenthesisGroup[], logicalOperator?: LogicalOperator) {
-		const pattern = /\b(ro|dna)\b/;
-
-		this.line = groups[0].line??1;
-		this.start = groups[0].start;
-		this.end = groups[groups.length - 1].end;
-
-		for(const group of groups) {
-			for(let i = 0; i < group.tokens.length; i++) {
-				const isComparison = group.tokens[i].filter((token) => token.scopes?.includes("meta.comparison.sql")).length > 0;
-				if (isComparison) {
-					const tokens = group.tokens[i].map((token) => token.tokens).flat();
-					const slices = tokens.filter((token) => token.scopes.includes("meta.operator.sql")).map((token) => tokens.indexOf(token));
-					slices.push(tokens.length);
-
-					let sliceStart = 0;
-					for (const slice of slices) {
-						this.comparisons.push(new ComparisonAST(tokens.slice(sliceStart, slice)));
-						sliceStart = slice;
-					}
-				}
-				
-				if (group.nested.length > i) {
-					if (group.strings.length > i) {
-						const match = group.strings[i].split("").reverse().join("").match(pattern);
-						if (match) {
-							const operatorString = match[0].split("").reverse().join("");
-							logicalOperator = LogicalOperator[operatorString as keyof typeof LogicalOperator];
-						}
-					}
-					this.comparisons.push(new ComparisonGroupAST([group.nested[i]], logicalOperator));
-				}
-			}			
-		}
-
-		this.tokens = this.comparisons.map((comparison) => comparison.tokens).flat();
-	}
-
+	constructor() {}
+		
 }
 
 class JoinAST implements AST {
@@ -234,15 +173,7 @@ class JoinAST implements AST {
 	"start": number | null = null;
 	"end": number | null = null;
 
-	constructor(source: ObjectAST | StatementAST, tokens: LineToken[]) {
-		this.source = source;
-		this.on = new ComparisonGroupAST(Parser.mapParenthesis(tokens));
-		this.tokens.push(...source.tokens);
-		this.tokens.push(...this.on.tokens);
-		this.start = this.tokens[0].start;
-		this.end = this.tokens[this.tokens.length - 1].end;
-		this.line = this.tokens[0].line;
-	}
+	constructor() {}
 }
 
 
@@ -287,67 +218,7 @@ class SourceAST implements AST {
 	"start": number | null = null;
 	"end": number | null = null;
 	
-	constructor (tokens: LineToken[]) {
-
-		const sourceEndScopes: string[] = [
-			"meta.where.sql",
-			"meta.group.sql",
-			"meta.order.sql",
-			"meta.limit.sql",
-			"meta.having.sql",
-			"meta.source.sql",
-		];
-
-		const matchScopes: string[] = [
-			"meta.operator.sql",
-			"meta.source.join.sql"
-		];
-
-		tokens.filter((line) => line.tokens.filter((token) => token.scopes.includes("meta.source.sql")).length > 0)
-					.map((line) => {
-
-						const objectAST = new ObjectAST(line.tokens);
-						const joinToken = findToken([line], "keyword.join.sql");
-
-						const index = tokens.indexOf(line);
-						const onTokens: LineToken[] = [];
-			
-						for(let i = (index); i < tokens.length; i++) {
-							if (tokens[i].tokens.filter((token) => token.scopes.some((scope) => sourceEndScopes.includes(scope))).length > 0 && i > index) {
-								break;
-							}
-							
-							if (tokens[i].tokens.filter((token) => token.scopes.some((scope) => matchScopes.includes(scope))).length > 0) {
-								onTokens.push(tokens[i]);
-							}
-			
-						}
-						if (onTokens.length > 1) {
-							const join = new JoinAST(objectAST, onTokens);
-							const joinParts = joinToken?.value.split(' ')??['inner'];
-							let joinType: JoinType;
-							if (joinParts[0] == 'join') {
-								joinType = JoinType['INNER'];
-							} else {
-								joinType = JoinType[joinParts[0].toUpperCase() as keyof typeof JoinType];
-							}
-							join.join = joinType;
-							this.joins.push(join);
-						} else if (this.source === null) {
-							this.source = objectAST;
-						}
-			
-		});
-		
-		this.tokens.push(...this.source?.tokens??[]);
-		this.start = this.tokens[0].start;
-		this.line = this.tokens[0].line;
-
-		if (this.joins.length > 0) {
-			this.tokens.push(...this.joins.map((join) => join.tokens).flat());
-		}
-
-		this.end = this.tokens[this.tokens.length - 1].end;
+	constructor () {
 
 	}
 }
@@ -450,38 +321,6 @@ function findToken(tokens: LineToken[] | Token[], scope: string): Token | null {
 }
 
 /**
- * Extract the column from the tokens
- * @param {Token[]} tokens The tokens to extract the column from
- * @returns {Column | null} The column
- * @name extractColumn
- */
-function extractColumn(tokens: Token[]): Column | null {
-	if (findToken(tokens, "other.column.name.sql")) {
-		return new ColumnAST(tokens);
-	}
-	if (findToken(tokens, "meta.function.sql")) {
-		return new ColumnFunctionAST();
-	}
-	if (findToken(tokens, "meta.source.sql")) {
-		return null;
-	}
-	const stringToken = findToken(tokens, "string.quoted.double.sql")?? findToken(tokens, "string.quoted.single.sql")?? null;
-	if (stringToken) {
-		return tokens.filter((token) => token.scopes.includes("string.quoted.double.sql") || token.scopes.includes("string.quoted.single.sql"))
-									.map((token) => token.value).join('');
-	}
-
-	const numberToken = findToken(tokens, "constant.numeric.sql"); 
-
-	if (numberToken) {
-		return numberToken.value;
-	}
-
-	return null;
-
-}
-
-/**
  * Object for parsing SQL code
  * @name Parser
  */
@@ -541,7 +380,7 @@ export class Parser {
 			}
 
 			rules = rules.filter((rule) => token.scopes.includes(rule.scopes[tokenCounter]) || rule.scopes[tokenCounter] === '*')
-									.map((rule) => (rule.lookahead > 0 || rule.negativeLookahead.length > 0) ? this._lookahead(tokens.slice(i + 1), rule, tokenCounter + 1) : rule)
+									.map((rule) => (rule.lookahead > 0 || rule.negativeLookahead !== null) ? this._lookahead(tokens.slice(i + 1), rule, tokenCounter + 1) : rule)
 									.filter((rule) => rule !== null) as Rule[];
 
 			if (rules.length === 0) {
@@ -564,15 +403,16 @@ export class Parser {
 			}
 			
 			if (matchedRule.rule) {
-				// add to AST
+				if (matchedRule.rule.children !== null) {
+					const [matchedRules, y] = this._recursiveLookahead(tokens.slice(i + 1), syntaxRules.filter((rule) => matchedRule.rule?.children?.includes(rule.name)));
+					matchedRule.matches.push(...matchedRules);
+					i += y;
+				}
 				statement.processRule(matchedRule);
 				reset();
 				continue;
 			}
-
-		
 		}
-
 		return statement;
 	}
 
@@ -590,7 +430,7 @@ export class Parser {
 		let tokenCounter: number = currentMatchCount;
 		let lookaheadCounter: number = 0;
 
-		if (tokenCounter === rule.scopes.length && rule.negativeLookahead.length > 0) {
+		if (tokenCounter === rule.scopes.length && rule.negativeLookahead !== null) {
 			return rule;
 		}
 		
@@ -603,7 +443,7 @@ export class Parser {
 				continue;
 			}
 
-			if (rule.negativeLookahead.length > 0 && rule.negativeLookahead.filter((scope) => token.scopes.includes(scope)).length > 0) {
+			if (rule.negativeLookahead !== null && rule.negativeLookahead.filter((scope) => token.scopes.includes(scope)).length > 0) {
 				return null;
 			} else if (token.scopes.includes(rule.scopes[tokenCounter]) || rule.scopes[tokenCounter] === '*') {
 				tokenCounter++;
@@ -612,7 +452,7 @@ export class Parser {
 				return null;
 			}
 
-			if (tokenCounter === rule.scopes.length && rule.negativeLookahead.length > 0) {
+			if (tokenCounter === rule.scopes.length && rule.negativeLookahead !== null) {
 				return rule;
 			}
 
@@ -624,10 +464,17 @@ export class Parser {
 		return rule;
 	}
 
-	_recursiveLookahead(tokens: Token[]): [MatchedRule[], number] {
-		let counter = 1;
+	/**
+	 * Look ahead recursively finding all matches
+	 * @param {Token[]} tokens The tokens to look ahead
+	 * @returns {[MatchedRule[], number]} The matched rules and the number of tokens checked
+	 * @memberof Parser
+	 * @name _recursiveLookahead
+	 */
+	_recursiveLookahead(tokens: Token[], rules?: Rule[] | null): [MatchedRule[], number] {
 		const matches: MatchedRule[] = [];
-		let rules = syntaxJson.rules;
+		const exitOnMatch: boolean = rules != null;
+		rules == null ? rules = syntaxRules : rules;
 		let expressionTokens: Token[] = [];
 		let tokenCounter: number = 0;
 		const reset = () => {
@@ -645,10 +492,7 @@ export class Parser {
 			}
 			
 			if (token.scopes.filter((scope) => recursiveGroupEnd.includes(scope)).length > 0) {
-				counter--;
-				// if (counter === 0) {
 					break;
-				// }
 			}
 
 			if (token.scopes.map((t) => punctuation.includes(t)).includes(true)) {
@@ -657,8 +501,8 @@ export class Parser {
 			}
 
 			rules = rules.filter((rule) => token.scopes.includes(rule.scopes[tokenCounter]) || rule.scopes[tokenCounter] === '*')
-									.map((rule) => (rule.lookahead > 0 || rule.negativeLookahead.length > 0) ? this._lookahead(tokens.slice(i + 1), rule, tokenCounter + 1) : rule)
-									.filter((rule) => rule !== null) as Rule[];
+										.map((rule) => (rule.lookahead > 0 || rule.negativeLookahead !== null) ? this._lookahead(tokens.slice(i + 1), rule, tokenCounter + 1) : rule)
+										.filter((rule) => rule !== null) as Rule[];
 
 			if (rules.length === 0) {
 				// add syntax error
@@ -679,16 +523,21 @@ export class Parser {
 				matches.push(matchedRule);
 				i += y;
 				reset();
+				if (exitOnMatch) {
+					break;
+				}
 				continue;
-			} else if (matchedRule) {
+			} else if (matchedRule.rule) {
 				matches.push(matchedRule);
 				reset();
+				if (exitOnMatch) {
+					break;
+				}
 				continue;
 			}
 
 
 			if (token.scopes.filter((scope) => recursiveGroupBegin.includes(scope)).length > 0) {
-				counter++;
 				const [matchedRules, y] = this._recursiveLookahead(tokens.slice(i + 1));
 				matches.push(...matchedRules);
 				i += y;
@@ -752,173 +601,11 @@ export class Parser {
 	 * @name _getMatchedTokens
 	 */
 	_getMatchedTokens(tokens: Token[]): string {
-		return tokens.map((t) => t.scopes.filter((scope) => !skipTokens.includes(scope.split('.')[0]) && !punctuation.includes(scope))??[''][0])
+		return tokens.map((t) => t.scopes.filter((scope) => !skipTokens.includes(scope.split('.')[0]) && !punctuation.includes(scope) && !ignoreTokens.includes(scope))??[''][0])
 								.map((t) => t.filter((scope) => scope !== ''))
 								.filter((t) => t.length > 0)
 								.join('|');
 	}
-
-	static mapParenthesis(tokens: LineToken[]): ParenthesisGroup[] {
-		const value: string = tokens.reduce((acc, token) => acc + token.value + '\n', '');
-		const scanner = new OnigScanner(['(?i)(?>(?:(?:\\"|\\\')[^)]*?(?:\\"|\\\'))|\\".*?\\(.*?\\"|\\\'.*?\\(.*?\\\'|(\\())']);
-		const startPosition = scanner.findNextMatchSync(value, 0)?.captureIndices[1].start ?? 0;
-		const matches: number[][] = Parser.pairParenthesis(startPosition, value);
-		const parts: number[][][] = matches.sort((a, b) => a[0] - b[0])
-																			.map((match) => Parser.createParenthesisGroupPairs(match, matches));
-
-		// check parts for any we aren't interested in
-		parts.map((part) => part.map((p) => {
-			const str = value.substring(p[0], p[1]);
-			const pop = (p: number[]) => {
-				parts.map((iPart) => iPart.map((ip) => p[0] == ip[1]?ip[1] = p[1]:null));
-				part.splice(part.indexOf(p),1);
-			};
-
-			if (/^\((?:\s*(?:\d+|"\w+"|'\w+')\s*,?)+\s*\)$/gm.test(str)) {
-				return pop(p);
-			} 
-			
-			if (/^\(\s*\)/gm.test(str)) {
-				return pop(p);
-			}
-			// tokenize the previous string and check if group preceded by function
-			const token = Parser.tokenize(value.substring(0, p[0]))
-												.reverse()
-												.find((token) => !(token.scopes?.includes("punctuation.whitespace.sql") || token.scopes?.join() == "source.sql-bigquery"));
-
-			if ((token && token.scopes?.includes("meta.function.sql")) ?? false) {
-				return pop(p);
-			}
-
-		}));
-
-
-		const flatParts: number[][] = parts.flat().sort((a, b) => a[0] - b[0]);
-		const strings: Map<number,ParenthesisGroup > = new Map();
-		let inputLine: number = tokens[0].line ?? 1;
-		const inputStart: number = tokens[0].start ?? 1;
-		const lineNumbers: number[] = flatParts.map((p) => {
-			const pattern = /\n/g;
-			const match = value.substring(p[0], p[1]).match(pattern);
-			const rt = inputLine;
-			if (match) {
-				inputLine ++;
-			}
-			return rt;
-		});
-
-		parts.map((part) => part.length > 0?strings.set(part[0][0], {
-			"strings": part.map((p) => value.substring(p[0], p[1])),
-			"tokens": part.map((p) => Parser.tokenize(value.substring(p[0], p[1]))),
-			"parts": part,
-			"start": (part[0][0] + inputStart),
-			"end": (part[part.length - 1][0] + inputStart),
-			"line": inputLine,
-			"nested": []
-		}):null);
-
-		lineNumbers.map((line, index) => {
-			const key = flatParts[index][0];
-			if (strings.has(key)) {
-				const value = strings.get(key);
-				if (value !== undefined) {
-						value.line = line;
-						value.tokens = value.tokens.map((token) => token.map((t) => {
-							t.line = (t.line??1) + (value.line??1) - 1;
-							t.start = (t.start??1) + (value.start??1) - 1;
-							t.end = (t.end??1) + (value.start??1) - 1;
-							t.tokens.map((token) => {
-								token.line = (token.line??1) + (t.line??1) - 1;
-								token.start = (token.start??1) + (t.start??1) - 1;
-								token.end = (token.end??1) + (t.start??1) - 1;
-							});
-							return t;
-						}));
-				}
-			}
-		});
-
-		const comparisonGroups: ParenthesisGroup[] = [];
-		
-		const adddNestedGroups = (obj: ParenthesisGroup): ParenthesisGroup => {
-			if (obj.parts.length > 1) {
-				obj.parts.map((part) => {
-					if (strings.has(part[1])) {
-						obj.nested.push(adddNestedGroups(strings.get(part[1]) as ParenthesisGroup));
-						strings.delete(part[1]);
-					}
-				});
-			}
-			return obj;
-		};
-
-		for(const [key, value] of strings) {
-			comparisonGroups.push(adddNestedGroups(value));
-		}
-		return comparisonGroups;
-
-	}
-
-
-	/**
-	 * Pair the parenthesis in the source code
-	 * @param {number} startPosition The start position of the parenthesis
-	 * @param {string} value The source code
-	 * @returns {number[][]} The pairs of parenthesis
-	 * @memberof Parser
-	 * @name pairParenthesis
-	 */
-	static pairParenthesis = (startPosition: number, value: string): number[][] => {
-		const pairs: number[][] = [];
-		let counter = 1;
-		for (let i = startPosition + 1; i < value.length; i++) {
-			const char = value[i];
-			if (char === '(') {
-				counter++;
-				if (pairs.map((pair) => pair[0]).indexOf(i) < 0) {
-					pairs.push(...Parser.pairParenthesis(i, value));
-				}
-			} else if (char === ')') {
-				counter--;
-			}
-			if (counter === 0) {
-				const end = i + 1;
-				pairs.push([startPosition, end]);
-				break;
-			}
-		}
-		return pairs;
-	};
-
-	/**
-	 * For an array of parenthesis pairs, create identify the string positions that are not nested.
-	 * When groups of parenthesis are paired there can be overlapping nested groups, this function
-	 * creates a list of string positions excluding the nested groups.
-	 * @param {number[]} match The match
-	 * @param {number[][]} matches The matches
-	 * @returns {number[][]} The parts of the source code
-	 * @memberof Parser
-	 * @name _createParenthesisGroupPairs
-	 */
-	static createParenthesisGroupPairs = (match: number[], matches: number[][]): number[][] => {
-		const parts: number[][] = [];
-		
-		let start: number = match[0];
-		const end: number = match[1];
-
-		for(const m of matches) {
-			if (m[0] > start && m[1] < end) {
-				parts.push([start, m[0]]);
-				start = m[1];
-			}
-		}
-
-		if (start <= end) {
-			parts.push([start, end]);
-		}
-
-		return parts;
-	};
 
 	/**
 	 * Split the source code into statements
@@ -953,16 +640,6 @@ export class Parser {
 
 	}
 
-	/**
-	 * Strip the tokenized source of comments and other tokens we don't care about
-	 * @param {GrammarToken[][]} tokenizedSource The tokenized source code
-	 * @returns {GrammarToken[][]} The tokenized source code stripped of comments and other tokens we don't care about
-	 * @memberof Parser
-	 * @name _stripTokens
-	 */
-	_stripTokens(tokenizedSource: LineToken[]): LineToken[] {
-		return tokenizedSource.filter((line) => line.tokens.filter((token) => !token.scopes.some(scope => this.ignoreScopes.includes(scope))).length > 0);
-	}
 
 	/**
 	 * Extract the type of the statement from the tokenized source code

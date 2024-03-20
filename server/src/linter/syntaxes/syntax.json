@@ -14,6 +14,10 @@
     "punctuation.whitespace.comment.leading.sql",
     "punctuation.whitespace.trailing.sql"
   ],
+  "ignore": [
+    "punctuation.definition.string.begin.sql",
+    "punctuation.definition.string.end.sql"
+  ],
   "recursiveGroupBegin": [
     "punctuation.definition.section.bracket.round.begin.sql"
   ],
@@ -31,8 +35,9 @@
       ],
       "type": "dml",
       "lookahead": 0,
-      "negativeLookahead": [],
-      "recursive": false
+      "negativeLookahead": null,
+      "recursive": false,
+      "children": null
     },
     {
       "name": "dml.project",
@@ -44,16 +49,18 @@
       ],
       "type": "dml",
       "lookahead": 0,
-      "negativeLookahead": [],
-      "recursive": false
+      "negativeLookahead": null,
+      "recursive": false,
+      "children": null
     },
     {
       "name": "dml.alias",
       "scopes": ["keyword.dml.sql", "entity.name.alias.sql"],
       "type": "dml",
       "lookahead": 0,
-      "negativeLookahead": [],
-      "recursive": false
+      "negativeLookahead": null,
+      "recursive": false,
+      "children": null
     },
     {
       "name": "dml.dataset",
@@ -64,16 +71,18 @@
       ],
       "type": "dml",
       "lookahead": 0,
-      "negativeLookahead": [],
-      "recursive": false
+      "negativeLookahead": null,
+      "recursive": false,
+      "children": null
     },
     {
       "name": "select.distinct",
       "scopes": ["keyword.select.sql", "keyword.select.distinct.sql"],
       "type": "select",
       "lookahead": 0,
-      "negativeLookahead": [],
-      "recursive": false
+      "negativeLookahead": null,
+      "recursive": false,
+      "children": null
     },
     {
       "name": "column.explicit.alias",
@@ -85,16 +94,18 @@
       ],
       "type": "column",
       "lookahead": 3,
-      "negativeLookahead": [],
-      "recursive": false
+      "negativeLookahead": null,
+      "recursive": false,
+      "children": null
     },
     {
       "name": "column.explicit.alias.no.prefix",
       "scopes": ["other.column.name.sql", "keyword.as.sql", "entity.name.tag"],
       "type": "column",
       "lookahead": 2,
-      "negativeLookahead": [],
-      "recursive": false
+      "negativeLookahead": null,
+      "recursive": false,
+      "children": null
     },
     {
       "name": "column.implicit.alias",
@@ -105,16 +116,18 @@
       ],
       "type": "column",
       "lookahead": 2,
-      "negativeLookahead": [],
-      "recursive": false
+      "negativeLookahead": null,
+      "recursive": false,
+      "children": null
     },
     {
       "name": "column.implicit.alias.no.prefix",
       "scopes": ["other.column.name.sql", "entity.name.tag"],
       "type": "column",
       "lookahead": 1,
-      "negativeLookahead": [],
-      "recursive": false
+      "negativeLookahead": null,
+      "recursive": false,
+      "children": null
     },
     {
       "name": "column.no.alias",
@@ -122,7 +135,8 @@
       "type": "column",
       "lookahead": 2,
       "negativeLookahead": ["keyword.as.sql", "entity.name.tag"],
-      "recursive": false
+      "recursive": false,
+      "children": null
     },
     {
       "name": "column.no.prefix",
@@ -130,7 +144,26 @@
       "type": "column",
       "lookahead": 0,
       "negativeLookahead": ["keyword.as.sql", "entity.name.tag"],
-      "recursive": false
+      "recursive": false,
+      "children": null
+    },
+    {
+      "name": "explicit.alias",
+      "scopes": ["keyword.as.sql", "entity.name.tag"],
+      "type": "alias",
+      "lookahead": 0,
+      "negativeLookahead": null,
+      "recursive": false,
+      "children": null
+    },
+    {
+      "name": "implicit.alias",
+      "scopes": ["entity.name.tag"],
+      "type": "alias",
+      "lookahead": 0,
+      "negativeLookahead": null,
+      "recursive": false,
+      "children": null
     },
     {
       "name": "function.string",
@@ -140,8 +173,9 @@
       ],
       "type": "function",
       "lookahead": 0,
-      "negativeLookahead": [],
-      "recursive": true
+      "negativeLookahead": null,
+      "recursive": true,
+      "children": ["implicit.alias", "explicit.alias"]
     },
     {
       "name": "function.hash",
@@ -151,8 +185,9 @@
       ],
       "type": "function",
       "lookahead": 0,
-      "negativeLookahead": [],
-      "recursive": true
+      "negativeLookahead": null,
+      "recursive": true,
+      "children": null
     },
     {
       "name": "function.aggregate",
@@ -162,8 +197,9 @@
       ],
       "type": "function",
       "lookahead": 0,
-      "negativeLookahead": [],
-      "recursive": true
+      "negativeLookahead": null,
+      "recursive": true,
+      "children": null
     },
     {
       "name": "from.project.dataset.object.explicit.alias",
@@ -177,8 +213,9 @@
       ],
       "type": "from",
       "lookahead": 0,
-      "negativeLookahead": [],
-      "recursive": false
+      "negativeLookahead": null,
+      "recursive": false,
+      "children": null
     },
     {
       "name": "from.project.dataset.object.implicit.alias",
@@ -191,8 +228,9 @@
       ],
       "type": "from",
       "lookahead": 0,
-      "negativeLookahead": [],
-      "recursive": false
+      "negativeLookahead": null,
+      "recursive": false,
+      "children": null
     },
     {
       "name": "from.project.dataset.object.no.alias",
@@ -205,7 +243,8 @@
       "type": "from",
       "lookahead": 0,
       "negativeLookahead": ["keyword.as.sql", "entity.name.alias.sql"],
-      "recursive": false
+      "recursive": false,
+      "children": null
     },
     {
       "name": "from.project.dataset.object.no.alias",
@@ -218,7 +257,8 @@
       "type": "from",
       "lookahead": 0,
       "negativeLookahead": ["keyword.as.sql", "entity.name.alias.sql"],
-      "recursive": false
+      "recursive": false,
+      "children": null
     },
     {
       "name": "from.dataset.object.explicit.alias",
@@ -231,8 +271,9 @@
       ],
       "type": "from",
       "lookahead": 0,
-      "negativeLookahead": [],
-      "recursive": false
+      "negativeLookahead": null,
+      "recursive": false,
+      "children": null
     },
     {
       "name": "from.dataset.object.implicit.alias",
@@ -244,8 +285,9 @@
       ],
       "type": "from",
       "lookahead": 0,
-      "negativeLookahead": [],
-      "recursive": false
+      "negativeLookahead": null,
+      "recursive": false,
+      "children": null
     },
     {
       "name": "from.dataset.object.no.alias",
@@ -257,7 +299,8 @@
       "type": "from",
       "lookahead": 0,
       "negativeLookahead": ["keyword.as.sql", "entity.name.alias.sql"],
-      "recursive": false
+      "recursive": false,
+      "children": null
     },
     {
       "name": "from.dataset.object.no.alias",
@@ -269,47 +312,44 @@
       "type": "from",
       "lookahead": 0,
       "negativeLookahead": ["keyword.as.sql", "entity.name.alias.sql"],
-      "recursive": false
+      "recursive": false,
+      "children": null
     },
     {
       "name": "limit.offset",
       "scopes": ["keyword.select.limit.sql", "keyword.select.offset.sql"],
       "type": "limit",
       "lookahead": 0,
-      "negativeLookahead": [],
-      "recursive": false
+      "negativeLookahead": null,
+      "recursive": false,
+      "children": null
     },
     {
       "name": "limit.no.offset",
       "scopes": ["keyword.select.limit.sql"],
       "type": "limit",
       "lookahead": 0,
-      "negativeLookahead": [],
-      "recursive": false
+      "negativeLookahead": null,
+      "recursive": false,
+      "children": null
     },
     {
       "name": "string.single",
-      "scopes": [
-        "punctuation.definition.string.begin.sql",
-        "string.quoted.single.sql",
-        "punctuation.definition.string.end.sql"
-      ],
+      "scopes": ["string.quoted.single.sql"],
       "type": "string",
       "lookahead": 0,
-      "negativeLookahead": [],
-      "recursive": false
+      "negativeLookahead": null,
+      "recursive": false,
+      "children": null
     },
     {
       "name": "string.double",
-      "scopes": [
-        "punctuation.definition.string.begin.sql",
-        "string.quoted.double.sql",
-        "punctuation.definition.string.end.sql"
-      ],
+      "scopes": ["string.quoted.double.sql"],
       "type": "string",
       "lookahead": 0,
-      "negativeLookahead": [],
-      "recursive": false
+      "negativeLookahead": null,
+      "recursive": false,
+      "children": null
     }
   ]
 }
