@@ -45,16 +45,6 @@ enum LogicalOperator {
 	OR = 'or',
 }
 
-type Rule = {
-	"name": string,
-	"scopes": string[],
-	"type": string,
-	"lookahead": number,
-	"negativeLookahead": string[] | null,
-	"recursive": boolean,
-	"children": string[] | null
-}
-
 // endregion
 
 // region Types
@@ -81,6 +71,29 @@ interface AST extends ASTPosition {
 type Column = ColumnAST | ColumnFunctionAST | StatementAST | StringAST | NumberAST;
 
 type FunctionParameter = Column | KeywordAST;
+
+type Rule = {
+	"name": string,
+	"scopes": string[],
+	"type": string,
+	"lookahead": number,
+	"negativeLookahead": string[] | null,
+	"recursive": boolean,
+	"children": string[] | null
+}
+
+/**
+ * An object to store the match object when splitting the source code into statements
+ * @typedef {Object} MatchObj
+ * @property {number} end The end index of the statement
+ * @property {number} start The start index of the statement
+ * @property {string} statement The statement
+ * @memberof Parser
+ * @name MatchObj
+ */
+type MatchObj = {"end": number, "start": number, statement: string};
+
+type MatchedRule = {"rule": Rule | null, "tokens": Token[], "matches"?: MatchedRule[]};
 
 // endregion
 
@@ -325,19 +338,6 @@ class StatementAST implements AST {
 
 }
 
-
-/**
- * An object to store the match object when splitting the source code into statements
- * @typedef {Object} MatchObj
- * @property {number} end The end index of the statement
- * @property {number} start The start index of the statement
- * @property {string} statement The statement
- * @memberof Parser
- * @name MatchObj
- */
-type MatchObj = {"end": number, "start": number, statement: string};
-
-type MatchedRule = {"rule": Rule | null, "tokens": Token[], "matches"?: MatchedRule[]};
 
 // endregion
 
