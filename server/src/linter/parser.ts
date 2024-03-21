@@ -15,8 +15,7 @@ const recursiveGroupBegin: string[] = syntaxJson.recursiveGroupBegin;
 const recursiveGroupEnd: string[] = syntaxJson.recursiveGroupEnd;
 const syntaxRules: Rule[] = syntaxJson.rules;
 
-// region Types
-
+// region Enums
 enum StatementType{
 	SELECT = 'select',
 	INSERT = 'insert',
@@ -56,7 +55,9 @@ type Rule = {
 	"children": string[] | null
 }
 
-type Column = ColumnAST | ColumnFunctionAST | StatementAST | StringAST | NumberAST;
+// endregion
+
+// region Types
 
 type ASTPosition = {
 	"line": number | null,
@@ -76,6 +77,12 @@ interface AST extends ASTPosition {
 	"tokens": Token[]
 
 }
+
+type Column = ColumnAST | ColumnFunctionAST | StatementAST | StringAST | NumberAST;
+
+type FunctionParameter = Column | KeywordAST;
+
+// endregion
 
 class ColumnAST implements AST {
 	source: string | null = null;
@@ -150,7 +157,6 @@ class KeywordAST implements AST {
 	}
 }
 
-type FunctionParameter = Column | KeywordAST;
 
 class ColumnFunctionAST implements AST {
 	function: string | null = null;
