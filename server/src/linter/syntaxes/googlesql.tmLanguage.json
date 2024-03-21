@@ -229,121 +229,22 @@
         {
           "captures": {
             "1": {
-              "name": "punctuation.definition.string.begin.sql"
-            },
-            "2": {
-              "name": "punctuation.definition.string.end.sql"
+              "name": "string.quoted.single.sql"
             }
           },
           "comment": "this is faster than the next begin/end rule since sub-pattern will match till end-of-line and SQL files tend to have very long lines.",
-          "match": "(')[^'\\\\]*(')",
-          "name": "string.quoted.single.sql"
-        },
-        {
-          "begin": "'",
-          "beginCaptures": {
-            "0": {
-              "name": "punctuation.definition.string.begin.sql"
-            }
-          },
-          "end": "'",
-          "endCaptures": {
-            "0": {
-              "name": "punctuation.definition.string.end.sql"
-            }
-          },
-          "name": "string.quoted.single.sql",
-          "patterns": [
-            {
-              "include": "#string_escape"
-            }
-          ]
-        },
-        {
-          "begin": "\"",
-          "beginCaptures": {
-            "0": {
-              "name": "punctuation.definition.string.begin.sql"
-            }
-          },
-          "end": "\"",
-          "endCaptures": {
-            "0": {
-              "name": "punctuation.definition.string.end.sql"
-            }
-          },
-          "name": "string.quoted.double.sql",
-          "patterns": [
-            {
-              "include": "#string_escape"
-            }
-          ]
+          "match": "('(?>\\.|[^'\\\\])*')",
+          "name": "meta.string.sql"
         },
         {
           "captures": {
             "1": {
-              "name": "punctuation.definition.string.begin.sql"
-            },
-            "2": {
-              "name": "punctuation.definition.string.end.sql"
+              "name": "string.quoted.double.sql"
             }
           },
           "comment": "this is faster than the next begin/end rule since sub-pattern will match till end-of-line and SQL files tend to have very long lines.",
-          "match": "(`)[^`\\\\]*(`)",
-          "name": "string.quoted.other.backtick.sql"
-        },
-        {
-          "begin": "`",
-          "beginCaptures": {
-            "0": {
-              "name": "punctuation.definition.string.begin.sql"
-            }
-          },
-          "end": "`",
-          "endCaptures": {
-            "0": {
-              "name": "punctuation.definition.string.end.sql"
-            }
-          },
-          "name": "string.quoted.other.backtick.sql",
-          "patterns": [
-            {
-              "include": "#string_escape"
-            }
-          ]
-        },
-        {
-          "captures": {
-            "1": {
-              "name": "punctuation.definition.string.begin.sql"
-            },
-            "2": {
-              "name": "punctuation.definition.string.end.sql"
-            }
-          },
-          "comment": "this is faster than the next begin/end rule since sub-pattern will match till end-of-line and SQL files tend to have very long lines.",
-          "match": "(\")[^\"#]*(\")",
-          "name": "string.quoted.double.sql"
-        },
-        {
-          "begin": "%\\{",
-          "beginCaptures": {
-            "0": {
-              "name": "punctuation.definition.string.begin.sql"
-            }
-          },
-          "end": "\\}",
-          "endCaptures": {
-            "0": {
-              "name": "punctuation.definition.string.end.sql"
-            }
-          },
-          "name": "string.other.quoted.brackets.sql",
-          "patterns": [
-            {
-              "include": "#string_interpolation"
-            }
-          ]
+          "match": "(\"(?>\\.|[^\"\\\\])*\")",
+          "name": "meta.string.sql"
         }
       ]
     },
@@ -748,14 +649,14 @@
             "4": { "name": "keyword.as.sql" },
             "5": { "name": "entity.name.tag" }
           },
-          "match": "(?i)(?:(?<!\\.)(?:(\\w+)(\\.))?(?>\\b\\d+\\b|(\\w+))(?: +(?:(as) +)?(?!\\b(?:in|is|null|or|and)\\b)(\\w+))?)",
+          "match": "(?i)(?:(?<!\\.)(?:(\\w+)(\\.))?(?>\\b\\d+\\b|(\\w+))(?: +(?:(as) +)?(?!\\b(?:in|is|null|or|and)\\b)((?:`)?\\w+(?:`)?))?)",
           "name": "meta.column.sql"
         },
         {
           "captures": {
             "1": { "name": "entity.name.tag" }
           },
-          "match": "(?i)(?>^(?: *\\w+,? *$)|(?: +(?!\\b(?:in|is|null|distinct|\\d+)\\b)(\\w+),? *$))"
+          "match": "(?i)(?>^(?: *\\w+,? *$)|(?: +(?!\\b(?:in|is|null|distinct|\\d+)\\b)((?:`)?\\w+(?:`)?),? *$))"
         }
       ]
     },

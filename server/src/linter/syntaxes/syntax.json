@@ -14,10 +14,6 @@
     "punctuation.whitespace.comment.leading.sql",
     "punctuation.whitespace.trailing.sql"
   ],
-  "ignore": [
-    "punctuation.definition.string.begin.sql",
-    "punctuation.definition.string.end.sql"
-  ],
   "recursiveGroupBegin": [
     "punctuation.definition.section.bracket.round.begin.sql"
   ],

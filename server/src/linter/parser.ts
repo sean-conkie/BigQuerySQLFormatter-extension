@@ -11,7 +11,6 @@ import syntaxJson from './syntaxes/syntax.json';
 
 const punctuation: string[] = syntaxJson.punctuation;
 const skipTokens: string[] = syntaxJson.skipTokens;
-const ignoreTokens: string[] = syntaxJson.ignore;
 const recursiveGroupBegin: string[] = syntaxJson.recursiveGroupBegin;
 const recursiveGroupEnd: string[] = syntaxJson.recursiveGroupEnd;
 const syntaxRules: Rule[] = syntaxJson.rules;
@@ -57,7 +56,7 @@ type Rule = {
 	"children": string[] | null
 }
 
-type Column = ColumnAST | ColumnFunctionAST | StatementAST | string | number;
+type Column = ColumnAST | ColumnFunctionAST | StatementAST | StringAST | NumberAST;
 
 type ASTPosition = {
 	"line": number | null,
@@ -99,6 +98,38 @@ class ColumnAST implements AST {
 
 }
 
+class StringAST implements AST {
+	value: string | null = null;
+	tokens: Token[] = [];
+	line: number | null = null;
+	start: number | null = null;
+	end: number | null = null;
+
+	constructor(tokens: Token[]) {
+		this.tokens = tokens;
+		this.value = tokens.map((token) => token.value).join('');
+		this.line = tokens[0].line;
+		this.start = tokens[0].start;
+		this.end = tokens[tokens.length - 1].end;
+	}
+}
+
+class NumberAST implements AST {
+	value: number | null = null;
+	tokens: Token[] = [];
+	line: number | null = null;
+	start: number | null = null;
+	end: number | null = null;
+
+	constructor(tokens: Token[]) {
+		this.tokens = tokens;
+		this.value = Number(tokens.map((token) => token.value).join(''));
+		this.line = tokens[0].line;
+		this.start = tokens[0].start;
+		this.end = tokens[tokens.length - 1].end;
+	}
+}
+
 type FunctionParameter = Column;
 
 class ColumnFunctionAST implements AST {
@@ -117,18 +148,23 @@ class ColumnFunctionAST implements AST {
 		this.start = matchedRule.tokens[0].start;
 
 		for (const match of matchedRule.matches??[]) {
+			let parameter: FunctionParameter | null = null;
 			if (match.rule?.type === 'column') {
-				this.parameters.push(new ColumnAST(match.tokens));
+				parameter = new ColumnAST(match.tokens);
 			} else if (match.rule?.type === 'function') {
-				this.parameters.push(new ColumnFunctionAST(match));
+				parameter = new ColumnFunctionAST(match);
 			} else if (match.rule?.type === 'string') {
-				this.parameters.push(match.tokens.join(''));
+				parameter = new StringAST(match.tokens);
 			} else if (match.rule?.type === 'number') {
-				this.parameters.push(Number(match.tokens.join('')));
+				parameter = new NumberAST(match.tokens);
 			} else if (match.rule?.type === 'alias') {
 				this.alias = findToken(match.tokens, "entity.name.tag")?.value ?? null;
+				this.tokens.push(...match.tokens);
 			}
-			this.tokens.push(...match.tokens);
+			if (parameter) {
+				this.parameters.push(parameter);
+				this.tokens.push(...parameter.tokens);
+			}
 		}
 
 		this.end = this.tokens[this.tokens.length - 1].end;
@@ -210,19 +246,6 @@ class ObjectAST implements AST {
 	}
 }
 
-class SourceAST implements AST {
-	"source": ObjectAST | StatementAST | null = null;
-	"joins": JoinAST[] = [];
-	"tokens": Token[] = [];
-	"line": number | null = null;
-	"start": number | null = null;
-	"end": number | null = null;
-	
-	constructor () {
-
-	}
-}
-
 /**
  * The abstract syntax tree for the SQL code
  */
@@ -233,7 +256,8 @@ class StatementAST implements AST {
   "options": null = null;
   "distinct": boolean = false;
   "columns": Column[] = [];
-  "from": SourceAST | null = null;
+  "from": ObjectAST | StatementAST | null = null;
+	"joins": JoinAST[] = [];
   "where": null = null;
   "groupby": ColumnAST[] = [];
   "having": string | null = null;
@@ -267,6 +291,8 @@ class StatementAST implements AST {
 				this.columns.push(new ColumnAST(tokens));
 			} else if (rule.type === 'function') {
 				this.columns.push(new ColumnFunctionAST(matchedRule));
+			} else if (rule.type === 'from') {
+				this.from = new ObjectAST(tokens);
 			}
 		}
 	}
@@ -394,23 +420,25 @@ export class Parser {
 
 			expressionTokens.push(token);
 
-			const matchedRule = {"rule": rules.find((rule) => rule.scopes.join('|') === this._getMatchedTokens(expressionTokens))??null, "tokens": expressionTokens, "matches": [] as MatchedRule[]};
+			if (rules.length === 1) {
+				const matchedRule = {"rule": rules.find((rule) => rule.scopes.join('|') === this._getMatchedTokens(expressionTokens))??null, "tokens": expressionTokens, "matches": [] as MatchedRule[]};
 
-			if (matchedRule.rule && matchedRule.rule.recursive) {
-				const [matchedRules, y] = this._recursiveLookahead(tokens.slice(i + 1));
-				matchedRule.matches.push(...matchedRules);
-				i += y;
-			}
-			
-			if (matchedRule.rule) {
-				if (matchedRule.rule.children !== null) {
-					const [matchedRules, y] = this._recursiveLookahead(tokens.slice(i + 1), syntaxRules.filter((rule) => matchedRule.rule?.children?.includes(rule.name)));
+				if (matchedRule.rule && matchedRule.rule.recursive) {
+					const [matchedRules, y] = this._recursiveLookahead(tokens.slice(i + 1));
 					matchedRule.matches.push(...matchedRules);
 					i += y;
 				}
-				statement.processRule(matchedRule);
-				reset();
-				continue;
+				
+				if (matchedRule.rule) {
+					if (matchedRule.rule.children !== null) {
+						const [matchedRules, y] = this._recursiveLookahead(tokens.slice(i + 1), syntaxRules.filter((rule) => matchedRule.rule?.children?.includes(rule.name)));
+						matchedRule.matches.push(...matchedRules);
+						i += y;
+					}
+					statement.processRule(matchedRule);
+					reset();
+					continue;
+				}
 			}
 		}
 		return statement;
@@ -430,7 +458,7 @@ export class Parser {
 		let tokenCounter: number = currentMatchCount;
 		let lookaheadCounter: number = 0;
 
-		if (tokenCounter === rule.scopes.length && rule.negativeLookahead !== null) {
+		if (tokenCounter === rule.scopes.length && rule.negativeLookahead == null) {
 			return rule;
 		}
 		
@@ -443,21 +471,23 @@ export class Parser {
 				continue;
 			}
 
-			if (rule.negativeLookahead !== null && rule.negativeLookahead.filter((scope) => token.scopes.includes(scope)).length > 0) {
+			if (rule.negativeLookahead != null && rule.negativeLookahead.filter((scope) => token.scopes.includes(scope)).length > 0) {
 				return null;
 			} else if (token.scopes.includes(rule.scopes[tokenCounter]) || rule.scopes[tokenCounter] === '*') {
 				tokenCounter++;
+				lookaheadCounter++;
+			} else if (rule.negativeLookahead != null && rule.negativeLookahead.filter((scope) => token.scopes.includes(scope)).length == 0) {
 				lookaheadCounter++;
 			} else {
 				return null;
 			}
 
-			if (tokenCounter === rule.scopes.length && rule.negativeLookahead !== null) {
+			if (tokenCounter === rule.scopes.length && rule.negativeLookahead == null) {
 				return rule;
 			}
 
 			if (lookaheadCounter == rule.lookahead) {
-				return null;
+				return rule;
 			}
 		}
 		// if we reach here we have matched the rule
@@ -492,7 +522,10 @@ export class Parser {
 			}
 			
 			if (token.scopes.filter((scope) => recursiveGroupEnd.includes(scope)).length > 0) {
-					break;
+				if (matches.length > 0) {
+					matches[matches.length - 1].tokens.push(token);
+				}
+				break;
 			}
 
 			if (token.scopes.map((t) => punctuation.includes(t)).includes(true)) {
@@ -501,7 +534,7 @@ export class Parser {
 			}
 
 			rules = rules.filter((rule) => token.scopes.includes(rule.scopes[tokenCounter]) || rule.scopes[tokenCounter] === '*')
-										.map((rule) => (rule.lookahead > 0 || rule.negativeLookahead !== null) ? this._lookahead(tokens.slice(i + 1), rule, tokenCounter + 1) : rule)
+										.map((rule) => (rule.lookahead > 0 || rule.negativeLookahead != null) ? this._lookahead(tokens.slice(i + 1), rule, tokenCounter + 1) : rule)
 										.filter((rule) => rule !== null) as Rule[];
 
 			if (rules.length === 0) {
@@ -592,7 +625,6 @@ export class Parser {
 		return lineTokens;
 	}
 
-
 	/**
  	 * Get the matched tokens as a string
 	 * @param {Token[]} tokens 
@@ -601,7 +633,7 @@ export class Parser {
 	 * @name _getMatchedTokens
 	 */
 	_getMatchedTokens(tokens: Token[]): string {
-		return tokens.map((t) => t.scopes.filter((scope) => !skipTokens.includes(scope.split('.')[0]) && !punctuation.includes(scope) && !ignoreTokens.includes(scope))??[''][0])
+		return tokens.map((t) => t.scopes.filter((scope) => !skipTokens.includes(scope.split('.')[0]) && !punctuation.includes(scope))??[''][0])
 								.map((t) => t.filter((scope) => scope !== ''))
 								.filter((t) => t.length > 0)
 								.join('|');
@@ -639,7 +671,6 @@ export class Parser {
 		return statements;
 
 	}
-
 
 	/**
 	 * Extract the type of the statement from the tokenized source code
