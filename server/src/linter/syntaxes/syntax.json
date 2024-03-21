@@ -3,12 +3,12 @@
     "comment.line.double-dash.sql",
     "comment.line.number-sign.sql",
     "punctuation.definition.comment.sql",
-    "punctuation.separator.comma.sql",
     "source",
     "meta"
   ],
   "punctuation": [
     "punctuation.separator.period.sql",
+    "punctuation.separator.comma.sql",
     "punctuation.whitespace.sql",
     "punctuation.whitespace.leading.sql",
     "punctuation.whitespace.comment.leading.sql",
@@ -183,10 +183,10 @@
       "lookahead": 0,
       "negativeLookahead": null,
       "recursive": true,
-      "children": null
+      "children": ["implicit.alias", "explicit.alias"]
     },
     {
-      "name": "function.aggregate",
+      "name": "function.aggregate.array",
       "scopes": [
         "support.function.aggregate.sql.array",
         "punctuation.definition.section.bracket.round.begin.sql"
@@ -195,7 +195,223 @@
       "lookahead": 0,
       "negativeLookahead": null,
       "recursive": true,
-      "children": null
+      "children": ["implicit.alias", "explicit.alias"]
+    },
+    {
+      "name": "function.aggregate",
+      "scopes": [
+        "support.function.aggregate.sql",
+        "punctuation.definition.section.bracket.round.begin.sql"
+      ],
+      "type": "function",
+      "lookahead": 0,
+      "negativeLookahead": null,
+      "recursive": true,
+      "children": ["implicit.alias", "explicit.alias"]
+    },
+    {
+      "name": "function.scalar",
+      "scopes": [
+        "support.function.scalar.sql",
+        "punctuation.definition.section.bracket.round.begin.sql"
+      ],
+      "type": "function",
+      "lookahead": 0,
+      "negativeLookahead": null,
+      "recursive": true,
+      "children": ["implicit.alias", "explicit.alias"]
+    },
+    {
+      "name": "function.cast",
+      "scopes": [
+        "support.function.cast.sql",
+        "punctuation.definition.section.bracket.round.begin.sql"
+      ],
+      "type": "function",
+      "lookahead": 0,
+      "negativeLookahead": null,
+      "recursive": true,
+      "children": ["implicit.alias", "explicit.alias"]
+    },
+    {
+      "name": "function.date",
+      "scopes": [
+        "support.function.date.sql",
+        "punctuation.definition.section.bracket.round.begin.sql"
+      ],
+      "type": "function",
+      "lookahead": 0,
+      "negativeLookahead": null,
+      "recursive": true,
+      "children": ["implicit.alias", "explicit.alias"]
+    },
+    {
+      "name": "function.net",
+      "scopes": [
+        "support.function.net.sql",
+        "punctuation.definition.section.bracket.round.begin.sql"
+      ],
+      "type": "function",
+      "lookahead": 0,
+      "negativeLookahead": null,
+      "recursive": true,
+      "children": ["implicit.alias", "explicit.alias"]
+    },
+    {
+      "name": "function.math",
+      "scopes": [
+        "support.function.math.sql",
+        "punctuation.definition.section.bracket.round.begin.sql"
+      ],
+      "type": "function",
+      "lookahead": 0,
+      "negativeLookahead": null,
+      "recursive": true,
+      "children": ["implicit.alias", "explicit.alias"]
+    },
+    {
+      "name": "function.string",
+      "scopes": [
+        "support.function.string.sql",
+        "punctuation.definition.section.bracket.round.begin.sql"
+      ],
+      "type": "function",
+      "lookahead": 0,
+      "negativeLookahead": null,
+      "recursive": true,
+      "children": ["implicit.alias", "explicit.alias"]
+    },
+    {
+      "name": "function.string.param",
+      "scopes": [
+        "support.function.string.param.sql",
+        "punctuation.definition.section.bracket.round.begin.sql"
+      ],
+      "type": "function",
+      "lookahead": 0,
+      "negativeLookahead": null,
+      "recursive": true,
+      "children": ["implicit.alias", "explicit.alias"]
+    },
+    {
+      "name": "function.string.hash",
+      "scopes": [
+        "support.function.string.hash.sql",
+        "punctuation.definition.section.bracket.round.begin.sql"
+      ],
+      "type": "function",
+      "lookahead": 0,
+      "negativeLookahead": null,
+      "recursive": true,
+      "children": ["implicit.alias", "explicit.alias"]
+    },
+    {
+      "name": "function.json",
+      "scopes": [
+        "support.function.json.sql",
+        "punctuation.definition.section.bracket.round.begin.sql"
+      ],
+      "type": "function",
+      "lookahead": 0,
+      "negativeLookahead": null,
+      "recursive": true,
+      "children": ["implicit.alias", "explicit.alias"]
+    },
+    {
+      "name": "function.window",
+      "scopes": [
+        "support.function.window.sql",
+        "punctuation.definition.section.bracket.round.begin.sql"
+      ],
+      "type": "function",
+      "lookahead": 0,
+      "negativeLookahead": null,
+      "recursive": true,
+      "children": ["implicit.alias", "explicit.alias"]
+    },
+    {
+      "name": "function.conditional",
+      "scopes": [
+        "support.function.conditional.sql",
+        "punctuation.definition.section.bracket.round.begin.sql"
+      ],
+      "type": "function",
+      "lookahead": 0,
+      "negativeLookahead": null,
+      "recursive": true,
+      "children": ["implicit.alias", "explicit.alias"]
+    },
+    {
+      "name": "function.debug",
+      "scopes": [
+        "support.function.debug.sql",
+        "punctuation.definition.section.bracket.round.begin.sql"
+      ],
+      "type": "function",
+      "lookahead": 0,
+      "negativeLookahead": null,
+      "recursive": true,
+      "children": ["implicit.alias", "explicit.alias"]
+    },
+    {
+      "name": "function.gis",
+      "scopes": [
+        "support.function.gis.sql",
+        "punctuation.definition.section.bracket.round.begin.sql"
+      ],
+      "type": "function",
+      "lookahead": 0,
+      "negativeLookahead": null,
+      "recursive": true,
+      "children": ["implicit.alias", "explicit.alias"]
+    },
+    {
+      "name": "function.ml",
+      "scopes": [
+        "support.function.ml.sql",
+        "punctuation.definition.section.bracket.round.begin.sql"
+      ],
+      "type": "function",
+      "lookahead": 0,
+      "negativeLookahead": null,
+      "recursive": true,
+      "children": ["implicit.alias", "explicit.alias"]
+    },
+    {
+      "name": "function.keys",
+      "scopes": [
+        "support.function.keys.sql",
+        "punctuation.definition.section.bracket.round.begin.sql"
+      ],
+      "type": "function",
+      "lookahead": 0,
+      "negativeLookahead": null,
+      "recursive": true,
+      "children": ["implicit.alias", "explicit.alias"]
+    },
+    {
+      "name": "function.aead",
+      "scopes": [
+        "support.function.aead.sql",
+        "punctuation.definition.section.bracket.round.begin.sql"
+      ],
+      "type": "function",
+      "lookahead": 0,
+      "negativeLookahead": null,
+      "recursive": true,
+      "children": ["implicit.alias", "explicit.alias"]
+    },
+    {
+      "name": "function.federated",
+      "scopes": [
+        "support.function.federated.sql",
+        "punctuation.definition.section.bracket.round.begin.sql"
+      ],
+      "type": "function",
+      "lookahead": 0,
+      "negativeLookahead": null,
+      "recursive": true,
+      "children": ["implicit.alias", "explicit.alias"]
     },
     {
       "name": "from.project.dataset.object.explicit.alias",

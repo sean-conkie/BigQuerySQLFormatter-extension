@@ -101,6 +101,42 @@ class ColumnAST implements AST {
 class StringAST implements AST {
 	value: string | null = null;
 	tokens: Token[] = [];
+	alias: string | null = null;
+	line: number | null = null;
+	start: number | null = null;
+	end: number | null = null;
+
+	constructor(tokens: Token[]) {
+		this.tokens = tokens;
+		this.value = tokens.map((token) => token.value).join('');
+		this.alias = findToken(tokens, "entity.name.tag")?.value ?? null;
+		this.line = tokens[0].line;
+		this.start = tokens[0].start;
+		this.end = tokens[tokens.length - 1].end;
+	}
+}
+
+class NumberAST implements AST {
+	value: number | null = null;
+	tokens: Token[] = [];
+	alias: string | null = null;
+	line: number | null = null;
+	start: number | null = null;
+	end: number | null = null;
+
+	constructor(tokens: Token[]) {
+		this.tokens = tokens;
+		this.value = Number(tokens.map((token) => token.value).join(''));
+		this.alias = findToken(tokens, "entity.name.tag")?.value ?? null;
+		this.line = tokens[0].line;
+		this.start = tokens[0].start;
+		this.end = tokens[tokens.length - 1].end;
+	}
+}
+
+class KeywordAST implements AST {
+	value: string | null = null;
+	tokens: Token[] = [];
 	line: number | null = null;
 	start: number | null = null;
 	end: number | null = null;
@@ -114,23 +150,7 @@ class StringAST implements AST {
 	}
 }
 
-class NumberAST implements AST {
-	value: number | null = null;
-	tokens: Token[] = [];
-	line: number | null = null;
-	start: number | null = null;
-	end: number | null = null;
-
-	constructor(tokens: Token[]) {
-		this.tokens = tokens;
-		this.value = Number(tokens.map((token) => token.value).join(''));
-		this.line = tokens[0].line;
-		this.start = tokens[0].start;
-		this.end = tokens[tokens.length - 1].end;
-	}
-}
-
-type FunctionParameter = Column;
+type FunctionParameter = Column | KeywordAST;
 
 class ColumnFunctionAST implements AST {
 	function: string | null = null;
