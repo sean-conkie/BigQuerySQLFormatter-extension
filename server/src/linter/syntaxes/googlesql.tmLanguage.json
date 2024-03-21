@@ -268,7 +268,7 @@
           "name": "meta.function.sql"
         },
         {
-          "captures": { "1": { "name": "upport.function.net.sql" } },
+          "captures": { "1": { "name": "support.function.net.sql" } },
           "match": "(?i)\\b(NET\\.(?:IP_FROM_STRING|SAFE_IP_FROM_STRING|IP_TO_STRING|IP_NET_MASK|IP_TRUNC|IPV4_FROM_INT64|IPV4_TO_INT64|HOST|PUBLIC_SUFFIX|REG_DOMAIN))\\b",
           "name": "meta.function.sql"
         },
@@ -627,6 +627,10 @@
         },
         {
           "match": "(?i:\\b(over|ignore|respect|nulls|first|last|interval|at|zone|at\\s+time\\s+zone)\\b)",
+          "name": "keyword.function.sql"
+        },
+        {
+          "match": "(?i:(?<=\\d)\\s?\\b(day|week|month|quarter|year|(?:(?:micro|milli)?second)|minute|hour)\\b)",
           "name": "keyword.function.sql"
         },
         {
