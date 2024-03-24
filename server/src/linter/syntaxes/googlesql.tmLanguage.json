@@ -31,7 +31,7 @@
       "name": "punctuation.whitespace.trailing.sql"
     },
     {
-      "match": " ",
+      "match": " *",
       "name": "punctuation.whitespace.sql"
     }
   ],
@@ -496,9 +496,11 @@
         },
         {
           "captures": {
-            "1": { "name": "keyword.expression.comparison.sql" }
+            "1": { "name": "keyword.expression.negative.comparison.sql" },
+            "2": { "name": "keyword.expression.comparison.sql" },
+            "3": { "name": "keyword.expression.negative.comparison.sql" }
           },
-          "match": "(?i)(?:\\b((?:not\\b\\s+\\b)?in|is(?:\\b\\s+\bnot)?)\\b\\s+(?:\\())",
+          "match": "(?i)(?:\\b(?:(?:(not)\\b\\s+\\b)?(in|is)(?:\\b\\s+\b(not))?)\\b\\s+(?:\\())",
           "name": "meta.comparison.sql"
         },
         {
@@ -630,7 +632,7 @@
           "name": "keyword.function.sql"
         },
         {
-          "match": "(?i:(?<=\\d)\\s?\\b(day|week|month|quarter|year|(?:(?:micro|milli)?second)|minute|hour)\\b)",
+          "match": "(?i:(?>[[:alpha:]]+\\s+\\b(?:day|week|month|quarter|year|(?:(?:micro|milli)?second)|minute|hour)|(day|week|month|quarter|year|(?:(?:micro|milli)?second)|minute|hour))\\b)",
           "name": "keyword.function.sql"
         },
         {

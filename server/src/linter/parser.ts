@@ -45,6 +45,16 @@ enum LogicalOperator {
 	OR = 'or',
 }
 
+enum ComparisonOperator {
+	EQUAL = '=',
+	NOT_EQUAL = '!=',
+	GREATER_THAN = '>',
+	GREATER_THAN_OR_EQUAL = '>=',
+	LESS_THAN = '<',
+	LESS_THAN_OR_EQUAL = '<=',
+	NOT_EQUAL_ALT = '<>',
+}
+
 // endregion
 
 // region Types
@@ -79,7 +89,15 @@ type Rule = {
 	"lookahead": number,
 	"negativeLookahead": string[] | null,
 	"recursive": boolean,
-	"children": string[] | null
+	"children": string[] | null,
+	"end": string[] | null
+}
+
+type Comparison = {
+	"left": Column | null,
+	"operator": ComparisonOperator | null,
+	"right": Column | null,
+	"logicalOperator": LogicalOperator | null
 }
 
 /**
@@ -196,6 +214,8 @@ class ColumnFunctionAST implements AST {
 				parameter = new StringAST(match.tokens);
 			} else if (match.rule?.type === 'number') {
 				parameter = new NumberAST(match.tokens);
+			} else if (match.rule?.type === 'keyword') {
+				parameter = new KeywordAST(match.tokens);
 			} else if (match.rule?.type === 'alias') {
 				this.alias = findToken(match.tokens, "entity.name.tag")?.value ?? null;
 				this.tokens.push(...match.tokens);
@@ -213,17 +233,23 @@ class ColumnFunctionAST implements AST {
 class ComparisonAST implements AST {
 	logicalOperator: LogicalOperator | null = null;
 	left: Column | null = null;
-	operator: string | null = null;
+	operator: ComparisonOperator | null = null;
 	right: Column | null = null;
 	tokens: Token[] = [];
 	line: number | null = null;
 	start: number | null = null;
 	end: number | null = null;
 
-	constructor() {
-		
+	constructor(comparison: Comparison, tokens: Token[]) {
+		this.tokens = tokens;
+		this.left = comparison.left;
+		this.operator = comparison.operator;
+		this.right = comparison.right;
+		this.logicalOperator = comparison.logicalOperator;
+		this.line = tokens[0].line;
+		this.start = tokens[0].start;
+		this.end = tokens[tokens.length - 1].end;
 	}
-
 }
 
 
@@ -235,12 +261,64 @@ class ComparisonGroupAST implements AST {
 	start: number | null = null;
 	end: number | null = null;
 
-	constructor() {}
+	constructor(matches: MatchedRule[]) {
+		if (matches.length === 0) {
+			return;
+		}
+		// this.tokens = match.tokens;
+		// this.line = match.tokens[0].line;
+		// this.start = match.tokens[0].start;
+
+		let tokens: Token[] = [];
 		
+		let working: Comparison = {"left": null, "operator": null, "right": null, "logicalOperator": null};
+		for (let i = 0; i < matches?.length??[]; i++) {
+			const m = matches[i];
+			if (m.rule?.type === 'group' && (m.matches?.length??0 > 0)) {
+				this.comparisons.push(new ComparisonGroupAST(m.matches??[]));
+				continue;
+			}
+			let col: Column | null = null;
+			if (m.rule?.type === 'column') {
+				col = new ColumnAST(m.tokens);
+			} else if (m.rule?.type === 'function') {
+				col = new ColumnFunctionAST(m);
+			} else if (m.rule?.type === 'string') {
+				col = new StringAST(m.tokens);
+			} else if (m.rule?.type === 'number') {
+				col = new NumberAST(m.tokens);
+			}
+
+			if (col) {
+				tokens.push(...m.tokens);
+
+				if (working.left === null) {
+					working.left = col;
+					continue;
+				}
+				working.right = col;
+				continue;
+			}
+			
+			if (m.rule?.type === 'operator' && working.left) {
+				this.comparisons.push(new ComparisonAST(working, tokens));
+				tokens = [];
+				working = {"left": null, "operator": null, "right": null, "logicalOperator": null};
+				i--;
+			} else if (m.rule?.type === 'operator') {
+				tokens.push(...m.tokens);
+				working.logicalOperator = findToken(m.tokens, `meta.${m.rule?.type}.sql`)?.value as LogicalOperator;
+			} else if (m.rule?.type === 'comparison') {
+				tokens.push(...m.tokens);
+				working.operator = findToken(m.tokens, `meta.${m.rule?.type}.sql`)?.value as ComparisonOperator;
+			}
+		}
+
+	}
 }
 
 class JoinAST implements AST {
-	"join": JoinType | null = null;
+	"join": JoinType | null = JoinType.INNER;
 	"source": ObjectAST | StatementAST | null = null;
 	"on": ComparisonGroupAST | null = null;
 	"tokens": Token[] = [];
@@ -248,7 +326,18 @@ class JoinAST implements AST {
 	"start": number | null = null;
 	"end": number | null = null;
 
-	constructor() {}
+	constructor(matchedRule: MatchedRule) {
+		this.tokens.push(...matchedRule.tokens);
+		this.line = matchedRule.tokens[0].line;
+		this.start = matchedRule.tokens[0].start;
+		
+		this.join = findToken(matchedRule.tokens, "keyword.join.sql")?.value as JoinType;
+		this.source = new ObjectAST(matchedRule.tokens);
+
+		this.on = new ComparisonGroupAST(matchedRule.matches??[]);
+
+		this.end = this.tokens[this.tokens.length - 1].end;
+	}
 }
 
 
@@ -332,6 +421,8 @@ class StatementAST implements AST {
 				this.columns.push(new ColumnFunctionAST(matchedRule));
 			} else if (rule.type === 'from') {
 				this.from = new ObjectAST(tokens);
+			} else if (rule.type === 'join') {
+				this.joins.push(new JoinAST(matchedRule));
 			}
 		}
 	}
@@ -450,7 +541,7 @@ export class Parser {
 				const matchedRule = {"rule": rules.find((rule) => rule.scopes.join('|') === this._getMatchedTokens(expressionTokens))??null, "tokens": expressionTokens, "matches": [] as MatchedRule[]};
 
 				if (matchedRule.rule && matchedRule.rule.recursive) {
-					const [matchedRules, y] = this._recursiveLookahead(tokens.slice(i + 1));
+					const [matchedRules, y] = this._recursiveLookahead(tokens.slice(i + 1), null, matchedRule.rule.end);
 					matchedRule.matches.push(...matchedRules);
 					i += y;
 				}
@@ -527,7 +618,7 @@ export class Parser {
 	 * @memberof Parser
 	 * @name _recursiveLookahead
 	 */
-	_recursiveLookahead(tokens: Token[], rules?: Rule[] | null): [MatchedRule[], number] {
+	_recursiveLookahead(tokens: Token[], rules?: Rule[] | null, endToken?: string[] | null): [MatchedRule[], number] {
 		const matches: MatchedRule[] = [];
 		const exitOnMatch: boolean = rules != null;
 		rules == null ? rules = syntaxRules : rules;
@@ -547,7 +638,7 @@ export class Parser {
 				continue;
 			}
 			
-			if (token.scopes.filter((scope) => recursiveGroupEnd.includes(scope)).length > 0) {
+			if (token.scopes.filter((scope) => recursiveGroupEnd.includes(scope)).length > 0 || token.scopes.filter((scope) => endToken?.includes(scope)).length > 0) {
 				if (matches.length > 0) {
 					matches[matches.length - 1].tokens.push(token);
 				}
@@ -563,6 +654,16 @@ export class Parser {
 										.map((rule) => (rule.lookahead > 0 || rule.negativeLookahead != null) ? this._lookahead(tokens.slice(i + 1), rule, tokenCounter + 1) : rule)
 										.filter((rule) => rule !== null) as Rule[];
 
+
+
+			if (token.scopes.filter((scope) => recursiveGroupBegin.includes(scope)).length > 0 && rules.length === 0) {
+				const [matchedRules, y] = this._recursiveLookahead(tokens.slice(i + 1));
+				matches.push(...matchedRules);
+				i += y;
+				reset();
+				continue;
+			}
+			
 			if (rules.length === 0) {
 				// add syntax error
 				i--; // restart checking from the last token
@@ -577,7 +678,7 @@ export class Parser {
 			const matchedRule = {"rule": rules.find((rule) => rule.scopes.join('|') === this._getMatchedTokens(expressionTokens))??null, "tokens": expressionTokens, "matches": [] as MatchedRule[]};
 
 			if (matchedRule.rule && matchedRule.rule.recursive) {
-				const [matchedRules, y] = this._recursiveLookahead(tokens.slice(i + 1));
+				const [matchedRules, y] = this._recursiveLookahead(tokens.slice(i + 1), null, matchedRule.rule.end);
 				matchedRule.matches.push(...matchedRules);
 				matches.push(matchedRule);
 				i += y;
@@ -592,15 +693,6 @@ export class Parser {
 				if (exitOnMatch) {
 					break;
 				}
-				continue;
-			}
-
-
-			if (token.scopes.filter((scope) => recursiveGroupBegin.includes(scope)).length > 0) {
-				const [matchedRules, y] = this._recursiveLookahead(tokens.slice(i + 1));
-				matches.push(...matchedRules);
-				i += y;
-				reset();
 				continue;
 			}
 

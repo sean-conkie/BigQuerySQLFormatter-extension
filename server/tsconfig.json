@@ -11,6 +11,6 @@
     "resolveJsonModule": true,
     "esModuleInterop": true
   },
-  "include": ["src", "src/**/googlesql.tmLanguage.json"],
+  "include": ["src", "src/**/googlesql.tmLanguage.json", "src/**/syntax.json"],
   "exclude": ["node_modules", ".vscode-test"]
 }
