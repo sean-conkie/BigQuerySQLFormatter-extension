@@ -14,6 +14,7 @@ const skipTokens: string[] = syntaxJson.skipTokens;
 const recursiveGroupBegin: string[] = syntaxJson.recursiveGroupBegin;
 const recursiveGroupEnd: string[] = syntaxJson.recursiveGroupEnd;
 const syntaxRules: Rule[] = syntaxJson.rules;
+const comparisonGroupRules: string[] = syntaxJson.comparisonGroupRules;
 
 // region Enums
 enum StatementType{
@@ -43,6 +44,9 @@ enum JoinType {
 enum LogicalOperator {
 	AND = 'and',
 	OR = 'or',
+	ON = 'on',
+	WHERE = 'where',
+	USING = 'using',
 }
 
 enum ComparisonOperator {
@@ -78,7 +82,7 @@ interface AST extends ASTPosition {
 
 }
 
-type Column = ColumnAST | ColumnFunctionAST | StatementAST | StringAST | NumberAST;
+type Column = ColumnAST | ColumnFunctionAST | StatementAST | StringAST | NumberAST | KeywordAST;
 
 type FunctionParameter = Column | KeywordAST;
 
@@ -261,59 +265,113 @@ class ComparisonGroupAST implements AST {
 	start: number | null = null;
 	end: number | null = null;
 
-	constructor(matches: MatchedRule[]) {
+	constructor(matches: MatchedRule[], logicalOperator: LogicalOperator | null = null) {
 		if (matches.length === 0) {
 			return;
 		}
-		// this.tokens = match.tokens;
-		// this.line = match.tokens[0].line;
-		// this.start = match.tokens[0].start;
 
-		let tokens: Token[] = [];
-		
-		let working: Comparison = {"left": null, "operator": null, "right": null, "logicalOperator": null};
-		for (let i = 0; i < matches?.length??[]; i++) {
-			const m = matches[i];
-			if (m.rule?.type === 'group' && (m.matches?.length??0 > 0)) {
-				this.comparisons.push(new ComparisonGroupAST(m.matches??[]));
+		const pop = (array: MatchedRule[], scope: string): [MatchedRule[], (LogicalOperator | ComparisonOperator)] => {
+			const match: MatchedRule | undefined = array.find((match) => match.rule?.type === scope);
+			const result = match?.tokens
+													.map((token) => token.scopes.includes(`meta.${scope}.sql`)? token.value : '')
+													.join('') as LogicalOperator;
+
+			if (match !== undefined) {
+					const index = array.indexOf(match);
+					if (index !== -1) {
+						array.splice(index, 1);
+					}
+			}
+
+			return [array, result];
+		};
+
+		this.logicalOperator = logicalOperator;
+
+		// split matches into comparisons
+		const comparisonsParts: number[][] = [];
+		let lastIndex: number = 0;
+		for (let i = 0; i < matches.length; i++) {
+			const match = matches[i];
+			// check for comparison group or logical operator
+			if (match.rule?.type === "group") {
+				comparisonsParts.push([lastIndex, i + 1]);
+				lastIndex = i + 1;
 				continue;
 			}
-			let col: Column | null = null;
-			if (m.rule?.type === 'column') {
-				col = new ColumnAST(m.tokens);
-			} else if (m.rule?.type === 'function') {
-				col = new ColumnFunctionAST(m);
-			} else if (m.rule?.type === 'string') {
-				col = new StringAST(m.tokens);
-			} else if (m.rule?.type === 'number') {
-				col = new NumberAST(m.tokens);
-			}
 
-			if (col) {
-				tokens.push(...m.tokens);
-
-				if (working.left === null) {
-					working.left = col;
-					continue;
-				}
-				working.right = col;
+			if (match.rule?.type === "operator" && i > 0) {
+				comparisonsParts.push([lastIndex, i]);
+				lastIndex = i;
 				continue;
-			}
-			
-			if (m.rule?.type === 'operator' && working.left) {
-				this.comparisons.push(new ComparisonAST(working, tokens));
-				tokens = [];
-				working = {"left": null, "operator": null, "right": null, "logicalOperator": null};
-				i--;
-			} else if (m.rule?.type === 'operator') {
-				tokens.push(...m.tokens);
-				working.logicalOperator = findToken(m.tokens, `meta.${m.rule?.type}.sql`)?.value as LogicalOperator;
-			} else if (m.rule?.type === 'comparison') {
-				tokens.push(...m.tokens);
-				working.operator = findToken(m.tokens, `meta.${m.rule?.type}.sql`)?.value as ComparisonOperator;
 			}
 		}
 
+		if (lastIndex < matches.length - 1) {
+			comparisonsParts.push([lastIndex, matches.length]);
+		}
+
+		for (const part of comparisonsParts) {
+			let partMatches = matches.slice(part[0], part[1]);
+			const tokens = partMatches.map((match) => match.tokens).flat();
+			let result: (LogicalOperator | ComparisonOperator | null);
+			let operator: LogicalOperator | null = null;
+			let comparison: ComparisonOperator | null = null;
+				// is there a comparison group?
+			if (partMatches.length === 1 && partMatches[0].rule?.type === "group") {
+				if (!(partMatches[0].rule?.name === "comparison.group")) {
+					operator = partMatches[0].tokens.map((token) => token.scopes.includes("meta.operator.sql")? token.value : '').join('') as LogicalOperator;
+				}
+				this.tokens.push(...partMatches[0].tokens);
+				const group = new ComparisonGroupAST(partMatches[0].matches??[], operator);
+				this.comparisons.push(group);
+				this.tokens.push(...group.tokens);
+				continue;
+			}
+			
+			if (partMatches.length > 1) {
+				[partMatches, result] = pop(partMatches, "operator");
+				
+				if (result != null) {
+					operator = result as LogicalOperator;
+				}
+			}
+
+			if (partMatches.length === 3) {
+				[partMatches, result] = pop(partMatches, "comparison");
+				
+				if (result != null) {
+					comparison = result as ComparisonOperator;
+				}
+			}
+
+			const comparisonObj: Comparison = {"logicalOperator": operator, "operator": comparison} as Comparison;
+
+			for (const match of partMatches??[]) {
+				let parameter: Column | null = null;
+				if (match.rule?.type === 'column') {
+					parameter = new ColumnAST(match.tokens);
+				} else if (match.rule?.type === 'function') {
+					parameter = new ColumnFunctionAST(match);
+				} else if (match.rule?.type === 'string') {
+					parameter = new StringAST(match.tokens);
+				} else if (match.rule?.type === 'number') {
+					parameter = new NumberAST(match.tokens);
+				} else if (match.rule?.type === 'keyword') {
+					parameter = new KeywordAST(match.tokens);
+				}
+
+				if (comparisonObj.left == null) {
+					comparisonObj.left = parameter;
+				} else if (comparisonObj.right == null) {
+					comparisonObj.right = parameter;
+				}
+			}
+
+			const comp = new ComparisonAST(comparisonObj, tokens);
+			this.comparisons.push(comp);
+			this.tokens.push(...comp.tokens);
+		}
 	}
 }
 
@@ -335,6 +393,7 @@ class JoinAST implements AST {
 		this.source = new ObjectAST(matchedRule.tokens);
 
 		this.on = new ComparisonGroupAST(matchedRule.matches??[]);
+		this.tokens.push(...this.on.tokens);
 
 		this.end = this.tokens[this.tokens.length - 1].end;
 	}
@@ -386,7 +445,7 @@ class StatementAST implements AST {
   "columns": Column[] = [];
   "from": ObjectAST | StatementAST | null = null;
 	"joins": JoinAST[] = [];
-  "where": null = null;
+  "where": ComparisonGroupAST | null = null;
   "groupby": ColumnAST[] = [];
   "having": string | null = null;
   "orderby": ColumnAST[] = [];
@@ -423,6 +482,8 @@ class StatementAST implements AST {
 				this.from = new ObjectAST(tokens);
 			} else if (rule.type === 'join') {
 				this.joins.push(new JoinAST(matchedRule));
+			} else if (rule.type === 'where') {
+				this.where = new ComparisonGroupAST(matchedRule.matches??[]);
 			}
 		}
 	}
@@ -485,16 +546,15 @@ export class Parser {
 		// split string into statements
 		const statements = this._splitSource(source);
 
-		let linePosition: number = 0;
 		for(let i = 0; i < statements.length; i++) {
 			const statement: MatchObj = statements[i];
 			const tokenizedLines: LineToken[] = Parser.tokenize(statement.statement);
 
 			const s = this._parseStatement(tokenizedLines.map((line) => line.tokens).flat());
+			s.statement = statement.statement;
+			this.fileMap[i] = s;
+			console.log(s);
 
-	
-
-			linePosition += tokenizedLines.length;
 		}
 
 	}
@@ -682,6 +742,7 @@ export class Parser {
 				matchedRule.matches.push(...matchedRules);
 				matches.push(matchedRule);
 				i += y;
+				loopCounter = i;
 				reset();
 				if (exitOnMatch) {
 					break;

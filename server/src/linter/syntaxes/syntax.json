@@ -21,6 +21,12 @@
     "punctuation.definition.section.bracket.round.end.sql",
     "punctuation.unmatched.bracket.round.end.sql"
   ],
+  "comparisonGroupRules": [
+    "comparison.group.or",
+    "comparison.group.and",
+    "logical.operator.and",
+    "logical.operator.or"
+  ],
   "rules": [
     {
       "name": "dml.write_disposition",
@@ -798,6 +804,20 @@
       "recursive": false,
       "children": null,
       "end": null
+    },
+    {
+      "name": "where",
+      "scopes": ["keyword.where.sql"],
+      "type": "where",
+      "lookahead": 0,
+      "negativeLookahead": null,
+      "recursive": true,
+      "children": null,
+      "end": [
+        "keyword.group.sql",
+        "keyword.order.sql",
+        "keyword.select.limit.sql"
+      ]
     },
     {
       "name": "limit.offset",

@@ -492,7 +492,7 @@
             "2": { "name": "keyword.expression.join.using.sql" }
           },
           "match": "(?i)\\b(?:(on)|(using))\\b",
-          "name": "meta.source.join.sql"
+          "name": "meta.operator.sql"
         },
         {
           "captures": {
@@ -500,7 +500,7 @@
             "2": { "name": "keyword.expression.comparison.sql" },
             "3": { "name": "keyword.expression.negative.comparison.sql" }
           },
-          "match": "(?i)(?:\\b(?:(?:(not)\\b\\s+\\b)?(in|is)(?:\\b\\s+\b(not))?)\\b\\s+(?:\\())",
+          "match": "(?i)(?:\\b(?:(?:(not)\\b\\s+\\b)?(in|is)(?:\\b\\s+\b(not))?)\\b)",
           "name": "meta.comparison.sql"
         },
         {
