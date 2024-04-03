@@ -4,21 +4,18 @@
 
 import { expect } from 'chai';
 import { layoutRules } from '../../../../linter/rules/layout/rules';
-import { SelectModifiers } from '../../../../linter/rules/layout/LT10';
-import { UnionCheck } from '../../../../linter/rules/layout/LT11';
-import { EndofFile } from '../../../../linter/rules/layout/LT12';
-import { StartOfFile } from '../../../../linter/rules/layout/LT13';
+import { classes } from '../../../../linter/rules/layout/rules';
 import { defaultSettings } from '../../../../settings';
 
 describe('layoutRules', () => {
     it('should return an array with a single instance of each rule', () => {
         const problems = 0;
         const result = layoutRules(defaultSettings, problems);
-        expect(result).to.be.an('array').that.has.lengthOf(4);
-        expect(result[0]).to.be.an.instanceOf(SelectModifiers);
-        expect(result[1]).to.be.an.instanceOf(UnionCheck);
-        expect(result[2]).to.be.an.instanceOf(EndofFile);
-        expect(result[3]).to.be.an.instanceOf(StartOfFile);
+        const classes_length = classes.length;
+        expect(result).to.be.an('array').that.has.lengthOf(classes_length);
+        for (const [index, val] of classes.entries()) {
+            expect(result[index]).to.be.an.instanceOf(val);
+        }
     });
 
     it('should pass the settings and problems to the each constructor', () => {
