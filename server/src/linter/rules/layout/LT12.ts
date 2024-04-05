@@ -40,4 +40,8 @@ export class EndofFile extends Rule{
 		return null;
 	}
 
+  evaluateAst(): Diagnostic | null {
+    return null;
+  }
+
 }

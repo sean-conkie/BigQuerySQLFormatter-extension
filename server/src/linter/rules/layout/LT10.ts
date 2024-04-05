@@ -60,6 +60,10 @@ export class SelectModifiers extends Rule{
 
   }
 
+  evaluateAst(): Diagnostic | null {
+    return null;
+  }
+
   matches(test: string): number {
 
     let noOfMatches: number = 0;
