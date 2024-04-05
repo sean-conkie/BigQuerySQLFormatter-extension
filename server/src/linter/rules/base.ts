@@ -9,6 +9,7 @@
 import { Diagnostic, DiagnosticSeverity } from 'vscode-languageserver/node';
 import { RuleType } from './enums';
 import { ServerSettings } from '../../settings';
+import { OnigRegExp } from 'oniguruma';
 
 
 /**
@@ -22,7 +23,7 @@ export abstract class Rule{
 	readonly code: string = "";
 	readonly type: RuleType = RuleType.REGEX;
 	readonly message: string = "";
-	readonly pattern: RegExp = /./;
+	readonly pattern: RegExp | OnigRegExp = /./;
 	severity: DiagnosticSeverity = DiagnosticSeverity.Error;
 	enabled: boolean = true;
 	settings: ServerSettings;
