@@ -98,9 +98,9 @@ type Rule = {
 }
 
 type Comparison = {
-	"left": Column | null,
+	"left": Column | ArrayAST | null,
 	"operator": ComparisonOperator | null,
-	"right": Column | null,
+	"right": Column | ArrayAST | null,
 	"logicalOperator": LogicalOperator | null
 }
 
@@ -128,16 +128,22 @@ class ColumnAST implements AST {
 	start: number | null = null;
 	end: number | null = null;
 
-	constructor(tokens: Token[]) {
-		this.tokens = tokens;
-		this.source = findToken(tokens, "entity.name.alias.sql")?.value ?? null;
-		this.column = findToken(tokens, "other.column.name.sql")?.value ?? null;
-		this.alias = findToken(tokens, "entity.name.tag")?.value ?? null;
-		this.line = tokens[0].line;
-		this.start = tokens[0].start;
-		this.end = tokens[tokens.length - 1].end;
-	}
+	constructor(matchedRule: MatchedRule) {
+		this.tokens = matchedRule.tokens;
 
+		if (matchedRule.matches != null && matchedRule.matches.length > 0) {
+			this.tokens.push(...matchedRule.matches[0].tokens);
+		}
+
+		this.tokens = Parser.sortTokens(this.tokens);
+
+		this.source = findToken(matchedRule.tokens, "entity.name.alias.sql")?.value ?? null;
+		this.column = findToken(matchedRule.tokens, "other.column.name.sql")?.value ?? null;
+		this.alias = findToken(matchedRule.tokens, "entity.name.tag")?.value ?? null;
+		this.line = matchedRule.tokens[0].line;
+		this.start = matchedRule.tokens[0].start;
+		this.end = matchedRule.tokens[matchedRule.tokens.length - 1].end;
+	}
 }
 
 class StringAST implements AST {
@@ -203,7 +209,7 @@ class ColumnFunctionAST implements AST {
 	end: number | null = null;
 
 	constructor(matchedRule: MatchedRule) {
-		this.function = matchedRule.tokens[0].value;
+		this.function = matchedRule.tokens.filter((token) => token.scopes.includes("meta.function.sql"))[0].value;
 		this.tokens.push(...matchedRule.tokens);
 		this.line = matchedRule.tokens[0].line;
 		this.start = matchedRule.tokens[0].start;
@@ -211,7 +217,7 @@ class ColumnFunctionAST implements AST {
 		for (const match of matchedRule.matches??[]) {
 			let parameter: FunctionParameter | null = null;
 			if (match.rule?.type === 'column') {
-				parameter = new ColumnAST(match.tokens);
+				parameter = new ColumnAST(match);
 			} else if (match.rule?.type === 'function') {
 				parameter = new ColumnFunctionAST(match);
 			} else if (match.rule?.type === 'string') {
@@ -234,11 +240,34 @@ class ColumnFunctionAST implements AST {
 	}
 }
 
+class ArrayAST implements AST {
+	values: (StringAST | NumberAST)[] = [];
+	tokens: Token[] = [];
+	line: number | null = null;
+	start: number | null = null;
+	end: number | null = null;
+
+	constructor(matchedRules: MatchedRule[]) {
+		this.line = matchedRules[0].tokens[0].line;
+		this.start = matchedRules[0].tokens[0].start;
+		this.end = matchedRules[matchedRules.length - 1].tokens[matchedRules[matchedRules.length - 1].tokens.length - 1].end;
+		this.tokens = matchedRules.map((match) => match.tokens).flat();
+
+		for (const match of matchedRules) {
+			if (match.rule?.type === 'string') {
+				this.values.push(new StringAST(match.tokens));
+			} else if (match.rule?.type === 'number') {
+				this.values.push(new NumberAST(match.tokens));
+			}
+		}
+	}
+}
+
 class ComparisonAST implements AST {
 	logicalOperator: LogicalOperator | null = null;
-	left: Column | null = null;
+	left: Column | ArrayAST | null = null;
 	operator: ComparisonOperator | null = null;
-	right: Column | null = null;
+	right: Column | ArrayAST | null = null;
 	tokens: Token[] = [];
 	line: number | null = null;
 	start: number | null = null;
@@ -348,9 +377,9 @@ class ComparisonGroupAST implements AST {
 			const comparisonObj: Comparison = {"logicalOperator": operator, "operator": comparison} as Comparison;
 
 			for (const match of partMatches??[]) {
-				let parameter: Column | null = null;
+				let parameter: Column | ArrayAST | null = null;
 				if (match.rule?.type === 'column') {
-					parameter = new ColumnAST(match.tokens);
+					parameter = new ColumnAST(match);
 				} else if (match.rule?.type === 'function') {
 					parameter = new ColumnFunctionAST(match);
 				} else if (match.rule?.type === 'string') {
@@ -359,6 +388,9 @@ class ComparisonGroupAST implements AST {
 					parameter = new NumberAST(match.tokens);
 				} else if (match.rule?.type === 'keyword') {
 					parameter = new KeywordAST(match.tokens);
+				} else if (match.rule?.type === 'group') {
+					parameter = new ArrayAST(match.matches??[]);
+					tokens.push(...parameter.tokens);
 				}
 
 				if (comparisonObj.left == null) {
@@ -372,6 +404,9 @@ class ComparisonGroupAST implements AST {
 			this.comparisons.push(comp);
 			this.tokens.push(...comp.tokens);
 		}
+		
+		this.tokens = Parser.sortTokens(this.tokens);
+
 	}
 }
 
@@ -436,7 +471,7 @@ class ObjectAST implements AST {
 /**
  * The abstract syntax tree for the SQL code
  */
-class StatementAST implements AST {
+export class StatementAST implements AST {
   "with": StatementAST | null = null;
   "type": StatementType | null = StatementType.SELECT;
 	"object": ObjectAST | null = null;
@@ -475,7 +510,7 @@ class StatementAST implements AST {
 					this.distinct = true;
 				}
 			} else if (rule.type === 'column') {
-				this.columns.push(new ColumnAST(tokens));
+				this.columns.push(new ColumnAST(matchedRule));
 			} else if (rule.type === 'function') {
 				this.columns.push(new ColumnFunctionAST(matchedRule));
 			} else if (rule.type === 'from') {
@@ -557,6 +592,8 @@ export class Parser {
 
 		}
 
+		return this.fileMap;
+
 	}
 
 	_parseStatement(tokens: Token[]): StatementAST {
@@ -565,6 +602,8 @@ export class Parser {
 		let rules = syntaxRules;
 		let expressionTokens: Token[] = [];
 		let tokenCounter: number = 0;
+		let reCheck: boolean = true; // used to stop infinite loops
+
 		const reset = () => {
 			rules = syntaxJson.rules;
 			expressionTokens = [];
@@ -587,11 +626,18 @@ export class Parser {
 									.filter((rule) => rule !== null) as Rule[];
 
 			if (rules.length === 0) {
+				if (reCheck) {
+					i--; // restart checking from the last token
+					reCheck = false;
+				} else {
+					reCheck = true;
+				}
 				// add syntax error
-				i--; // restart checking from the last token
 				reset();
 				continue;
 			}
+
+			reCheck = true;
 
 			tokenCounter++;
 
@@ -876,5 +922,15 @@ export class Parser {
 		
 	}
 
+
+	static sortTokens(tokens: Token[]): Token[] {
+
+		return tokens.sort((a, b) => {
+			if (a.line??0 === b.line??0) {
+				return (a.start ?? 0) - (b.start ?? 0);
+			}
+			return (a.line ?? 0) - (b.line ?? 0);
+		});
+	}
 
 }

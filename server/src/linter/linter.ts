@@ -12,7 +12,7 @@ import { Diagnostic } from 'vscode-languageserver/node';
 import { Rule } from './rules/base';
 import { initialiseRules } from './rules/rules';
 import { RuleType } from './rules/enums';
-import { Parser } from './parser';
+import { Parser, StatementAST } from './parser';
 
 
 
@@ -55,7 +55,6 @@ export class Linter {
 
 		// Parse the source code
 		const parser = new Parser();
-		const abstractSyntaxTree = parser.parse(source);
 
 		const diagnostics: Diagnostic[] = [];
 
@@ -66,6 +65,17 @@ export class Linter {
 				this.problems++;
 			}
 		}
+
+		const abstractSyntaxTree: { [key: number]: StatementAST } = parser.parse(source);
+
+		for (const rule of this.parserRules) {
+			const result = rule.evaluateAst(abstractSyntaxTree);
+			if (result !== null) {
+				diagnostics.push(result);
+				this.problems++;
+			}
+		}
+
 
 		return diagnostics;
 		
