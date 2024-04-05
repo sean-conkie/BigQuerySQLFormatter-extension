@@ -8,7 +8,6 @@
   ],
   "punctuation": [
     "punctuation.separator.period.sql",
-    "punctuation.separator.comma.sql",
     "punctuation.whitespace.sql",
     "punctuation.whitespace.leading.sql",
     "punctuation.whitespace.comment.leading.sql",
@@ -166,6 +165,174 @@
       "type": "alias",
       "lookahead": 0,
       "negativeLookahead": null,
+      "recursive": false,
+      "children": null,
+      "end": null
+    },
+    {
+      "name": "column.explicit.alias.trailing.comma",
+      "scopes": [
+        "entity.name.alias.sql",
+        "other.column.name.sql",
+        "keyword.as.sql",
+        "entity.name.tag",
+        "punctuation.separator.comma.sql"
+      ],
+      "type": "column",
+      "lookahead": 4,
+      "negativeLookahead": null,
+      "recursive": false,
+      "children": null,
+      "end": null
+    },
+    {
+      "name": "column.explicit.alias.no.prefix.trailing.comma",
+      "scopes": [
+        "other.column.name.sql",
+        "keyword.as.sql",
+        "entity.name.tag",
+        "punctuation.separator.comma.sql"
+      ],
+      "type": "column",
+      "lookahead": 3,
+      "negativeLookahead": null,
+      "recursive": false,
+      "children": null,
+      "end": null
+    },
+    {
+      "name": "column.implicit.alias.trailing.comma",
+      "scopes": [
+        "entity.name.alias.sql",
+        "other.column.name.sql",
+        "entity.name.tag",
+        "punctuation.separator.comma.sql"
+      ],
+      "type": "column",
+      "lookahead": 3,
+      "negativeLookahead": null,
+      "recursive": false,
+      "children": null,
+      "end": null
+    },
+    {
+      "name": "column.implicit.alias.no.prefix.trailing.comma",
+      "scopes": [
+        "other.column.name.sql",
+        "entity.name.tag",
+        "punctuation.separator.comma.sql"
+      ],
+      "type": "column",
+      "lookahead": 2,
+      "negativeLookahead": null,
+      "recursive": false,
+      "children": null,
+      "end": null
+    },
+    {
+      "name": "column.no.alias.trailing.comma",
+      "scopes": [
+        "entity.name.alias.sql",
+        "other.column.name.sql",
+        "punctuation.separator.comma.sql"
+      ],
+      "type": "column",
+      "lookahead": 3,
+      "negativeLookahead": ["keyword.as.sql", "entity.name.tag"],
+      "recursive": false,
+      "children": null,
+      "end": null
+    },
+    {
+      "name": "column.no.prefix.trailing.comma",
+      "scopes": ["other.column.name.sql", "punctuation.separator.comma.sql"],
+      "type": "column",
+      "lookahead": 1,
+      "negativeLookahead": ["keyword.as.sql", "entity.name.tag"],
+      "recursive": false,
+      "children": null,
+      "end": null
+    },
+    {
+      "name": "column.explicit.alias.leading.comma",
+      "scopes": [
+        "punctuation.separator.comma.sql",
+        "entity.name.alias.sql",
+        "other.column.name.sql",
+        "keyword.as.sql",
+        "entity.name.tag"
+      ],
+      "type": "column",
+      "lookahead": 4,
+      "negativeLookahead": null,
+      "recursive": false,
+      "children": null,
+      "end": null
+    },
+    {
+      "name": "column.explicit.alias.no.prefix.leading.comma",
+      "scopes": [
+        "punctuation.separator.comma.sql",
+        "other.column.name.sql",
+        "keyword.as.sql",
+        "entity.name.tag"
+      ],
+      "type": "column",
+      "lookahead": 3,
+      "negativeLookahead": null,
+      "recursive": false,
+      "children": null,
+      "end": null
+    },
+    {
+      "name": "column.implicit.alias.leading.comma",
+      "scopes": [
+        "punctuation.separator.comma.sql",
+        "entity.name.alias.sql",
+        "other.column.name.sql",
+        "entity.name.tag"
+      ],
+      "type": "column",
+      "lookahead": 3,
+      "negativeLookahead": null,
+      "recursive": false,
+      "children": null,
+      "end": null
+    },
+    {
+      "name": "column.implicit.alias.no.prefix.leading.comma",
+      "scopes": [
+        "punctuation.separator.comma.sql",
+        "other.column.name.sql",
+        "entity.name.tag"
+      ],
+      "type": "column",
+      "lookahead": 2,
+      "negativeLookahead": null,
+      "recursive": false,
+      "children": null,
+      "end": null
+    },
+    {
+      "name": "column.no.alias.leading.comma",
+      "scopes": [
+        "punctuation.separator.comma.sql",
+        "entity.name.alias.sql",
+        "other.column.name.sql"
+      ],
+      "type": "column",
+      "lookahead": 3,
+      "negativeLookahead": ["keyword.as.sql", "entity.name.tag"],
+      "recursive": false,
+      "children": null,
+      "end": null
+    },
+    {
+      "name": "column.no.prefix.leading.comma",
+      "scopes": ["punctuation.separator.comma.sql", "other.column.name.sql"],
+      "type": "column",
+      "lookahead": 1,
+      "negativeLookahead": ["keyword.as.sql", "entity.name.tag"],
       "recursive": false,
       "children": null,
       "end": null
