@@ -1,5 +1,5 @@
 /**
- * @fileoverview Rules to enforce layout formats
+ * @fileoverview Rules to enforce select modifier rule
  * @module linter/rules/layout
  * @requires vscode-languageserver
  * @requires settings
@@ -7,7 +7,6 @@
  */
 
 
-import { RuleType } from "../enums";
 import { ServerSettings } from "../../../settings";
 import {
   Diagnostic,
@@ -36,14 +35,14 @@ export class SelectModifiers extends Rule{
       super(settings, problems);
   }
 
-  evaluate(test: string): Diagnostic | null {
+  evaluate(test: string): Diagnostic[] | null {
 
     if (this.enabled === false) {
       return null;
     }
 
     if (this.pattern.test(test)) {
-      return {
+      return [{
         message: this.message,
         severity: this.severity,
         range: {
@@ -51,14 +50,14 @@ export class SelectModifiers extends Rule{
           end: { line:1000, character: 1000 }
         },
         source: this.name
-      };
+      }];
     }
 
     return null;
 
   }
 
-  evaluateAst(): Diagnostic | null {
+  evaluateAst(): Diagnostic[] | null {
     return null;
   }
 

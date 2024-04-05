@@ -1,5 +1,5 @@
 /**
- * @fileoverview Rules to enforce layout formats
+ * @fileoverview Rules to enforce start of file checks
  * @module linter/rules/layout
  * @requires vscode-languageserver
  * @requires settings
@@ -7,7 +7,6 @@
  */
 
 
-import { RuleType } from "../enums";
 import { ServerSettings } from "../../../settings";
 import {
   Diagnostic,
@@ -37,14 +36,14 @@ export class StartOfFile extends Rule{
       super(settings, problems);
   }
 
-  evaluate(test: string): Diagnostic | null {
+  evaluate(test: string): Diagnostic[] | null {
 
     if (this.enabled === false) {
       return null;
     }
 
     if (this.pattern.test(test.substring(0, 1))) {
-      return {
+      return [{
         message: this.message,
         severity: this.severity,
         range: {
@@ -52,14 +51,14 @@ export class StartOfFile extends Rule{
           end: { line: 0, character: 1 }
         },
         source: this.name
-      };
+      }];
     }
 
     return null;
 
   }
 
-  evaluateAst(): Diagnostic | null {
+  evaluateAst(): Diagnostic[] | null {
     return null;
   }
 }
