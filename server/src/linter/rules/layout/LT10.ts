@@ -21,10 +21,8 @@ import { Rule } from '../base';
  * @memberof Linter.Rules
  */
 export class SelectModifiers extends Rule{
-  readonly is_fix_compatible: boolean = true;
   readonly name: string = "select_modifiers_check";
   readonly code: string = "LT10";
-  readonly type: RuleType = RuleType.REGEX;
   readonly message: string = "SELECT modifiers (e.g. DISTINCT) must be on the same line as SELECT";
   readonly pattern: RegExp =/\bselect(?:\s*\n\s*(distinct|all|with|as)\b)/gi;
 

@@ -4,10 +4,8 @@ import { RuleType } from '../enums';
 import { OnigRegExp } from 'oniguruma';
 
 export class EndofFile extends Rule{
-  readonly is_fix_compatible: boolean = true;
   readonly name: string = "end_of_file";
   readonly code: string = "LT12";
-  readonly type: RuleType = RuleType.REGEX;
   readonly message: string = "Files must end with a single trailing newline.";
   readonly pattern: RegExp = /\S\n$/;
 	

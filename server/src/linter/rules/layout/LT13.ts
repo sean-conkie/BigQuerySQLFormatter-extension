@@ -21,10 +21,8 @@ import { Rule } from '../base';
  * @memberof Linter.Rules
  */
 export class StartOfFile extends Rule{
-  readonly is_fix_compatible: boolean = true;
   readonly name: string = "start_of_file";
   readonly code: string = "LT13";
-  readonly type: RuleType = RuleType.REGEX;
   readonly message: string = "Files must not begin with newlines or whitespace.";
   readonly pattern: RegExp = /^[\s]/;
 

@@ -21,10 +21,8 @@ import { Rule } from '../base';
  * @memberof Linter.Rules
  */
 export class UnionCheck extends Rule{
-  readonly is_fix_compatible: boolean = true;
   readonly name: string = "union_checks";
   readonly code: string = "LT11";
-  readonly type: RuleType = RuleType.REGEX;
   readonly message: string = "Union operators should be surrounded by newlines.";
   readonly pattern: RegExp =/(?<!\n)\bunion( (all|distinct)|(?!( (all|distinct))))|\bunion( (all|distinct)|(?!( (all|distinct))))(?!\n)/gi;
 
