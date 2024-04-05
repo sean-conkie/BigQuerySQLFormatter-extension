@@ -60,4 +60,8 @@ export class StartOfFile extends Rule{
     return null;
 
   }
+
+  evaluateAst(): Diagnostic | null {
+    return null;
+  }
 }

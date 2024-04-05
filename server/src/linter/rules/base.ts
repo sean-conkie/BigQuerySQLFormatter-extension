@@ -41,4 +41,6 @@ export abstract class Rule{
 	}
 
 	abstract evaluate(test: string): Diagnostic | null;
+
+	abstract evaluateAst(ast: any): Diagnostic | null;
 }
