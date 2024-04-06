@@ -61,7 +61,7 @@ export class Linter {
 		for (const rule of this.regexRules) {
 			const result = rule.evaluate(source);
 			if (result !== null) {
-				diagnostics.push(result);
+				diagnostics.push(...result);
 				this.problems++;
 			}
 		}
@@ -71,7 +71,7 @@ export class Linter {
 		for (const rule of this.parserRules) {
 			const result = rule.evaluateAst(abstractSyntaxTree);
 			if (result !== null) {
-				diagnostics.push(result);
+				diagnostics.push(...result);
 				this.problems++;
 			}
 		}
