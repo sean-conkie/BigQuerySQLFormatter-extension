@@ -6,7 +6,6 @@
 import { Grammar, GrammarRegistry, GrammarToken } from 'first-mate';
 import { resolve } from 'path';
 import { mergeArrayToUnique } from '../utils';
-import { OnigScanner } from 'oniguruma';
 import syntaxJson from './syntaxes/syntax.json';
 
 const punctuation: string[] = syntaxJson.punctuation;
@@ -621,9 +620,7 @@ export class Parser {
 				continue;
 			}
 
-			rules = rules.filter((rule) => token.scopes.includes(rule.scopes[tokenCounter]) || rule.scopes[tokenCounter] === '*')
-									.map((rule) => (rule.lookahead > 0 || rule.negativeLookahead !== null) ? this._lookahead(tokens.slice(i + 1), rule, tokenCounter + 1) : rule)
-									.filter((rule) => rule !== null) as Rule[];
+			rules = this._filterRules(token, tokenCounter, tokens.slice(i + 1), rules);
 
 			if (rules.length === 0) {
 				if (reCheck) {
@@ -665,6 +662,44 @@ export class Parser {
 			}
 		}
 		return statement;
+	}
+
+	/**
+	 * filter the rules based on the current token
+	 * @param {Token} token The current token
+	 * @param {number} tokenCounter The current token counter
+	 * @param {Token[]} nextTokens The next tokens
+	 * @param {Rule[]} rules The rules to filter
+	 * @returns {Rule[]} The filtered rules
+	 * @memberof Parser
+	 * @name _filterRules
+	 * @private
+	 */
+	_filterRules(token: Token, tokenCounter: number, nextTokens: Token[], rules: Rule[]): Rule[] {
+
+		const passingRules: Rule[] = [];
+		const log: { [key: string]: string[] } = {'tokenMissmatch': [], 'lookaheadFail': [], 'token': [token.value]};
+		for (const rule of rules) {
+			if (!(token.scopes.includes(rule.scopes[tokenCounter]) || rule.scopes[tokenCounter] === '*')) {
+				log.tokenMissmatch.push(rule.name);
+				continue;
+			}
+
+			if (rule.lookahead > 0 || rule.negativeLookahead !== null) {
+				if (!this._lookahead(nextTokens, rule, tokenCounter + 1)) {
+					log.lookaheadFail.push(rule.name);
+					continue;
+				}
+			}
+
+			passingRules.push(rule);
+
+		}
+
+		console.log(log);
+
+		return passingRules;
+
 	}
 
 	/**
@@ -756,11 +791,7 @@ export class Parser {
 				continue;
 			}
 
-			rules = rules.filter((rule) => token.scopes.includes(rule.scopes[tokenCounter]) || rule.scopes[tokenCounter] === '*')
-										.map((rule) => (rule.lookahead > 0 || rule.negativeLookahead != null) ? this._lookahead(tokens.slice(i + 1), rule, tokenCounter + 1) : rule)
-										.filter((rule) => rule !== null) as Rule[];
-
-
+			rules = this._filterRules(token, tokenCounter, tokens.slice(i + 1), rules);
 
 			if (token.scopes.filter((scope) => recursiveGroupBegin.includes(scope)).length > 0 && rules.length === 0) {
 				const [matchedRules, y] = this._recursiveLookahead(tokens.slice(i + 1));
@@ -819,14 +850,14 @@ export class Parser {
 		const tokenizedLines: GrammarToken[][] = Parser.grammar.tokenizeLines(source);
 		const lineTokens: LineToken[] = [];
 
-		let filePosition: number = 0;
+		const filePosition: number = 0;
 		for (let i = 0; i < tokenizedLines.length; i++) {
 			const line = tokenizedLines[i];
 			let innerPosition = filePosition;
 			const convertToken = function(token: GrammarToken): Token {
 				const newToken = token as Token;
-				newToken.line = i + 1;
-				newToken.start = innerPosition + 1;
+				newToken.line = i;
+				newToken.start = innerPosition;
 				innerPosition += newToken.value.length;
 				newToken.end = innerPosition;
 				return newToken;
@@ -841,9 +872,9 @@ export class Parser {
 				"value": tokens.reduce((acc, token) => acc + token.value, ''),
 				"scopes": tokens.reduce((p, token) => mergeArrayToUnique(p, token.scopes), [] as string[])
 			} as LineToken;
-			token.start = filePosition + 1;
-			filePosition += line.reduce((acc, token) => acc + token.value.length, 0);
-			token.end = filePosition;
+			token.start = 1;
+			// filePosition += line.reduce((acc, token) => acc + token.value.length, 0);
+			token.end = innerPosition;
 			lineTokens.push(token);
 		}
 
