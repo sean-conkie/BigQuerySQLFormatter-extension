@@ -22,7 +22,7 @@ describe('StartOfFile', () => {
     it('should return diagnostic when rule is enabled and pattern matches', () => {
         instance.enabled = true;
         const result = instance.evaluate(' select *\n  from table');
-        expect(result).to.deep.equal({
+        expect(result).to.deep.equal([{
             message: instance.message,
             severity: instance.severity,
             range: {
@@ -30,7 +30,7 @@ describe('StartOfFile', () => {
                 end: { line: 0, character: 1 }
             },
             source: 'start_of_file'
-        });
+        }]);
     });
 
     it('should return null when rule is enabled but pattern does not match', () => {

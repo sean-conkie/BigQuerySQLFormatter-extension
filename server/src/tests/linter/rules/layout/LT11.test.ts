@@ -89,7 +89,7 @@ describe('UnionCheck', () => {
         it(`${element[0]}\nshould return diagnostic when rule is enabled and pattern matches`, () => {
             instance.enabled = true;
             const result = instance.evaluate(element[1]);
-            expect(result).to.deep.equal({
+            expect(result).to.deep.equal([{
                 message: instance.message,
                 severity: instance.severity,
                 range: {
@@ -97,7 +97,7 @@ describe('UnionCheck', () => {
                     end: { line: 1000, character: 1000 }
                 },
                 source: 'union_checks'
-            });
+            }]);
         });
     });
 

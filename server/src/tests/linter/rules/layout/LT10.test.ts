@@ -54,7 +54,7 @@ describe('SelectModifiers', () => {
             it(`Case ${case_number}: ${new_title}\nshould return diagnostic when rule is enabled and pattern matches`, () => {
                 instance.enabled = true;
                 const result = instance.evaluate(new_sql);
-                expect(result).to.deep.equal({
+                expect(result).to.deep.equal([{
                     message: instance.message,
                     severity: instance.severity,
                     range: {
@@ -62,7 +62,7 @@ describe('SelectModifiers', () => {
                         end: { line: 1000, character: 1000 }
                     },
                     source: 'select_modifiers_check'
-                });
+                }]);
             });
         });
     });
