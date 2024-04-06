@@ -62,7 +62,7 @@ export class Linter {
 			const result = rule.evaluate(source);
 			if (result !== null) {
 				diagnostics.push(...result);
-				this.problems++;
+				this.problems = diagnostics.length;
 			}
 		}
 
@@ -72,7 +72,7 @@ export class Linter {
 			const result = rule.evaluateAst(abstractSyntaxTree);
 			if (result !== null) {
 				diagnostics.push(...result);
-				this.problems++;
+				this.problems = diagnostics.length;
 			}
 		}
 
