@@ -81,6 +81,51 @@
       "end": null
     },
     {
+      "name": "dml.ddl.project",
+      "scopes": [
+        "keyword.dml.sql",
+        "keyword.ddl.object.sql",
+        "entity.name.project.sql",
+        "entity.name.dataset.sql",
+        "entity.name.object.sql"
+      ],
+      "type": "dml",
+      "lookahead": 0,
+      "negativeLookahead": null,
+      "recursive": false,
+      "children": null,
+      "end": null
+    },
+    {
+      "name": "dml.ddl.alias",
+      "scopes": [
+        "keyword.dml.sql",
+        "keyword.ddl.object.sql",
+        "entity.name.alias.sql"
+      ],
+      "type": "dml",
+      "lookahead": 0,
+      "negativeLookahead": null,
+      "recursive": false,
+      "children": null,
+      "end": null
+    },
+    {
+      "name": "dml.ddl.dataset",
+      "scopes": [
+        "keyword.dml.sql",
+        "keyword.ddl.object.sql",
+        "entity.name.dataset.sql",
+        "entity.name.object.sql"
+      ],
+      "type": "dml",
+      "lookahead": 0,
+      "negativeLookahead": null,
+      "recursive": false,
+      "children": null,
+      "end": null
+    },
+    {
       "name": "select.distinct",
       "scopes": ["keyword.select.sql", "keyword.select.distinct.sql"],
       "type": "select",
@@ -150,6 +195,31 @@
       "end": null
     },
     {
+      "name": "special.cast.column",
+      "scopes": [
+        "entity.name.alias.sql",
+        "other.column.name.sql",
+        "keyword.as.sql",
+        "storage.type.sql"
+      ],
+      "type": "special",
+      "lookahead": 0,
+      "negativeLookahead": null,
+      "recursive": false,
+      "children": null,
+      "end": null
+    },
+    {
+      "name": "special.cast.column.no.prefix",
+      "scopes": ["other.column.name.sql", "keyword.as.sql", "storage.type.sql"],
+      "type": "special",
+      "lookahead": 0,
+      "negativeLookahead": null,
+      "recursive": false,
+      "children": null,
+      "end": null
+    },
+    {
       "name": "column.no.prefix",
       "scopes": ["other.column.name.sql"],
       "type": "column",
@@ -163,6 +233,16 @@
       "name": "explicit.alias",
       "scopes": ["keyword.as.sql", "entity.name.tag"],
       "type": "alias",
+      "lookahead": 0,
+      "negativeLookahead": null,
+      "recursive": false,
+      "children": null,
+      "end": null
+    },
+    {
+      "name": "keyword.cast.type",
+      "scopes": ["keyword.as.sql", "storage.type.sql"],
+      "type": "keyword",
       "lookahead": 0,
       "negativeLookahead": null,
       "recursive": false,
@@ -597,6 +677,26 @@
     {
       "name": "keyword.function",
       "scopes": ["keyword.function.sql"],
+      "type": "keyword",
+      "lookahead": 0,
+      "negativeLookahead": null,
+      "recursive": false,
+      "children": null,
+      "end": null
+    },
+    {
+      "name": "keyword.boolean",
+      "scopes": ["constant.boolean.sql"],
+      "type": "keyword",
+      "lookahead": 0,
+      "negativeLookahead": null,
+      "recursive": false,
+      "children": null,
+      "end": null
+    },
+    {
+      "name": "keyword.math",
+      "scopes": ["keyword.operator.math.sql"],
       "type": "keyword",
       "lookahead": 0,
       "negativeLookahead": null,

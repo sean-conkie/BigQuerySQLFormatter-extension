@@ -213,6 +213,44 @@ class ColumnFunctionAST implements AST {
 		this.line = matchedRule.tokens[0].line;
 		this.start = matchedRule.tokens[0].start;
 
+		// Special rules have been created for columns being cast as a type - these need split into column
+		// and keyword and inserted into the matches array.
+		const specialMatches = matchedRule.matches?.filter((match) => match.rule?.type === 'special') ?? [];
+
+		specialMatches.forEach((match) => {
+			const indexOfMatch = matchedRule.matches?.indexOf(match) ?? 0;
+			const slicePoint = match.tokens.findIndex((token) => token.scopes.includes("keyword.as.sql"));
+
+			const keywordTokens = match.tokens.slice(slicePoint);
+			const columnTokens = match.tokens.slice(0, slicePoint);
+			matchedRule.matches?.splice(indexOfMatch, 1, {
+				"rule": {
+					"type": "column", 
+					"name": "special.column", 
+					"scopes": [], 
+					"lookahead": 0, 
+					"negativeLookahead": null, 
+					"recursive": false, 
+					"children": null, 
+					"end": null
+				}, "tokens": columnTokens
+			});
+
+			matchedRule.matches?.splice(indexOfMatch + 1, 0, {
+				"rule": {
+					"type": "keyword", 
+					"name": "special.keyword", 
+					"scopes": [], 
+					"lookahead": 0, 
+					"negativeLookahead": null, 
+					"recursive": false, 
+					"children": null, 
+					"end": null
+				}, "tokens": keywordTokens
+			});
+
+		});
+
 		for (const match of matchedRule.matches??[]) {
 			let parameter: FunctionParameter | null = null;
 			if (match.rule?.type === 'column') {
@@ -223,7 +261,7 @@ class ColumnFunctionAST implements AST {
 				parameter = new StringAST(match.tokens);
 			} else if (match.rule?.type === 'number') {
 				parameter = new NumberAST(match.tokens);
-			} else if (match.rule?.type === 'keyword') {
+			} else if (['comparison','keyword','operator'].includes(match.rule?.type ?? '')) {
 				parameter = new KeywordAST(match.tokens);
 			} else if (match.rule?.type === 'alias') {
 				this.alias = findToken(match.tokens, "entity.name.tag")?.value ?? null;
@@ -602,6 +640,8 @@ export class Parser {
 		let expressionTokens: Token[] = [];
 		let tokenCounter: number = 0;
 		let reCheck: boolean = true; // used to stop infinite loops
+		statement.tokens = tokens;
+		statement.line = tokens[0].line;
 
 		const reset = () => {
 			rules = syntaxJson.rules;
@@ -943,7 +983,7 @@ export class Parser {
 			const targetTokens: Token[] = tokens.filter((token) => token.scopes.some((scope) => scope.includes(searchString)));
 			if (targetTokens.length > 0) {
 				const typeToken = findToken(targetTokens, "keyword.dml.sql");
-				type = StatementType[typeToken?.value.toUpperCase() as keyof typeof StatementType];
+				type = StatementType[typeToken?.value.split(' ')[0].toUpperCase() as keyof typeof StatementType];
 				objectAST = new ObjectAST(targetTokens);
 				break;
 			}

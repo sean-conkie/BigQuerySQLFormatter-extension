@@ -7,8 +7,12 @@
       "name": "storage.type.sql"
     },
     {
-      "match": "\\b(\\d+\\.\\d+)|(\\d+\\.)|(\\.\\d+)|\\b(\\d+)|(?i:(true|false))\\b",
+      "match": "\\b(\\d+\\.\\d+)|(\\d+\\.)|(\\.\\d+)|\\b(\\d+)\\b",
       "name": "constant.numeric.sql"
+    },
+    {
+      "match": "(?i)\\b(true|false)\\b",
+      "name": "constant.boolean.sql"
     },
     { "include": "#custom" },
     { "include": "#comments" },
@@ -655,7 +659,7 @@
             "4": { "name": "keyword.as.sql" },
             "5": { "name": "entity.name.tag" }
           },
-          "match": "(?i)(?:(?<!\\.)(?:(\\w+)(\\.))?(?>\\b\\d+\\b|((?:`)?\\w+(?:`)?))(?: +(?:(as) +)?(?!\\b(?:in|is|null|or|and)\\b)((?:`)?\\w+(?:`)?))?)",
+          "match": "(?i)(?:(?<!\\.)(?:(\\w+)(\\.))?(?>\\b\\d+\\b|((?:`)?\\w+(?:`)?))(?: +(?:(as) +)?(?!\\b(?:desc|asc|as|in|is|null|or|and|array|bool(?:ean)?|date(?:time)?|geography|(?:big)?numeric|(?:big)?decimal|float(?:64)?|(?:small|big|tiny|byte)?int(?:64|eger)?|record|string|time(?:stamp)?|struct)\\b)((?:`)?\\w+(?:`)?))?)",
           "name": "meta.column.sql"
         },
         {
@@ -676,6 +680,17 @@
           },
           "match": "(?i)(?:(\\w+)\\.(\\w+)\\:(\\w+)\\:)",
           "name": "meta.dml.sql"
+        }
+      ]
+    },
+    "params": {
+      "patterns": [
+        {
+          "captures": {
+            "1": { "name": "entity.name.param" }
+          },
+          "match": "(?i)(\\@\\b\\w+)\\b",
+          "name": "meta.param.sql"
         }
       ]
     }
