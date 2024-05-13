@@ -64,6 +64,17 @@ export class TrailingComma extends Rule{
             },
             source: this.name
           });
+        } else if ((filteredTokens.find((token) => token.value === ',')?.line??0) > (filteredTokens[0].line??0)) {
+          const commaToken = filteredTokens.find((token) => token.value === ',');
+          errors.push({
+            message: this.message,
+            severity: this.severity,
+            range: {
+              start: { line: commaToken?.line??0, character: commaToken?.start??0 },
+              end: { line: commaToken?.line??0, character: commaToken?.end??0 }
+            },
+            source: this.name
+          });
         }
       }
     }
