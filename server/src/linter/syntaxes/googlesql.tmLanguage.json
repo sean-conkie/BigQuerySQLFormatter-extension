@@ -2,44 +2,76 @@
   "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
   "name": "GoogleSQL",
   "patterns": [
-    {
-      "match": "(?i)\\b(array|boolean|bytes|date(?!\\s*\\()|datetime(?!\\s*\\()|geography|numeric|decimal|bignumeric|bigdecimal|float|float64|int64|int|smallint|integer|bigint|tinyint|byteint|bool|record|any\\s+type|string(?!\\s*\\()|struct|time(?!\\s*\\(|\\s+as\\s+of|\\s+zone)|timestamp(?!\\s*\\())\\b",
-      "name": "storage.type.sql"
-    },
-    {
-      "match": "\\b(\\d+\\.\\d+)|(\\d+\\.)|(\\.\\d+)|\\b(\\d+)\\b",
-      "name": "constant.numeric.sql"
-    },
-    {
-      "match": "(?i)\\b(true|false)\\b",
-      "name": "constant.boolean.sql"
-    },
+    { "include": "#storage" },
+    { "include": "#constants" },
     { "include": "#custom" },
     { "include": "#comments" },
-    { "include": "#ddl" },
-    { "include": "#dml" },
     { "include": "#from" },
     { "include": "#functions" },
     { "include": "#keywords" },
+    { "include": "#ddl" },
+    { "include": "#dml" },
     { "include": "#columns" },
     { "include": "#strings" },
+    { "include": "#params" },
     { "include": "#punctuation" },
     { "include": "#regexps" },
     { "include": "#javascript" },
-    {
-      "match": "^ *",
-      "name": "punctuation.whitespace.leading.sql"
-    },
-    {
-      "match": " *$",
-      "name": "punctuation.whitespace.trailing.sql"
-    },
-    {
-      "match": " *",
-      "name": "punctuation.whitespace.sql"
-    }
+    { "include": "#whitespace" }
   ],
   "repository": {
+    "storage": {
+      "patterns": [
+        {
+          "match": "(?i)\\b(array|boolean|bytes|date(?!\\s*\\()|datetime(?!\\s*\\()|geography|numeric|decimal|bignumeric|bigdecimal|float|float64|int64|int|smallint|integer|bigint|tinyint|byteint|bool|record|any\\s+type|string(?!\\s*\\()|struct|time(?!\\s*\\(|\\s+as\\s+of|\\s+zone)|timestamp(?!\\s*\\())\\b",
+          "name": "storage.type.sql"
+        }
+      ]
+    },
+    "constants": {
+      "patterns": [
+        {
+          "match": "(\\s+)?\\b(\\d+\\.\\d+|\\d+\\.|\\.\\d+|\\d+)\\b",
+          "captures": {
+            "1": { "name": "punctuation.whitespace.leading.sql" },
+            "2": { "name": "constant.numeric.sql" }
+          },
+          "name": "meta.constant.sql"
+        },
+        {
+          "match": "(?i)(\\s+)?\\b(true|false)\\b",
+          "captures": {
+            "1": { "name": "punctuation.whitespace.leading.sql" },
+            "2": { "name": "constant.boolean.sql" }
+          },
+          "name": "meta.constant.sql"
+        },
+        {
+          "captures": {
+            "1": { "name": "punctuation.whitespace.leading.sql" },
+            "2": { "name": "constant.other.null.sql" }
+          },
+          "match": "(?i)(\\s+)?\\b(null)\\b",
+          "name": "meta.constant.sql"
+        }
+      ]
+    },
+    "whitespace": {
+      "patterns": [
+        {
+          "match": "^ *",
+          "name": "punctuation.whitespace.leading.sql"
+        },
+        {
+          "match": " *$",
+          "name": "punctuation.whitespace.trailing.sql"
+        },
+        {
+          "match": " *",
+          "name": "punctuation.whitespace.sql"
+        }
+      ]
+    },
     "comments": {
       "patterns": [
         {
@@ -319,7 +351,12 @@
         },
         {
           "captures": { "1": { "name": "support.function.window.sql" } },
-          "match": "(?i)\\b(ROW_NUMBER|RANK|DENSE_RANK|PERCENT_RANK|CUME_DIST|NTILE|LAG|LEAD|(?:FIRST|LAST|NTH)_VALUE|OVER|PERCENTILE_(?:CONT|DISC)|BIT_COUNT)\\b",
+          "match": "(?i)\\b(ROW_NUMBER|RANK|DENSE_RANK|PERCENT_RANK|CUME_DIST|NTILE|LAG|LEAD|(?:FIRST|LAST|NTH)_VALUE|PERCENTILE_(?:CONT|DISC)|BIT_COUNT)\\b",
+          "name": "meta.function.sql"
+        },
+        {
+          "captures": { "1": { "name": "support.function.over.sql" } },
+          "match": "(?i)\\b(OVER)\\b",
           "name": "meta.function.sql"
         },
         {
@@ -589,12 +626,71 @@
     "keywords": {
       "patterns": [
         {
+          "captures": {
+            "1": { "name": "keyword.order.sql" }
+          },
           "match": "(?i)\\b(desc|asc)\\b",
-          "name": "keyword.order.sql"
+          "name": "meta.order.sql"
         },
         {
-          "match": "(?i)\\b(case|when|then|else|end)\\b",
-          "name": "keyword.case.sql"
+          "captures": {
+            "1": { "name": "keyword.partition.sql" }
+          },
+          "match": "(?i)(?:\\b(partition\\s+by)\\b)",
+          "name": "meta.partition.sql"
+        },
+        {
+          "captures": {
+            "1": { "name": "punctuation.whitespace.leading.sql" },
+            "2": { "name": "keyword.control.case.sql" }
+          },
+          "match": "(?i)(\\s*)\\b(case)\\b",
+          "name": "meta.case.sql"
+        },
+        {
+          "captures": {
+            "1": {
+              "name": "keyword.control.when.sql"
+            }
+          },
+          "match": "(?i)\\b(when)\\b",
+          "name": "meta.case.sql"
+        },
+        {
+          "captures": {
+            "1": {
+              "name": "keyword.control.then.sql"
+            }
+          },
+          "match": "(?i)\\b(then)\\b",
+          "name": "meta.case.sql"
+        },
+        {
+          "captures": {
+            "1": {
+              "name": "keyword.control.else.sql"
+            }
+          },
+          "match": "(?i)\\b(else)\\b",
+          "name": "meta.case.sql"
+        },
+        {
+          "captures": {
+            "1": {
+              "name": "keyword.control.case.part.end.sql"
+            }
+          },
+          "match": "(?i)(\\s+(?=when)|\\s+(?=then)|\\s+(?=else)|\\s+(?=end))",
+          "name": "meta.case.sql"
+        },
+        {
+          "captures": {
+            "1": {
+              "name": "keyword.control.case.end.sql"
+            }
+          },
+          "match": "(?i)\\b(end)\\b",
+          "name": "meta.case.sql"
         },
         {
           "match": "\\*",
@@ -655,18 +751,18 @@
           "captures": {
             "1": { "name": "entity.name.alias.sql" },
             "2": { "name": "punctuation.separator.period.sql" },
-            "3": { "name": "other.column.name.sql" },
+            "3": { "name": "entity.other.column.sql" },
             "4": { "name": "keyword.as.sql" },
             "5": { "name": "entity.name.tag" }
           },
-          "match": "(?i)(?:(?<!\\.)(?:(\\w+)(\\.))?(?>\\b\\d+\\b|((?:`)?\\w+(?:`)?))(?: +(?:(as) +)?(?!\\b(?:desc|asc|as|in|is|null|or|and|array|bool(?:ean)?|date(?:time)?|geography|(?:big)?numeric|(?:big)?decimal|float(?:64)?|(?:small|big|tiny|byte)?int(?:64|eger)?|record|string|time(?:stamp)?|struct)\\b)((?:`)?\\w+(?:`)?))?)",
+          "match": "(?i)(?:(?<!\\.)(?:(\\w+)(\\.))?(?>\\b\\d+\\b|((?:`)?\\w+(?:`)?))(?: +(?:(as) +)?(?!\\b(?:case|when|then|else|end|desc|asc|as|in|is|null|or|and|array|bool(?:ean)?|date(?:time)?|geography|(?:big)?numeric|(?:big)?decimal|float(?:64)?|(?:small|big|tiny|byte)?int(?:64|eger)?|record|string|time(?:stamp)?|struct)\\b)((?:`)?\\w+(?:`)?))?)",
           "name": "meta.column.sql"
         },
         {
           "captures": {
             "1": { "name": "entity.name.tag" }
           },
-          "match": "(?i)(?>^(?: *\\w+,? *$)|(?: +(?!\\b(?:in|is|null|distinct|\\d+)\\b)((?:`)?\\w+(?:`)?),? *$))"
+          "match": "(?i)(?>^(?: *\\w+,? *$)|(?: +(?!\\b(?:case|when|then|else|end|desc|asc|as|in|is|null|or|and|array|bool(?:ean)?|date(?:time)?|geography|(?:big)?numeric|(?:big)?decimal|float(?:64)?|(?:small|big|tiny|byte)?int(?:64|eger)?|record|string|time(?:stamp)?|struct|distinct|\\d+)\\b)((?:`)?\\w+(?:`)?),? *$))"
         }
       ]
     },
@@ -687,10 +783,10 @@
       "patterns": [
         {
           "captures": {
-            "1": { "name": "entity.name.param" }
+            "1": { "name": "variable.parameter.sql" }
           },
           "match": "(?i)(\\@\\b\\w+)\\b",
-          "name": "meta.param.sql"
+          "name": "meta.parameter.sql"
         }
       ]
     }
