@@ -22,13 +22,13 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4.0.2
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
       - run: npm ci
       - run: npm run compile
-      - run: npm test -- --coverage
+      - run: npx nyc --reporter=html --reporter=text npm test && npx codecov
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v4.0.1
         with:

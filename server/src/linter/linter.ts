@@ -12,7 +12,7 @@ import { Diagnostic } from 'vscode-languageserver/node';
 import { Rule } from './rules/base';
 import { initialiseRules } from './rules/rules';
 import { RuleType } from './rules/enums';
-import { Parser, StatementAST } from './parser';
+import { FileMap, Parser, StatementAST } from './parser';
 
 
 
@@ -23,8 +23,8 @@ import { Parser, StatementAST } from './parser';
 export class Linter {
 
 	settings: ServerSettings;
-	regexRules: Rule[] = [];
-	parserRules: Rule[] = [];
+	regexRules: Rule<string | FileMap>[] = [];
+	parserRules: Rule<string | FileMap>[] = [];
 	problems: number = 0;
 
 	constructor(settings: ServerSettings) {
@@ -38,7 +38,7 @@ export class Linter {
 	 * @name initialiseRules
 	 */
 	_initialiseRules() {
-		const rules: Rule[] = initialiseRules(this.settings, this.problems);
+		const rules: Rule<string | FileMap>[] = initialiseRules(this.settings, this.problems);
 
 		this.regexRules = rules.filter(rule => rule.type === RuleType.REGEX);
 		this.parserRules = rules.filter(rule => rule.type === RuleType.PARSER);
@@ -69,7 +69,7 @@ export class Linter {
 		const abstractSyntaxTree: { [key: number]: StatementAST } = parser.parse(source);
 
 		for (const rule of this.parserRules) {
-			const result = rule.evaluateAst(abstractSyntaxTree);
+			const result = rule.evaluate(abstractSyntaxTree);
 			if (result !== null) {
 				diagnostics.push(...result);
 				this.problems = diagnostics.length;

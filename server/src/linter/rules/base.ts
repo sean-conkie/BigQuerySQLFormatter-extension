@@ -10,6 +10,7 @@ import { Diagnostic, DiagnosticSeverity } from 'vscode-languageserver/node';
 import { RuleType } from './enums';
 import { ServerSettings } from '../../settings';
 import { OnigRegExp } from 'oniguruma';
+import { FileMap } from '../parser';
 
 
 /**
@@ -17,7 +18,7 @@ import { OnigRegExp } from 'oniguruma';
  * @class Rule
  * @memberof Linter.Rules
  */
-export abstract class Rule{
+export abstract class Rule<T extends string | FileMap>{
 	readonly is_fix_compatible: boolean = true;
 	readonly name: string = "";
 	readonly code: string = "";
@@ -29,6 +30,7 @@ export abstract class Rule{
 	settings: ServerSettings;
 	problems: number;
 
+	
 	constructor(settings: ServerSettings, problems: number) {
 
 		this.settings = settings;
@@ -41,7 +43,6 @@ export abstract class Rule{
 
 	}
 
-	abstract evaluate(test: string): Diagnostic[] | null;
+	abstract evaluate(test: T): Diagnostic[] | null;
 
-	abstract evaluateAst(ast: any): Diagnostic[] | null;
 }

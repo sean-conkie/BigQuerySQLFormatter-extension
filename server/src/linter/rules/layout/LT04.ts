@@ -13,7 +13,7 @@ import {
   Diagnostic,
 } from 'vscode-languageserver/node';
 import { Rule } from '../base';
-import { StatementAST } from '../../parser';
+import { FileMap } from '../../parser';
 
 
 /**
@@ -22,7 +22,7 @@ import { StatementAST } from '../../parser';
  * @extends Rule
  * @memberof Linter.Rules
  */
-export class TrailingComma extends Rule{
+export class TrailingComma extends Rule<FileMap>{
   readonly name: string = "trailing_commas";
   readonly code: string = "LT04";
 	readonly type: RuleType = RuleType.PARSER;
@@ -38,13 +38,7 @@ export class TrailingComma extends Rule{
       super(settings, problems);
   }
 
-  evaluate(test: string): Diagnostic[] | null {
-
-    return null;
-
-  }
-
-  evaluateAst(ast: {[key: number] : StatementAST}): Diagnostic[] | null {
+  evaluate(ast: FileMap): Diagnostic[] | null {
 
     if (this.enabled === false) {
       return null;
@@ -79,6 +73,6 @@ export class TrailingComma extends Rule{
       }
     }
 		
-    return errors;
+    return errors.length > 0 ? errors : null;
   }
 }

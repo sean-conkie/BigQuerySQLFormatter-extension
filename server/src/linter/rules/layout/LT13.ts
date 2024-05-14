@@ -19,7 +19,7 @@ import { Rule } from '../base';
  * @extends Rule
  * @memberof Linter.Rules
  */
-export class StartOfFile extends Rule{
+export class StartOfFile extends Rule<string>{
   readonly name: string = "start_of_file";
   readonly code: string = "LT13";
   readonly message: string = "Files must not begin with newlines or whitespace.";

@@ -19,7 +19,7 @@ import { Rule } from '../base';
  * @extends Rule
  * @memberof Linter.Rules
  */
-export class SelectModifiers extends Rule{
+export class SelectModifiers extends Rule<string>{
   readonly name: string = "select_modifiers_check";
   readonly code: string = "LT10";
   readonly message: string = "SELECT modifiers (e.g. DISTINCT) must be on the same line as SELECT";

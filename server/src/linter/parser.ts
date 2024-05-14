@@ -719,6 +719,13 @@ function createColumn(matchedRule: MatchedRule): Column {
 }
 
 /**
+ * Extract the statement type and object from the tokens
+ * @param tokens The tokens to extract the statement type and object from
+ * @returns [StatementType, ObjectAST] The statement type and object
+ */
+export type FileMap = { [key: number]: StatementAST };
+
+/**
  * Object for parsing SQL code
  * @name Parser
  */
@@ -728,14 +735,14 @@ export class Parser {
 	static grammar: Grammar = this.registry.loadGrammarSync(resolve(`${__dirname}/syntaxes/googlesql.tmLanguage.json`));
 	
 	readonly ignoreScopes: string[] = ["comment.line.double-dash.sql","punctuation.definition.comment.sql"];
-	fileMap: { [key: number]: StatementAST } = {};
+	fileMap: FileMap = {};
 
 
 	/**
 	 * Parse the source code
 	 * @param {string} source The source code to parse
 	 */
-	parse(source: string) {
+	parse(source: string): FileMap {
 
 		// split string into statements
 		const statements = this._splitSource(source);
