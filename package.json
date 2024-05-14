@@ -84,7 +84,8 @@
     "watch": "tsc -b -w",
     "lint": "eslint ./client/src ./server/src --ext .ts,.tsx",
     "postinstall": "cd client && npm install && cd ../server && npm install && cd ..",
-    "test": "mocha ./server/out/tests/**/*.test.js ./server/out/tests/**/**/*.test.js ./server/out/tests/**/**/**/*.test.js --rescursive"
+    "test": "mocha ./server/out/tests/**/*.test.js ./server/out/tests/**/**/*.test.js ./server/out/tests/**/**/**/*.test.js --rescursive",
+    "deploy": "vsce publish --no-yarn"
   },
   "devDependencies": {
     "@types/chai": "^4.3.12",
@@ -96,6 +97,7 @@
     "@typescript-eslint/parser": "^7.8.0",
     "@vscode/test-cli": "^0.0.9",
     "@vscode/test-electron": "^2.3.9",
+    "@vscode/vsce": "^2.26.1",
     "chai": "^4.4.1",
     "eslint": "^8.57.0",
     "mocha": "^10.4.0",
