@@ -8,20 +8,23 @@
 
 import { Rule } from '../base';
 import { ServerSettings } from '../../../settings';
+import { TrailingComma } from './LT04';
 import { SelectModifiers } from './LT10';
 import { UnionCheck } from './LT11';
 import { EndofFile } from './LT12';
 import { StartOfFile } from './LT13';
+import { FileMap } from '../../parser';
 
 export const classes = [SelectModifiers,
                         UnionCheck,
+												TrailingComma,
                         EndofFile,
                         StartOfFile];
 
-export function layoutRules(settings: ServerSettings, problems: number): Rule[] {
+export function layoutRules(settings: ServerSettings, problems: number): Rule<string | FileMap>[] {
 
 	const length: number = classes.length;
-	const rules: Rule[] = [];
+	const rules: Rule<string | FileMap>[] = [];
 
 	for (let i = 0; i < length; i++) {
 		rules.push(new classes[i](settings, problems));

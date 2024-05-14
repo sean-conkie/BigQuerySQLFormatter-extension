@@ -1,13 +1,18 @@
+/**
+ * @fileoverview Rules to enforce end of file checks
+ * @module linter/rules/layout
+ * @requires vscode-languageserver
+ * @requires settings
+ * @requires Rule
+ */
+
+
 import { Diagnostic } from 'vscode-languageserver';
 import { Rule } from '../base';
-import { RuleType } from '../enums';
-import { OnigRegExp } from 'oniguruma';
 
-export class EndofFile extends Rule{
-  readonly is_fix_compatible: boolean = true;
+export class EndofFile extends Rule<string>{
   readonly name: string = "end_of_file";
   readonly code: string = "LT12";
-  readonly type: RuleType = RuleType.REGEX;
   readonly message: string = "Files must end with a single trailing newline.";
   readonly pattern: RegExp = /\S\n$/;
 	
@@ -16,7 +21,7 @@ export class EndofFile extends Rule{
 		super(settings, problems);
 	}
 
-	evaluate(test: string): Diagnostic | null {
+	evaluate(test: string): Diagnostic[] | null {
 		
 		if (this.enabled === false) {
 			return null;
@@ -26,7 +31,7 @@ export class EndofFile extends Rule{
 
 			const sourceLines: string[] = test.split(/\n|\r\n|\r/);
 
-			return {
+			return [{
 				message: this.message,
 				severity: this.severity,
 				range: {
@@ -34,10 +39,14 @@ export class EndofFile extends Rule{
 					end: { line: sourceLines.length, character: sourceLines[sourceLines.length - 1].length },
 				},
 				source: this.name
-			};
+			}];
 		}
 
 		return null;
 	}
+
+  evaluateAst(): Diagnostic[] | null {
+    return null;
+  }
 
 }

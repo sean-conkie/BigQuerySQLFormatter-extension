@@ -1,5 +1,5 @@
 /**
- * @fileoverview Rules to enforce layout formats
+ * @fileoverview Rules to enforce select modifier rule
  * @module linter/rules/layout
  * @requires vscode-languageserver
  * @requires settings
@@ -7,7 +7,6 @@
  */
 
 
-import { RuleType } from "../enums";
 import { ServerSettings } from "../../../settings";
 import {
   Diagnostic,
@@ -20,11 +19,9 @@ import { Rule } from '../base';
  * @extends Rule
  * @memberof Linter.Rules
  */
-export class SelectModifiers extends Rule{
-  readonly is_fix_compatible: boolean = true;
+export class SelectModifiers extends Rule<string>{
   readonly name: string = "select_modifiers_check";
   readonly code: string = "LT10";
-  readonly type: RuleType = RuleType.REGEX;
   readonly message: string = "SELECT modifiers (e.g. DISTINCT) must be on the same line as SELECT";
   readonly pattern: RegExp =/\bselect(?:\s*\n\s*(distinct|all|with|as)\b)/gi;
 
@@ -38,14 +35,14 @@ export class SelectModifiers extends Rule{
       super(settings, problems);
   }
 
-  evaluate(test: string): Diagnostic | null {
+  evaluate(test: string): Diagnostic[] | null {
 
     if (this.enabled === false) {
       return null;
     }
 
     if (this.pattern.test(test)) {
-      return {
+      return [{
         message: this.message,
         severity: this.severity,
         range: {
@@ -53,11 +50,15 @@ export class SelectModifiers extends Rule{
           end: { line:1000, character: 1000 }
         },
         source: this.name
-      };
+      }];
     }
 
     return null;
 
+  }
+
+  evaluateAst(): Diagnostic[] | null {
+    return null;
   }
 
   matches(test: string): number {

@@ -1,5 +1,5 @@
 /**
- * @fileoverview Rules to enforce layout formats
+ * @fileoverview Rules to enforce union checks
  * @module linter/rules/layout
  * @requires vscode-languageserver
  * @requires settings
@@ -7,7 +7,6 @@
  */
 
 
-import { RuleType } from "../enums";
 import { ServerSettings } from "../../../settings";
 import {
   Diagnostic,
@@ -20,11 +19,9 @@ import { Rule } from '../base';
  * @extends Rule
  * @memberof Linter.Rules
  */
-export class UnionCheck extends Rule{
-  readonly is_fix_compatible: boolean = true;
+export class UnionCheck extends Rule<string>{
   readonly name: string = "union_checks";
   readonly code: string = "LT11";
-  readonly type: RuleType = RuleType.REGEX;
   readonly message: string = "Union operators should be surrounded by newlines.";
   readonly pattern: RegExp =/(?<!\n)\bunion( (all|distinct)|(?!( (all|distinct))))|\bunion( (all|distinct)|(?!( (all|distinct))))(?!\n)/gi;
 
@@ -38,14 +35,14 @@ export class UnionCheck extends Rule{
       super(settings, problems);
   }
 
-  evaluate(test: string): Diagnostic | null {
+  evaluate(test: string): Diagnostic[] | null {
 
     if (this.enabled === false) {
       return null;
     }
 
     if (this.pattern.test(test)) {
-      return {
+      return [{
         message: this.message,
         severity: this.severity,
         range: {
@@ -53,11 +50,15 @@ export class UnionCheck extends Rule{
           end: { line:1000, character: 1000 }
         },
         source: this.name
-      };
+      }];
     }
 
     return null;
 
+  }
+
+  evaluateAst(): Diagnostic[] | null {
+    return null;
   }
 
   matches(test: string): number {

@@ -30,7 +30,7 @@ describe('Linter', () => {
         for (const rule of linter.regexRules) {
             const result = rule.evaluate(source);
             if (result !== null) {
-                diagnostics.push(result);
+                diagnostics.push(...result);
             }
         }
         const result = linter.verify(source);
@@ -43,7 +43,7 @@ describe('Linter', () => {
         for (const rule of linter.regexRules) {
             const result = rule.evaluate(source);
             if (result !== null) {
-                diagnostics.push(result);
+                diagnostics.push(...result);
             }
         }
         linter.verify(source);
