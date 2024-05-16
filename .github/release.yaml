@@ -8,6 +8,9 @@ changelog:
     - title: Breaking changes 🛠️
       labels:
         - breaking-change
+    - title: New and changed rules 📏
+      labels:
+        - rule
     - title: Exciting new features 🎉
       labels:
         - feature
