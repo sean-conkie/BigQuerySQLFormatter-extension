@@ -67,7 +67,7 @@ export abstract class Rule<T extends string | FileMap>{
 					end: { line: end.line, character: end.character }
 				},
 				message: this.message,
-				source: this.code
+				source: `${this.code} (${this.name})`
 			};
 			diagnostics.push(diagnostic);
 		}

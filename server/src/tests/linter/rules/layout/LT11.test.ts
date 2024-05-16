@@ -24,65 +24,49 @@ describe('UnionCheck', () => {
         ['Case 2: no new line on left (union all)',
         `select *
         from tablename\n union all\nselect
-        * from tablename`],
+        * from tablename`,'2','1',
+    '2','10'],
 
         ['Case 3: no new line on right (union all)',
         `select *
         from tablename\nunion all \nselect
-        * from tablename`],
+        * from tablename`,'2','0','2','9'],
 
         ['Case 4: no new line on either side (union all)',
         `select *
          from tablename\n union all \nselect
-         * from tablename`],
+         * from tablename`,'2','1','2','10'],
 
-         ['Case 5: multiple errors (union all)',
-         `select *
-          from tablename\nunion all \nselect
-          * from tablename\n union all\nselect
-          * from tablename`],
-
-        ['Case 6: no new line on left (union distinct)',
-         `select *
-          from tablename\n union distinct\nselect
-          * from tablename`],
+       ['Case 6: no new line on left (union distinct)',
+       `select *
+        from tablename\n union distinct\nselect
+        * from tablename`, '2','1','2','15'],
 
         ['Case 7: no new line on right (union distinct)',
-         `select *
-          from tablename\nunion distinct \nselect
-          * from tablename`],
+        `select *
+         from tablename\nunion distinct \nselect
+         * from tablename`, '2','0','2','14'],
 
-        ['Case 8: no new line on either side (union distinct)',
+         ['Case 8: no new line on either side (union distinct)',
          `select *
          from tablename\n union distinct \nselect
-         * from tablename`],
-
-         ['Case 9: multiple errors (union distinct)',
-          `select *
-           from tablename\nunion distinct \nselect
-           * from tablename\n union distinct\nselect
-           * from tablename`],
-        
-        ['Case 10: no new line on left (union)',
+         * from tablename`, '2','1','2','15'],
+ 
+         ['Case 10: no new line on left (union)',
          `select *
           from tablename\n union\nselect
-          * from tablename`],
-
+          * from tablename`, '2','1','2','6'],
+ 
         ['Case 11: no new line on right (union)',
          `select *
           from tablename\nunion \nselect
-          * from tablename`],
-
+          * from tablename`, '2','0','2','5'],
+ 
         ['Case 12: no new line on either side (union)',
          `select *
          from tablename\n union \nselect
-         * from tablename`],
-
-         ['Case 13: multiple errors (union)',
-          `select *
-           from tablename\nunion \nselect
-           * from tablename\n union\nselect
-           * from tablename`]
+         * from tablename`, '2','1','2','6'],
+ 
     ];
 
     listSql.forEach((element: string[]) => {
@@ -93,13 +77,60 @@ describe('UnionCheck', () => {
                 message: instance.message,
                 severity: instance.severity,
                 range: {
-                    start: { line: 0, character: 0 },
-                    end: { line: 1000, character: 1000 }
+                    start: { line: parseInt(element[2]), character: parseInt(element[3]) },
+                    end: { line: parseInt(element[4]), character: parseInt(element[5]) }
                 },
-                source: 'union_checks'
+                source: 'LT11 (union_checks)'
             }]);
         });
     });
+
+    const listSQLMultipleErrors: string[][] = [
+
+
+        ['Case 5: multiple errors (union all)',
+        `select *
+         from tablename\nunion all \nselect
+         * from tablename\n union all\nselect
+         * from tablename`,'2','0','2','9','5','1','5','10'],
+
+        ['Case 9: multiple errors (union distinct)',
+         `select *
+          from tablename\nunion distinct \nselect
+          * from tablename\n union distinct\nselect
+          * from tablename`, '2','0','2','14','5','1','5','15'],
+       
+        ['Case 13: multiple errors (union)',
+         `select *
+          from tablename\nunion \nselect
+          * from tablename\n union\nselect
+          * from tablename`, '2','0','2','5','5','1','5','6']];
+
+
+
+          listSQLMultipleErrors.forEach((element: string[]) => {
+            it(`${element[0]}\nshould return diagnostic when rule is enabled and pattern matches`, () => {
+                instance.enabled = true;
+                const result = instance.evaluate(element[1]);
+                expect(result).to.deep.equal([{
+                    message: instance.message,
+                    severity: instance.severity,
+                    range: {
+                        start: { line: parseInt(element[2]), character: parseInt(element[3]) },
+                        end: { line: parseInt(element[4]), character: parseInt(element[5]) }
+                    },
+                    source: 'LT11 (union_checks)'
+                },{
+                    message: instance.message,
+                    severity: instance.severity,
+                    range: {
+                        start: { line: parseInt(element[6]), character: parseInt(element[7]) },
+                        end: { line: parseInt(element[8]), character: parseInt(element[9]) }
+                    },
+                    source: 'LT11 (union_checks)'
+                }]);
+            });
+        });
 
     const listSqlMultiples: string[][] = [
         ['Case 14: multiple errors (union all)',
