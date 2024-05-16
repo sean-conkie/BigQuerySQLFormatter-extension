@@ -26,7 +26,7 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - run: npm run compile
-      - run: npx nyc --reporter=lcov npm full-test
+      - run: npx nyc --reporter=lcov npm citest
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v4.0.1
         with:

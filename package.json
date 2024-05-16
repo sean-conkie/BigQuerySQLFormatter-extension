@@ -85,7 +85,7 @@
     "lint": "eslint ./client/src ./server/src --ext .ts,.tsx",
     "postinstall": "cd client && npm install && cd ../server && npm install && cd ..",
     "test": "mocha ./server/out/tests/**/*.test.js ./server/out/tests/**/**/*.test.js ./server/out/tests/**/**/**/*.test.js --rescursive",
-    "clienttest": "node ./client/out/test/runTest",
+    "citest": "mocha ./server/out/tests/**/*.test.js ./server/out/tests/**/**/*.test.js ./server/out/tests/**/**/**/*.test.js --rescursive && node ./client/out/test/runTest",
     "deploy": "vsce publish --no-yarn"
   },
   "devDependencies": {
