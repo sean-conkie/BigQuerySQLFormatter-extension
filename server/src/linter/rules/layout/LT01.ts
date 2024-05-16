@@ -45,28 +45,7 @@ export class TrailingSpaces extends Rule<string>{
     }
 
     if (this.pattern.test(test)) {
-      const diagnostics: Diagnostic[] = [];
-      
-      let match;
-      while ((match = this.pattern.exec(test)) !== null) {
-
-        const start: MatchPosition = this.getLineAndCharacter(test, match.index);
-        const end: MatchPosition = this.getLineAndCharacter(test, this.pattern.lastIndex);
-
-        const diagnostic: Diagnostic = {
-          severity: this.severity,
-          range: {
-            start: { line: start.line, character: start.character },
-            end: { line: end.line, character: end.character }
-          },
-          message: this.message,
-          source: this.code
-        };
-        diagnostics.push(diagnostic);
-      }
-
-      return diagnostics;
-      
+      return this.evaluateMultiRegexTest(test);
     }
 
     return null;

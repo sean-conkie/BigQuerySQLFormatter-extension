@@ -40,25 +40,13 @@ export class SelectModifiers extends Rule<string>{
     if (this.enabled === false) {
       return null;
     }
-
+    
     if (this.pattern.test(test)) {
-      return [{
-        message: this.message,
-        severity: this.severity,
-        range: {
-          start: { line: 0, character: 0 },
-          end: { line:1000, character: 1000 }
-        },
-        source: this.name
-      }];
+      return this.evaluateMultiRegexTest(test);
     }
 
     return null;
 
-  }
-
-  evaluateAst(): Diagnostic[] | null {
-    return null;
   }
 
   matches(test: string): number {
