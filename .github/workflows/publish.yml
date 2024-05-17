@@ -17,6 +17,6 @@ jobs:
           node-version: 18.x
       - run: npm install
       - name: Publish
-        run: vsce publish --no-yarn ${GITHUB_REF#refs/tags/}
+        run: vsce publish --no-yarn "${GITHUB_REF#refs/tags/}"
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
