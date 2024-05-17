@@ -35,21 +35,26 @@ describe('SelectModifiers', () => {
     const listSql: string[][] = [
 
         ['modifier not on same line as select (modifier: <modifier>)',
-        `select \n<modifier> column from tablename`],
+        `select \n<modifier> column from tablename`,
+        '1',
+        '0'],
 
         ['modifier not on same line as select and spacing in front of modifier on second (modifier: <modifier>)',
-        `select   \n      <modifier> column from tablename`],
+        `select   \n      <modifier> column from tablename`,'1','6'],
 
         ['modifier not on same line as select and multiple new lines before modifier (modifier: <modifier>)',
-        `select \n\n\n<modifier> column from tablename`]
+        `select \n\n\n<modifier> column from tablename`,'3','0']
     ];
+    
 
 
     listSql.forEach((element: string[]) => {
         selectMods.forEach((mod: string) => {
             case_number++;
             const new_title: string = element[0].replace('<modifier>', mod);
-            const new_sql: string   = element[1].replace('<modifier>', mod);
+            const new_sql: string = element[1].replace('<modifier>', mod);
+            const expected_line: number = parseInt(element[2]);
+            const expected_character: number = parseInt(element[3]) + mod.length;
 
             it(`Case ${case_number}: ${new_title}\nshould return diagnostic when rule is enabled and pattern matches`, () => {
                 instance.enabled = true;
@@ -59,9 +64,9 @@ describe('SelectModifiers', () => {
                     severity: instance.severity,
                     range: {
                         start: { line: 0, character: 0 },
-                        end: { line: 1000, character: 1000 }
+                        end: { line: expected_line, character: expected_character }
                     },
-                    source: 'select_modifiers_check'
+                    source: 'LT10 (select_modifiers_check)'
                 }]);
             });
         });

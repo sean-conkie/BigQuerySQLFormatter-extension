@@ -1,5 +1,5 @@
 /**
- * @fileoverview Rules to enforce select modifier rule
+ * @fileoverview Rules to enforce trailing comma checks
  * @module linter/rules/layout
  * @requires vscode-languageserver
  * @requires settings
@@ -10,26 +10,29 @@
 import { ServerSettings } from "../../../settings";
 import {
   Diagnostic,
+  DiagnosticSeverity
 } from 'vscode-languageserver/node';
-import { Rule } from '../base';
+import { MatchPosition, Rule } from '../base';
+
 
 /**
- * The SelectModifiers rule
- * @class SelectModifiers
+ * The TrailingSpaces rule
+ * @class TrailingSpaces
  * @extends Rule
  * @memberof Linter.Rules
  */
-export class SelectModifiers extends Rule<string>{
-  readonly name: string = "select_modifiers_check";
-  readonly code: string = "LT10";
-  readonly message: string = "SELECT modifiers (e.g. DISTINCT) must be on the same line as SELECT";
-  readonly pattern: RegExp =/\bselect(?:\s*\n\s*(distinct|all|with|as)\b)/gi;
+export class TrailingSpaces extends Rule<string>{
+  readonly name: string = "trailing_sapces";
+  readonly code: string = "LT01";
+  readonly message: string = "Trailing whitespace.";
+  readonly pattern: RegExp = / +$/gm;
+  readonly severity: DiagnosticSeverity = DiagnosticSeverity.Warning;
 
   /**
-   * Creates an instance of SelectModifiers.
+   * Creates an instance of TrailingSpaces.
    * @param {ServerSettings} settings The server settings
    * @param {number} problems The number of problems identified in the source code
-   * @memberof SelectModifiers
+   * @memberof TrailingSpaces
    */
   constructor(settings: ServerSettings, problems: number) {
       super(settings, problems);
@@ -40,7 +43,7 @@ export class SelectModifiers extends Rule<string>{
     if (this.enabled === false) {
       return null;
     }
-    
+
     if (this.pattern.test(test)) {
       return this.evaluateMultiRegexTest(test);
     }
@@ -48,6 +51,7 @@ export class SelectModifiers extends Rule<string>{
     return null;
 
   }
+
 
   matches(test: string): number {
 
