@@ -3,11 +3,11 @@ changelog:
   exclude:
     labels:
       - release
-      - ignore-for-release
+      - "ignore for release notes"
   categories:
     - title: Breaking changes 🛠️
       labels:
-        - breaking-change
+        - "breaking change"
     - title: New and changed rules 📏
       labels:
         - rule
