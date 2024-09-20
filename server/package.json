@@ -12,12 +12,11 @@
     "url": "https://github.com/sean-conkie/BigQuerySQLFormatter-extension.git"
   },
   "dependencies": {
-    "@types/first-mate": "^7.0.10",
-    "@types/oniguruma": "^7.0.5",
-    "first-mate": "^7.0.0",
-    "oniguruma": "^7.2.3",
+    "onigasm": "^2.2.5",
     "vscode-languageserver": "^9.0.1",
-    "vscode-languageserver-textdocument": "^1.0.11"
+    "vscode-languageserver-textdocument": "^1.0.11",
+    "vscode-oniguruma": "^2.0.1",
+    "vscode-textmate": "^9.1.0"
   },
   "scripts": {}
 }

@@ -53,19 +53,19 @@ export class TrailingComma extends Rule<FileMap>{
             message: this.message,
             severity: this.severity,
             range: {
-              start: { line: filteredTokens[0].line??0, character: filteredTokens[0].start??0 },
-              end: { line: filteredTokens[0].line??0, character: filteredTokens[0].end??0 }
+              start: { line: filteredTokens[0].lineNumber??0, character: filteredTokens[0].startIndex??0 },
+              end: { line: filteredTokens[0].lineNumber??0, character: filteredTokens[0].endIndex??0 }
             },
             source: this.name
           });
-        } else if ((filteredTokens.find((token) => token.value === ',')?.line??0) > (filteredTokens[0].line??0)) {
+        } else if ((filteredTokens.find((token) => token.value === ',')?.lineNumber??0) > (filteredTokens[0].lineNumber??0)) {
           const commaToken = filteredTokens.find((token) => token.value === ',');
           errors.push({
             message: this.message,
             severity: this.severity,
             range: {
-              start: { line: commaToken?.line??0, character: commaToken?.start??0 },
-              end: { line: commaToken?.line??0, character: commaToken?.end??0 }
+              start: { line: commaToken?.lineNumber??0, character: commaToken?.startIndex??0 },
+              end: { line: commaToken?.lineNumber??0, character: commaToken?.endIndex??0 }
             },
             source: this.name
           });

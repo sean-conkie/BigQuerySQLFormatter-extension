@@ -26,13 +26,19 @@ import {
 } from './linter/linter';
 
 import { defaultSettings, ServerSettings } from './settings';
+// import * as vscode from 'vscode';
+
+// const outputChannel = vscode.window.createOutputChannel('BigQuery SQL Formatter', {log: true});
 
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
+
 const connection = createConnection(ProposedFeatures.all);
+connection.console.log('Server connection created');
 
 // Create a simple text document manager.
 const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
+connection.console.log('Server text document manager created');
 
 let hasConfigurationCapability = false;
 let hasWorkspaceFolderCapability = false;
@@ -40,6 +46,7 @@ let hasDiagnosticRelatedInformationCapability = false;
 
 connection.onInitialize((params: InitializeParams) => {
 	const capabilities = params.capabilities;
+	connection.console.log('Server initialized');
 
 	// Does the client support the `workspace/configuration` request?
 	// If not, we fall back using global settings.
@@ -88,9 +95,11 @@ connection.onInitialized(() => {
 
 // The global settings, used when the `workspace/configuration` request is not supported by the client.
 let globalSettings: ServerSettings = defaultSettings;
+connection.console.log('Server global settings created');
 
 // Cache the settings of all open documents
 const documentSettings: Map<string, Thenable<ServerSettings>> = new Map();
+connection.console.log('Server document settings cache created');
 
 connection.onDidChangeConfiguration(change => {
 	if (hasConfigurationCapability) {
@@ -144,7 +153,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	// Create the linter
 	const linter = new Linter(settings);
 
-	const diagnostics: Diagnostic[] = linter.verify(textDocument.getText());
+	const diagnostics: Diagnostic[] = await linter.verify(textDocument.getText());
 
 	// Send the computed diagnostics to VSCode.
 	connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
@@ -194,6 +203,8 @@ connection.onCompletionResolve(
 // Make the text document manager listen on the connection
 // for open, change and close text document events
 documents.listen(connection);
+connection.console.log('Server text document manager listening');
 
 // Listen on the connection
 connection.listen();
+connection.console.log('Server listening');
