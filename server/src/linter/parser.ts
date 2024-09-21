@@ -62,12 +62,12 @@ enum ComparisonOperator {
 // #region Types
 
 type ASTPosition = {
-	"line": number | null,
-	"start": number | null,
-	"end": number | null,
+	lineNumber: number | null,
+	startIndex: number | null,
+	endIndex: number | null,
 };
 
-class Token extends GrammarToken {
+export class Token extends GrammarToken {
 	value: string;
 	lineNumber: number | null = null;
 
@@ -129,21 +129,21 @@ type Column = ColumnAST | ColumnFunctionAST | StatementAST | StringAST | NumberA
 type FunctionParameter = Column | KeywordAST;
 
 type Rule = {
-	"name": string,
-	"scopes": string[],
-	"type": string,
-	"lookahead": number,
-	"negativeLookahead": string[] | null,
-	"recursive": boolean,
-	"children": string[] | null,
-	"end": string[] | null
+	name: string,
+	scopes: string[],
+	type: string,
+	lookahead: number,
+	negativeLookahead: string[] | null,
+	recursive: boolean,
+	children: string[] | null,
+	end: string[] | null
 }
 
 type Comparison = {
-	"left": Column | ArrayAST | null,
-	"operator": ComparisonOperator | null,
-	"right": Column | ArrayAST | null,
-	"logicalOperator": LogicalOperator | null
+	left: Column | ArrayAST | null,
+	operator: ComparisonOperator | null,
+	right: Column | ArrayAST | null,
+	logicalOperator: LogicalOperator | null
 }
 
 /**
@@ -160,14 +160,14 @@ type MatchObj = { end: number, start: number, statement: string, line: number };
 type MatchedRule = { "rule": Rule | null, "tokens": Token[], "matches"?: MatchedRule[] };
 
 
-class ColumnAST implements AST {
+export class ColumnAST implements AST {
 	source: string | null = null;
 	column: string | null = null;
 	alias: string | null = null;
 	tokens: Token[] = [];
-	line: number | null = null;
-	start: number | null = null;
-	end: number | null = null;
+	lineNumber: number | null = null;
+	startIndex: number | null = null;
+	endIndex: number | null = null;
 
 	constructor(matchedRule: MatchedRule) {
 		this.tokens = matchedRule.tokens;
@@ -181,9 +181,9 @@ class ColumnAST implements AST {
 		this.source = findToken(matchedRule.tokens, "entity.name.alias.sql")?.value ?? null;
 		this.column = findToken(matchedRule.tokens, "entity.other.column.sql")?.value ?? null;
 		this.alias = findToken(matchedRule.tokens, "entity.name.tag")?.value ?? null;
-		this.line = matchedRule.tokens[0].lineNumber;
-		this.start = matchedRule.tokens[0].startIndex;
-		this.end = matchedRule.tokens[matchedRule.tokens.length - 1].endIndex;
+		this.lineNumber = matchedRule.tokens[0].lineNumber;
+		this.startIndex = matchedRule.tokens[0].startIndex;
+		this.endIndex = matchedRule.tokens[matchedRule.tokens.length - 1].endIndex;
 	}
 }
 
@@ -191,17 +191,17 @@ class StringAST implements AST {
 	value: string | null = null;
 	tokens: Token[] = [];
 	alias: string | null = null;
-	line: number | null = null;
-	start: number | null = null;
-	end: number | null = null;
+	lineNumber: number | null = null;
+	startIndex: number | null = null;
+	endIndex: number | null = null;
 
 	constructor(tokens: Token[]) {
 		this.tokens = tokens;
 		this.value = tokens.map((token) => token.value).join('');
 		this.alias = findToken(tokens, "entity.name.tag")?.value ?? null;
-		this.line = tokens[0].lineNumber;
-		this.start = tokens[0].startIndex;
-		this.end = tokens[tokens.length - 1].endIndex;
+		this.lineNumber = tokens[0].lineNumber;
+		this.startIndex = tokens[0].startIndex;
+		this.endIndex = tokens[tokens.length - 1].endIndex;
 	}
 }
 
@@ -209,17 +209,17 @@ class NumberAST implements AST {
 	value: number | null = null;
 	tokens: Token[] = [];
 	alias: string | null = null;
-	line: number | null = null;
-	start: number | null = null;
-	end: number | null = null;
+	lineNumber: number | null = null;
+	startIndex: number | null = null;
+	endIndex: number | null = null;
 
 	constructor(tokens: Token[]) {
 		this.tokens = tokens;
 		this.value = Number(tokens.map((token) => token.value).join(''));
 		this.alias = findToken(tokens, "entity.name.tag")?.value ?? null;
-		this.line = tokens[0].lineNumber;
-		this.start = tokens[0].startIndex;
-		this.end = tokens[tokens.length - 1].endIndex;
+		this.lineNumber = tokens[0].lineNumber;
+		this.startIndex = tokens[0].startIndex;
+		this.endIndex = tokens[tokens.length - 1].endIndex;
 	}
 }
 
@@ -227,17 +227,17 @@ class KeywordAST implements AST {
 	value: string | null = null;
 	tokens: Token[] = [];
 	alias: string | null = null;
-	line: number | null = null;
-	start: number | null = null;
-	end: number | null = null;
+	lineNumber: number | null = null;
+	startIndex: number | null = null;
+	endIndex: number | null = null;
 
 	constructor(tokens: Token[]) {
 		this.tokens = tokens;
 		this.value = tokens.map((token) => token.value).join('');
 		this.alias = findToken(tokens, "entity.name.tag")?.value ?? null;
-		this.line = tokens[0].lineNumber;
-		this.start = tokens[0].startIndex;
-		this.end = tokens[tokens.length - 1].endIndex;
+		this.lineNumber = tokens[0].lineNumber;
+		this.startIndex = tokens[0].startIndex;
+		this.endIndex = tokens[tokens.length - 1].endIndex;
 	}
 }
 
@@ -245,9 +245,9 @@ class OrderAST implements AST {
 	column: Column | null = null;
 	direction: string | null = null;
 	tokens: Token[] = [];
-	line: number | null = null;
-	start: number | null = null;
-	end: number | null = null;
+	lineNumber: number | null = null;
+	startIndex: number | null = null;
+	endIndex: number | null = null;
 
 }
 
@@ -255,9 +255,9 @@ class WindowAST implements AST {
 	partition: Column[] = [];
 	order: OrderAST[] = [];
 	tokens: Token[] = [];
-	line: number | null = null;
-	start: number | null = null;
-	end: number | null = null;
+	lineNumber: number | null = null;
+	startIndex: number | null = null;
+	endIndex: number | null = null;
 
 	constructor(match: MatchedRule) {
 		const emptyMatch = { rule: null, tokens: [], matches: [] };
@@ -279,15 +279,15 @@ class ColumnFunctionAST implements AST {
 	over: WindowAST | null = null;
 	alias: string | null = null;
 	tokens: Token[] = [];
-	line: number | null = null;
-	start: number | null = null;
-	end: number | null = null;
+	lineNumber: number | null = null;
+	startIndex: number | null = null;
+	endIndex: number | null = null;
 
 	constructor(matchedRule: MatchedRule) {
 		this.function = matchedRule.tokens.filter((token) => token.scopes.includes("meta.function.sql"))[0].value;
 		this.tokens.push(...matchedRule.tokens);
-		this.line = matchedRule.tokens[0].lineNumber;
-		this.start = matchedRule.tokens[0].startIndex;
+		this.lineNumber = matchedRule.tokens[0].lineNumber;
+		this.startIndex = matchedRule.tokens[0].startIndex;
 
 		// Special rules have been created for columns being cast as a type - these need split into column
 		// and keyword and inserted into the matches array.
@@ -362,21 +362,21 @@ class ColumnFunctionAST implements AST {
 			}
 		}
 
-		this.end = this.tokens[this.tokens.length - 1].endIndex;
+		this.endIndex = this.tokens[this.tokens.length - 1].endIndex;
 	}
 }
 
 class ArrayAST implements AST {
 	values: (StringAST | NumberAST)[] = [];
 	tokens: Token[] = [];
-	line: number | null = null;
-	start: number | null = null;
-	end: number | null = null;
+	lineNumber: number | null = null;
+	startIndex: number | null = null;
+	endIndex: number | null = null;
 
 	constructor(matchedRules: MatchedRule[]) {
-		this.line = matchedRules[0].tokens[0].lineNumber;
-		this.start = matchedRules[0].tokens[0].startIndex;
-		this.end = matchedRules[matchedRules.length - 1].tokens[matchedRules[matchedRules.length - 1].tokens.length - 1].endIndex;
+		this.lineNumber = matchedRules[0].tokens[0].lineNumber;
+		this.startIndex = matchedRules[0].tokens[0].startIndex;
+		this.endIndex = matchedRules[matchedRules.length - 1].tokens[matchedRules[matchedRules.length - 1].tokens.length - 1].endIndex;
 		this.tokens = matchedRules.map((match) => match.tokens).flat();
 
 		for (const match of matchedRules) {
@@ -395,9 +395,9 @@ class ComparisonAST implements AST {
 	operator: ComparisonOperator | null = null;
 	right: Column | ArrayAST | null = null;
 	tokens: Token[] = [];
-	line: number | null = null;
-	start: number | null = null;
-	end: number | null = null;
+	lineNumber: number | null = null;
+	startIndex: number | null = null;
+	endIndex: number | null = null;
 
 	constructor(comparison: Comparison, tokens: Token[]) {
 		this.tokens = tokens;
@@ -405,9 +405,9 @@ class ComparisonAST implements AST {
 		this.operator = comparison.operator;
 		this.right = comparison.right;
 		this.logicalOperator = comparison.logicalOperator;
-		this.line = tokens[0].lineNumber;
-		this.start = tokens[0].startIndex;
-		this.end = tokens[tokens.length - 1].endIndex;
+		this.lineNumber = tokens[0].lineNumber;
+		this.startIndex = tokens[0].startIndex;
+		this.endIndex = tokens[tokens.length - 1].endIndex;
 	}
 }
 
@@ -416,9 +416,9 @@ class ComparisonGroupAST implements AST {
 	logicalOperator: LogicalOperator | null = null;
 	comparisons: (ComparisonGroupAST | ComparisonAST)[] = [];
 	tokens: Token[] = [];
-	line: number | null = null;
-	start: number | null = null;
-	end: number | null = null;
+	lineNumber: number | null = null;
+	startIndex: number | null = null;
+	endIndex: number | null = null;
 
 	constructor(matches: MatchedRule[], logicalOperator: LogicalOperator | null = null) {
 		if (matches.length === 0) {
@@ -540,18 +540,18 @@ class CaseStatementWhenAST implements AST {
 	when: ComparisonGroupAST | null = null;
 	then: Column | null = null;
 	tokens: Token[] = [];
-	line: number | null = null;
-	start: number | null = null;
-	end: number | null = null;
+	lineNumber: number | null = null;
+	startIndex: number | null = null;
+	endIndex: number | null = null;
 
 	constructor(when: MatchedRule, then: MatchedRule) {
 
 		this.tokens.push(...when.tokens);
 		this.tokens.push(...then.tokens);
 
-		this.line = this.tokens[0].lineNumber;
-		this.start = this.tokens[0].startIndex;
-		this.end = this.tokens[this.tokens.length - 1].endIndex;
+		this.lineNumber = this.tokens[0].lineNumber;
+		this.startIndex = this.tokens[0].startIndex;
+		this.endIndex = this.tokens[this.tokens.length - 1].endIndex;
 
 		this.when = new ComparisonGroupAST(when.matches ?? []);
 		this.then = new ColumnAST(then);
@@ -565,15 +565,15 @@ class CaseStatementAST implements AST {
 	else: Column | null = null;
 	alias: string | null = null;
 	tokens: Token[] = [];
-	line: number | null = null;
-	start: number | null = null;
-	end: number | null = null;
+	lineNumber: number | null = null;
+	startIndex: number | null = null;
+	endIndex: number | null = null;
 
 	constructor(matchedRule: MatchedRule) {
 		this.tokens = matchedRule.tokens;
-		this.line = matchedRule.tokens[0].lineNumber;
-		this.start = matchedRule.tokens[0].startIndex;
-		this.end = matchedRule.tokens[matchedRule.tokens.length - 1].endIndex;
+		this.lineNumber = matchedRule.tokens[0].lineNumber;
+		this.startIndex = matchedRule.tokens[0].startIndex;
+		this.endIndex = matchedRule.tokens[matchedRule.tokens.length - 1].endIndex;
 
 		const whenMatches = matchedRule.matches?.filter((match) => match.rule?.type === "when") ?? [];
 		const thenMatches = matchedRule.matches?.filter((match) => match.rule?.type === "then") ?? [];
@@ -596,18 +596,18 @@ class CaseStatementAST implements AST {
 }
 
 class JoinAST implements AST {
-	"join": JoinType | null = JoinType.INNER;
-	"source": ObjectAST | StatementAST | null = null;
-	"on": ComparisonGroupAST | null = null;
-	"tokens": Token[] = [];
-	"line": number | null = null;
-	"start": number | null = null;
-	"end": number | null = null;
+	join: JoinType | null = JoinType.INNER;
+	source: ObjectAST | StatementAST | null = null;
+	on: ComparisonGroupAST | null = null;
+	tokens: Token[] = [];
+	lineNumber: number | null = null;
+	startIndex: number | null = null;
+	endIndex: number | null = null;
 
 	constructor(matchedRule: MatchedRule) {
 		this.tokens.push(...matchedRule.tokens);
-		this.line = matchedRule.tokens[0].lineNumber;
-		this.start = matchedRule.tokens[0].startIndex;
+		this.lineNumber = matchedRule.tokens[0].lineNumber;
+		this.startIndex = matchedRule.tokens[0].startIndex;
 
 		this.join = findToken(matchedRule.tokens, "keyword.join.sql")?.value as JoinType;
 		this.source = new ObjectAST(matchedRule.tokens);
@@ -615,19 +615,19 @@ class JoinAST implements AST {
 		this.on = new ComparisonGroupAST(matchedRule.matches ?? []);
 		this.tokens.push(...this.on.tokens);
 
-		this.end = this.tokens[this.tokens.length - 1].endIndex;
+		this.endIndex = this.tokens[this.tokens.length - 1].endIndex;
 	}
 }
 
-class ObjectAST implements AST {
-	"project": string | null = null;
-	"dataset": string | null = null;
-	"object": string | null = null;
-	"alias": string | null = null;
-	"tokens": Token[] = [];
-	"line": number | null = null;
-	"start": number | null = null;
-	"end": number | null = null;
+export class ObjectAST implements AST {
+	project: string | null = null;
+	dataset: string | null = null;
+	object: string | null = null;
+	alias: string | null = null;
+	tokens: Token[] = [];
+	lineNumber: number | null = null;
+	startIndex: number | null = null;
+	endIndex: number | null = null;
 
 	constructor(tokens: LineToken[] | Token[]) {
 
@@ -645,9 +645,9 @@ class ObjectAST implements AST {
 		this.dataset = dataset?.value ?? null;
 		this.object = object?.value ?? null;
 		this.alias = alias?.value ?? null;
-		this.line = Math.min(...statementTokens.map((token) => token?.lineNumber ?? 0));
-		this.start = Math.min(...statementTokens.map((token) => token?.startIndex ?? 0));
-		this.end = Math.min(...statementTokens.map((token) => token?.endIndex ?? 0));
+		this.lineNumber = Math.min(...statementTokens.map((token) => token?.lineNumber ?? 0));
+		this.startIndex = Math.min(...statementTokens.map((token) => token?.startIndex ?? 0));
+		this.endIndex = Math.min(...statementTokens.map((token) => token?.endIndex ?? 0));
 		this.tokens = statementTokens.filter(token => token !== null) as Token[];
 	}
 }
@@ -656,29 +656,41 @@ class ObjectAST implements AST {
  * The abstract syntax tree for the SQL code
  */
 export class StatementAST implements AST {
-	"with": StatementAST | null = null;
-	"type": StatementType | null = StatementType.SELECT;
-	"object": ObjectAST | null = null;
-	"options": null = null;
-	"distinct": boolean = false;
-	"columns": Column[] = [];
-	"from": ObjectAST | StatementAST | null = null;
-	"joins": JoinAST[] = [];
-	"where": ComparisonGroupAST | null = null;
-	"groupby": ColumnAST[] = [];
-	"having": string | null = null;
-	"orderby": ColumnAST[] = [];
-	"limit": number | null = null;
-	"statement": string | null = null;
-	"tokens": Token[] = [];
-	"line": number | null = null;
-	"start": number | null = null;
-	"end": number | null = null;
+	with: StatementAST | null = null;
+	type: StatementType | null = StatementType.SELECT;
+	object: ObjectAST | null = null;
+	options: null = null;
+	distinct: boolean = false;
+	columns: Column[] = [];
+	from: ObjectAST | StatementAST | null = null;
+	joins: JoinAST[] = [];
+	where: ComparisonGroupAST | null = null;
+	groupby: ColumnAST[] = [];
+	having: string | null = null;
+	orderby: ColumnAST[] = [];
+	limit: number | null = null;
+	statement: string | null = null;
+	tokens: Token[] = [];
+	lineNumber: number | null = null;
+	startIndex: number | null = null;
+	endIndex: number | null = null;
 
 	constructor() {
-
 	}
 
+	/**
+	 * Processes a matched rule and updates the internal state based on the rule type.
+	 *
+	 * @param matchedRule - The matched rule object containing the rule and tokens to process.
+	 * 
+	 * The function performs the following actions based on the rule type:
+	 * - 'dml': Extracts the statement type and object AST from the tokens and updates the type and object properties.
+	 * - 'select': Checks if the tokens contain a "keyword.select.distinct.sql" scope and sets the distinct property to true if found.
+	 * - 'from': Creates a new ObjectAST from the tokens and assigns it to the from property.
+	 * - 'join': Creates a new JoinAST from the matched rule and adds it to the joins array.
+	 * - 'where': Creates a new ComparisonGroupAST from the matched rule matches and assigns it to the where property.
+	 * - Default: Creates a new column from the matched rule and adds it to the columns array.
+	 */
 	processRule(matchedRule: MatchedRule): void {
 		const rule = matchedRule.rule;
 		if (rule) {
@@ -838,7 +850,7 @@ export class Parser {
 		let tokenCounter: number = 0;
 		let reCheck: boolean = true; // used to stop infinite loops
 		statement.tokens = tokens;
-		statement.line = tokens[0].lineNumber;
+		statement.lineNumber = tokens[0].lineNumber;
 
 		const reset = () => {
 			rules = syntaxJson.rules;
