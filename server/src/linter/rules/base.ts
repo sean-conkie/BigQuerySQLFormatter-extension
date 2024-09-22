@@ -25,6 +25,7 @@ export abstract class Rule<T extends string | FileMap>{
 	readonly code: string = "";
 	readonly type: RuleType = RuleType.REGEX;
 	readonly message: string = "";
+	readonly relatedInformation: string = "";
 	readonly pattern: RegExp = /./;
 	severity: DiagnosticSeverity = DiagnosticSeverity.Error;
 	enabled: boolean = true;
@@ -44,7 +45,7 @@ export abstract class Rule<T extends string | FileMap>{
 
 	}
 
-	abstract evaluate(test: T): Diagnostic[] | null;
+	abstract evaluate(test: T, documentUri: string | null): Diagnostic[] | null;
 
 	evaluateMultiRegexTest(test: string): Diagnostic[] | null {
 
@@ -60,6 +61,7 @@ export abstract class Rule<T extends string | FileMap>{
 			const end: MatchPosition = this.getLineAndCharacter(test, this.pattern.lastIndex);
 
 			const diagnostic: Diagnostic = {
+				code: this.code,
 				severity: this.severity,
 				range: {
 					start: { line: start.line, character: start.character },
