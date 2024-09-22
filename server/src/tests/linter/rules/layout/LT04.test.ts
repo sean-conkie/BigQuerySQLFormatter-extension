@@ -5,7 +5,7 @@
 import { expect } from 'chai';
 import { defaultSettings } from '../../../../settings';
 import { TrailingComma } from '../../../../linter/rules/layout/LT04';
-import { FileMap, StatementAST, Parser, ColumnAST, Token, ObjectAST } from '../../../../linter/parser';
+import { FileMap, StatementAST, Parser } from '../../../../linter/parser';
 
 describe('TrailingComma', () => {
     let instance: TrailingComma;
@@ -28,13 +28,14 @@ describe('TrailingComma', () => {
 
         const result = instance.evaluate(await parser.parse('SELECT col1\n ,col2\n FROM table'));
         expect(result).to.deep.equal([{
+            code: instance.code,
             message: instance.message,
             severity: instance.severity,
             range: {
                 start: { line: 1, character: 1 },
                 end: { line: 1, character: 2 }
             },
-            source: 'trailing_commas'
+            source: instance.source()
         }]);
     });
 
