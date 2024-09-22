@@ -5,5 +5,5 @@ source-path=SCRIPTDIR
 external-sources=true
 
 disable=SC2181
-
 disable=SC1090
+disable=SC1091

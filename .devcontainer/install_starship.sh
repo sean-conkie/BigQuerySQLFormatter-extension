@@ -24,8 +24,7 @@ function install_starship() {
     if [[ -f /tmp/install.sh ]]
     then
         chmod +x /tmp/install.sh
-        /tmp/install.sh -y
-        if [[ $? -ne 0 ]]
+        if ! /tmp/install.sh -y
         then
             echo -e "${RED}Starship install failed.${RESET}"
             exit 1

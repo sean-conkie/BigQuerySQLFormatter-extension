@@ -25,8 +25,7 @@ then
     exit 1
 else
 
-    chmod +x $GIT_AUTOCOMPLETE
-    if [[ $? -ne 0 ]]
+    if ! chmod +x $GIT_AUTOCOMPLETE
     then
         echo -e "${RED}Failed to set permissions on ${GIT_AUTOCOMPLETE}.${RESET}"
         exit 1
