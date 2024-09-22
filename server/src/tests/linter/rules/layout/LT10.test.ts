@@ -60,6 +60,7 @@ describe('SelectModifiers', () => {
                 instance.enabled = true;
                 const result = instance.evaluate(new_sql);
                 expect(result).to.deep.equal([{
+                    code: instance.code,
                     message: instance.message,
                     severity: instance.severity,
                     range: {

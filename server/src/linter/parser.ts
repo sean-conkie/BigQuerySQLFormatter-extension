@@ -160,6 +160,13 @@ type MatchObj = { end: number, start: number, statement: string, line: number };
 type MatchedRule = { "rule": Rule | null, "tokens": Token[], "matches"?: MatchedRule[] };
 
 
+/**
+ * Represents a column in the Abstract Syntax Tree (AST).
+ * 
+ * This class is used to parse and store information about a column, including its source, name, alias, and token positions.
+ * 
+ * @implements {AST}
+ */
 export class ColumnAST implements AST {
 	source: string | null = null;
 	column: string | null = null;
@@ -168,7 +175,7 @@ export class ColumnAST implements AST {
 	lineNumber: number | null = null;
 	startIndex: number | null = null;
 	endIndex: number | null = null;
-
+	
 	constructor(matchedRule: MatchedRule) {
 		this.tokens = matchedRule.tokens;
 
@@ -185,6 +192,26 @@ export class ColumnAST implements AST {
 		this.startIndex = matchedRule.tokens[0].startIndex;
 		this.endIndex = matchedRule.tokens[matchedRule.tokens.length - 1].endIndex;
 	}
+
+	/**
+	 * Checks if the alias is redundant.
+	 * 
+	 * An alias is considered redundant if it is not null and is the same as the column name.
+	 * 
+	 * @returns {boolean} - Returns `true` if the alias is redundant, otherwise `false`.
+	 */
+	redundantAlias(): boolean {
+		if (this.alias === null) {
+			return false;
+		}
+
+		if (this.column === null) {
+			return false;
+		}
+
+		return this.column === this.alias;
+	}
+
 }
 
 class StringAST implements AST {
@@ -230,7 +257,7 @@ class KeywordAST implements AST {
 	lineNumber: number | null = null;
 	startIndex: number | null = null;
 	endIndex: number | null = null;
-
+	
 	constructor(tokens: Token[]) {
 		this.tokens = tokens;
 		this.value = tokens.map((token) => token.value).join('');
@@ -248,7 +275,7 @@ class OrderAST implements AST {
 	lineNumber: number | null = null;
 	startIndex: number | null = null;
 	endIndex: number | null = null;
-
+	
 }
 
 class WindowAST implements AST {
@@ -258,7 +285,7 @@ class WindowAST implements AST {
 	lineNumber: number | null = null;
 	startIndex: number | null = null;
 	endIndex: number | null = null;
-
+	
 	constructor(match: MatchedRule) {
 		const emptyMatch = { rule: null, tokens: [], matches: [] };
 		const partitionByIndex = match.matches?.indexOf(match.matches?.find((match) => match.rule?.name === "keyword.partition") ?? emptyMatch) ?? 0;
@@ -282,7 +309,7 @@ class ColumnFunctionAST implements AST {
 	lineNumber: number | null = null;
 	startIndex: number | null = null;
 	endIndex: number | null = null;
-
+	
 	constructor(matchedRule: MatchedRule) {
 		this.function = matchedRule.tokens.filter((token) => token.scopes.includes("meta.function.sql"))[0].value;
 		this.tokens.push(...matchedRule.tokens);
@@ -372,7 +399,7 @@ class ArrayAST implements AST {
 	lineNumber: number | null = null;
 	startIndex: number | null = null;
 	endIndex: number | null = null;
-
+	
 	constructor(matchedRules: MatchedRule[]) {
 		this.lineNumber = matchedRules[0].tokens[0].lineNumber;
 		this.startIndex = matchedRules[0].tokens[0].startIndex;
@@ -398,7 +425,7 @@ class ComparisonAST implements AST {
 	lineNumber: number | null = null;
 	startIndex: number | null = null;
 	endIndex: number | null = null;
-
+	
 	constructor(comparison: Comparison, tokens: Token[]) {
 		this.tokens = tokens;
 		this.left = comparison.left;
@@ -419,6 +446,7 @@ class ComparisonGroupAST implements AST {
 	lineNumber: number | null = null;
 	startIndex: number | null = null;
 	endIndex: number | null = null;
+	type: string = 'comparison.group';
 
 	constructor(matches: MatchedRule[], logicalOperator: LogicalOperator | null = null) {
 		if (matches.length === 0) {
@@ -543,6 +571,7 @@ class CaseStatementWhenAST implements AST {
 	lineNumber: number | null = null;
 	startIndex: number | null = null;
 	endIndex: number | null = null;
+	type: string = 'case.when';
 
 	constructor(when: MatchedRule, then: MatchedRule) {
 
@@ -568,7 +597,7 @@ class CaseStatementAST implements AST {
 	lineNumber: number | null = null;
 	startIndex: number | null = null;
 	endIndex: number | null = null;
-
+	
 	constructor(matchedRule: MatchedRule) {
 		this.tokens = matchedRule.tokens;
 		this.lineNumber = matchedRule.tokens[0].lineNumber;
@@ -603,7 +632,7 @@ class JoinAST implements AST {
 	lineNumber: number | null = null;
 	startIndex: number | null = null;
 	endIndex: number | null = null;
-
+	
 	constructor(matchedRule: MatchedRule) {
 		this.tokens.push(...matchedRule.tokens);
 		this.lineNumber = matchedRule.tokens[0].lineNumber;
@@ -628,7 +657,7 @@ export class ObjectAST implements AST {
 	lineNumber: number | null = null;
 	startIndex: number | null = null;
 	endIndex: number | null = null;
-
+	
 	constructor(tokens: LineToken[] | Token[]) {
 
 		const project = findToken(tokens, "entity.name.project.sql");

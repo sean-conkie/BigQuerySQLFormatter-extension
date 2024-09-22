@@ -44,13 +44,14 @@ export class StartOfFile extends Rule<string>{
 
     if (this.pattern.test(test.substring(0, 1))) {
       return [{
+        code: this.code,
         message: this.message,
         severity: this.severity,
         range: {
           start: { line: 0, character: 0 },
           end: { line: 0, character: 1 }
         },
-        source: this.name
+        source: this.source()
       }];
     }
 

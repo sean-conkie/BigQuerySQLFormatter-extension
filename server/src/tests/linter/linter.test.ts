@@ -28,7 +28,7 @@ describe('Linter', () => {
         const source = 'select * from table';
         const diagnostics: Diagnostic[] = [];
         for (const rule of linter.regexRules) {
-            const result = rule.evaluate(source);
+            const result = rule.evaluate(source, null);
             if (result !== null) {
                 diagnostics.push(...result);
             }
@@ -41,7 +41,7 @@ describe('Linter', () => {
         const source = '\nselect *\nfrom table';
         const diagnostics: Diagnostic[] = [];
         for (const rule of linter.regexRules) {
-            const result = rule.evaluate(source);
+            const result = rule.evaluate(source, null);
             if (result !== null) {
                 diagnostics.push(...result);
             }

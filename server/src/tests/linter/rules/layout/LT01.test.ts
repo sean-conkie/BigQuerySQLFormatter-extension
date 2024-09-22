@@ -33,6 +33,7 @@ describe('TrailingSpaces', () => {
             instance.enabled = true;
             const result = instance.evaluate(element[1]);
             expect(result).to.deep.equal([{
+                code: instance.code,
                 message: instance.message,
                 severity: instance.severity,
                 range: {
@@ -59,6 +60,7 @@ describe('TrailingSpaces', () => {
                 instance.enabled = true;
                 const result = instance.evaluate(element[1]);
                 expect(result).to.deep.equal([{
+                    code: instance.code,
                     message: instance.message,
                     severity: instance.severity,
                     range: {
@@ -67,6 +69,7 @@ describe('TrailingSpaces', () => {
                     },
                     source: 'LT01 (trailing_sapces)'
                 },{
+                    code: instance.code,
                     message: instance.message,
                     severity: instance.severity,
                     range: {
