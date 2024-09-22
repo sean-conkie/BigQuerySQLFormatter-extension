@@ -153,7 +153,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	// Create the linter
 	const linter = new Linter(settings);
 
-	const diagnostics: Diagnostic[] = await linter.verify(textDocument.getText());
+	const diagnostics: Diagnostic[] = await linter.verify(textDocument.getText(), textDocument.uri);
 
 	// Send the computed diagnostics to VSCode.
 	connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
