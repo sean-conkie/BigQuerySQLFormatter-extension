@@ -31,3 +31,4 @@ jobs:
           DEFAULT_BRANCH: "main"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           LINTER_RULES_PATH: .github/linters
+          BASH_FILE_NAME: .github/linters/.shellcheckrc
