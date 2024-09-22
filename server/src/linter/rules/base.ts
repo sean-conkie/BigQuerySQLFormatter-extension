@@ -66,7 +66,7 @@ export abstract class Rule<T extends string | FileMap>{
 					end: { line: end.line, character: end.character }
 				},
 				message: this.message,
-				source: `${this.code} (${this.name})`
+				source: `${this.source()}`
 			};
 			diagnostics.push(diagnostic);
 		}
@@ -85,6 +85,10 @@ export abstract class Rule<T extends string | FileMap>{
 					runningTotal += lines[i].length + 1;
 			}
 			throw new Error('Match index out of range');
+	}
+
+	source(): string {
+		return `${this.code} (${this.name})`;
 	}
 
 }
