@@ -7,6 +7,7 @@
  */
 
 import { ServerSettings } from '../../settings';
+import { aliasRules } from './aliasing/rules';
 import { layoutRules } from './layout/rules';
 import { Rule } from './base';
 import { FileMap } from '../parser';
@@ -22,6 +23,7 @@ import { FileMap } from '../parser';
  */
 export function initialiseRules(settings: ServerSettings, problems: number): Rule<string | FileMap>[] {
 	return [
-		...layoutRules(settings, problems)
+		...layoutRules(settings, problems),
+		...aliasRules(settings, problems)
 	];
 }
