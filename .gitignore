@@ -133,8 +133,11 @@ dist
 
 # VS Code and dev containers
 
-.devcontainer/*
 .vscode
 *.code-workspace
 
 .venv
+
+*.vsix
+
+.env

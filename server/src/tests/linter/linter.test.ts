@@ -24,7 +24,7 @@ describe('Linter', () => {
         expect(linter.parserRules).to.deep.equal(parserRules);
     });
 
-    it('should verify source code and return diagnostics', () => {
+    it('should verify source code and return diagnostics', async () => {
         const source = 'select * from table';
         const diagnostics: Diagnostic[] = [];
         for (const rule of linter.regexRules) {
@@ -33,11 +33,11 @@ describe('Linter', () => {
                 diagnostics.push(...result);
             }
         }
-        const result = linter.verify(source);
+        const result = await linter.verify(source);
         expect(result).to.deep.equal(diagnostics);
     });
 
-    it('should increment problems for each diagnostic', () => {
+    it('should increment problems for each diagnostic', async () => {
         const source = '\nselect *\nfrom table';
         const diagnostics: Diagnostic[] = [];
         for (const rule of linter.regexRules) {
@@ -46,7 +46,7 @@ describe('Linter', () => {
                 diagnostics.push(...result);
             }
         }
-        linter.verify(source);
+        await linter.verify(source);
         expect(linter.problems).to.equal(diagnostics.length);
     });
 });

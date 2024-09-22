@@ -9,7 +9,6 @@
 import { Diagnostic, DiagnosticSeverity } from 'vscode-languageserver/node';
 import { RuleType } from './enums';
 import { ServerSettings } from '../../settings';
-import { OnigRegExp } from 'oniguruma';
 import { FileMap } from '../parser';
 
 
