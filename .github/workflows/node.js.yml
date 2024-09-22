@@ -18,15 +18,24 @@ jobs:
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4.0.2
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-      - run: npm ci
-      - run: npm run compile
-      - run: npx nyc --reporter=lcov npm test
+      
+      - name: Install Dependencies
+        run: npm ci
+      
+      - name: Build
+        run: npm run compile
+      
+      - name: Test
+        run: npx nyc --reporter=lcov npm test
+      
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v4.0.1
         with:
