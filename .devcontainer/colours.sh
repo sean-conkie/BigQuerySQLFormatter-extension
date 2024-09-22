@@ -1,3 +1,4 @@
+#!/bin/bash
 
 # ANSI Colors
 export BLACK='\033[0;30m'

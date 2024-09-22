@@ -1,6 +1,6 @@
 #!/bin/bash
 
-
+# shellcheck source=.devcontainer/colours.sh
 source "$(dirname "$0")/colours.sh"
 
 function install_starship() {

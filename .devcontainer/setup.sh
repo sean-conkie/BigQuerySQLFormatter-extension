@@ -1,7 +1,8 @@
 #!/bin/bash
 
-
+# shellcheck source=.devcontainer/colours.sh
 source "$(dirname "$0")/colours.sh"
+# shellcheck source=.devcontainer/install_starship.sh
 source "$(dirname "$0")/install_starship.sh"
 
 
