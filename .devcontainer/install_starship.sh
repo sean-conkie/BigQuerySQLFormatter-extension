@@ -7,8 +7,7 @@ function install_starship() {
 
     echo -e "${BLUE}Installing nerdfont...${RESET}"
     # install Nerd Font
-    curl -sS https://webi.sh/nerdfont | sh
-    if [[ $? -ne 0 ]]
+    if ! curl -sS https://webi.sh/nerdfont | sh
     then
         echo -e "${RED}Nerdfont install failed.${RESET}"
         exit 1

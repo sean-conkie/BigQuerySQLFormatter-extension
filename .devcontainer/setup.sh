@@ -19,9 +19,7 @@ echo ""
 echo -e "${BLUE}Installing git autocomplete...${RESET}"
 GIT_AUTOCOMPLETE=/home/node/.git-completion.bash
 # add bash autocompletion
-curl https://raw.githubusercontent.com/git/git/master/contrib/completion/git-completion.bash -o $GIT_AUTOCOMPLETE
-
-if [[ $? -ne 0 ]]
+if ! curl https://raw.githubusercontent.com/git/git/master/contrib/completion/git-completion.bash -o $GIT_AUTOCOMPLETE
 then
     echo -e "${RED}git autocompletion download failed.${RESET}"
     exit 1
@@ -44,8 +42,7 @@ install_starship
 
 # add yeoman
 echo -e "${BLUE}Installing Yeoman...${RESET}"
-npm install --global yo generator-code
-if [[ $? -ne 0 ]]
+if ! npm install --global yo generator-code
 then
     echo -e "${RED}Failed to install yeoman.${RESET}"
     exit 1
@@ -55,8 +52,7 @@ echo ""
 
 # add vsce
 echo -e "${BLUE}Installing VSCE...${RESET}"
-npm install -g @vscode/vsce
-if [[ $? -ne 0 ]]
+if ! npm install -g @vscode/vsce
 then
     echo -e "${RED}Failed to install VSCE.${RESET}"
     exit 1
@@ -66,8 +62,7 @@ echo ""
 
 # add markdownlint
 echo -e "${BLUE}Installing markdownlint...${RESET}"
-npm install -g markdownlint-cli
-if [[ $? -ne 0 ]]
+if ! npm install -g markdownlint-cli
 then
     echo -e "${RED}Failed to install markdownlint.${RESET}"
     exit 1
@@ -77,8 +72,7 @@ echo ""
 
 # add shellcheck
 echo -e "${BLUE}Installing shellcheck...${RESET}"
-apt install shellcheck
-if [[ $? -ne 0 ]]
+if ! apt install shellcheck
 then
     echo -e "${RED}Failed to install shellcheck.${RESET}"
     exit 1
