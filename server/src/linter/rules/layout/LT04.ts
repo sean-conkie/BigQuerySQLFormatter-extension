@@ -56,7 +56,7 @@ export class TrailingComma extends Rule<FileMap>{
               start: { line: filteredTokens[0].lineNumber??0, character: filteredTokens[0].startIndex??0 },
               end: { line: filteredTokens[0].lineNumber??0, character: filteredTokens[0].endIndex??0 }
             },
-            source: this.name
+            source: this.source()
           });
         } else if ((filteredTokens.find((token) => token.value === ',')?.lineNumber??0) > (filteredTokens[0].lineNumber??0)) {
           const commaToken = filteredTokens.find((token) => token.value === ',');
@@ -67,7 +67,7 @@ export class TrailingComma extends Rule<FileMap>{
               start: { line: commaToken?.lineNumber??0, character: commaToken?.startIndex??0 },
               end: { line: commaToken?.lineNumber??0, character: commaToken?.endIndex??0 }
             },
-            source: this.name
+            source: this.source()
           });
         }
       }
