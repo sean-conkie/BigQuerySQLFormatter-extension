@@ -51,7 +51,7 @@ export class Linter {
 	 * @param source - The source code to be verified.
 	 * @returns A promise that resolves to an array of `Diagnostic` objects representing the issues found in the source code.
 	 */
-	async verify(source: string): Promise<Diagnostic[]> {
+	async verify(source: string, documentUri: string | null = null): Promise<Diagnostic[]> {
 
 		// Parse the source code
 		const parser = new Parser();
@@ -59,7 +59,7 @@ export class Linter {
 		const diagnostics: Diagnostic[] = [];
 
 		for (const rule of this.regexRules) {
-			const result = rule.evaluate(source);
+			const result = rule.evaluate(source, documentUri);
 			if (result !== null) {
 				diagnostics.push(...result);
 				this.problems = diagnostics.length;
@@ -69,7 +69,7 @@ export class Linter {
 		const abstractSyntaxTree: { [key: number]: StatementAST } = await parser.parse(source);
 
 		for (const rule of this.parserRules) {
-			const result = rule.evaluate(abstractSyntaxTree);
+			const result = rule.evaluate(abstractSyntaxTree, documentUri);
 			if (result !== null) {
 				diagnostics.push(...result);
 				this.problems = diagnostics.length;
