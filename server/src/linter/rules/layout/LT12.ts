@@ -32,13 +32,14 @@ export class EndofFile extends Rule<string>{
 			const sourceLines: string[] = test.split(/\n|\r\n|\r/);
 
 			return [{
+				code: this.code,
 				message: this.message,
 				severity: this.severity,
 				range: {
 					start: { line: sourceLines.length, character: sourceLines[sourceLines.length - 1].length },
 					end: { line: sourceLines.length, character: sourceLines[sourceLines.length - 1].length },
 				},
-				source: this.name
+				source: this.source()
 			}];
 		}
 

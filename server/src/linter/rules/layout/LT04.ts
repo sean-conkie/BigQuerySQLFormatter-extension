@@ -50,6 +50,7 @@ export class TrailingComma extends Rule<FileMap>{
         const filteredTokens = column.tokens.filter((token) => !token.scopes.includes("punctuation.whitespace.leading.sql"));
         if ((filteredTokens[0].value??'') === ',') {
           errors.push({
+            code: this.code,
             message: this.message,
             severity: this.severity,
             range: {
@@ -61,6 +62,7 @@ export class TrailingComma extends Rule<FileMap>{
         } else if ((filteredTokens.find((token) => token.value === ',')?.lineNumber??0) > (filteredTokens[0].lineNumber??0)) {
           const commaToken = filteredTokens.find((token) => token.value === ',');
           errors.push({
+            code: this.code,
             message: this.message,
             severity: this.severity,
             range: {
