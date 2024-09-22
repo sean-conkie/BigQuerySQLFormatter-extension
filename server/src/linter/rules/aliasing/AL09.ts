@@ -3,6 +3,8 @@ import { ServerSettings } from "../../../settings";
 import {
   Diagnostic,
   DiagnosticSeverity,
+  DiagnosticRelatedInformation,
+  Location,
   Range
 } from 'vscode-languageserver/node';
 import { RuleType } from '../enums';
@@ -14,6 +16,7 @@ export class RedundantColumnAlias extends Rule<FileMap>{
   readonly name: string = "redundant_column_alias";
   readonly code: string = "AL09";
   readonly message: string = "Redundant column alias.";
+  readonly relatedInformation: string = "Columns should not be aliased with the same name as reference.";
   readonly pattern: RegExp = / +$/gm;
   readonly severity: DiagnosticSeverity = DiagnosticSeverity.Warning;
 	readonly type: RuleType = RuleType.PARSER;
@@ -28,7 +31,7 @@ export class RedundantColumnAlias extends Rule<FileMap>{
       super(settings, problems);
   }
 
-  evaluate(ast: FileMap): Diagnostic[] | null {
+  evaluate(ast: FileMap, documentUri: string | null = null): Diagnostic[] | null {
 
     if (this.enabled === false) {
       return null;
@@ -70,9 +73,18 @@ export class RedundantColumnAlias extends Rule<FileMap>{
             errors.push({
               code: this.code,
               message: this.message,
-              source: this.name,
+              source: this.source(),
               severity: this.severity,
-              range: range
+              range: range,
+              relatedInformation: [
+                {
+                  location: {
+                    uri: documentUri??'', 
+                    range: range
+                  },
+                  message: this.relatedInformation
+                }
+              ]
             });
 
             
