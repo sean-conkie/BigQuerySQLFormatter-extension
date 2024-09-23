@@ -31,6 +31,13 @@ export class RedundantColumnAlias extends Rule<FileMap>{
       super(settings, problems);
   }
 
+  /**
+   * Evaluates the given Abstract Syntax Tree (AST) to identify redundant aliases in column definitions.
+   * 
+   * @param ast - The Abstract Syntax Tree (AST) representing the SQL file structure.
+   * @param documentUri - The URI of the document being evaluated, or null if not applicable.
+   * @returns An array of Diagnostic objects representing the errors found, or null if no errors are found or the rule is disabled.
+   */
   evaluate(ast: FileMap, documentUri: string | null = null): Diagnostic[] | null {
 
     if (this.enabled === false) {
@@ -70,24 +77,8 @@ export class RedundantColumnAlias extends Rule<FileMap>{
               };
             }
 
-            errors.push({
-              code: this.code,
-              message: this.message,
-              source: this.source(),
-              severity: this.severity,
-              range: range,
-              relatedInformation: [
-                {
-                  location: {
-                    uri: documentUri??'', 
-                    range: range
-                  },
-                  message: this.relatedInformation
-                }
-              ]
-            });
+            errors.push(this.createDiagnostic(range, documentUri));
 
-            
           }
         }
       });

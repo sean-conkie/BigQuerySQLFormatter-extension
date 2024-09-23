@@ -1,11 +1,3 @@
-/**
- * @fileoverview Rules to enforce trailing comma checks
- * @module linter/rules/layout
- * @requires vscode-languageserver
- * @requires settings
- * @requires Rule
- */
-
 
 import { ServerSettings } from "../../../settings";
 import { RuleType } from '../enums';
@@ -17,34 +9,35 @@ import { FileMap } from '../../parser';
 
 
 /**
- * The TrailingComma rule
- * @class TrailingComma
+ * The Functions rule
+ * @class Functions
  * @extends Rule
  * @memberof Linter.Rules
  */
-export class TrailingComma extends Rule<FileMap> {
-  readonly name: string = "trailing_commas";
-  readonly code: string = "LT04";
+export class Functions extends Rule<FileMap> {
+  readonly name: string = "functions";
+  readonly code: string = "LT06";
   readonly type: RuleType = RuleType.PARSER;
-  readonly message: string = "Commas should be at the end of the line.";
+  readonly message: string = "Function name not immediately followed by parenthesis.";
+  readonly relatedInformation: string = "Function name not immediately followed by parenthesis.";
 
   /**
-   * Creates an instance of TrailingComma.
+   * Creates an instance of Functions.
    * @param {ServerSettings} settings The server settings
    * @param {number} problems The number of problems identified in the source code
-   * @memberof TrailingComma
+   * @memberof Functions
    */
   constructor(settings: ServerSettings, problems: number) {
     super(settings, problems);
   }
 
   /**
-   * Evaluates the provided Abstract Syntax Tree (AST) to identify and return diagnostics for layout issues.
-   * Specifically, it checks for misplaced commas in the SQL code represented by the AST.
+   * Evaluates the given Abstract Syntax Tree (AST) to identify and report diagnostics related to layout issues.
+   * Specifically, it checks for misplaced commas in SQL statements.
    *
-   * @param ast - The Abstract Syntax Tree (AST) representing the SQL code to be evaluated.
-   * @param documentUri - The URI of the document being evaluated. This parameter is optional and defaults to null.
-   * @returns An array of `Diagnostic` objects representing the layout issues found, or null if no issues are found or the rule is disabled.
+   * @param ast - The Abstract Syntax Tree (AST) representing the SQL file structure.
+   * @param documentUri - The URI of the document being evaluated. Defaults to null.
+   * @returns An array of Diagnostic objects if any issues are found, otherwise null.
    */
   evaluate(ast: FileMap, documentUri: string | null = null): Diagnostic[] | null {
 

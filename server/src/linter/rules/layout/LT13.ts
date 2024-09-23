@@ -19,7 +19,7 @@ import { Rule } from '../base';
  * @extends Rule
  * @memberof Linter.Rules
  */
-export class StartOfFile extends Rule<string>{
+export class StartOfFile extends Rule<string> {
   readonly name: string = "start_of_file";
   readonly code: string = "LT13";
   readonly message: string = "Files must not begin with newlines or whitespace.";
@@ -33,33 +33,30 @@ export class StartOfFile extends Rule<string>{
    * @memberof StartOfFile
    */
   constructor(settings: ServerSettings, problems: number) {
-      super(settings, problems);
+    super(settings, problems);
   }
 
-  evaluate(test: string): Diagnostic[] | null {
+  /**
+   * Evaluates the given test string against a specific pattern and returns diagnostics if the pattern matches.
+   *
+   * @param test - The string to be evaluated.
+   * @param documentUri - The URI of the document being evaluated. Defaults to null.
+   * @returns An array of `Diagnostic` objects if the pattern matches, otherwise null.
+   */
+  evaluate(test: string, documentUri: string | null = null): Diagnostic[] | null {
 
     if (this.enabled === false) {
       return null;
     }
 
     if (this.pattern.test(test.substring(0, 1))) {
-      return [{
-        code: this.code,
-        message: this.message,
-        severity: this.severity,
-        range: {
-          start: { line: 0, character: 0 },
-          end: { line: 0, character: 1 }
-        },
-        source: this.source()
-      }];
+      return [this.createDiagnostic({
+        start: { line: 0, character: 0 },
+        end: { line: 0, character: 1 }
+      }, documentUri)];
     }
 
     return null;
 
-  }
-
-  evaluateAst(): Diagnostic[] | null {
-    return null;
   }
 }
