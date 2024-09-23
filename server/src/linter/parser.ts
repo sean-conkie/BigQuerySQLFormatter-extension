@@ -1147,32 +1147,42 @@ export class Parser {
 		const tokenizedLines: GrammarTokenizeLineResult[] = [];
 
 		for (let i = 0; i < lines.length; i++) {
-			let line = lines[i];
-
+			const line = lines[i];
+		
+			// Initial tokenization
 			const result = grammar.tokenizeLine(line, null, i + lineNumber);
-
+		
 			if (result.stoppedEarly) {
-				const startIndex = result.tokens[result.tokens.length - 1].endIndex;
-				const endIndex = line.length;
-				line = line.substring(startIndex, endIndex);
-
-				while (line.length > 0) {
-					const newResult = grammar.tokenizeLine(line, null, i + lineNumber);
-					// create new tokens with correct start index
+				let startIndex = result.tokens[result.tokens.length - 1].endIndex;
+				let currentLine = line.substring(startIndex);
+				let currentRuleStack = result.ruleStack;
+		
+				while (currentLine.length > 0) {
+					const newResult = grammar.tokenizeLine(currentLine, currentRuleStack, i + lineNumber);
+		
+					// Adjust token positions
 					newResult.tokens.forEach((token) => {
-							const newToken = {
-								startIndex: token.startIndex + startIndex,
-								endIndex: token.endIndex + startIndex,
-								scopes: token.scopes,
-							};
-							result.tokens.push(newToken);
-						});
-					
-					line = line.substring(newResult.tokens[newResult.tokens.length - 1].endIndex);
+						const newToken = {
+							startIndex: token.startIndex + startIndex,
+							endIndex: token.endIndex + startIndex,
+							scopes: token.scopes,
+						};
+						result.tokens.push(newToken);
+					});
+		
+					// Update indices and states
+					const lastToken = newResult.tokens[newResult.tokens.length - 1];
+					startIndex += lastToken.endIndex;
+					currentLine = line.substring(startIndex);
+					currentRuleStack = newResult.ruleStack;
+		
+					// Exit if fully tokenized
+					if (!newResult.stoppedEarly) {
+						break;
+					}
 				}
-
 			}
-
+		
 			tokenizedLines.push(result);
 		}
 
