@@ -300,7 +300,7 @@ class WindowAST implements AST {
 	}
 }
 
-class ColumnFunctionAST implements AST {
+export class ColumnFunctionAST implements AST {
 	function: string | null = null;
 	parameters: FunctionParameter[] = [];
 	over: WindowAST | null = null;
