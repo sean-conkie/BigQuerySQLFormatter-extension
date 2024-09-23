@@ -49,10 +49,43 @@ export class SelectTargets extends Rule<FileMap> {
 
       const columns = ast[i].columns;
 
+      if (columns.length < 2) {
+        continue;
+      }
+
       for (let j = 0; j < columns.length - 1; j ++) {
-        const current = columns[j];
-        const next = columns[j + 1]; 
-        if (current.lineNumber === next.lineNumber  && current instanceof ColumnAST && next instanceof ColumnAST) {
+        let current = columns[j];
+
+        // check if any of the current.tokens has scope `punctuation.separator.comma.sql`
+        if (!current.tokens.some(token => token.scopes.includes('punctuation.separator.comma.sql'))) {
+          
+          // if there is no comma, then loop through the next columns until we find a comma
+          let k = j + 1;
+          while (k < columns.length && !columns[k].tokens.some(token => token.scopes.includes('punctuation.separator.comma.sql'))) {
+            if (k === columns.length - 1) {
+              k = -1;
+              break;
+            }
+            k++;
+          }
+
+          if (k === -1) {
+            continue;
+          }
+
+          // update current to the column we found the comma in
+          current = columns[k];
+          j = k;
+
+        }
+
+        const next = columns[j + 1];
+
+        if (!next) {
+          continue;
+        }
+
+        if (current.lineNumber === next.lineNumber) {
           errors.push(this.createDiagnostic({
             start: {
               line: current.lineNumber??0,
