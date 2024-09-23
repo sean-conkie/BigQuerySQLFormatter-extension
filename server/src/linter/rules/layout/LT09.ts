@@ -5,7 +5,7 @@ import {
   Diagnostic,
 } from 'vscode-languageserver/node';
 import { Rule } from '../base';
-import { FileMap } from '../../parser';
+import { ColumnAST, FileMap } from '../../parser';
 
 
 /**
@@ -52,7 +52,7 @@ export class SelectTargets extends Rule<FileMap> {
       for (let j = 0; j < columns.length - 1; j ++) {
         const current = columns[j];
         const next = columns[j + 1]; 
-        if (current.lineNumber === next.lineNumber) {
+        if (current.lineNumber === next.lineNumber  && current instanceof ColumnAST && next instanceof ColumnAST) {
           errors.push(this.createDiagnostic({
             start: {
               line: current.lineNumber??0,
