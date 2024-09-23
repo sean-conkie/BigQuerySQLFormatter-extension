@@ -755,14 +755,42 @@
             "4": { "name": "keyword.as.sql" },
             "5": { "name": "entity.name.tag" }
           },
-          "match": "(?i)(?:(?<!\\.)(?:(\\w+)(\\.))?(?>\\b\\d+\\b|((?:`)?\\w+(?:`)?))(?: +(?:(as) +)?(?!\\b(?:case|when|then|else|end|desc|asc|as|in|is|null|or|and|array|bool(?:ean)?|date(?:time)?|geography|(?:big)?numeric|(?:big)?decimal|float(?:64)?|(?:small|big|tiny|byte)?int(?:64|eger)?|record|string|time(?:stamp)?|struct)\\b)((?:`)?\\w+(?:`)?))?)",
-          "name": "meta.column.sql"
+          "match": "(?i)(\\w+)(\\.)(\\w+) +(as) +(\\w+)",
+          "name": "meta.column.explicit.alias.sql"
         },
         {
           "captures": {
-            "1": { "name": "entity.name.tag" }
+            "1": { "name": "entity.name.alias.sql" },
+            "2": { "name": "punctuation.separator.period.sql" },
+            "3": { "name": "entity.other.column.sql" },
+            "4": { "name": "entity.name.tag" }
           },
-          "match": "(?i)(?>^(?: *\\w+,? *$)|(?: +(?!\\b(?:case|when|then|else|end|desc|asc|as|in|is|null|or|and|array|bool(?:ean)?|date(?:time)?|geography|(?:big)?numeric|(?:big)?decimal|float(?:64)?|(?:small|big|tiny|byte)?int(?:64|eger)?|record|string|time(?:stamp)?|struct|distinct|\\d+)\\b)((?:`)?\\w+(?:`)?),? *$))"
+          "match": "(?i)(\\w+)(\\.)(\\w+) +(?:(?>as|(\\w+)))(?: *?,|\\n|from)",
+          "name": "meta.column.implicit.alias.sql"
+        },
+        {
+          "captures": {
+            "1": { "name": "entity.name.alias.sql" },
+            "2": { "name": "punctuation.separator.period.sql" },
+            "3": { "name": "entity.other.column.sql" }
+          },
+          "match": "(?i)(\\w+)(\\.)(\\w+)",
+          "name": "meta.column.no.alias.sql"
+        },
+        {
+          "captures": {
+            "1": { "name": "keyword.as.sql" },
+            "2": { "name": "entity.name.tag" }
+          },
+          "match": "(?i)(?:(as) +)?(\\w+)(?: *?,|\\n|from)",
+          "name": "meta.column.alias.sql"
+        },
+        {
+          "captures": {
+            "1": { "name": "entity.other.column.sql" }
+          },
+          "match": "(?i)(\\w+)",
+          "name": "meta.column.sql"
         }
       ]
     },
