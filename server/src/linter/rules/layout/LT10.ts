@@ -19,11 +19,11 @@ import { Rule } from '../base';
  * @extends Rule
  * @memberof Linter.Rules
  */
-export class SelectModifiers extends Rule<string>{
+export class SelectModifiers extends Rule<string> {
   readonly name: string = "select_modifiers_check";
   readonly code: string = "LT10";
   readonly message: string = "SELECT modifiers (e.g. DISTINCT) must be on the same line as SELECT";
-  readonly pattern: RegExp =/\bselect(?:\s*\n\s*(distinct|all|with|as)\b)/gi;
+  readonly pattern: RegExp = /\bselect(?:\s*\n\s*(distinct|all|with|as)\b)/gi;
 
   /**
    * Creates an instance of SelectModifiers.
@@ -32,17 +32,24 @@ export class SelectModifiers extends Rule<string>{
    * @memberof SelectModifiers
    */
   constructor(settings: ServerSettings, problems: number) {
-      super(settings, problems);
+    super(settings, problems);
   }
 
-  evaluate(test: string): Diagnostic[] | null {
+  /**
+   * Evaluates the given test string against a pattern and returns diagnostics if applicable.
+   *
+   * @param test - The string to be tested against the pattern.
+   * @param documentUri - The URI of the document being evaluated, or null if not applicable.
+   * @returns An array of `Diagnostic` objects if the pattern matches the test string, otherwise null.
+   */
+  evaluate(test: string, documentUri: string | null = null): Diagnostic[] | null {
 
     if (this.enabled === false) {
       return null;
     }
-    
+
     if (this.pattern.test(test)) {
-      return this.evaluateMultiRegexTest(test);
+      return this.evaluateMultiRegexTest(test, documentUri);
     }
 
     return null;
@@ -53,10 +60,10 @@ export class SelectModifiers extends Rule<string>{
 
     let noOfMatches: number = 0;
     const matches = test.matchAll(this.pattern);
-		for (const match of matches) {
+    for (const match of matches) {
       noOfMatches++;
-		}
+    }
     return noOfMatches;
-		
-	}
+
+  }
 }

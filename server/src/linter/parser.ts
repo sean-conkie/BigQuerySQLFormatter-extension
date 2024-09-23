@@ -300,7 +300,7 @@ class WindowAST implements AST {
 	}
 }
 
-class ColumnFunctionAST implements AST {
+export class ColumnFunctionAST implements AST {
 	function: string | null = null;
 	parameters: FunctionParameter[] = [];
 	over: WindowAST | null = null;
@@ -416,7 +416,7 @@ class ArrayAST implements AST {
 	}
 }
 
-class ComparisonAST implements AST {
+export class ComparisonAST implements AST {
 	logicalOperator: LogicalOperator | null = null;
 	left: Column | ArrayAST | null = null;
 	operator: ComparisonOperator | null = null;
@@ -439,7 +439,7 @@ class ComparisonAST implements AST {
 }
 
 
-class ComparisonGroupAST implements AST {
+export class ComparisonGroupAST implements AST {
 	logicalOperator: LogicalOperator | null = null;
 	comparisons: (ComparisonGroupAST | ComparisonAST)[] = [];
 	tokens: Token[] = [];

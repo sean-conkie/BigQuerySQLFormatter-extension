@@ -3,7 +3,7 @@ name: Publish
 on:
   release:
     types:
-    - created
+    - released # A release was published, or a pre-release was changed to a release.
 
 jobs:
   publish:
@@ -11,11 +11,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18.x
-      - run: npm install
+
+      - name: Install Dependencies
+        run: npm install
+
       - name: Publish
         run: vsce publish --no-yarn "${GITHUB_REF#refs/tags/}"
         env:

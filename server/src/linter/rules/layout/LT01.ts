@@ -21,7 +21,7 @@ import { MatchPosition, Rule } from '../base';
  * @extends Rule
  * @memberof Linter.Rules
  */
-export class TrailingSpaces extends Rule<string>{
+export class TrailingSpaces extends Rule<string> {
   readonly name: string = "trailing_sapces";
   readonly code: string = "LT01";
   readonly message: string = "Trailing whitespace.";
@@ -35,17 +35,24 @@ export class TrailingSpaces extends Rule<string>{
    * @memberof TrailingSpaces
    */
   constructor(settings: ServerSettings, problems: number) {
-      super(settings, problems);
+    super(settings, problems);
   }
 
-  evaluate(test: string): Diagnostic[] | null {
+  /**
+   * Evaluates the given test string against a pattern and returns diagnostics if the pattern matches.
+   *
+   * @param test - The string to be tested against the pattern.
+   * @param documentUri - The URI of the document being evaluated, optional.
+   * @returns An array of diagnostics if the pattern matches, otherwise null.
+   */
+  evaluate(test: string, documentUri: string | null = null): Diagnostic[] | null {
 
     if (this.enabled === false) {
       return null;
     }
 
     if (this.pattern.test(test)) {
-      return this.evaluateMultiRegexTest(test);
+      return this.evaluateMultiRegexTest(test, documentUri);
     }
 
     return null;
@@ -57,10 +64,10 @@ export class TrailingSpaces extends Rule<string>{
 
     let noOfMatches: number = 0;
     const matches = test.matchAll(this.pattern);
-		for (const match of matches) {
+    for (const match of matches) {
       noOfMatches++;
-		}
+    }
     return noOfMatches;
-		
-	}
+
+  }
 }
