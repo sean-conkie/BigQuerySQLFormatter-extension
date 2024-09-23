@@ -6,7 +6,7 @@
  * @requires RuleType
  */
 
-import { Diagnostic, DiagnosticSeverity } from 'vscode-languageserver/node';
+import { Diagnostic, DiagnosticSeverity, Range } from 'vscode-languageserver/node';
 import { RuleType } from './enums';
 import { ServerSettings } from '../../settings';
 import { FileMap } from '../parser';
@@ -47,7 +47,7 @@ export abstract class Rule<T extends string | FileMap>{
 
 	abstract evaluate(test: T, documentUri: string | null): Diagnostic[] | null;
 
-	evaluateMultiRegexTest(test: string): Diagnostic[] | null {
+	evaluateMultiRegexTest(test: string, documentUri: string | null = null): Diagnostic[] | null {
 
 		// Reset the regex, regexes are stateful
 		this.pattern.lastIndex = 0;
@@ -59,24 +59,26 @@ export abstract class Rule<T extends string | FileMap>{
 
 			const start: MatchPosition = this.getLineAndCharacter(test, match.index);
 			const end: MatchPosition = this.getLineAndCharacter(test, this.pattern.lastIndex);
-
-			const diagnostic: Diagnostic = {
-				code: this.code,
-				severity: this.severity,
-				range: {
-					start: { line: start.line, character: start.character },
-					end: { line: end.line, character: end.character }
-				},
-				message: this.message,
-				source: `${this.source()}`
+			const range = {
+				start: { line: start.line, character: start.character },
+				end: { line: end.line, character: end.character }
 			};
-			diagnostics.push(diagnostic);
+
+			diagnostics.push(this.createDiagnostic(range, documentUri));
 		}
 
 		return diagnostics;
 		
 	}
 
+	/**
+	 * Calculates the line and character position of a given index within a string.
+	 *
+	 * @param content - The string content to search within.
+	 * @param matchIndex - The index within the string for which to find the line and character position.
+	 * @returns An object containing the line and character position corresponding to the given index.
+	 * @throws Will throw an error if the match index is out of range of the content.
+	 */
 	getLineAndCharacter(content: string, matchIndex: number):  MatchPosition{
 			const lines = content.split('\n');
 			let runningTotal = 0;
@@ -87,6 +89,30 @@ export abstract class Rule<T extends string | FileMap>{
 					runningTotal += lines[i].length + 1;
 			}
 			throw new Error('Match index out of range');
+	}
+
+	/**
+	 * Creates a diagnostic object for reporting issues in the code.
+	 *
+	 * @param range - The range within the document where the issue is located.
+	 * @param documentUri - The URI of the document where the issue is found. Defaults to null.
+	 * @returns A `Diagnostic` object containing details about the issue.
+	 */
+	createDiagnostic(range: Range, documentUri: string | null = null): Diagnostic {
+		return {
+			code: this.code,
+			severity: this.severity,
+			range: range,
+			message: this.message,
+			source: this.source(),
+			relatedInformation: this.relatedInformation !== "" && documentUri !== null ? [{
+				location: {
+					uri: documentUri,
+					range: range
+				},
+				message: this.relatedInformation
+			}] : undefined
+		};
 	}
 
 	source(): string {
