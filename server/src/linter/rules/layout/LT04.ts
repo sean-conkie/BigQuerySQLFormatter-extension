@@ -54,18 +54,16 @@ export class TrailingComma extends Rule<FileMap> {
 
     const errors: Diagnostic[] = [];
     for (const i in ast) {
-      for (const column of ast[i].columns) {
+
+      const columns = ast[i].columns;
+
+      for (const column of columns) {
         const filteredTokens = column.tokens.filter((token) => !token.scopes.includes("punctuation.whitespace.leading.sql"));
+        
         if ((filteredTokens[0].value ?? '') === ',') {
           errors.push(this.createDiagnostic({
             start: { line: filteredTokens[0].lineNumber ?? 0, character: filteredTokens[0].startIndex ?? 0 },
             end: { line: filteredTokens[0].lineNumber ?? 0, character: filteredTokens[0].endIndex ?? 0 }
-          }, documentUri));
-        } else if ((filteredTokens.find((token) => token.value === ',')?.lineNumber ?? 0) > (filteredTokens[0].lineNumber ?? 0)) {
-          const commaToken = filteredTokens.find((token) => token.value === ',');
-          errors.push(this.createDiagnostic({
-            start: { line: commaToken?.lineNumber ?? 0, character: commaToken?.startIndex ?? 0 },
-            end: { line: commaToken?.lineNumber ?? 0, character: commaToken?.endIndex ?? 0 }
           }, documentUri));
         }
       }
