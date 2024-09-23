@@ -5,7 +5,7 @@ import {
   Diagnostic,
 } from 'vscode-languageserver/node';
 import { Rule } from '../base';
-import { FileMap } from '../../parser';
+import { FileMap, ColumnFunctionAST, Token } from '../../parser';
 
 
 /**
@@ -31,14 +31,6 @@ export class Functions extends Rule<FileMap> {
     super(settings, problems);
   }
 
-  /**
-   * Evaluates the given Abstract Syntax Tree (AST) to identify and report diagnostics related to layout issues.
-   * Specifically, it checks for misplaced commas in SQL statements.
-   *
-   * @param ast - The Abstract Syntax Tree (AST) representing the SQL file structure.
-   * @param documentUri - The URI of the document being evaluated. Defaults to null.
-   * @returns An array of Diagnostic objects if any issues are found, otherwise null.
-   */
   evaluate(ast: FileMap, documentUri: string | null = null): Diagnostic[] | null {
 
     if (this.enabled === false) {
@@ -47,19 +39,21 @@ export class Functions extends Rule<FileMap> {
 
     const errors: Diagnostic[] = [];
     for (const i in ast) {
-      for (const column of ast[i].columns) {
-        const filteredTokens = column.tokens.filter((token) => !token.scopes.includes("punctuation.whitespace.leading.sql"));
-        if ((filteredTokens[0].value ?? '') === ',') {
-          errors.push(this.createDiagnostic({
-            start: { line: filteredTokens[0].lineNumber ?? 0, character: filteredTokens[0].startIndex ?? 0 },
-            end: { line: filteredTokens[0].lineNumber ?? 0, character: filteredTokens[0].endIndex ?? 0 }
-          }, documentUri));
-        } else if ((filteredTokens.find((token) => token.value === ',')?.lineNumber ?? 0) > (filteredTokens[0].lineNumber ?? 0)) {
-          const commaToken = filteredTokens.find((token) => token.value === ',');
-          errors.push(this.createDiagnostic({
-            start: { line: commaToken?.lineNumber ?? 0, character: commaToken?.startIndex ?? 0 },
-            end: { line: commaToken?.lineNumber ?? 0, character: commaToken?.endIndex ?? 0 }
-          }, documentUri));
+      // check the columns for functions
+      for(const column of ast[i].columns) {
+        if (column instanceof ColumnFunctionAST) {
+          for (let i = 0; i < column.tokens.length; i++) {
+            if (column.function === column.tokens[i].value) {
+              // found function, check if it is followed by parenthesis
+              if (column.tokens[i + 1].value !== '(') {
+                const range = {
+                  start: { line: column.tokens[i + 1].lineNumber??0, character: column.tokens[i + 1].startIndex??0 },
+                  end: { line: column.tokens[i + 1].lineNumber??0, character: column.tokens[i + 1].endIndex??0 }
+                };
+                errors.push(this.createDiagnostic(range, documentUri));
+              }
+            }
+          }
         }
       }
     }

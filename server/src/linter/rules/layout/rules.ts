@@ -10,6 +10,7 @@ import { Rule } from '../base';
 import { ServerSettings } from '../../../settings';
 import { TrailingSpaces } from './LT01';
 import { TrailingComma } from './LT04';
+import { Functions } from './LT06';
 import { SelectModifiers } from './LT10';
 import { UnionCheck } from './LT11';
 import { EndofFile } from './LT12';
@@ -21,7 +22,8 @@ export const classes = [SelectModifiers,
 												TrailingComma,
                         EndofFile,
                         StartOfFile,
-                        TrailingSpaces];
+                        TrailingSpaces,
+												Functions];
 
 export function layoutRules(settings: ServerSettings, problems: number): Rule<string | FileMap>[] {
 
