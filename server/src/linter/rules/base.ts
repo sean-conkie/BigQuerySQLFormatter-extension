@@ -99,20 +99,23 @@ export abstract class Rule<T extends string | FileMap>{
 	 * @returns A `Diagnostic` object containing details about the issue.
 	 */
 	createDiagnostic(range: Range, documentUri: string | null = null): Diagnostic {
-		return {
+		const diagnostic: Diagnostic = {
 			code: this.code,
 			severity: this.severity,
 			range: range,
 			message: this.message,
-			source: this.source(),
-			relatedInformation: this.relatedInformation !== "" && documentUri !== null ? [{
+			source: this.source()
+		};
+		if (this.relatedInformation !== "" && documentUri !== null) {
+			diagnostic.relatedInformation = [{
 				location: {
 					uri: documentUri,
 					range: range
 				},
 				message: this.relatedInformation
-			}] : undefined
-		};
+			}];
+		}
+		return diagnostic;
 	}
 
 	source(): string {
