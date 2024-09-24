@@ -9,7 +9,8 @@ import { Token, LineToken } from './token';
 import { Rule } from './matches';
 import { StatementAST } from './ast';
 import { MatchObj, MatchedRule } from './matches';
-import { TextDocument, DocumentUri } from 'vscode-languageserver-textdocument';
+import { DocumentUri } from 'vscode-languageserver-textdocument';
+import { TextDocumentItem } from 'vscode-languageserver';
 import { range } from '../../utils';
 
 const punctuation: string[] = syntaxJson.punctuation;
@@ -56,7 +57,7 @@ export class Parser {
 		this.grammar = await grammarLoader.loadGrammar('source.googlesql');
 	}
 
-	async parse(textDocument: TextDocument): Promise<FileMap> {
+	async parse(textDocument: TextDocumentItem): Promise<FileMap> {
 
 		if (this.grammar === null) {
 			await this.initialize();
@@ -81,8 +82,8 @@ export class Parser {
 	 * @param textDocument - The text document to parse.
 	 * @returns A file map where each key is the index of the statement and the value is the parsed statement object.
 	 */
-	private parseStatements(textDocument: TextDocument) {
-		const statements = this.splitSource(textDocument.getText());
+	private parseStatements(textDocument: TextDocumentItem) {
+		const statements = this.splitSource(textDocument.text);
 		let startLine: number = 0;
 		const fileMap: FileMap = {};
 
@@ -112,11 +113,11 @@ export class Parser {
 
 	// }
 
-	private tokenizeInitialDocument(document: TextDocument) {
+	private tokenizeInitialDocument(document: TextDocumentItem) {
 		
 		const lineMap = new Map<number, string>();
 
-		document.getText().split('\n').map((line, index) => {
+		document.text.split('\n').map((line, index) => {
 			lineMap.set(index, line);
 		});
 
