@@ -34,11 +34,9 @@ import { defaultSettings, ServerSettings } from './settings';
 // Also include all preview / proposed LSP features.
 
 const connection = createConnection(ProposedFeatures.all);
-connection.console.log('Server connection created');
 
 // Create a simple text document manager.
 const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
-connection.console.log('Server text document manager created');
 
 let hasConfigurationCapability = false;
 let hasWorkspaceFolderCapability = false;
@@ -46,7 +44,6 @@ let hasDiagnosticRelatedInformationCapability = false;
 
 connection.onInitialize((params: InitializeParams) => {
 	const capabilities = params.capabilities;
-	connection.console.log('Server initialized');
 
 	// Does the client support the `workspace/configuration` request?
 	// If not, we fall back using global settings.
@@ -88,18 +85,15 @@ connection.onInitialized(() => {
 	}
 	if (hasWorkspaceFolderCapability) {
 		connection.workspace.onDidChangeWorkspaceFolders(_event => {
-			connection.console.log('Workspace folder change event received.');
 		});
 	}
 });
 
 // The global settings, used when the `workspace/configuration` request is not supported by the client.
 let globalSettings: ServerSettings = defaultSettings;
-connection.console.log('Server global settings created');
 
 // Cache the settings of all open documents
 const documentSettings: Map<string, Thenable<ServerSettings>> = new Map();
-connection.console.log('Server document settings cache created');
 
 connection.onDidChangeConfiguration(change => {
 	if (hasConfigurationCapability) {
@@ -203,8 +197,6 @@ connection.onCompletionResolve(
 // Make the text document manager listen on the connection
 // for open, change and close text document events
 documents.listen(connection);
-connection.console.log('Server text document manager listening');
 
 // Listen on the connection
 connection.listen();
-connection.console.log('Server listening');

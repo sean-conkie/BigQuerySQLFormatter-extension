@@ -54,18 +54,32 @@ export class TrailingComma extends Rule<FileMap> {
 
     const errors: Diagnostic[] = [];
     for (const i in ast) {
-      for (const column of ast[i].columns) {
+
+      const columns = ast[i].columns;
+
+      for (const column of columns) {
         const filteredTokens = column.tokens.filter((token) => !token.scopes.includes("punctuation.whitespace.leading.sql"));
-        if ((filteredTokens[0].value ?? '') === ',') {
+
+        // sort the tokens by linenumber then start index
+        filteredTokens.sort((a, b) => {
+          if (a.lineNumber === b.lineNumber) {
+            return a.startIndex - b.startIndex;
+          }
+          return a.lineNumber! - b.lineNumber!;
+        });
+
+        const firstToken = filteredTokens[0];
+        const lastToken = filteredTokens[filteredTokens.length - 1];
+        
+        if ((firstToken.value ?? '') === ',' && lastToken.lineNumber! === firstToken.lineNumber!) {
           errors.push(this.createDiagnostic({
-            start: { line: filteredTokens[0].lineNumber ?? 0, character: filteredTokens[0].startIndex ?? 0 },
-            end: { line: filteredTokens[0].lineNumber ?? 0, character: filteredTokens[0].endIndex ?? 0 }
+            start: { line: firstToken.lineNumber ?? 0, character: firstToken.startIndex ?? 0 },
+            end: { line: firstToken.lineNumber ?? 0, character: firstToken.endIndex ?? 0 }
           }, documentUri));
-        } else if ((filteredTokens.find((token) => token.value === ',')?.lineNumber ?? 0) > (filteredTokens[0].lineNumber ?? 0)) {
-          const commaToken = filteredTokens.find((token) => token.value === ',');
+        } else if (lastToken.value === ',' && lastToken.lineNumber! !== firstToken.lineNumber!) {
           errors.push(this.createDiagnostic({
-            start: { line: commaToken?.lineNumber ?? 0, character: commaToken?.startIndex ?? 0 },
-            end: { line: commaToken?.lineNumber ?? 0, character: commaToken?.endIndex ?? 0 }
+            start: { line: lastToken.lineNumber ?? 0, character: lastToken.startIndex ?? 0 },
+            end: { line: lastToken.lineNumber ?? 0, character: lastToken.endIndex ?? 0 }
           }, documentUri));
         }
       }

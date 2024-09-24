@@ -188,7 +188,7 @@ export class ColumnAST implements AST {
 		this.source = findToken(matchedRule.tokens, "entity.name.alias.sql")?.value ?? null;
 		this.column = findToken(matchedRule.tokens, "entity.other.column.sql")?.value ?? null;
 		this.alias = findToken(matchedRule.tokens, "entity.name.tag")?.value ?? null;
-		this.lineNumber = matchedRule.tokens[0].lineNumber;
+		this.lineNumber = matchedRule.tokens.filter((token) => !token.scopes.includes('punctuation.whitespace.leading.sql') && !token.scopes.includes('punctuation.whitespace.trailing.sql') && !token.scopes.includes('punctuation.whitespace.sql'))[0].lineNumber;
 		this.startIndex = matchedRule.tokens[0].startIndex;
 		this.endIndex = matchedRule.tokens[matchedRule.tokens.length - 1].endIndex;
 	}
@@ -226,7 +226,7 @@ class StringAST implements AST {
 		this.tokens = tokens;
 		this.value = tokens.map((token) => token.value).join('');
 		this.alias = findToken(tokens, "entity.name.tag")?.value ?? null;
-		this.lineNumber = tokens[0].lineNumber;
+		this.lineNumber = tokens.filter((token) => !token.scopes.includes('punctuation.whitespace.leading.sql') && !token.scopes.includes('punctuation.whitespace.trailing.sql') && !token.scopes.includes('punctuation.whitespace.sql'))[0].lineNumber;
 		this.startIndex = tokens[0].startIndex;
 		this.endIndex = tokens[tokens.length - 1].endIndex;
 	}
@@ -244,7 +244,7 @@ class NumberAST implements AST {
 		this.tokens = tokens;
 		this.value = Number(tokens.map((token) => token.value).join(''));
 		this.alias = findToken(tokens, "entity.name.tag")?.value ?? null;
-		this.lineNumber = tokens[0].lineNumber;
+		this.lineNumber = tokens.filter((token) => !token.scopes.includes('punctuation.whitespace.leading.sql') && !token.scopes.includes('punctuation.whitespace.trailing.sql') && !token.scopes.includes('punctuation.whitespace.sql'))[0].lineNumber;
 		this.startIndex = tokens[0].startIndex;
 		this.endIndex = tokens[tokens.length - 1].endIndex;
 	}
@@ -262,7 +262,7 @@ class KeywordAST implements AST {
 		this.tokens = tokens;
 		this.value = tokens.map((token) => token.value).join('');
 		this.alias = findToken(tokens, "entity.name.tag")?.value ?? null;
-		this.lineNumber = tokens[0].lineNumber;
+		this.lineNumber = tokens.filter((token) => !token.scopes.includes('punctuation.whitespace.leading.sql') && !token.scopes.includes('punctuation.whitespace.trailing.sql') && !token.scopes.includes('punctuation.whitespace.sql'))[0].lineNumber;
 		this.startIndex = tokens[0].startIndex;
 		this.endIndex = tokens[tokens.length - 1].endIndex;
 	}
@@ -313,7 +313,7 @@ export class ColumnFunctionAST implements AST {
 	constructor(matchedRule: MatchedRule) {
 		this.function = matchedRule.tokens.filter((token) => token.scopes.includes("meta.function.sql"))[0].value;
 		this.tokens.push(...matchedRule.tokens);
-		this.lineNumber = matchedRule.tokens[0].lineNumber;
+		this.lineNumber = matchedRule.tokens.filter((token) => !token.scopes.includes('punctuation.whitespace.leading.sql') && !token.scopes.includes('punctuation.whitespace.trailing.sql') && !token.scopes.includes('punctuation.whitespace.sql'))[0].lineNumber;
 		this.startIndex = matchedRule.tokens[0].startIndex;
 
 		// Special rules have been created for columns being cast as a type - these need split into column
@@ -432,7 +432,7 @@ export class ComparisonAST implements AST {
 		this.operator = comparison.operator;
 		this.right = comparison.right;
 		this.logicalOperator = comparison.logicalOperator;
-		this.lineNumber = tokens[0].lineNumber;
+		this.lineNumber = tokens.filter((token) => !token.scopes.includes('punctuation.whitespace.leading.sql') && !token.scopes.includes('punctuation.whitespace.trailing.sql') && !token.scopes.includes('punctuation.whitespace.sql'))[0].lineNumber;
 		this.startIndex = tokens[0].startIndex;
 		this.endIndex = tokens[tokens.length - 1].endIndex;
 	}
@@ -600,7 +600,7 @@ class CaseStatementAST implements AST {
 	
 	constructor(matchedRule: MatchedRule) {
 		this.tokens = matchedRule.tokens;
-		this.lineNumber = matchedRule.tokens[0].lineNumber;
+		this.lineNumber = matchedRule.tokens.filter((token) => !token.scopes.includes('punctuation.whitespace.leading.sql') && !token.scopes.includes('punctuation.whitespace.trailing.sql') && !token.scopes.includes('punctuation.whitespace.sql'))[0].lineNumber;
 		this.startIndex = matchedRule.tokens[0].startIndex;
 		this.endIndex = matchedRule.tokens[matchedRule.tokens.length - 1].endIndex;
 
@@ -635,7 +635,7 @@ class JoinAST implements AST {
 	
 	constructor(matchedRule: MatchedRule) {
 		this.tokens.push(...matchedRule.tokens);
-		this.lineNumber = matchedRule.tokens[0].lineNumber;
+		this.lineNumber = matchedRule.tokens.filter((token) => !token.scopes.includes('punctuation.whitespace.leading.sql') && !token.scopes.includes('punctuation.whitespace.trailing.sql') && !token.scopes.includes('punctuation.whitespace.sql'))[0].lineNumber;
 		this.startIndex = matchedRule.tokens[0].startIndex;
 
 		this.join = findToken(matchedRule.tokens, "keyword.join.sql")?.value as JoinType;
@@ -1148,7 +1148,42 @@ export class Parser {
 
 		for (let i = 0; i < lines.length; i++) {
 			const line = lines[i];
-			tokenizedLines.push(grammar.tokenizeLine(line, null, i + lineNumber));
+		
+			// Initial tokenization
+			const result = grammar.tokenizeLine(line, null, i + lineNumber);
+		
+			if (result.stoppedEarly) {
+				let startIndex = result.tokens[result.tokens.length - 1].endIndex;
+				let currentLine = line.substring(startIndex);
+				let currentRuleStack = result.ruleStack;
+		
+				while (currentLine.length > 0) {
+					const newResult = grammar.tokenizeLine(currentLine, currentRuleStack, i + lineNumber);
+		
+					// Adjust token positions
+					newResult.tokens.forEach((token) => {
+						const newToken = {
+							startIndex: token.startIndex + startIndex,
+							endIndex: token.endIndex + startIndex,
+							scopes: token.scopes,
+						};
+						result.tokens.push(newToken);
+					});
+		
+					// Update indices and states
+					const lastToken = newResult.tokens[newResult.tokens.length - 1];
+					startIndex += lastToken.endIndex;
+					currentLine = line.substring(startIndex);
+					currentRuleStack = newResult.ruleStack;
+		
+					// Exit if fully tokenized
+					if (!newResult.stoppedEarly) {
+						break;
+					}
+				}
+			}
+		
+			tokenizedLines.push(result);
 		}
 
 		const lineTokens: LineToken[] = [];

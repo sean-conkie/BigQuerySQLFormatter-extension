@@ -11,6 +11,7 @@ import { ServerSettings } from '../../../settings';
 import { TrailingSpaces } from './LT01';
 import { TrailingComma } from './LT04';
 import { Functions } from './LT06';
+import { SelectTargets } from './LT09';
 import { SelectModifiers } from './LT10';
 import { UnionCheck } from './LT11';
 import { EndofFile } from './LT12';
@@ -18,6 +19,7 @@ import { StartOfFile } from './LT13';
 import { FileMap } from '../../parser';
 
 export const classes = [SelectModifiers,
+												SelectTargets,
                         UnionCheck,
 												TrailingComma,
                         EndofFile,
