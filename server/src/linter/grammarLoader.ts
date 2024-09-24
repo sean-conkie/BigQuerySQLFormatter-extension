@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { Registry, INITIAL, IGrammar, ITokenizeLineResult, IToken } from 'vscode-textmate';
+import { Registry, INITIAL, IGrammar, ITokenizeLineResult, IToken, StateStack } from 'vscode-textmate';
 import { readFileSync } from 'fs';
 
 // Load the oniguruma library for vscode-textmate
@@ -13,6 +13,7 @@ const wasmPath = require.resolve('onigasm/lib/onigasm.wasm');
 
 export type Grammar = IGrammar;
 export type GrammarTokenizeLineResult = ITokenizeLineResult;
+export type RuleStack = StateStack;
 export class GrammarToken implements IToken {
   scopes: string[];
   startIndex: number;
