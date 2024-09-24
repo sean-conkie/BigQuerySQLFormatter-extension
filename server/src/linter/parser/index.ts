@@ -4,11 +4,13 @@
  */
 
 import syntaxJson from '../syntaxes/syntax.json';
-import { GrammarLoader, Grammar, GrammarTokenizeLineResult } from '../grammarLoader';
+import { GrammarLoader, Grammar, GrammarTokenizeLineResult, RuleStack } from '../grammarLoader';
 import { Token, LineToken } from './token';
 import { Rule } from './matches';
 import { StatementAST } from './ast';
 import { MatchObj, MatchedRule } from './matches';
+import { TextDocument, DocumentUri } from 'vscode-languageserver-textdocument';
+import { range } from '../../utils';
 
 const punctuation: string[] = syntaxJson.punctuation;
 const skipTokens: string[] = syntaxJson.skipTokens;
@@ -16,6 +18,11 @@ const recursiveGroupBegin: string[] = syntaxJson.recursiveGroupBegin;
 const recursiveGroupEnd: string[] = syntaxJson.recursiveGroupEnd;
 const syntaxRules: Rule[] = syntaxJson.rules;
 const comparisonGroupRules: string[] = syntaxJson.comparisonGroupRules;
+const tokenCache: Map<DocumentUri, DocumentCache> = new Map(); // Key: Line number, Value: { tokens, ruleStack }
+
+
+type DocumentCache = Map<number, LineToken>;
+type LineMap = Map<number, string>;
 
 // #region Functions
 
@@ -35,7 +42,6 @@ export class Parser {
 	 * The scopes to ignore
 	 */
 	readonly ignoreScopes: string[] = ["comment.line.double-dash.sql", "punctuation.definition.comment.sql"];
-	fileMap: FileMap = {};
 	grammar: Grammar | null = null;
 
 	/**
@@ -50,44 +56,83 @@ export class Parser {
 		this.grammar = await grammarLoader.loadGrammar('source.googlesql');
 	}
 
-	/**
-	 * Parses the provided source string into a FileMap.
-	 *
-	 * @param source - The source string to be parsed.
-	 * @returns A promise that resolves to a FileMap containing the parsed statements.
-	 *
-	 * @remarks
-	 * - If the grammar is not initialized, it will be initialized before parsing.
-	 * - The source string is split into individual statements.
-	 * - Each statement is tokenized and parsed.
-	 * - The parsed statements are stored in the fileMap.
-	 */
-	async parse(source: string): Promise<FileMap> {
+	async parse(textDocument: TextDocument): Promise<FileMap> {
 
 		if (this.grammar === null) {
 			await this.initialize();
 		}
 
-		// split string into statements
-		const statements = this._splitSource(source);
-		let lines: number = 0;
-
-		for (let i = 0; i < statements.length; i++) {
-			const statement: MatchObj = statements[i];
-			const tokenizedLines: LineToken[] = Parser.tokenize(this.grammar!, statement.statement, lines);
-			lines = statement.line;
-
-			const s = this._parseStatement(tokenizedLines.map((line) => line.tokens).flat());
-			s.statement = statement.statement;
-			this.fileMap[i] = s;
-
+		// if the document exists in the cache, remove it
+		if (tokenCache.has(textDocument.uri)) {
+			tokenCache.delete(textDocument.uri);
 		}
 
-		return this.fileMap;
+		this.tokenizeInitialDocument(textDocument);
+
+
+		// split string into statements
+		return this.parseStatements(textDocument);
 
 	}
 
-	_parseStatement(tokens: Token[]): StatementAST {
+	/**
+	 * Parses the statements from a given text document and returns a file map.
+	 *
+	 * @param textDocument - The text document to parse.
+	 * @returns A file map where each key is the index of the statement and the value is the parsed statement object.
+	 */
+	private parseStatements(textDocument: TextDocument) {
+		const statements = this.splitSource(textDocument.getText());
+		let startLine: number = 0;
+		const fileMap: FileMap = {};
+
+		for (let i = 0; i < statements.length; i++) {
+			const statement: MatchObj = statements[i];
+
+			const s = this.parseStatement(
+				range(startLine, statement.line).map((line) => {
+					if (tokenCache.get(textDocument.uri)?.has(line)) {
+						return tokenCache.get(textDocument.uri)?.get(line)?.tokens;
+					}
+				})
+				.flat()
+				.filter((t) => t !== undefined)
+			);
+
+			s.statement = statement.statement;
+			fileMap[i] = s;
+			startLine = statement.line;
+
+		}
+
+		return fileMap;
+	}
+
+	// async reParse(textDocument: TextDocument): Promise<FileMap> {
+
+	// }
+
+	private tokenizeInitialDocument(document: TextDocument) {
+		
+		const lineMap = new Map<number, string>();
+
+		document.getText().split('\n').map((line, index) => {
+			lineMap.set(index, line);
+		});
+
+		const tokens = Parser.tokenize(this.grammar!, lineMap);
+
+		const cache: DocumentCache = new Map<number, LineToken>();
+
+		tokens.map((lineToken) => {
+			cache.set(lineToken.lineNumber!, lineToken);
+		});
+
+		tokenCache.set(document.uri, cache);
+
+	}
+
+	private parseStatement(tokens: Token[]): StatementAST {
 
 		const statement = new StatementAST();
 		let rules = syntaxRules;
@@ -115,7 +160,7 @@ export class Parser {
 				continue;
 			}
 
-			rules = this._filterRules(token, tokenCounter, tokens.slice(i + 1), rules);
+			rules = this.filterRules(token, tokenCounter, tokens.slice(i + 1), rules);
 
 			if (rules.length === 0) {
 				if (reCheck) {
@@ -136,17 +181,17 @@ export class Parser {
 			expressionTokens.push(token);
 
 			if (rules.length === 1) {
-				const matchedRule = { "rule": rules.find((rule) => rule.scopes.join('|') === this._getMatchedTokens(expressionTokens)) ?? null, "tokens": expressionTokens, "matches": [] as MatchedRule[] };
+				const matchedRule = { "rule": rules.find((rule) => rule.scopes.join('|') === this.getMatchedTokens(expressionTokens)) ?? null, "tokens": expressionTokens, "matches": [] as MatchedRule[] };
 
 				if (matchedRule.rule && matchedRule.rule.recursive) {
-					const [matchedRules, y] = this._recursiveLookahead(tokens.slice(i + 1), null, matchedRule.rule.end);
+					const [matchedRules, y] = this.recursiveLookahead(tokens.slice(i + 1), null, matchedRule.rule.end);
 					matchedRule.matches.push(...matchedRules);
 					i += y;
 				}
 
 				if (matchedRule.rule) {
 					if (matchedRule.rule.children !== null) {
-						const [matchedRules, y] = this._recursiveLookahead(tokens.slice(i + 1), syntaxRules.filter((rule) => matchedRule.rule?.children?.includes(rule.name)));
+						const [matchedRules, y] = this.recursiveLookahead(tokens.slice(i + 1), syntaxRules.filter((rule) => matchedRule.rule?.children?.includes(rule.name)));
 						matchedRule.matches.push(...matchedRules);
 						i += y;
 					}
@@ -167,10 +212,10 @@ export class Parser {
 	 * @param {Rule[]} rules The rules to filter
 	 * @returns {Rule[]} The filtered rules
 	 * @memberof Parser
-	 * @name _filterRules
+	 * @name filterRules
 	 * @private
 	 */
-	_filterRules(token: Token, tokenCounter: number, nextTokens: Token[], rules: Rule[]): Rule[] {
+	private filterRules(token: Token, tokenCounter: number, nextTokens: Token[], rules: Rule[]): Rule[] {
 
 		const passingRules: Rule[] = [];
 		for (const rule of rules) {
@@ -179,7 +224,7 @@ export class Parser {
 			}
 
 			if (rule.lookahead > 0 || rule.negativeLookahead !== null) {
-				if (!this._lookahead(nextTokens, rule, tokenCounter + 1)) {
+				if (!this.lookahead(nextTokens, rule, tokenCounter + 1)) {
 					continue;
 				}
 			}
@@ -202,7 +247,7 @@ export class Parser {
 	 * @memberof Parser
 	 * @name _lookahead
 	 */
-	_lookahead(tokens: Token[], rule: Rule, currentMatchCount: number): Rule | null {
+	private lookahead(tokens: Token[], rule: Rule, currentMatchCount: number): Rule | null {
 		// look ahead to the next x tokens, will the rule match?
 		let checkIndex: number = currentMatchCount; // controls which token to look at
 		let tokenCounter: number = currentMatchCount - 1;
@@ -253,7 +298,7 @@ export class Parser {
 	 * @memberof Parser
 	 * @name _recursiveLookahead
 	 */
-	_recursiveLookahead(tokens: Token[], rules?: Rule[] | null, endToken?: string[] | null): [MatchedRule[], number] {
+	private recursiveLookahead(tokens: Token[], rules?: Rule[] | null, endToken?: string[] | null): [MatchedRule[], number] {
 		const matches: MatchedRule[] = [];
 		const exitOnMatch: boolean = rules != null;
 		let workingRules: Rule[] = [];
@@ -294,10 +339,10 @@ export class Parser {
 				continue;
 			}
 
-			workingRules = this._filterRules(token, tokenCounter, tokens.slice(i + 1), workingRules);
+			workingRules = this.filterRules(token, tokenCounter, tokens.slice(i + 1), workingRules);
 
 			if (token.scopes.filter((scope) => recursiveGroupBegin.includes(scope)).length > 0 && workingRules.length === 0) {
-				const [matchedRules, y] = this._recursiveLookahead(tokens.slice(i + 1));
+				const [matchedRules, y] = this.recursiveLookahead(tokens.slice(i + 1));
 				matches.push(...matchedRules);
 				i += y;
 				reset();
@@ -321,10 +366,10 @@ export class Parser {
 
 			expressionTokens.push(token);
 
-			const matchedRule = { "rule": workingRules.find((rule) => rule.scopes.join('|') === this._getMatchedTokens(expressionTokens)) ?? null, "tokens": expressionTokens, "matches": [] as MatchedRule[] };
+			const matchedRule = { "rule": workingRules.find((rule) => rule.scopes.join('|') === this.getMatchedTokens(expressionTokens)) ?? null, "tokens": expressionTokens, "matches": [] as MatchedRule[] };
 
 			if (matchedRule.rule && matchedRule.rule.recursive) {
-				const [matchedRules, y] = this._recursiveLookahead(tokens.slice(i + 1), null, matchedRule.rule.end);
+				const [matchedRules, y] = this.recursiveLookahead(tokens.slice(i + 1), null, matchedRule.rule.end);
 				matchedRule.matches.push(...matchedRules);
 				matches.push(matchedRule);
 				i += y;
@@ -355,18 +400,17 @@ export class Parser {
 	 * @memberof Parser
 	 * @name tokenize
 	 */
-	static tokenize(grammar: Grammar, source: string, lineNumber: number = 0): LineToken[] {
-
-		const lines: string[] = source.split('\n');
+	static tokenize(grammar: Grammar, source: LineMap, ruleStack: RuleStack | null = null, lineNumber: number = 0): LineToken[] {
 
 
 		const tokenizedLines: GrammarTokenizeLineResult[] = [];
 
-		for (let i = 0; i < lines.length; i++) {
-			const line = lines[i];
-		
+		const lineTokens: LineToken[] = [];
+
+		for (const [lineNumber, line] of source.entries()) {
+			
 			// Initial tokenization
-			const result = grammar.tokenizeLine(line, null, i + lineNumber);
+			const result = grammar.tokenizeLine(line, ruleStack);
 		
 			if (result.stoppedEarly) {
 				let startIndex = result.tokens[result.tokens.length - 1].endIndex;
@@ -374,7 +418,7 @@ export class Parser {
 				let currentRuleStack = result.ruleStack;
 		
 				while (currentLine.length > 0) {
-					const newResult = grammar.tokenizeLine(currentLine, currentRuleStack, i + lineNumber);
+					const newResult = grammar.tokenizeLine(currentLine, currentRuleStack);
 		
 					// Adjust token positions
 					newResult.tokens.forEach((token) => {
@@ -400,18 +444,7 @@ export class Parser {
 			}
 		
 			tokenizedLines.push(result);
-		}
-
-		const lineTokens: LineToken[] = [];
-
-		// const filePosition: number = 0;
-
-		for (let i = 0; i < tokenizedLines.length; i++) {
-			const tokenizedLine = tokenizedLines[i];
-			const sourceLine = lines[i];
-
-			lineTokens.push(LineToken.fromGrammarTokens(tokenizedLine.tokens, sourceLine, i + lineNumber));
-
+			lineTokens.push(LineToken.fromGrammarTokens(result.tokens, line, lineNumber, result.ruleStack));
 		}
 
 		return lineTokens;
@@ -424,7 +457,7 @@ export class Parser {
 	 * @memberof Parser
 	 * @name _getMatchedTokens
 	 */
-	_getMatchedTokens(tokens: Token[]): string {
+	private getMatchedTokens(tokens: Token[]): string {
 		return tokens.map((t) => t.scopes.filter((scope) => !skipTokens.includes(scope.split('.')[0]) && !punctuation.includes(scope)) ?? [''][0])
 			.map((t) => t.filter((scope) => scope !== ''))
 			.filter((t) => t.length > 0)
@@ -436,7 +469,7 @@ export class Parser {
 	 * @param {string} source The source code to split
 	 * @returns {MatchObj[]} The source code split into statements
 	 */
-	_splitSource(source: string): MatchObj[] {
+	private splitSource(source: string): MatchObj[] {
 
 		const pattern = /;/g;
 		let match: RegExpExecArray | null;
