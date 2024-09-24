@@ -755,7 +755,7 @@
             "4": { "name": "keyword.as.sql" },
             "5": { "name": "entity.name.tag" }
           },
-          "match": "(?i)([\\w_]+)(\\.)([\\w_]+)[ \\t]+(as)[ \\t]+([\\w_]+)(?=[ \\t]*?,|\\n|from)",
+          "match": "(?i)([\\w_]+)(\\.)([\\w_]+)[ \\t]+(as)[ \\t]+([\\w_]+)(?=\\s*?(?:,|\\n|from))",
           "name": "meta.column.explicit.alias.sql"
         },
         {
@@ -765,7 +765,7 @@
             "3": { "name": "entity.other.column.sql" },
             "4": { "name": "entity.name.tag" }
           },
-          "match": "(?i)([\\w_]+)(\\.)([\\w_]+)[ \\t]+(?:(?>as|([\\w_]+)))(?=[ \\t]*?,|\\n|from)",
+          "match": "(?i)([\\w_]+)(\\.)([\\w_]+)[ \\t]+(?:(?>as|([\\w_]+)))(?=\\s*?(?:,|\\n|from))",
           "name": "meta.column.implicit.alias.sql"
         },
         {
@@ -781,21 +781,21 @@
           "captures": {
             "1": { "name": "entity.other.column.sql" }
           },
-          "match": "(?i)^[ \\t]*?([\\w_]+)(?=[ \\t]*?,|\\n|from)",
+          "match": "(?i)^[ \\t]*?([\\w_]+)(?=\\s*?(?:,|\\n|from))",
           "name": "meta.column.sql"
         },
         {
           "captures": {
             "1": { "name": "entity.other.column.sql" }
           },
-          "match": "(?i)(?<=select )([\\w_]+)(?=[ \\t]*?,|\\n|from)",
+          "match": "(?i)(?<=select )([\\w_]+)(?=\\s*?(?:,|\\n|from))",
           "name": "meta.column.sql"
         },
         {
           "captures": {
             "1": { "name": "entity.other.column.sql" }
           },
-          "match": "(?i)(?<=,)[ \\t]*?(\\w+)(?=[ \\t]*?,|\\n|from)",
+          "match": "(?i)(?<=,)[ \\t]*?(\\w+)(?=\\s*?(?:,|\\n|from))",
           "name": "meta.column.sql"
         },
         {
@@ -803,7 +803,7 @@
             "1": { "name": "keyword.as.sql" },
             "2": { "name": "entity.name.tag" }
           },
-          "match": "(?i)(?:(as)[ \t]+)?([\\w_]+)(?=[ \\t]*?,|\\n|from)",
+          "match": "(?i)(?:(as)[ \\t]+)?([\\w_]+)(?=\\s*?(?:,|\\n|from))",
           "name": "meta.column.alias.sql"
         },
         {
