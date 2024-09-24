@@ -1,6 +1,6 @@
 
 // #region Enums
-enum StatementType {
+export enum StatementType {
 	SELECT = 'select',
 	INSERT = 'insert',
 	UPDATE = 'update',
@@ -16,7 +16,7 @@ enum StatementType {
 	CALL = 'call',
 }
 
-enum JoinType {
+export enum JoinType {
 	INNER = 'inner',
 	LEFT = 'left',
 	RIGHT = 'right',
@@ -24,7 +24,7 @@ enum JoinType {
 	CROSS = 'cross',
 }
 
-enum LogicalOperator {
+export enum LogicalOperator {
 	AND = 'and',
 	OR = 'or',
 	ON = 'on',
@@ -32,7 +32,7 @@ enum LogicalOperator {
 	USING = 'using',
 }
 
-enum ComparisonOperator {
+export enum ComparisonOperator {
 	EQUAL = '=',
 	NOT_EQUAL = '!=',
 	GREATER_THAN = '>',

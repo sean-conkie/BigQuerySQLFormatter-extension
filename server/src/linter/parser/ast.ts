@@ -1,6 +1,7 @@
 import { Token, LineToken } from './token';
 import { MatchedRule } from './matches';
 import { findToken, sortTokens } from './utils';
+import { StatementType, JoinType, LogicalOperator, ComparisonOperator } from './enums';
 
 // region base types
 export type ASTPosition = {
