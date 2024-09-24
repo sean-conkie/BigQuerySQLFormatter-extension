@@ -5,7 +5,8 @@
 import { expect } from 'chai';
 import { defaultSettings } from '../../../../settings';
 import { TrailingComma } from '../../../../linter/rules/layout/LT04';
-import { FileMap, StatementAST, Parser } from '../../../../linter/parser';
+import { FileMap, Parser } from '../../../../linter/parser';
+import { StatementAST } from '../../../../linter/parser/ast';
 
 describe('TrailingComma', () => {
     let instance: TrailingComma;

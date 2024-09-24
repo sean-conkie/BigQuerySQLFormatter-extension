@@ -5,7 +5,8 @@
 import { expect } from 'chai';
 import { defaultSettings } from '../../../../settings';
 import { Functions } from '../../../../linter/rules/layout/LT06';
-import { FileMap, StatementAST, Parser } from '../../../../linter/parser';
+import { FileMap, Parser } from '../../../../linter/parser';
+import { StatementAST } from '../../../../linter/parser/ast';
 
 describe('Functions', () => {
     let instance: Functions;

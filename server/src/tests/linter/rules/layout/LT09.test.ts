@@ -5,7 +5,8 @@
 import { expect } from 'chai';
 import { defaultSettings } from '../../../../settings';
 import { SelectTargets } from '../../../../linter/rules/layout/LT09';
-import { FileMap, StatementAST, Parser } from '../../../../linter/parser';
+import { FileMap, Parser } from '../../../../linter/parser';
+import { StatementAST } from '../../../../linter/parser/ast';
 
 describe('SelectTargets', () => {
     let instance: SelectTargets;
