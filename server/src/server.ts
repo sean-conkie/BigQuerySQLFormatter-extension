@@ -1,12 +1,5 @@
-/**
- * @fileoverview Language Server for BigQuery SQL Formatter
- * 
- */
-
 import {
 	createConnection,
-	TextDocuments,
-	Diagnostic,
 	ProposedFeatures,
 	InitializeParams,
 	DidChangeConfigurationNotification,
@@ -16,27 +9,17 @@ import {
 	TextDocumentSyncKind,
 	InitializeResult
 } from 'vscode-languageserver/node';
-
-import { workspace } from 'vscode';
-
-import {
-	TextDocument
-} from 'vscode-languageserver-textdocument';
-
-import {
-	Linter
-} from './linter/linter';
-
-import { defaultSettings, ServerSettings } from './settings';
+import { defaultSettings, documentSettings, getDocumentSettings, ServerSettings } from './settings';
+import { validateTextDocument, validateTextDocumentChanges } from './validate';
 
 const connection = createConnection(ProposedFeatures.all);
-
-// Create a simple text document manager.
-const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
 
 let hasConfigurationCapability = false;
 let hasWorkspaceFolderCapability = false;
 let hasDiagnosticRelatedInformationCapability = false;
+let globalSettings: ServerSettings = defaultSettings;
+
+// region event handlers
 
 connection.onInitialize((params: InitializeParams) => {
 	const capabilities = params.capabilities;
@@ -85,12 +68,6 @@ connection.onInitialized(() => {
 	}
 });
 
-// The global settings, used when the `workspace/configuration` request is not supported by the client.
-let globalSettings: ServerSettings = defaultSettings;
-
-// Cache the settings of all open documents
-const documentSettings: Map<string, Thenable<ServerSettings>> = new Map();
-
 connection.onDidChangeConfiguration(change => {
 	if (hasConfigurationCapability) {
 		// Reset all cached document settings
@@ -100,55 +77,7 @@ connection.onDidChangeConfiguration(change => {
 			(change.settings.bigqueryLanguageServer || defaultSettings)
 		);
 	}
-
-	// Revalidate all open text documents
-	documents.all().forEach(validateTextDocument);
 });
-
-function getDocumentSettings(resource: string): Thenable<ServerSettings> {
-	if (!hasConfigurationCapability) {
-		return Promise.resolve(globalSettings);
-	}
-	let result = documentSettings.get(resource);
-	if (!result) {
-		result = connection.workspace.getConfiguration({
-			scopeUri: resource,
-			section: 'bigquerySQLFormatter'
-		});
-		documentSettings.set(resource, result);
-	}
-	return result;
-}
-
-// Only keep settings for open documents
-documents.onDidClose(e => {
-	documentSettings.delete(e.document.uri);
-});
-
-// The content of a document has changed. This event is emitted
-// when the document first opened or when its content has changed.
-documents.onDidOpen(change => {
-	validateTextDocument(change.document);
-});
-
-
-/**
- * Validates the text document and sends diagnostics to VSCode
- * @name validateTextDocument
- * @param textDocument 
- */
-async function validateTextDocument(textDocument: TextDocument): Promise<void> {
-	// we get the settings for every validate run.
-	const settings = await getDocumentSettings(textDocument.uri);
-
-	// Create the linter
-	const linter = new Linter(settings);
-
-	const diagnostics: Diagnostic[] = await linter.verify(textDocument);
-
-	// Send the computed diagnostics to VSCode.
-	connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
-}
 
 connection.onDidChangeWatchedFiles(_change => {
 	// Monitored files have change in VSCode
@@ -191,9 +120,13 @@ connection.onCompletionResolve(
 	}
 );
 
-// Make the text document manager listen on the connection
-// for open, change and close text document events
-documents.listen(connection);
+connection.onDidOpenTextDocument(async (params) => {
+	connection.sendDiagnostics(await validateTextDocument(params.textDocument, await getDocumentSettings(params.textDocument.uri, connection, globalSettings, hasConfigurationCapability)));
+});
 
-// Listen on the connection
+connection.onDidChangeTextDocument(async (params) => {
+	connection.sendDiagnostics(await validateTextDocumentChanges(params, await getDocumentSettings(params.textDocument.uri, connection, globalSettings, hasConfigurationCapability)));
+});
+
 connection.listen();
+// endregion event handlers
