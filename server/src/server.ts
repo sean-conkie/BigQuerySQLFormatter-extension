@@ -17,6 +17,8 @@ import {
 	InitializeResult
 } from 'vscode-languageserver/node';
 
+import { workspace } from 'vscode';
+
 import {
 	TextDocument
 } from 'vscode-languageserver-textdocument';
@@ -26,12 +28,6 @@ import {
 } from './linter/linter';
 
 import { defaultSettings, ServerSettings } from './settings';
-// import * as vscode from 'vscode';
-
-// const outputChannel = vscode.window.createOutputChannel('BigQuery SQL Formatter', {log: true});
-
-// Create a connection for the server, using Node's IPC as a transport.
-// Also include all preview / proposed LSP features.
 
 const connection = createConnection(ProposedFeatures.all);
 
@@ -131,9 +127,10 @@ documents.onDidClose(e => {
 
 // The content of a document has changed. This event is emitted
 // when the document first opened or when its content has changed.
-documents.onDidChangeContent(change => {
+documents.onDidOpen(change => {
 	validateTextDocument(change.document);
 });
+
 
 /**
  * Validates the text document and sends diagnostics to VSCode
@@ -147,7 +144,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	// Create the linter
 	const linter = new Linter(settings);
 
-	const diagnostics: Diagnostic[] = await linter.verify(textDocument.getText(), textDocument.uri);
+	const diagnostics: Diagnostic[] = await linter.verify(textDocument);
 
 	// Send the computed diagnostics to VSCode.
 	connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
