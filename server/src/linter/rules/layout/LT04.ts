@@ -59,11 +59,27 @@ export class TrailingComma extends Rule<FileMap> {
 
       for (const column of columns) {
         const filteredTokens = column.tokens.filter((token) => !token.scopes.includes("punctuation.whitespace.leading.sql"));
+
+        // sort the tokens by linenumber then start index
+        filteredTokens.sort((a, b) => {
+          if (a.lineNumber === b.lineNumber) {
+            return a.startIndex - b.startIndex;
+          }
+          return a.lineNumber! - b.lineNumber!;
+        });
+
+        const firstToken = filteredTokens[0];
+        const lastToken = filteredTokens[filteredTokens.length - 1];
         
-        if ((filteredTokens[0].value ?? '') === ',') {
+        if ((firstToken.value ?? '') === ',' && lastToken.lineNumber! === firstToken.lineNumber!) {
           errors.push(this.createDiagnostic({
-            start: { line: filteredTokens[0].lineNumber ?? 0, character: filteredTokens[0].startIndex ?? 0 },
-            end: { line: filteredTokens[0].lineNumber ?? 0, character: filteredTokens[0].endIndex ?? 0 }
+            start: { line: firstToken.lineNumber ?? 0, character: firstToken.startIndex ?? 0 },
+            end: { line: firstToken.lineNumber ?? 0, character: firstToken.endIndex ?? 0 }
+          }, documentUri));
+        } else if (lastToken.value === ',' && lastToken.lineNumber! !== firstToken.lineNumber!) {
+          errors.push(this.createDiagnostic({
+            start: { line: lastToken.lineNumber ?? 0, character: lastToken.startIndex ?? 0 },
+            end: { line: lastToken.lineNumber ?? 0, character: lastToken.endIndex ?? 0 }
           }, documentUri));
         }
       }
