@@ -6,7 +6,8 @@ import {
   DiagnosticSeverity,
 } from 'vscode-languageserver/node';
 import { Rule } from '../base';
-import { FileMap, ColumnFunctionAST, ComparisonAST, ComparisonGroupAST } from '../../parser';
+import { FileMap } from '../../parser';
+import { ColumnFunctionAST, ComparisonAST, ComparisonGroupAST } from '../../parser/ast';
 
 
 /**

@@ -12,7 +12,8 @@ import { Diagnostic } from 'vscode-languageserver/node';
 import { Rule } from './rules/base';
 import { initialiseRules } from './rules/rules';
 import { RuleType } from './rules/enums';
-import { FileMap, Parser, StatementAST } from './parser';
+import { FileMap, Parser } from './parser';
+import { StatementAST } from './parser/ast';
 
 
 

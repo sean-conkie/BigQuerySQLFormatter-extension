@@ -5,7 +5,8 @@ import {
   Diagnostic,
 } from 'vscode-languageserver/node';
 import { Rule } from '../base';
-import { ColumnAST, FileMap } from '../../parser';
+import { FileMap } from '../../parser';
+import { ColumnAST } from '../../parser/ast';
 
 
 /**
