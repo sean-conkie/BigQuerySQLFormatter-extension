@@ -1,6 +1,6 @@
 
 import { mergeArrayToUnique } from '../../utils';
-import { GrammarLoader, Grammar, GrammarToken, GrammarTokenizeLineResult } from '../grammarLoader';
+import { GrammarToken, RuleStack } from '../grammarLoader';
 
 /**
  * A class that represents a token in a line of code.
@@ -50,6 +50,7 @@ export class LineToken extends GrammarToken {
 	 * This array is used to store the tokens parsed by the linter.
 	 */
 	tokens: Token[] = [];
+	ruleStack: RuleStack;
 
 
 	/**
@@ -62,11 +63,12 @@ export class LineToken extends GrammarToken {
 	 * @param lineNumber - The line number where the token is located, or null if not applicable.
 	 * @param tokens - An array of child tokens, defaults to an empty array.
 	 */
-	constructor(scopes: string[], startIndex: number, endIndex: number, value: string, lineNumber: number | null = null, tokens: Token[] = []) {
+	constructor(scopes: string[], startIndex: number, endIndex: number, value: string, lineNumber: number | null = null, tokens: Token[] = [], ruleStack: RuleStack) {
 		super(scopes, startIndex, endIndex);
 		this.value = value;
 		this.lineNumber = lineNumber;
 		this.tokens = tokens;
+		this.ruleStack = ruleStack;
 	}
 
 	/**
@@ -78,7 +80,7 @@ export class LineToken extends GrammarToken {
 	 * @returns A `LineToken` object representing the combined tokens.
 	 * @throws Will throw an error if any token does not have defined start and end indexes.
 	 */
-	static fromGrammarTokens(grammarTokens: GrammarToken[], sourceLine: string, lineNumber: number | null = null): LineToken {
+	static fromGrammarTokens(grammarTokens: GrammarToken[], sourceLine: string, lineNumber: number | null = null, ruleStack: RuleStack): LineToken {
 		const tokens: Token[] = [];
 		for (const token of grammarTokens) {
 			if (token.startIndex === undefined || token.endIndex === undefined) {
@@ -93,7 +95,8 @@ export class LineToken extends GrammarToken {
 			grammarTokens[grammarTokens.length - 1].endIndex,
 			sourceLine.substring(grammarTokens[0].startIndex, grammarTokens[grammarTokens.length - 1].endIndex),
 			lineNumber,
-			tokens
+			tokens,
+			ruleStack
 		);
 
 	}
