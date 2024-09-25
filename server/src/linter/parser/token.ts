@@ -2,6 +2,23 @@
 import { mergeArrayToUnique } from '../../utils';
 import { GrammarToken, RuleStack } from '../grammarLoader';
 
+
+// region functions
+
+
+/**
+ * Joins the values of an array of tokens into a single string, with an optional character separator.
+ *
+ * @param tokens - An array of Token objects whose values need to be joined.
+ * @param char - An optional string character to separate each token value. Defaults to an empty string.
+ * @returns A single string composed of the token values joined by the specified character.
+ */
+export function joinTokenValues(tokens: Token[], char: string = ''): string {
+	return tokens.map((token) => token.value).join(char);
+}
+
+// endregion functions
+
 /**
  * A class that represents a token in a line of code.
  */

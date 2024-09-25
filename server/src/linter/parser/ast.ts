@@ -1,21 +1,33 @@
-import { Token, LineToken } from './token';
+import { Token, LineToken, joinTokenValues } from './token';
 import { MatchedRule } from './matches';
 import { findToken, sortTokens } from './utils';
 import { StatementType, JoinType, LogicalOperator, ComparisonOperator } from './enums';
 
 // region base types
+/**
+ * Represents the position of a node in the Abstract Syntax Tree (AST).
+ * 
+ * @property lineNumber - The line number where the node is located. It can be null if the line number is not applicable.
+ * @property startIndex - The starting index of the node in the source code. It can be null if the start index is not applicable.
+ * @property endIndex - The ending index of the node in the source code. It can be null if the end index is not applicable.
+ */
 export type ASTPosition = {
 	lineNumber: number | null,
 	startIndex: number | null,
 	endIndex: number | null,
 };
 
-
-
+/**
+ * Represents an Abstract Syntax Tree (AST) with positional information.
+ * 
+ * @extends ASTPosition
+ * 
+ * @property {Token[]} tokens - An array of tokens that make up the AST.
+ */
 export interface AST extends ASTPosition {
-	"tokens": Token[]
-
+	tokens: Token[]
 }
+
 // endregion base types
 
 // region functions
@@ -150,11 +162,10 @@ export class ColumnAST implements AST {
 
 }
 
-
 /**
- * Represents a column function in the Abstract Syntax Tree (AST).
+ * Represents a string in the Abstract Syntax Tree (AST).
  */
-class StringAST implements AST {
+class BaseStringAST implements AST {
 	value: string | null = null;
 	tokens: Token[] = [];
 	alias: string | null = null;
@@ -178,13 +189,19 @@ class StringAST implements AST {
 	 */
 	constructor(tokens: Token[]) {
 		this.tokens = tokens;
-		this.value = tokens.map((token) => token.value).join('');
+		this.value = joinTokenValues(tokens);
 		this.alias = findToken(tokens, "entity.name.tag")?.value ?? null;
 		this.lineNumber = tokens.filter((token) => !token.scopes.includes('punctuation.whitespace.leading.sql') && !token.scopes.includes('punctuation.whitespace.trailing.sql') && !token.scopes.includes('punctuation.whitespace.sql'))[0].lineNumber;
 		this.startIndex = tokens[0].startIndex;
 		this.endIndex = tokens[tokens.length - 1].endIndex;
 	}
 }
+
+
+/**
+ * Represents a column function in the Abstract Syntax Tree (AST).
+ */
+class StringAST extends BaseStringAST {}
 
 /**
  * Represents a number in the Abstract Syntax Tree (AST).
@@ -211,7 +228,7 @@ class NumberAST implements AST {
 	 */
 	constructor(tokens: Token[]) {
 		this.tokens = tokens;
-		this.value = Number(tokens.map((token) => token.value).join(''));
+		this.value = Number(joinTokenValues(tokens));
 		this.alias = findToken(tokens, "entity.name.tag")?.value ?? null;
 		this.lineNumber = tokens.filter((token) => !token.scopes.includes('punctuation.whitespace.leading.sql') && !token.scopes.includes('punctuation.whitespace.trailing.sql') && !token.scopes.includes('punctuation.whitespace.sql'))[0].lineNumber;
 		this.startIndex = tokens[0].startIndex;
@@ -222,26 +239,11 @@ class NumberAST implements AST {
 /**
  * Represents a keyword in the Abstract Syntax Tree (AST).
  */
-class KeywordAST implements AST {
-	value: string | null = null;
-	tokens: Token[] = [];
-	alias: string | null = null;
-	lineNumber: number | null = null;
-	startIndex: number | null = null;
-	endIndex: number | null = null;
-	
-	constructor(tokens: Token[]) {
-		this.tokens = tokens;
-		this.value = tokens.map((token) => token.value).join('');
-		this.alias = findToken(tokens, "entity.name.tag")?.value ?? null;
-		this.lineNumber = tokens.filter((token) => !token.scopes.includes('punctuation.whitespace.leading.sql') && !token.scopes.includes('punctuation.whitespace.trailing.sql') && !token.scopes.includes('punctuation.whitespace.sql'))[0].lineNumber;
-		this.startIndex = tokens[0].startIndex;
-		this.endIndex = tokens[tokens.length - 1].endIndex;
-	}
-}
+class KeywordAST extends BaseStringAST {}
 
-
-
+/**
+ * Represents a statement in the Abstract Syntax Tree (AST).
+ */
 class OrderAST implements AST {
 	column: Column | null = null;
 	direction: string | null = null;
@@ -252,8 +254,9 @@ class OrderAST implements AST {
 	
 }
 
-
-
+/**
+ * Represents a statement in the Abstract Syntax Tree (AST).
+ */
 class WindowAST implements AST {
 	partition: Column[] = [];
 	order: OrderAST[] = [];
@@ -262,6 +265,21 @@ class WindowAST implements AST {
 	startIndex: number | null = null;
 	endIndex: number | null = null;
 	
+	/**
+	 * Constructs an instance of the class.
+	 * 
+	 * @param match - The matched rule object containing parsing information.
+	 * 
+	 * The constructor processes the matched rule to extract and initialize
+	 * partition and order columns. It identifies the indices for "partition"
+	 * and "order" keywords within the matches, slices the matches accordingly,
+	 * and maps them to create column and order objects.
+	 * 
+	 * - `partition`: An array of columns derived from the matches between
+	 *   the "partition" and "order" keywords.
+	 * - `order`: An array of order objects derived from the matches after
+	 *   the "order" keyword.
+	 */
 	constructor(match: MatchedRule) {
 		const emptyMatch = { rule: null, tokens: [], matches: [] };
 		const partitionByIndex = match.matches?.indexOf(match.matches?.find((match) => match.rule?.name === "keyword.partition") ?? emptyMatch) ?? 0;
@@ -277,7 +295,9 @@ class WindowAST implements AST {
 }
 
 
-
+/**
+ * Represents a statement in the Abstract Syntax Tree (AST).
+ */
 export class ColumnFunctionAST implements AST {
 	function: string | null = null;
 	parameters: FunctionParameter[] = [];
@@ -288,6 +308,21 @@ export class ColumnFunctionAST implements AST {
 	startIndex: number | null = null;
 	endIndex: number | null = null;
 	
+	/**
+	 * Constructs an instance of the class with the provided matched rule.
+	 * 
+	 * @param matchedRule - The matched rule containing tokens and matches to be processed.
+	 * 
+	 * The constructor performs the following operations:
+	 * - Extracts the function name from the matched rule tokens.
+	 * - Pushes all tokens from the matched rule to the instance's tokens array.
+	 * - Determines the line number and start index from the matched rule tokens.
+	 * - Processes special matches for columns being cast as a type and splits them into column and keyword tokens.
+	 * - Handles window functions that may contain an alias and adds the alias to the matched rule matches.
+	 * - Iterates over the matched rule matches to create appropriate AST nodes (e.g., ColumnAST, ColumnFunctionAST, StringAST, NumberAST, KeywordAST, WindowAST).
+	 * - Adds the created AST nodes to the instance's parameters and tokens arrays.
+	 * - Sets the end index based on the last token in the tokens array.
+	 */
 	constructor(matchedRule: MatchedRule) {
 		this.function = matchedRule.tokens.filter((token) => token.scopes.includes("meta.function.sql"))[0].value;
 		this.tokens.push(...matchedRule.tokens);
@@ -372,6 +407,9 @@ export class ColumnFunctionAST implements AST {
 }
 
 
+/**
+ * Represents a statement in the Abstract Syntax Tree (AST).
+ */
 class CaseStatementWhenAST implements AST {
 	when: ComparisonGroupAST | null = null;
 	then: Column | null = null;
@@ -381,6 +419,12 @@ class CaseStatementWhenAST implements AST {
 	endIndex: number | null = null;
 	type: string = 'case.when';
 
+	/**
+	 * Constructs an instance of the AST node with the provided matched rules.
+	 *
+	 * @param when - The matched rule representing the condition.
+	 * @param then - The matched rule representing the consequence.
+	 */
 	constructor(when: MatchedRule, then: MatchedRule) {
 
 		this.tokens.push(...when.tokens);
@@ -392,9 +436,7 @@ class CaseStatementWhenAST implements AST {
 
 		this.when = new ComparisonGroupAST(when.matches ?? []);
 		this.then = new ColumnAST(then);
-
 	}
-
 }
 
 class CaseStatementAST implements AST {
@@ -428,10 +470,10 @@ class CaseStatementAST implements AST {
 		if (aliasMatch) {
 			this.alias = findToken(aliasMatch.tokens, "entity.name.tag")?.value ?? null;
 		}
-
 	}
 }
 // endregion columns
+
 // region comparison
 export class ComparisonAST implements AST {
 	logicalOperator: LogicalOperator | null = null;
