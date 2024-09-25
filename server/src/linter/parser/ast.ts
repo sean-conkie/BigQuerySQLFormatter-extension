@@ -1,4 +1,4 @@
-import { Token, LineToken, joinTokenValues } from './token';
+import { Token, LineToken, joinTokenValues, filterOutTokens } from './token';
 import { MatchedRule } from './matches';
 import { findToken, sortTokens } from './utils';
 import { StatementType, JoinType, LogicalOperator, ComparisonOperator } from './enums';
@@ -24,6 +24,20 @@ abstract class AST {
   lineNumber: number | null = null;
   startIndex: number | null = null;
   endIndex: number | null = null;
+
+  constructor(tokens: Token[] = []) {
+    this.tokens = sortTokens(tokens);
+
+    if (tokens.length > 0) {
+      this.alias = findToken(tokens, "entity.name.tag")?.value ?? null;
+      this.lineNumber = filterOutTokens(tokens, ['punctuation.whitespace.leading.sql',
+        'punctuation.whitespace.trailing.sql',
+        'punctuation.whitespace.sql',
+        'punctuation.separator.comma.sql'])[0].lineNumber;
+      this.startIndex = tokens[0].startIndex;
+      this.endIndex = tokens[tokens.length - 1].endIndex;
+    }    
+  }
 }
 
 /**
@@ -50,35 +64,6 @@ abstract class AST {
  */
 abstract class ASTWithValue<T> extends AST {
   value: T | null = null;
-
-  /**
-   * Constructs a new instance of the class.
-   * 
-   * @param tokens - An array of Token objects that represent the tokens to be parsed.
-   * 
-   * @remarks
-   * This constructor initializes the following properties:
-   * - `tokens`: Stores the provided tokens.
-   * - `value`: Concatenates the values of all tokens into a single string.
-   * - `alias`: Finds the token with the scope "entity.name.tag" and assigns its value, or null if not found.
-   * - `lineNumber`: Determines the line number of the first non-whitespace token.
-   * - `startIndex`: Sets the start index to the start index of the first token.
-   * - `endIndex`: Sets the end index to the end index of the last token.
-   */
-  constructor(tokens: Token[]) {
-    super();
-    this.tokens = tokens;
-
-    if (tokens.length > 0) {
-      this.alias = findToken(tokens, "entity.name.tag")?.value ?? null;
-      this.lineNumber = tokens.filter((token) => !token.scopes.includes('punctuation.whitespace.leading.sql'))
-                              .filter((token) => !token.scopes.includes('punctuation.whitespace.trailing.sql'))
-                              .filter((token) => !token.scopes.includes('punctuation.whitespace.sql'))[0]
-                              .lineNumber;
-      this.startIndex = tokens[0].startIndex;
-      this.endIndex = tokens[tokens.length - 1].endIndex;
-    }
-}
 }
 
 // endregion base types
@@ -165,25 +150,14 @@ export class ColumnAST extends AST {
   column: string | null = null;
   
   constructor(matchedRule: MatchedRule) {
-    super();
-    this.tokens = matchedRule.tokens;
+    super(matchedRule.tokens);
 
     if (matchedRule.matches != null && matchedRule.matches.length > 0) {
       this.tokens.push(...matchedRule.matches[0].tokens);
     }
 
-    this.tokens = sortTokens(this.tokens);
-
     this.source = findToken(matchedRule.tokens, "entity.name.alias.sql")?.value ?? null;
     this.column = findToken(matchedRule.tokens, "entity.other.column.sql")?.value ?? null;
-    this.alias = findToken(matchedRule.tokens, "entity.name.tag")?.value ?? null;
-    this.lineNumber = matchedRule.tokens
-                        .filter((token) => !token.scopes.includes('punctuation.whitespace.leading.sql'))
-                        .filter((token) => !token.scopes.includes('punctuation.whitespace.trailing.sql'))
-                        .filter((token) => !token.scopes.includes('punctuation.whitespace.sql'))
-                        .filter((token) => !token.scopes.includes('punctuation.separator.comma.sql'))[0].lineNumber;
-    this.startIndex = matchedRule.tokens[0].startIndex;
-    this.endIndex = matchedRule.tokens[matchedRule.tokens.length - 1].endIndex;
   }
 
   /**
@@ -347,11 +321,8 @@ export class ColumnFunctionAST extends AST {
    * - Sets the end index based on the last token in the tokens array.
    */
   constructor(matchedRule: MatchedRule) {
-    super();
+    super(matchedRule.tokens);
     this.function = matchedRule.tokens.filter((token) => token.scopes.includes("meta.function.sql"))[0].value;
-    this.tokens.push(...matchedRule.tokens);
-    this.lineNumber = matchedRule.tokens.filter((token) => !token.scopes.includes('punctuation.whitespace.leading.sql') && !token.scopes.includes('punctuation.whitespace.trailing.sql') && !token.scopes.includes('punctuation.whitespace.sql'))[0].lineNumber;
-    this.startIndex = matchedRule.tokens[0].startIndex;
 
     // Special rules have been created for columns being cast as a type - these need split into column
     // and keyword and inserted into the matches array.
@@ -425,8 +396,6 @@ export class ColumnFunctionAST extends AST {
         this.tokens.push(...parameter.tokens);
       }
     }
-
-    this.endIndex = this.tokens[this.tokens.length - 1].endIndex;
   }
 }
 
@@ -445,13 +414,9 @@ export class CaseStatementWhenAST extends AST {
    * @param then - The matched rule representing the consequence.
    */
   constructor(when: MatchedRule, then: MatchedRule) {
-    super();
-    this.tokens.push(...when.tokens);
-    this.tokens.push(...then.tokens);
 
-    this.lineNumber = this.tokens[0].lineNumber;
-    this.startIndex = this.tokens[0].startIndex;
-    this.endIndex = this.tokens[this.tokens.length - 1].endIndex;
+    const tokens = [...when.tokens, ...then.tokens];
+    super(tokens);
 
     this.when = new ComparisonGroupAST(when.matches ?? []);
     this.then = new ColumnAST(then);
@@ -477,11 +442,7 @@ export class CaseStatementAST extends AST {
    * - Extracts the alias from the alias match, if present.
    */
   constructor(matchedRule: MatchedRule) {
-    super();
-    this.tokens = matchedRule.tokens;
-    this.lineNumber = matchedRule.tokens.filter((token) => !token.scopes.includes('punctuation.whitespace.leading.sql') && !token.scopes.includes('punctuation.whitespace.trailing.sql') && !token.scopes.includes('punctuation.whitespace.sql'))[0].lineNumber;
-    this.startIndex = matchedRule.tokens[0].startIndex;
-    this.endIndex = matchedRule.tokens[matchedRule.tokens.length - 1].endIndex;
+    super(matchedRule.tokens);
 
     const whenMatches = matchedRule.matches?.filter((match) => match.rule?.type === "when") ?? [];
     const thenMatches = matchedRule.matches?.filter((match) => match.rule?.type === "then") ?? [];
@@ -531,15 +492,11 @@ export class ComparisonAST extends AST {
    * - `endIndex`: The end index of the last token.
    */
   constructor(comparison: Comparison, tokens: Token[]) {
-    super();
-    this.tokens = tokens;
+    super(tokens);
     this.left = comparison.left;
     this.operator = comparison.operator;
     this.right = comparison.right;
     this.logicalOperator = comparison.logicalOperator;
-    this.lineNumber = tokens.filter((token) => !token.scopes.includes('punctuation.whitespace.leading.sql') && !token.scopes.includes('punctuation.whitespace.trailing.sql') && !token.scopes.includes('punctuation.whitespace.sql'))[0].lineNumber;
-    this.startIndex = tokens[0].startIndex;
-    this.endIndex = tokens[tokens.length - 1].endIndex;
   }
 }
 
@@ -680,7 +637,6 @@ export class ComparisonGroupAST extends AST {
     }
 
     this.tokens = sortTokens(this.tokens);
-
   }
 }
 

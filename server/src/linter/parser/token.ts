@@ -22,6 +22,41 @@ export function joinTokenValues(tokens: Token[], char: string = ''): string {
 	return tokens.map((token) => token.value).join(char);
 }
 
+
+/**
+ * Filters out tokens that are not included in any of the specified scopes.
+ *
+ * @param tokens - The array of tokens to be filtered.
+ * @param scopes - The array of scopes to filter out from the tokens.
+ * @returns An array of tokens that do not include any of the specified scopes.
+ */
+export function filterTokens(tokens: Token[], scopes: string[]): Token[] {
+	let filteredTokens: Token[] = [];
+
+	scopes.map((scope) => {
+		filteredTokens = tokens.filter((token) => token.scopes.includes(scope));
+	});
+
+	return filteredTokens;
+}
+
+/**
+ * Filters out tokens that include any of the specified scopes.
+ *
+ * @param tokens - The array of tokens to be filtered.
+ * @param scopes - The array of scopes to filter out from the tokens.
+ * @returns An array of tokens that do not include any of the specified scopes.
+ */
+export function filterOutTokens(tokens: Token[], scopes: string[]): Token[] {
+	let filteredTokens: Token[] = [];
+
+	scopes.map((scope) => {
+		filteredTokens = tokens.filter((token) => !token.scopes.includes(scope));
+	});
+
+	return filteredTokens;
+}
+
 // endregion functions
 
 /**
