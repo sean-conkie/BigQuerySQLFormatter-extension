@@ -4,28 +4,75 @@ import { findToken, sortTokens } from './utils';
 import { StatementType, JoinType, LogicalOperator, ComparisonOperator } from './enums';
 
 // region base types
-/**
- * Represents the position of a node in the Abstract Syntax Tree (AST).
- * 
- * @property lineNumber - The line number where the node is located. It can be null if the line number is not applicable.
- * @property startIndex - The starting index of the node in the source code. It can be null if the start index is not applicable.
- * @property endIndex - The ending index of the node in the source code. It can be null if the end index is not applicable.
- */
-export type ASTPosition = {
-	lineNumber: number | null,
-	startIndex: number | null,
-	endIndex: number | null,
-};
 
 /**
- * Represents an Abstract Syntax Tree (AST) with positional information.
+ * Abstract Syntax Tree (AST) base class.
  * 
- * @extends ASTPosition
+ * This class serves as a base for all AST nodes in the BigQuery SQL Formatter.
+ * It contains common properties that are shared across different types of AST nodes.
  * 
- * @property {Token[]} tokens - An array of tokens that make up the AST.
+ * @abstract
+ * @property {Token[]} tokens - An array of tokens associated with this AST node.
+ * @property {string | null} alias - An optional alias for the AST node.
+ * @property {number | null} lineNumber - The line number where this AST node starts.
+ * @property {number | null} startIndex - The start index of this AST node in the source code.
+ * @property {number | null} endIndex - The end index of this AST node in the source code.
  */
-export interface AST extends ASTPosition {
-	tokens: Token[]
+abstract class AST {
+	tokens: Token[] = [];
+	alias: string | null = null;
+	lineNumber: number | null = null;
+	startIndex: number | null = null;
+	endIndex: number | null = null;
+}
+
+/**
+ * Represents an abstract syntax tree (AST) node with an associated value.
+ * 
+ * @template T - The type of the value associated with this AST node.
+ * 
+ * @extends AST
+ * 
+ * @property {T | null} value - The value associated with this AST node, initialized to null.
+ * 
+ * @remarks
+ * This class extends the base AST class and adds a value property. It also provides a constructor
+ * that initializes various properties based on the provided tokens.
+ * 
+ * @constructor
+ * @param {Token[]} tokens - An array of Token objects that represent the tokens to be parsed.
+ * 
+ * @example
+ * ```typescript
+ * const tokens: Token[] = [...];
+ * const astNode = new ASTWithValue<string>(tokens);
+ * ```
+ */
+abstract class ASTWithValue<T> extends AST {
+	value: T | null = null;
+
+	/**
+	 * Constructs a new instance of the class.
+	 * 
+	 * @param tokens - An array of Token objects that represent the tokens to be parsed.
+	 * 
+	 * @remarks
+	 * This constructor initializes the following properties:
+	 * - `tokens`: Stores the provided tokens.
+	 * - `value`: Concatenates the values of all tokens into a single string.
+	 * - `alias`: Finds the token with the scope "entity.name.tag" and assigns its value, or null if not found.
+	 * - `lineNumber`: Determines the line number of the first non-whitespace token.
+	 * - `startIndex`: Sets the start index to the start index of the first token.
+	 * - `endIndex`: Sets the end index to the end index of the last token.
+	 */
+	constructor(tokens: Token[]) {
+		super();
+		this.tokens = tokens;
+		this.alias = findToken(tokens, "entity.name.tag")?.value ?? null;
+		this.lineNumber = tokens.filter((token) => !token.scopes.includes('punctuation.whitespace.leading.sql') && !token.scopes.includes('punctuation.whitespace.trailing.sql') && !token.scopes.includes('punctuation.whitespace.sql'))[0].lineNumber;
+		this.startIndex = tokens[0].startIndex;
+		this.endIndex = tokens[tokens.length - 1].endIndex;
+	}
 }
 
 // endregion base types
@@ -74,9 +121,7 @@ function extractStatementType(tokens: Token[]): [StatementType | undefined, Obje
 			break;
 		}
 	}
-
 	return [type, objectAST];
-
 }
 // endregion functions
 
@@ -102,7 +147,6 @@ export type Column = ColumnAST | ColumnFunctionAST | StatementAST | StringAST | 
 export type FunctionParameter = Column | KeywordAST;
 
 
-
 /**
  * Represents a column in the Abstract Syntax Tree (AST).
  * 
@@ -110,16 +154,12 @@ export type FunctionParameter = Column | KeywordAST;
  * 
  * @implements {AST}
  */
-export class ColumnAST implements AST {
+export class ColumnAST extends AST {
 	source: string | null = null;
 	column: string | null = null;
-	alias: string | null = null;
-	tokens: Token[] = [];
-	lineNumber: number | null = null;
-	startIndex: number | null = null;
-	endIndex: number | null = null;
 	
 	constructor(matchedRule: MatchedRule) {
+		super();
 		this.tokens = matchedRule.tokens;
 
 		if (matchedRule.matches != null && matchedRule.matches.length > 0) {
@@ -162,57 +202,34 @@ export class ColumnAST implements AST {
 
 }
 
-/**
- * Represents a string in the Abstract Syntax Tree (AST).
- */
-class BaseStringAST implements AST {
-	value: string | null = null;
-	tokens: Token[] = [];
-	alias: string | null = null;
-	lineNumber: number | null = null;
-	startIndex: number | null = null;
-	endIndex: number | null = null;
-
-	/**
-	 * Constructs a new instance of the class.
-	 * 
-	 * @param tokens - An array of Token objects that represent the tokens to be parsed.
-	 * 
-	 * @remarks
-	 * This constructor initializes the following properties:
-	 * - `tokens`: Stores the provided tokens.
-	 * - `value`: Concatenates the values of all tokens into a single string.
-	 * - `alias`: Finds the token with the scope "entity.name.tag" and assigns its value, or null if not found.
-	 * - `lineNumber`: Determines the line number of the first non-whitespace token.
-	 * - `startIndex`: Sets the start index to the start index of the first token.
-	 * - `endIndex`: Sets the end index to the end index of the last token.
-	 */
-	constructor(tokens: Token[]) {
-		this.tokens = tokens;
-		this.value = joinTokenValues(tokens);
-		this.alias = findToken(tokens, "entity.name.tag")?.value ?? null;
-		this.lineNumber = tokens.filter((token) => !token.scopes.includes('punctuation.whitespace.leading.sql') && !token.scopes.includes('punctuation.whitespace.trailing.sql') && !token.scopes.includes('punctuation.whitespace.sql'))[0].lineNumber;
-		this.startIndex = tokens[0].startIndex;
-		this.endIndex = tokens[tokens.length - 1].endIndex;
-	}
-}
-
 
 /**
  * Represents a column function in the Abstract Syntax Tree (AST).
  */
-class StringAST extends BaseStringAST {}
+class StringAST extends ASTWithValue<string> {
+
+	/**
+	 * Constructs a new instance of the Column class.
+	 * 
+	 * @param tokens - An array of Token objects representing the tokens to be parsed.
+	 * 
+	 * @property tokens - Stores the provided tokens.
+	 * @property value - A string value derived from concatenating the token values.
+	 * @property alias - The alias of the column, if any, extracted from the tokens.
+	 * @property lineNumber - The line number of the first non-whitespace token.
+	 * @property startIndex - The start index of the first token.
+	 * @property endIndex - The end index of the last token.
+	 */
+	constructor(tokens: Token[]) {
+		super(tokens);
+		this.value = joinTokenValues(tokens);
+	}
+}
 
 /**
  * Represents a number in the Abstract Syntax Tree (AST).
  */
-class NumberAST implements AST {
-	value: number | null = null;
-	tokens: Token[] = [];
-	alias: string | null = null;
-	lineNumber: number | null = null;
-	startIndex: number | null = null;
-	endIndex: number | null = null;
+class NumberAST extends ASTWithValue<number> {
 
 	/**
 	 * Constructs a new instance of the Column class.
@@ -227,43 +244,48 @@ class NumberAST implements AST {
 	 * @property endIndex - The end index of the last token.
 	 */
 	constructor(tokens: Token[]) {
-		this.tokens = tokens;
+		super(tokens);
 		this.value = Number(joinTokenValues(tokens));
-		this.alias = findToken(tokens, "entity.name.tag")?.value ?? null;
-		this.lineNumber = tokens.filter((token) => !token.scopes.includes('punctuation.whitespace.leading.sql') && !token.scopes.includes('punctuation.whitespace.trailing.sql') && !token.scopes.includes('punctuation.whitespace.sql'))[0].lineNumber;
-		this.startIndex = tokens[0].startIndex;
-		this.endIndex = tokens[tokens.length - 1].endIndex;
 	}
 }
 
 /**
  * Represents a keyword in the Abstract Syntax Tree (AST).
  */
-class KeywordAST extends BaseStringAST {}
+class KeywordAST extends ASTWithValue<string> {
 
-/**
- * Represents a statement in the Abstract Syntax Tree (AST).
- */
-class OrderAST implements AST {
-	column: Column | null = null;
-	direction: string | null = null;
-	tokens: Token[] = [];
-	lineNumber: number | null = null;
-	startIndex: number | null = null;
-	endIndex: number | null = null;
-	
+	/**
+	 * Constructs a new instance of the Column class.
+	 * 
+	 * @param tokens 
+	 * 
+	 * @property tokens - Stores the provided tokens.
+	 * @property value - A string value derived from concatenating the token values.
+	 * @property alias - The alias of the column, if any, extracted from the tokens.
+	 * @property lineNumber - The line number of the first non-whitespace token.
+	 * @property startIndex - The start index of the first token.
+	 * @property endIndex - The end index of the last token.
+	 */
+	constructor(tokens: Token[]) {
+		super(tokens);
+		this.value = joinTokenValues(tokens);
+	}
 }
 
 /**
  * Represents a statement in the Abstract Syntax Tree (AST).
  */
-class WindowAST implements AST {
+class OrderAST extends AST {
+	column: Column | null = null;
+	direction: string | null = null;
+}
+
+/**
+ * Represents a statement in the Abstract Syntax Tree (AST).
+ */
+class WindowAST extends AST {
 	partition: Column[] = [];
 	order: OrderAST[] = [];
-	tokens: Token[] = [];
-	lineNumber: number | null = null;
-	startIndex: number | null = null;
-	endIndex: number | null = null;
 	
 	/**
 	 * Constructs an instance of the class.
@@ -281,6 +303,7 @@ class WindowAST implements AST {
 	 *   the "order" keyword.
 	 */
 	constructor(match: MatchedRule) {
+		super();
 		const emptyMatch = { rule: null, tokens: [], matches: [] };
 		const partitionByIndex = match.matches?.indexOf(match.matches?.find((match) => match.rule?.name === "keyword.partition") ?? emptyMatch) ?? 0;
 		const orderByIndex = match.matches?.indexOf(match.matches?.find((match) => match.rule?.name === "keyword.order") ?? emptyMatch) ?? match.matches?.length;
@@ -290,7 +313,6 @@ class WindowAST implements AST {
 
 		this.partition = partitionMatches?.map((match) => createColumn(match) ?? null).filter((column) => column !== null) as Column[];
 		this.order = orderMatches?.map((match) => new OrderAST()) ?? [];
-
 	}
 }
 
@@ -298,15 +320,10 @@ class WindowAST implements AST {
 /**
  * Represents a statement in the Abstract Syntax Tree (AST).
  */
-export class ColumnFunctionAST implements AST {
+export class ColumnFunctionAST extends AST {
 	function: string | null = null;
 	parameters: FunctionParameter[] = [];
 	over: WindowAST | null = null;
-	alias: string | null = null;
-	tokens: Token[] = [];
-	lineNumber: number | null = null;
-	startIndex: number | null = null;
-	endIndex: number | null = null;
 	
 	/**
 	 * Constructs an instance of the class with the provided matched rule.
@@ -324,6 +341,7 @@ export class ColumnFunctionAST implements AST {
 	 * - Sets the end index based on the last token in the tokens array.
 	 */
 	constructor(matchedRule: MatchedRule) {
+		super();
 		this.function = matchedRule.tokens.filter((token) => token.scopes.includes("meta.function.sql"))[0].value;
 		this.tokens.push(...matchedRule.tokens);
 		this.lineNumber = matchedRule.tokens.filter((token) => !token.scopes.includes('punctuation.whitespace.leading.sql') && !token.scopes.includes('punctuation.whitespace.trailing.sql') && !token.scopes.includes('punctuation.whitespace.sql'))[0].lineNumber;
@@ -410,14 +428,9 @@ export class ColumnFunctionAST implements AST {
 /**
  * Represents a statement in the Abstract Syntax Tree (AST).
  */
-class CaseStatementWhenAST implements AST {
+class CaseStatementWhenAST extends AST {
 	when: ComparisonGroupAST | null = null;
 	then: Column | null = null;
-	tokens: Token[] = [];
-	lineNumber: number | null = null;
-	startIndex: number | null = null;
-	endIndex: number | null = null;
-	type: string = 'case.when';
 
 	/**
 	 * Constructs an instance of the AST node with the provided matched rules.
@@ -426,7 +439,7 @@ class CaseStatementWhenAST implements AST {
 	 * @param then - The matched rule representing the consequence.
 	 */
 	constructor(when: MatchedRule, then: MatchedRule) {
-
+		super();
 		this.tokens.push(...when.tokens);
 		this.tokens.push(...then.tokens);
 
@@ -439,16 +452,26 @@ class CaseStatementWhenAST implements AST {
 	}
 }
 
-class CaseStatementAST implements AST {
+/**
+ * Represents a statement in the Abstract Syntax Tree (AST).
+ */
+class CaseStatementAST extends AST {
 	when: CaseStatementWhenAST[] = [];
 	else: Column | null = null;
-	alias: string | null = null;
-	tokens: Token[] = [];
-	lineNumber: number | null = null;
-	startIndex: number | null = null;
-	endIndex: number | null = null;
 	
+	/**
+	 * Constructs an instance of the class with the provided matched rule.
+	 * 
+	 * @param matchedRule - The matched rule containing tokens and matches to be processed.
+	 * 
+	 * The constructor performs the following operations:
+	 * - Extracts the when and then matches from the matched rule.
+	 * - Iterates over the when matches to create CaseStatementWhenAST objects.
+	 * - Creates a Column object for the else match, if present.
+	 * - Extracts the alias from the alias match, if present.
+	 */
 	constructor(matchedRule: MatchedRule) {
+		super();
 		this.tokens = matchedRule.tokens;
 		this.lineNumber = matchedRule.tokens.filter((token) => !token.scopes.includes('punctuation.whitespace.leading.sql') && !token.scopes.includes('punctuation.whitespace.trailing.sql') && !token.scopes.includes('punctuation.whitespace.sql'))[0].lineNumber;
 		this.startIndex = matchedRule.tokens[0].startIndex;
@@ -475,17 +498,34 @@ class CaseStatementAST implements AST {
 // endregion columns
 
 // region comparison
-export class ComparisonAST implements AST {
+/**
+ * Represents a comparison in the Abstract Syntax Tree (AST).
+ */
+export class ComparisonAST extends AST {
 	logicalOperator: LogicalOperator | null = null;
 	left: Column | ArrayAST | null = null;
 	operator: ComparisonOperator | null = null;
 	right: Column | ArrayAST | null = null;
-	tokens: Token[] = [];
-	lineNumber: number | null = null;
-	startIndex: number | null = null;
-	endIndex: number | null = null;
 	
+	/**
+	 * 
+	 * Constructs a new instance of the class.
+	 * 
+	 * @param comparison 
+	 * @param tokens 
+	 * 
+	 * This constructor initializes the following properties:
+	 * - `tokens`: Stores the provided tokens.
+	 * - `left`: The left side of the comparison.
+	 * - `operator`: The comparison operator.
+	 * - `right`: The right side of the comparison.
+	 * - `logicalOperator`: The logical operator that connects this comparison to the next.
+	 * - `lineNumber`: The line number of the first non-whitespace token.
+	 * - `startIndex`: The start index of the first token.
+	 * - `endIndex`: The end index of the last token.
+	 */
 	constructor(comparison: Comparison, tokens: Token[]) {
+		super();
 		this.tokens = tokens;
 		this.left = comparison.left;
 		this.operator = comparison.operator;
@@ -498,16 +538,31 @@ export class ComparisonAST implements AST {
 }
 
 
-export class ComparisonGroupAST implements AST {
+/**
+ * Represents a comparison group in the Abstract Syntax Tree (AST).
+ */
+export class ComparisonGroupAST extends AST {
 	logicalOperator: LogicalOperator | null = null;
 	comparisons: (ComparisonGroupAST | ComparisonAST)[] = [];
-	tokens: Token[] = [];
-	lineNumber: number | null = null;
-	startIndex: number | null = null;
-	endIndex: number | null = null;
-	type: string = 'comparison.group';
 
+
+	/**
+	 * 
+	 * Constructs a new instance of the class.
+	 * 
+	 * @param matches 
+	 * @param logicalOperator
+	 * 
+	 * This constructor initializes the following properties:
+	 * - `logicalOperator`: The logical operator that connects this group to the next.
+	 * - `comparisons`: An array of comparisons or comparison groups.
+	 * - `tokens`: An array of tokens representing the comparison group.
+	 * - `lineNumber`: The line number of the first non-whitespace token.
+	 * - `startIndex`: The start index of the first token.
+	 * - `endIndex`: The end index of the last token.
+	 */
 	constructor(matches: MatchedRule[], logicalOperator: LogicalOperator | null = null) {
+		super();
 		if (matches.length === 0) {
 			return;
 		}
@@ -625,6 +680,16 @@ export class ComparisonGroupAST implements AST {
 
 
 
+/**
+ * Represents a comparison operation in the AST (Abstract Syntax Tree).
+ * 
+ * @typedef {Object} Comparison
+ * 
+ * @property {Column | ArrayAST | null} left - The left-hand side of the comparison, which can be a column, an array, or null.
+ * @property {ComparisonOperator | null} operator - The operator used in the comparison, which can be a comparison operator or null.
+ * @property {Column | ArrayAST | null} right - The right-hand side of the comparison, which can be a column, an array, or null.
+ * @property {LogicalOperator | null} logicalOperator - The logical operator used to combine this comparison with others, which can be a logical operator or null.
+ */
 type Comparison = {
 	left: Column | ArrayAST | null,
 	operator: ComparisonOperator | null,
@@ -634,14 +699,28 @@ type Comparison = {
 // endregion comparison
 
 // region objects
-class ArrayAST implements AST {
+
+/**
+ * Represents an array in the Abstract Syntax Tree (AST).
+ */
+class ArrayAST extends AST {
 	values: (StringAST | NumberAST)[] = [];
-	tokens: Token[] = [];
-	lineNumber: number | null = null;
-	startIndex: number | null = null;
-	endIndex: number | null = null;
 	
+
+	/**
+	 * Constructs a new instance of the ArrayAST class.
+	 * 
+	 * @param matchedRules - An array of matched rules containing the tokens to be parsed.
+	 * 
+	 * This constructor initializes the following properties:
+	 * - `lineNumber`: The line number of the first non-whitespace token.
+	 * - `startIndex`: The start index of the first token.
+	 * - `endIndex`: The end index of the last token.
+	 * - `tokens`: An array of tokens representing the array.
+	 * - `values`: An array of StringAST and NumberAST objects representing the values in the array.
+	 */
 	constructor(matchedRules: MatchedRule[]) {
+		super();
 		this.lineNumber = matchedRules[0].tokens[0].lineNumber;
 		this.startIndex = matchedRules[0].tokens[0].startIndex;
 		this.endIndex = matchedRules[matchedRules.length - 1].tokens[matchedRules[matchedRules.length - 1].tokens.length - 1].endIndex;
@@ -657,16 +736,30 @@ class ArrayAST implements AST {
 	}
 }
 
-class JoinAST implements AST {
+/**
+ * Represents a join in the Abstract Syntax Tree (AST).
+ */
+class JoinAST extends AST {
 	join: JoinType | null = JoinType.INNER;
 	source: ObjectAST | StatementAST | null = null;
 	on: ComparisonGroupAST | null = null;
-	tokens: Token[] = [];
-	lineNumber: number | null = null;
-	startIndex: number | null = null;
-	endIndex: number | null = null;
 	
+	/**
+	 * Constructs a new instance of the class.
+	 * 
+	 * @param matchedRule - The matched rule containing the tokens to be parsed.
+	 * 
+	 * This constructor initializes the following properties:
+	 * - `join`: The type of join, which can be an inner, left, right, or full join.
+	 * - `source`: The source object of the join, which can be an ObjectAST or StatementAST.
+	 * - `on`: The comparison group representing the join condition.
+	 * - `lineNumber`: The line number of the first non-whitespace token.
+	 * - `startIndex`: The start index of the first token.
+	 * - `endIndex`: The end index of the last token.
+	 * - `tokens`: An array of tokens representing the join.
+	 */
 	constructor(matchedRule: MatchedRule) {
+		super();
 		this.tokens.push(...matchedRule.tokens);
 		this.lineNumber = matchedRule.tokens.filter((token) => !token.scopes.includes('punctuation.whitespace.leading.sql') && !token.scopes.includes('punctuation.whitespace.trailing.sql') && !token.scopes.includes('punctuation.whitespace.sql'))[0].lineNumber;
 		this.startIndex = matchedRule.tokens[0].startIndex;
@@ -681,18 +774,33 @@ class JoinAST implements AST {
 	}
 }
 
-export class ObjectAST implements AST {
+/**
+ * Represents an object in the Abstract Syntax Tree (AST).
+ */
+export class ObjectAST extends AST {
 	project: string | null = null;
 	dataset: string | null = null;
 	object: string | null = null;
-	alias: string | null = null;
-	tokens: Token[] = [];
-	lineNumber: number | null = null;
-	startIndex: number | null = null;
-	endIndex: number | null = null;
 	
+	/**
+	 * 
+	 * Constructs a new instance of the class.
+	 * 
+	 * @param tokens 
+	 * 
+	 * This constructor initializes the following properties:
+	 * - `project`: The project name extracted from the tokens.
+	 * - `dataset`: The dataset name extracted from the tokens.
+	 * - `object`: The object name extracted from the tokens.
+	 * - `alias`: The alias extracted from the tokens.
+	 * - `lineNumber`: The line number of the first non-whitespace token.
+	 * - `startIndex`: The start index of the first token.
+	 * - `endIndex`: The end index of the last token.
+	 * - `tokens`: An array of tokens representing the object.
+	 * 
+	 */
 	constructor(tokens: LineToken[] | Token[]) {
-
+		super();
 		const project = findToken(tokens, "entity.name.project.sql");
 		const dataset = findToken(tokens, "entity.name.dataset.sql");
 		const object = findToken(tokens, "entity.name.object.sql");
@@ -718,7 +826,7 @@ export class ObjectAST implements AST {
 /**
  * The abstract syntax tree for the SQL code
  */
-export class StatementAST implements AST {
+export class StatementAST extends AST {
 	with: StatementAST | null = null;
 	type: StatementType | null = StatementType.SELECT;
 	object: ObjectAST | null = null;
@@ -733,13 +841,6 @@ export class StatementAST implements AST {
 	orderby: ColumnAST[] = [];
 	limit: number | null = null;
 	statement: string | null = null;
-	tokens: Token[] = [];
-	lineNumber: number | null = null;
-	startIndex: number | null = null;
-	endIndex: number | null = null;
-
-	constructor() {
-	}
 
 	/**
 	 * Processes a matched rule and updates the internal state based on the rule type.
