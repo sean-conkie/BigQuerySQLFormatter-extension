@@ -27,7 +27,7 @@ describe('Functions', () => {
 
         const parser = new Parser();
 
-        const result = instance.evaluate(await parser.parse('SELECT cast (1 as string),\n col2\n FROM table'));
+        const result = instance.evaluate(await parser.parse({text:'SELECT cast (1 as string),\n col2\n FROM table', uri: 'test.sql', languageId: 'sql', version: 0}));
         expect(result).to.deep.equal([{
             code: instance.code,
             message: instance.message,
@@ -45,7 +45,7 @@ describe('Functions', () => {
 
         const parser = new Parser();
 
-        const result = instance.evaluate(await parser.parse('SELECT cast(1 as string),\n col2\n FROM table'));
+        const result = instance.evaluate(await parser.parse({text:'SELECT cast(1 as string),\n col2\n FROM table', uri: 'test.sql', languageId: 'sql', version: 0}));
         expect(result).to.be.null;
     });
 });

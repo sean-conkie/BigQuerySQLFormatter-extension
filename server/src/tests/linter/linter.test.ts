@@ -25,10 +25,10 @@ describe('Linter', () => {
     });
 
     it('should verify source code and return diagnostics', async () => {
-        const source = 'select * from table';
+        const source = {text:'select * from table', uri: 'test.sql', languageId: 'sql', version: 0};
         const diagnostics: Diagnostic[] = [];
         for (const rule of linter.regexRules) {
-            const result = rule.evaluate(source, null);
+            const result = rule.evaluate(source.text, null);
             if (result !== null) {
                 diagnostics.push(...result);
             }
@@ -38,10 +38,10 @@ describe('Linter', () => {
     });
 
     it('should increment problems for each diagnostic', async () => {
-        const source = '\nselect *\nfrom table';
+        const source = {text:'\nselect *\nfrom table', uri: 'test.sql', languageId: 'sql', version: 0};
         const diagnostics: Diagnostic[] = [];
         for (const rule of linter.regexRules) {
-            const result = rule.evaluate(source, null);
+            const result = rule.evaluate(source.text, null);
             if (result !== null) {
                 diagnostics.push(...result);
             }
