@@ -14,6 +14,11 @@ import { GrammarToken, RuleStack } from '../grammarLoader';
  * @returns A single string composed of the token values joined by the specified character.
  */
 export function joinTokenValues(tokens: Token[], char: string = ''): string {
+
+	if (tokens.length === 0) {
+		return '';
+	}
+
 	return tokens.map((token) => token.value).join(char);
 }
 
