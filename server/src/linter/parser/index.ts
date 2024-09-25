@@ -1,16 +1,11 @@
-/**
- * @fileoverview Parser for the BigQuery SQL.
- * @module parser
- */
-
 import syntaxJson from '../syntaxes/syntax.json';
 import { GrammarLoader, Grammar, GrammarTokenizeLineResult, RuleStack } from '../grammarLoader';
 import { Token, LineToken } from './token';
 import { Rule } from './matches';
 import { StatementAST } from './ast';
 import { MatchObj, MatchedRule } from './matches';
-import { DocumentUri } from 'vscode-languageserver-textdocument';
-import { TextDocumentItem } from 'vscode-languageserver';
+import { TokenCache, DocumentCache } from './tokenCache';
+import { DidChangeTextDocumentParams, TextDocumentItem, TextDocumentContentChangeEvent, VersionedTextDocumentIdentifier } from 'vscode-languageserver';
 import { range } from '../../utils';
 
 const punctuation: string[] = syntaxJson.punctuation;
@@ -19,10 +14,13 @@ const recursiveGroupBegin: string[] = syntaxJson.recursiveGroupBegin;
 const recursiveGroupEnd: string[] = syntaxJson.recursiveGroupEnd;
 const syntaxRules: Rule[] = syntaxJson.rules;
 const comparisonGroupRules: string[] = syntaxJson.comparisonGroupRules;
-const tokenCache: Map<DocumentUri, DocumentCache> = new Map(); // Key: Line number, Value: { tokens, ruleStack }
+const tokenCache: TokenCache = new Map();
 
-
-type DocumentCache = Map<number, LineToken>;
+/**
+ * A map that associates line numbers with their corresponding string content.
+ * 
+ * @typedef {Map<number, string>} LineMap
+ */
 type LineMap = Map<number, string>;
 
 // #region Functions
@@ -57,6 +55,17 @@ export class Parser {
 		this.grammar = await grammarLoader.loadGrammar('source.googlesql');
 	}
 
+	/**
+	 * Parses the given text document and returns a FileMap.
+	 * 
+	 * @param textDocument - The text document to be parsed.
+	 * @returns A promise that resolves to a FileMap.
+	 * 
+	 * @remarks
+	 * - If the grammar is not initialized, it will be initialized before parsing.
+	 * - If the document exists in the token cache, it will be removed from the cache.
+	 * - The document will be tokenized before parsing statements.
+	 */
 	async parse(textDocument: TextDocumentItem): Promise<FileMap> {
 
 		if (this.grammar === null) {
@@ -69,9 +78,40 @@ export class Parser {
 		}
 
 		this.tokenizeInitialDocument(textDocument);
+		
+		return this.parseStatements(textDocument);
 
+	}
 
-		// split string into statements
+	/**
+	 * Parses changes in a text document and updates the token cache accordingly.
+	 * If the grammar is not initialized, it initializes it first.
+	 * If the token cache does not have the document URI, it returns an empty FileMap.
+	 * Otherwise, it tokenizes the changed document and parses the statements.
+	 *
+	 * @param textDocumentChangeParams - The parameters containing the text document change details.
+	 * @returns A promise that resolves to a FileMap containing the parsed statements.
+	 */
+	async parseChange(textDocumentChangeParams: DidChangeTextDocumentParams): Promise<FileMap> {
+
+		if (this.grammar === null) {
+			await this.initialize();
+		}
+
+		if (!tokenCache.has(textDocumentChangeParams.textDocument.uri)) {
+			return {};
+		}
+
+		this.tokenizeChangeDocument(textDocumentChangeParams);
+		const fullText = tokenCache.get(textDocumentChangeParams.textDocument.uri)!.getText();
+
+		const textDocument = {
+			uri: textDocumentChangeParams.textDocument.uri,
+			text: fullText,
+			version: textDocumentChangeParams.textDocument.version,
+			languageId: 'googlesql'
+		};
+		
 		return this.parseStatements(textDocument);
 
 	}
@@ -82,7 +122,7 @@ export class Parser {
 	 * @param textDocument - The text document to parse.
 	 * @returns A file map where each key is the index of the statement and the value is the parsed statement object.
 	 */
-	private parseStatements(textDocument: TextDocumentItem) {
+	private parseStatements(textDocument: TextDocumentItem): FileMap {
 		const statements = this.splitSource(textDocument.text);
 		let startLine: number = 0;
 		const fileMap: FileMap = {};
@@ -109,9 +149,80 @@ export class Parser {
 		return fileMap;
 	}
 
-	// async reParse(textDocument: TextDocument): Promise<FileMap> {
+	/**
+	 * Handles changes to the content of a text document.
+	 *
+	 * @param change - The change event containing details about the content change.
+	 * @param document - The identifier for the versioned text document.
+	 *
+	 * This method updates the token cache based on the changes made to the document.
+	 * If the change includes a range, it updates the cache by processing the lines
+	 * within the range and adjusting the line numbers accordingly. If the change
+	 * does not include a range, it re-tokenizes the entire document and updates the cache.
+	 */
+	handleContentChange(change: TextDocumentContentChangeEvent, document: VersionedTextDocumentIdentifier) {
+		const cache = tokenCache.get(document.uri)!;
 
-	// }
+		if ('range' in change) {
+			const startLine = change.range.start.line;
+			const endLine = change.range.end.line;
+			let endLineCheck: number;
+			const linesBeingReplaced = endLine - startLine;
+		
+			const newLines = change.text.split('\n');
+			const lineDelta = newLines.length - linesBeingReplaced;
+		
+			if (startLine === endLine) {
+				endLineCheck = endLine + 1;
+			} else {
+				endLineCheck = endLine;
+			}
+			// Create new cache incorporating changes
+			const newCache = new DocumentCache();
+			for (const [lineNumber, lineToken] of cache.entries()) {
+				if (lineNumber >= endLineCheck) {
+					newCache.set(lineNumber + lineDelta, lineToken); // Shift lines up
+				} else if (lineNumber >= startLine) { 
+					// process changes
+					const newLineNumber = lineNumber - startLine;
+					if (newLineNumber < newLines.length) {
+						// get the new line
+						const line = newLines[newLineNumber];
+						const retainedLinePrefix = lineNumber == startLine ? lineToken.value.substring(0, change.range.start.character) : '';
+						const retainedLineSuffix = lineNumber == endLine ? lineToken.value.substring(change.range.end.character) : '';
+						const value = retainedLinePrefix + line + retainedLineSuffix;
+						const tokens = Parser.tokenize(this.grammar!, new Map([[lineNumber, value]]), lineToken.ruleStack);
+						newCache.set(lineNumber, tokens[0]);
+					}					
+				} else {
+					newCache.set(lineNumber, lineToken);
+				}
+			}
+			tokenCache.set(document.uri, newCache);
+		} else {
+			const textDocument = {
+				uri: document.uri,
+				text: change.text,
+				version: document.version,
+				languageId: 'googlesql'
+			};
+			// if the document exists in the cache, remove it
+			if (tokenCache.has(textDocument.uri)) {
+				tokenCache.delete(textDocument.uri);
+			}
+
+			this.tokenizeInitialDocument(textDocument);
+		}
+	}
+
+	/**
+	 * Tokenizes the changes in a document.
+	 *
+	 * @param document - The parameters of the document that has changed, including the content changes and the text document.
+	 */
+	private tokenizeChangeDocument(document: DidChangeTextDocumentParams) {
+		document.contentChanges.map((change) => this.handleContentChange(change, document.textDocument));
+	}
 
 	private tokenizeInitialDocument(document: TextDocumentItem) {
 		
@@ -123,7 +234,7 @@ export class Parser {
 
 		const tokens = Parser.tokenize(this.grammar!, lineMap);
 
-		const cache: DocumentCache = new Map<number, LineToken>();
+		const cache: DocumentCache = new DocumentCache();
 
 		tokens.map((lineToken) => {
 			cache.set(lineToken.lineNumber!, lineToken);
@@ -133,6 +244,19 @@ export class Parser {
 
 	}
 
+	/**
+	 * Parses a list of tokens into a StatementAST.
+	 *
+	 * @param tokens - The list of tokens to parse.
+	 * @returns The parsed StatementAST.
+	 *
+	 * This method processes the tokens to form a statement by applying syntax rules.
+	 * It handles punctuation, skips certain tokens, and checks for syntax errors.
+	 * If a rule is matched, it processes the rule and resets the state for the next potential statement.
+	 *
+	 * The method uses a recursive lookahead to handle nested structures and ensures that
+	 * infinite loops are avoided by using a reCheck flag.
+	 */
 	private parseStatement(tokens: Token[]): StatementAST {
 
 		const statement = new StatementAST();
@@ -510,9 +634,6 @@ export class Parser {
 		return statements;
 
 	}
-
-
-
 }
 
 // #endregion
