@@ -119,7 +119,12 @@ export class ColumnAST implements AST {
 		this.source = findToken(matchedRule.tokens, "entity.name.alias.sql")?.value ?? null;
 		this.column = findToken(matchedRule.tokens, "entity.other.column.sql")?.value ?? null;
 		this.alias = findToken(matchedRule.tokens, "entity.name.tag")?.value ?? null;
-		this.lineNumber = matchedRule.tokens.filter((token) => !token.scopes.includes('punctuation.whitespace.leading.sql') && !token.scopes.includes('punctuation.whitespace.trailing.sql') && !token.scopes.includes('punctuation.whitespace.sql'))[0].lineNumber;
+		this.lineNumber = matchedRule.tokens.filter((token) => 
+																									!token.scopes.includes('punctuation.whitespace.leading.sql') && 
+																									!token.scopes.includes('punctuation.whitespace.trailing.sql') && 
+																									!token.scopes.includes('punctuation.whitespace.sql') && 
+																									!token.scopes.includes('punctuation.separator.comma.sql')
+																								)[0].lineNumber;
 		this.startIndex = matchedRule.tokens[0].startIndex;
 		this.endIndex = matchedRule.tokens[matchedRule.tokens.length - 1].endIndex;
 	}
