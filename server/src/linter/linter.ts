@@ -7,14 +7,12 @@
 
 
 import { ServerSettings } from '../settings';
-import { Diagnostic } from 'vscode-languageserver/node';
-import { TextDocument } from 'vscode-languageserver-textdocument';
+import { Diagnostic, DidChangeTextDocumentParams, TextDocumentItem } from 'vscode-languageserver/node';
 import { Rule } from './rules/base';
 import { initialiseRules } from './rules/rules';
 import { RuleType } from './rules/enums';
 import { FileMap, Parser } from './parser';
 import { StatementAST } from './parser/ast';
-import { text } from 'node:stream/consumers';
 
 
 
@@ -53,16 +51,15 @@ export class Linter {
 	 * @param source - The source code to be verified.
 	 * @returns A promise that resolves to an array of `Diagnostic` objects representing the issues found in the source code.
 	 */
-	async verify(textDocument: TextDocument): Promise<Diagnostic[]> {
+	async verify(textDocument: TextDocumentItem): Promise<Diagnostic[]> {
 
 		// Parse the source code
 		const parser = new Parser();
 
 		const diagnostics: Diagnostic[] = [];
-		const source = textDocument.getText();
 
 		for (const rule of this.regexRules) {
-			const result = rule.evaluate(source, textDocument.uri);
+			const result = rule.evaluate(textDocument.text, textDocument.uri);
 			if (result !== null) {
 				diagnostics.push(...result);
 				this.problems = diagnostics.length;
@@ -79,11 +76,29 @@ export class Linter {
 			}
 		}
 
-
 		return diagnostics;
 		
 	}
 
+	async verifyChanges(textDocumentChangeParams: DidChangeTextDocumentParams): Promise<Diagnostic[]> {
 
+		const parser = new Parser();
+
+		const diagnostics: Diagnostic[] = [];
+
+
+		const abstractSyntaxTree: { [key: number]: StatementAST } = await parser.parseChange(textDocumentChangeParams);
+
+		for (const rule of this.parserRules) {
+			const result = rule.evaluate(abstractSyntaxTree, textDocumentChangeParams.textDocument.uri);
+			if (result !== null) {
+				diagnostics.push(...result);
+				this.problems = diagnostics.length;
+			}
+		}
+
+		return diagnostics;
+
+	}
 
 }
