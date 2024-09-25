@@ -1,11 +1,3 @@
-/**
- * @fileoverview Linter for the server
- * @module linter
- * @requires vscode-languageserver
- * @requires settings
- */
-
-
 import { ServerSettings } from '../settings';
 import { Diagnostic, DidChangeTextDocumentParams, TextDocumentItem } from 'vscode-languageserver/node';
 import { Rule } from './rules/base';
@@ -13,8 +5,7 @@ import { initialiseRules } from './rules/rules';
 import { RuleType } from './rules/enums';
 import { FileMap, Parser } from './parser';
 import { StatementAST } from './parser/ast';
-
-
+import { globalTokenCache } from './parser/tokenCache';
 
 /**
  * Object for linting SQL code
@@ -86,11 +77,18 @@ export class Linter {
 
 		const diagnostics: Diagnostic[] = [];
 
-
 		const abstractSyntaxTree: { [key: number]: StatementAST } = await parser.parseChange(textDocumentChangeParams);
 
 		for (const rule of this.parserRules) {
 			const result = rule.evaluate(abstractSyntaxTree, textDocumentChangeParams.textDocument.uri);
+			if (result !== null) {
+				diagnostics.push(...result);
+				this.problems = diagnostics.length;
+			}
+		}
+
+		for (const rule of this.regexRules) {
+			const result = rule.evaluate(globalTokenCache.get(textDocumentChangeParams.textDocument.uri)!.getText(), textDocumentChangeParams.textDocument.uri);
 			if (result !== null) {
 				diagnostics.push(...result);
 				this.problems = diagnostics.length;

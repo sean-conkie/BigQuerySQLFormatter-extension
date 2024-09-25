@@ -4,9 +4,10 @@ import { Token, LineToken } from './token';
 import { Rule } from './matches';
 import { StatementAST } from './ast';
 import { MatchObj, MatchedRule } from './matches';
-import { TokenCache, DocumentCache } from './tokenCache';
+import { globalTokenCache, DocumentCache } from './tokenCache';
 import { DidChangeTextDocumentParams, TextDocumentItem, TextDocumentContentChangeEvent, VersionedTextDocumentIdentifier } from 'vscode-languageserver';
 import { range } from '../../utils';
+import { start } from 'repl';
 
 const punctuation: string[] = syntaxJson.punctuation;
 const skipTokens: string[] = syntaxJson.skipTokens;
@@ -14,7 +15,6 @@ const recursiveGroupBegin: string[] = syntaxJson.recursiveGroupBegin;
 const recursiveGroupEnd: string[] = syntaxJson.recursiveGroupEnd;
 const syntaxRules: Rule[] = syntaxJson.rules;
 const comparisonGroupRules: string[] = syntaxJson.comparisonGroupRules;
-const tokenCache: TokenCache = new Map();
 
 /**
  * A map that associates line numbers with their corresponding string content.
@@ -22,6 +22,14 @@ const tokenCache: TokenCache = new Map();
  * @typedef {Map<number, string>} LineMap
  */
 type LineMap = Map<number, string>;
+
+
+type ChangedRange = {
+	startLine: number;
+	endLine: number;
+	startIndex: number;
+	endIndex: number;
+}
 
 // #region Functions
 
@@ -73,8 +81,8 @@ export class Parser {
 		}
 
 		// if the document exists in the cache, remove it
-		if (tokenCache.has(textDocument.uri)) {
-			tokenCache.delete(textDocument.uri);
+		if (globalTokenCache.has(textDocument.uri)) {
+			globalTokenCache.delete(textDocument.uri);
 		}
 
 		this.tokenizeInitialDocument(textDocument);
@@ -98,12 +106,12 @@ export class Parser {
 			await this.initialize();
 		}
 
-		if (!tokenCache.has(textDocumentChangeParams.textDocument.uri)) {
+		if (!globalTokenCache.has(textDocumentChangeParams.textDocument.uri)) {
 			return {};
 		}
 
 		this.tokenizeChangeDocument(textDocumentChangeParams);
-		const fullText = tokenCache.get(textDocumentChangeParams.textDocument.uri)!.getText();
+		const fullText = globalTokenCache.get(textDocumentChangeParams.textDocument.uri)!.getText();
 
 		const textDocument = {
 			uri: textDocumentChangeParams.textDocument.uri,
@@ -132,8 +140,8 @@ export class Parser {
 
 			const s = this.parseStatement(
 				range(startLine, statement.line).map((line) => {
-					if (tokenCache.get(textDocument.uri)?.has(line)) {
-						return tokenCache.get(textDocument.uri)?.get(line)?.tokens;
+					if (globalTokenCache.get(textDocument.uri)?.has(line)) {
+						return globalTokenCache.get(textDocument.uri)?.get(line)?.tokens;
 					}
 				})
 				.flat()
@@ -160,45 +168,53 @@ export class Parser {
 	 * within the range and adjusting the line numbers accordingly. If the change
 	 * does not include a range, it re-tokenizes the entire document and updates the cache.
 	 */
-	handleContentChange(change: TextDocumentContentChangeEvent, document: VersionedTextDocumentIdentifier) {
-		const cache = tokenCache.get(document.uri)!;
+	private handleContentChange(change: TextDocumentContentChangeEvent, document: VersionedTextDocumentIdentifier) {
+		const cache = globalTokenCache.get(document.uri)!;
 
 		if ('range' in change) {
 			const startLine = change.range.start.line;
 			const endLine = change.range.end.line;
-			let endLineCheck: number;
 			const linesBeingReplaced = endLine - startLine;
 		
 			const newLines = change.text.split('\n');
-			const lineDelta = newLines.length - linesBeingReplaced;
+			const lineDelta = (newLines.length - 1) - linesBeingReplaced;
+			const documentLength = Math.max(cache.size, cache.size + lineDelta);
 		
-			if (startLine === endLine) {
-				endLineCheck = endLine + 1;
-			} else {
-				endLineCheck = endLine;
-			}
+			const changedRange: ChangedRange = {
+				startLine: startLine,
+				endLine: endLine + 1,
+				startIndex: change.range.start.character,
+				endIndex: change.range.end.character,
+			};
 			// Create new cache incorporating changes
 			const newCache = new DocumentCache();
 			for (const [lineNumber, lineToken] of cache.entries()) {
-				if (lineNumber >= endLineCheck) {
-					newCache.set(lineNumber + lineDelta, lineToken); // Shift lines up
-				} else if (lineNumber >= startLine) { 
-					// process changes
-					const newLineNumber = lineNumber - startLine;
-					if (newLineNumber < newLines.length) {
-						// get the new line
-						const line = newLines[newLineNumber];
-						const retainedLinePrefix = lineNumber == startLine ? lineToken.value.substring(0, change.range.start.character) : '';
-						const retainedLineSuffix = lineNumber == endLine ? lineToken.value.substring(change.range.end.character) : '';
-						const value = retainedLinePrefix + line + retainedLineSuffix;
-						const tokens = Parser.tokenize(this.grammar!, new Map([[lineNumber, value]]), lineToken.ruleStack);
-						newCache.set(lineNumber, tokens[0]);
-					}					
+			// for (const lineNumber of range(changedRange.start, documentLength)) {
+				// const lineToken = cache.get(lineNumber);
+				if (lineNumber >= changedRange.endLine) {
+					newCache.set(lineNumber + lineDelta, lineToken!); // Shift lines up
+				} else if (lineNumber >= changedRange.startLine) {
+					// line is changed...
+					if (linesBeingReplaced === 0) {
+						newLines.map((line, index, array) => {
+							const[ newLineNumber, newLineToken] = this.processLineUpdate(index, line, array.length, lineNumber, lineToken!, changedRange);
+							newCache.set(newLineNumber, newLineToken);
+						});
+					} else {
+						// lines being replaced
+						const workingLineNumber = lineNumber - changedRange.startLine;
+						if (workingLineNumber < newLines.length) {
+							// line is being updated
+							const [newLineNumber, newLineToken] = this.processLineReplace(workingLineNumber, newLines[workingLineNumber], newLines.length, lineNumber, lineToken!, changedRange);
+							newCache.set(newLineNumber, newLineToken);
+						}
+						// else line is being deleted so do nothing
+					}
 				} else {
-					newCache.set(lineNumber, lineToken);
+					newCache.set(lineNumber, lineToken!);
 				}
 			}
-			tokenCache.set(document.uri, newCache);
+			globalTokenCache.set(document.uri, newCache);
 		} else {
 			const textDocument = {
 				uri: document.uri,
@@ -207,11 +223,28 @@ export class Parser {
 				languageId: 'googlesql'
 			};
 			// if the document exists in the cache, remove it
-			if (tokenCache.has(textDocument.uri)) {
-				tokenCache.delete(textDocument.uri);
+			if (globalTokenCache.has(textDocument.uri)) {
+				globalTokenCache.delete(textDocument.uri);
 			}
 
 			this.tokenizeInitialDocument(textDocument);
+		}
+	}
+
+	private processLineReplace(index: number, newLine: string, newLinesCount: number, lineNumber: number, lineToken: LineToken, change: ChangedRange): [number, LineToken] {
+		return this.processLineUpdate(index, newLine, newLinesCount, lineNumber-index, lineToken, change);
+	}
+	private processLineUpdate(index: number, newLine: string, newLinesCount: number, lineNumber: number, lineToken: LineToken, change: ChangedRange): [number, LineToken] {
+		const newLineNumber = lineNumber + index;
+		const retainedLinePrefix = index === 0 ? lineToken!.value.substring(0, change.startIndex) : '';
+		const retainedLineSuffix = index === (newLinesCount - 1) ? lineToken!.value.substring(change.endIndex) : '';
+		const value = retainedLinePrefix + newLine + retainedLineSuffix;
+		if (value !== lineToken?.value) {
+			const ruleStack = lineToken === undefined ? null : lineToken.ruleStack;
+			const tokens = Parser.tokenize(this.grammar!, new Map([[newLineNumber, value]]), ruleStack);
+			return [newLineNumber, tokens[0]];
+		} else {
+			return [newLineNumber, lineToken!];
 		}
 	}
 
@@ -240,7 +273,7 @@ export class Parser {
 			cache.set(lineToken.lineNumber!, lineToken);
 		});
 
-		tokenCache.set(document.uri, cache);
+		globalTokenCache.set(document.uri, cache);
 
 	}
 
@@ -378,7 +411,7 @@ export class Parser {
 		let tokenCounter: number = currentMatchCount - 1;
 
 		// if we have already matched all the tokens in the rule return the rule
-		if (checkIndex === rule.scopes.length && rule.negativeLookahead == null) {
+		if (checkIndex === rule.scopes.length && rule.negativeLookahead === null) {
 			return rule;
 		}
 
@@ -400,13 +433,13 @@ export class Parser {
 				}
 			}
 			// if i is greater than or equal to the lookahead counter and we have negative lookahead check if token matches negative lookahead
-			else if (tokenCounter >= rule.lookahead && rule.negativeLookahead != null) {
-				if (rule.negativeLookahead != null && rule.negativeLookahead.filter((scope) => filteredTokens[i].scopes.includes(scope)).length > 0) {
+			else if (tokenCounter >= rule.lookahead && rule.negativeLookahead !== null) {
+				if (rule.negativeLookahead !== null && rule.negativeLookahead.filter((scope) => filteredTokens[i].scopes.includes(scope)).length > 0) {
 					return null;
 				} else {
 					return rule;
 				}
-			} else if (tokenCounter >= rule.lookahead && rule.negativeLookahead == null) {
+			} else if (tokenCounter >= rule.lookahead && rule.negativeLookahead === null) {
 				return rule;
 			}
 
@@ -425,7 +458,7 @@ export class Parser {
 	 */
 	private recursiveLookahead(tokens: Token[], rules?: Rule[] | null, endToken?: string[] | null): [MatchedRule[], number] {
 		const matches: MatchedRule[] = [];
-		const exitOnMatch: boolean = rules != null;
+		const exitOnMatch: boolean = rules !== null;
 		let workingRules: Rule[] = [];
 		let expressionTokens: Token[] = [];
 		let tokenCounter: number = 0;

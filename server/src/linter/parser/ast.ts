@@ -527,7 +527,7 @@ export class ComparisonGroupAST implements AST {
 			if (partMatches.length > 1) {
 				[partMatches, result] = pop(partMatches, "operator");
 
-				if (result != null) {
+				if (result !== null) {
 					operator = result as LogicalOperator;
 				}
 			}
@@ -535,7 +535,7 @@ export class ComparisonGroupAST implements AST {
 			if (partMatches.length === 3) {
 				[partMatches, result] = pop(partMatches, "comparison");
 
-				if (result != null) {
+				if (result !== null) {
 					comparison = result as ComparisonOperator;
 				}
 			}
@@ -559,9 +559,9 @@ export class ComparisonGroupAST implements AST {
 					tokens.push(...parameter.tokens);
 				}
 
-				if (comparisonObj.left == null) {
+				if (comparisonObj.left === null) {
 					comparisonObj.left = parameter;
-				} else if (comparisonObj.right == null) {
+				} else if (comparisonObj.right === null) {
 					comparisonObj.right = parameter;
 				}
 			}

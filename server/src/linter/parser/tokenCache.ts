@@ -2,6 +2,8 @@
 import { DocumentUri } from 'vscode-languageserver';
 import { LineToken } from './token';
 
+export const globalTokenCache: TokenCache = new Map<DocumentUri, DocumentCache>();
+
 export type TokenCache = Map<DocumentUri, DocumentCache>;
 
 export class DocumentCache {
