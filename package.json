@@ -85,7 +85,7 @@
     "watch": "tsc -b -w",
     "lint": "eslint ./client/src ./server/src --ext .ts,.tsx",
     "postinstall": "cd client && npm install && cd ../server && npm install && cd ..",
-    "test": "mocha ./server/out/tests/**/*.test.js ./server/out/tests/**/**/*.test.js ./server/out/tests/**/**/**/*.test.js --rescursive",
+    "test": "mocha ./server/out/tests/*.test.js ./server/out/tests/**/*.test.js ./server/out/tests/**/**/*.test.js ./server/out/tests/**/**/**/*.test.js --rescursive",
     "citest": "mocha ./server/out/tests/**/*.test.js ./server/out/tests/**/**/*.test.js ./server/out/tests/**/**/**/*.test.js --rescursive && node ./client/out/test/runTest",
     "deploy": "vsce publish --no-yarn"
   },
