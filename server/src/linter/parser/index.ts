@@ -139,7 +139,7 @@ export class Parser {
 			const statement: MatchObj = statements[i];
 
 			const s = this.parseStatement(
-				range(startLine, statement.line).map((line) => {
+				range(startLine, statement.line + 1).map((line) => {
 					if (globalTokenCache.get(textDocument.uri)?.has(line)) {
 						return globalTokenCache.get(textDocument.uri)?.get(line)?.tokens;
 					}
@@ -293,6 +293,11 @@ export class Parser {
 	private parseStatement(tokens: Token[]): StatementAST {
 
 		const statement = new StatementAST();
+
+		if (tokens.length === 0) {
+			return statement;
+		}
+
 		let rules = syntaxRules;
 		let expressionTokens: Token[] = [];
 		let tokenCounter: number = 0;
