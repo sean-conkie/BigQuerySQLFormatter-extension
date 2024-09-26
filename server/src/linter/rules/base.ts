@@ -55,7 +55,7 @@ export abstract class Rule<T extends string | FileMap>{
 		const diagnostics: Diagnostic[] = [];
       
 		let match;
-		while ((match = this.pattern.exec(test)) !== null) {
+		while ((match = this.pattern.exec(test)) != null) {
 
 			const start: MatchPosition = this.getLineAndCharacter(test, match.index);
 			const end: MatchPosition = this.getLineAndCharacter(test, this.pattern.lastIndex);
@@ -106,7 +106,7 @@ export abstract class Rule<T extends string | FileMap>{
 			message: this.message,
 			source: this.source()
 		};
-		if (this.relatedInformation !== "" && documentUri !== null) {
+		if (this.relatedInformation !== "" && documentUri != null) {
 			diagnostic.relatedInformation = [{
 				location: {
 					uri: documentUri,

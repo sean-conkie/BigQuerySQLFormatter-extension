@@ -34,7 +34,7 @@ describe('EndofFile', () => {
 				}]);
 		});
 
-		it('should return null when rule is enabled but pattern matches', () => {
+		it('should return null when rule is enabled but pattern does not match', () => {
 				instance.enabled = true;
 				const result = instance.evaluate('select *\n  from table\n');
 				expect(result).to.be.null;

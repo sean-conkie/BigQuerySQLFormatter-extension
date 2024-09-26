@@ -51,7 +51,7 @@ export class Linter {
 
 		for (const rule of this.regexRules) {
 			const result = rule.evaluate(textDocument.text, textDocument.uri);
-			if (result !== null) {
+			if (result != null) {
 				diagnostics.push(...result);
 				this.problems = diagnostics.length;
 			}
@@ -61,7 +61,7 @@ export class Linter {
 
 		for (const rule of this.parserRules) {
 			const result = rule.evaluate(abstractSyntaxTree, textDocument.uri);
-			if (result !== null) {
+			if (result != null) {
 				diagnostics.push(...result);
 				this.problems = diagnostics.length;
 			}
@@ -81,7 +81,7 @@ export class Linter {
 
 		for (const rule of this.parserRules) {
 			const result = rule.evaluate(abstractSyntaxTree, textDocumentChangeParams.textDocument.uri);
-			if (result !== null) {
+			if (result != null) {
 				diagnostics.push(...result);
 				this.problems = diagnostics.length;
 			}
@@ -89,7 +89,7 @@ export class Linter {
 
 		for (const rule of this.regexRules) {
 			const result = rule.evaluate(globalTokenCache.get(textDocumentChangeParams.textDocument.uri)!.getText(), textDocumentChangeParams.textDocument.uri);
-			if (result !== null) {
+			if (result != null) {
 				diagnostics.push(...result);
 				this.problems = diagnostics.length;
 			}
