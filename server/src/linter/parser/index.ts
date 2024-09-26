@@ -353,7 +353,7 @@ export class Parser {
 				}
 
 				if (matchedRule.rule) {
-					if (matchedRule.rule.children !== null) {
+					if (matchedRule.rule.children != null) {
 						const [matchedRules, y] = this.recursiveLookahead(tokens.slice(i + 1), syntaxRules.filter((rule) => matchedRule.rule?.children?.includes(rule.name)));
 						matchedRule.matches.push(...matchedRules);
 						i += y;
@@ -386,7 +386,7 @@ export class Parser {
 				continue;
 			}
 
-			if (rule.lookahead > 0 || rule.negativeLookahead !== null) {
+			if (rule.lookahead > 0 || rule.negativeLookahead != null) {
 				if (!this.lookahead(nextTokens, rule, tokenCounter + 1)) {
 					continue;
 				}
@@ -438,8 +438,8 @@ export class Parser {
 				}
 			}
 			// if i is greater than or equal to the lookahead counter and we have negative lookahead check if token matches negative lookahead
-			else if (tokenCounter >= rule.lookahead && rule.negativeLookahead !== null) {
-				if (rule.negativeLookahead !== null && rule.negativeLookahead.filter((scope) => filteredTokens[i].scopes.includes(scope)).length > 0) {
+			else if (tokenCounter >= rule.lookahead && rule.negativeLookahead != null) {
+				if (rule.negativeLookahead != null && rule.negativeLookahead.filter((scope) => filteredTokens[i].scopes.includes(scope)).length > 0) {
 					return null;
 				} else {
 					return rule;
@@ -463,7 +463,7 @@ export class Parser {
 	 */
 	private recursiveLookahead(tokens: Token[], rules?: Rule[] | null, endToken?: string[] | null): [MatchedRule[], number] {
 		const matches: MatchedRule[] = [];
-		const exitOnMatch: boolean = rules !== null;
+		const exitOnMatch: boolean = rules != null;
 		let workingRules: Rule[] = [];
 		let expressionTokens: Token[] = [];
 		let tokenCounter: number = 0;
@@ -477,6 +477,7 @@ export class Parser {
 			tokenCounter = 0;
 		};
 		let loopCounter = 0;
+		setRules();
 
 		for (let i = 0; i < tokens.length; i++) {
 			const token = tokens[i];
@@ -484,7 +485,7 @@ export class Parser {
 			if (token.scopes.map((t) => skipTokens.includes(t)).includes(true) || token.scopes.filter((scope) => !skipTokens.includes(scope.split('.')[0])).length === 0) {
 				continue;
 			}
-
+			
 			if (token.scopes.filter((scope) => recursiveGroupEnd.includes(scope)).length > 0) {
 				if (matches.length > 0) {
 					matches[matches.length - 1].tokens.push(token);
