@@ -291,7 +291,7 @@ export class WindowAST extends AST {
     const partitionMatches = match.matches?.slice(partitionByIndex + 1, orderByIndex);
     const orderMatches = match.matches?.slice((orderByIndex ?? 0) + 1);
 
-    this.partition = partitionMatches?.map((match) => createColumn(match) ?? null).filter((column) => column !== null) as Column[];
+    this.partition = partitionMatches?.map((match) => createColumn(match) ?? null).filter((column) => column != null) as Column[];
     this.order = orderMatches?.map((match) => new OrderAST()) ?? [];
   }
 }
@@ -592,7 +592,7 @@ export class ComparisonGroupAST extends AST {
       if (partMatches.length > 1) {
         [partMatches, result] = pop(partMatches, "operator");
 
-        if (result !== null) {
+        if (result != null) {
           operator = result as LogicalOperator;
         }
       }
@@ -600,7 +600,7 @@ export class ComparisonGroupAST extends AST {
       if (partMatches.length === 3) {
         [partMatches, result] = pop(partMatches, "comparison");
 
-        if (result !== null) {
+        if (result != null) {
           comparison = result as ComparisonOperator;
         }
       }
@@ -624,9 +624,9 @@ export class ComparisonGroupAST extends AST {
           tokens.push(...parameter.tokens);
         }
 
-        if (comparisonObj.left === null) {
+        if (comparisonObj.left == null) {
           comparisonObj.left = parameter;
-        } else if (comparisonObj.right === null) {
+        } else if (comparisonObj.right == null) {
           comparisonObj.right = parameter;
         }
       }
@@ -721,10 +721,7 @@ export class JoinAST extends AST {
    * - `tokens`: An array of tokens representing the join.
    */
   constructor(matchedRule: MatchedRule) {
-    super();
-    this.tokens.push(...matchedRule.tokens);
-    this.lineNumber = matchedRule.tokens.filter((token) => !token.scopes.includes('punctuation.whitespace.leading.sql') && !token.scopes.includes('punctuation.whitespace.trailing.sql') && !token.scopes.includes('punctuation.whitespace.sql'))[0].lineNumber;
-    this.startIndex = matchedRule.tokens[0].startIndex;
+    super(matchedRule.tokens);
 
     this.join = findToken(matchedRule.tokens, "keyword.join.sql")?.value as JoinType;
     this.source = new ObjectAST(matchedRule.tokens);
@@ -768,7 +765,7 @@ export class ObjectAST extends AST {
     const object = findToken(tokens, "entity.name.object.sql");
     const alias = findToken(tokens, "entity.name.alias.sql");
 
-    const statementTokens = [project, dataset, object, alias].filter((token) => token !== null);
+    const statementTokens = [project, dataset, object, alias].filter((token) => token != null);
     if (statementTokens.length === 0) {
       return;
     }
@@ -780,7 +777,7 @@ export class ObjectAST extends AST {
     this.lineNumber = Math.min(...statementTokens.map((token) => token?.lineNumber ?? 0));
     this.startIndex = Math.min(...statementTokens.map((token) => token?.startIndex ?? 0));
     this.endIndex = Math.min(...statementTokens.map((token) => token?.endIndex ?? 0));
-    this.tokens = statementTokens.filter(token => token !== null) as Token[];
+    this.tokens = statementTokens.filter(token => token != null) as Token[];
   }
 }
 // endregion objects
