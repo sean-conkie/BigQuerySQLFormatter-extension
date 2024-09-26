@@ -5,7 +5,7 @@
   "icon": "images/BigQuerySQLFormatter_transparent_128.png",
   "author": "sean-conkie",
   "license": "MIT",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "repository": {
     "type": "git",
     "url": "https://github.com/sean-conkie/BigQuerySQLFormatter-extension.git"

@@ -31,10 +31,10 @@ export function joinTokenValues(tokens: Token[], char: string = ''): string {
  * @returns An array of tokens that do not include any of the specified scopes.
  */
 export function filterTokens(tokens: Token[], scopes: string[]): Token[] {
-	let filteredTokens: Token[] = [];
+	let filteredTokens: Token[] = tokens;
 
 	scopes.map((scope) => {
-		filteredTokens = tokens.filter((token) => token.scopes.includes(scope));
+		filteredTokens = filteredTokens.filter((token) => token.scopes.includes(scope));
 	});
 
 	return filteredTokens;
@@ -48,10 +48,10 @@ export function filterTokens(tokens: Token[], scopes: string[]): Token[] {
  * @returns An array of tokens that do not include any of the specified scopes.
  */
 export function filterOutTokens(tokens: Token[], scopes: string[]): Token[] {
-	let filteredTokens: Token[] = [];
+	let filteredTokens: Token[] = tokens;
 
 	scopes.map((scope) => {
-		filteredTokens = tokens.filter((token) => !token.scopes.includes(scope));
+		filteredTokens = filteredTokens.filter((token) => !token.scopes.includes(scope));
 	});
 
 	return filteredTokens;

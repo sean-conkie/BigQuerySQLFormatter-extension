@@ -802,6 +802,20 @@
           "captures": {
             "1": { "name": "entity.other.column.sql" }
           },
+          "match": "(?i)(?<=by )([\\w_]+)(?=\\s*?(?:,|\\n|from))",
+          "name": "meta.column.sql"
+        },
+        {
+          "captures": {
+            "1": { "name": "entity.other.column.sql" }
+          },
+          "match": "(?i)(?<=\\()([\\w_]+)(?=\\s*?(?:,|\\n|from))",
+          "name": "meta.column.sql"
+        },
+        {
+          "captures": {
+            "1": { "name": "entity.other.column.sql" }
+          },
           "match": "(?i)(?<=,)[ \\t]*?(\\w+)(?=\\s*?(?:,|\\n|from))",
           "name": "meta.column.sql"
         },
