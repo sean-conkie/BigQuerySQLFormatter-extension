@@ -16,6 +16,7 @@ import { SelectModifiers } from './LT10';
 import { UnionCheck } from './LT11';
 import { EndofFile } from './LT12';
 import { StartOfFile } from './LT13';
+import { Parenthesis } from './LT14';
 import { ComparisonOperators } from './LT15';
 import { FileMap } from '../../parser';
 
@@ -27,6 +28,7 @@ export const classes = [SelectModifiers,
                         StartOfFile,
                         TrailingSpaces,
 												Functions,
+												Parenthesis,
 												ComparisonOperators];
 
 export function layoutRules(settings: ServerSettings, problems: number): Rule<string | FileMap>[] {
