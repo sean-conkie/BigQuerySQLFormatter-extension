@@ -8,10 +8,11 @@
 
 import { Rule } from '../base';
 import { ServerSettings } from '../../../settings';
+import { Using } from './ST07';
 import { Distinct } from './ST08';
 import { FileMap } from '../../parser';
 
-export const classes = [Distinct];
+export const classes = [Using, Distinct];
 
 export function structureRules(settings: ServerSettings, problems: number): Rule<string | FileMap>[] {
 
