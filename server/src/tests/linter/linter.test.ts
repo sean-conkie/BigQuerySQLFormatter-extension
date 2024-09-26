@@ -29,7 +29,7 @@ describe('Linter', () => {
         const diagnostics: Diagnostic[] = [];
         for (const rule of linter.regexRules) {
             const result = rule.evaluate(source.text, null);
-            if (result !== null) {
+            if (result != null) {
                 diagnostics.push(...result);
             }
         }
@@ -42,7 +42,7 @@ describe('Linter', () => {
         const diagnostics: Diagnostic[] = [];
         for (const rule of linter.regexRules) {
             const result = rule.evaluate(source.text, null);
-            if (result !== null) {
+            if (result != null) {
                 diagnostics.push(...result);
             }
         }
