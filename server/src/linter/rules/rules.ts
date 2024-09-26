@@ -1,11 +1,3 @@
-/**
- * @fileoverview Collates and exports the rules for the linter
- * @module linter/rules
- * @requires vscode-languageserver
- * @requires settings
- * @requires RuleType
- */
-
 import { ServerSettings } from '../../settings';
 import { aliasRules } from './aliasing/rules';
 import { layoutRules } from './layout/rules';

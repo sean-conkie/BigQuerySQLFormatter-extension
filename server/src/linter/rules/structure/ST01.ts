@@ -16,7 +16,7 @@ export class ElseNull extends Rule<string> {
   readonly code: string = "ST01";
   readonly message: string = "Omit `else null`.";
 	readonly relatedInformation: string = "Do not specify redundant `else null` in a case when statement.";
-  readonly pattern: RegExp = /case\s+(?:when(?:.|\s)+)+(else\s+null)/gmi;
+  readonly pattern: RegExp = /else\s+null/gmi;
 
   /**
    * Creates an instance of ElseNull.

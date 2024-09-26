@@ -27,7 +27,7 @@ describe('ElseNull', () => {
             message: instance.message,
             severity: instance.severity,
             range: {
-                start: { line: 0, character: 7 },
+                start: { line: 0, character: 33 },
                 end: { line: 0, character: 42 }
             },
             source: instance.source()
