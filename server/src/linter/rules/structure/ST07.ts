@@ -1,28 +1,30 @@
 import { ServerSettings } from "../../../settings";
 import {
   Diagnostic,
+  DiagnosticSeverity,
 } from 'vscode-languageserver/node';
 import { Rule } from '../base';
 
 
 /**
- * The Distinct rule
- * @class Distinct
+ * The Using rule
+ * @class Using
  * @extends Rule
  * @memberof Linter.Rules
  */
-export class Distinct extends Rule<string> {
-  readonly name: string = "distinct";
-  readonly code: string = "ST08";
-  readonly message: string = "DISTINCT used with parentheses.";
-	readonly relatedInformation: string = "Remove parentheses to be clear that the DISTINCT applies to all columns.";
-  readonly pattern: RegExp = /select\s+(distinct\s*\((?:\w+\.)?\w+\))/gmi;
+export class Using extends Rule<string> {
+  readonly name: string = "using";
+  readonly code: string = "ST07";
+  readonly message: string = "Specify join keys instead of using USING.";
+	readonly relatedInformation: string = "Specify the keys directly.";
+  readonly pattern: RegExp = /join(?:\s+`?(?:[\w_]+\.)?(?:[\w_]+\.[\w_]+)`?(?:\s+(?:as\s+)?[\w_]+)?)\s+(using)/gmi;
+  readonly severity: DiagnosticSeverity = DiagnosticSeverity.Warning;
 
   /**
-   * Creates an instance of Distinct.
+   * Creates an instance of Using.
    * @param {ServerSettings} settings The server settings
    * @param {number} problems The number of problems identified in the source code
-   * @memberof Distinct
+   * @memberof Using
    */
   constructor(settings: ServerSettings, problems: number) {
     super(settings, problems);
