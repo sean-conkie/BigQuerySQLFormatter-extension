@@ -15,7 +15,7 @@ Explanation
 -----------
 
 Anti-pattern: Using `SELECT *`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When you use `SELECT *`, it fetches every column from the table, regardless of whether you actually need all of them. This can cause several issues:
 
@@ -33,7 +33,7 @@ When you use `SELECT *`, it fetches every column from the table, regardless of w
 In this example, all columns from the `foo` table are retrieved, even if only a few are actually needed for the query. This makes the query inefficient and harder to maintain.
 
 Best Practice: Specify Columns Explicitly
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Instead of using `SELECT *`, it is better to explicitly specify the columns that are needed. This improves both performance and maintainability by ensuring that only the necessary data is retrieved.
 

@@ -1,6 +1,6 @@
-=================================
+============================================================
 Rule: Use Lowercase for Literal `null`/`true`/`false` Values
-=================================
+============================================================
 
 **Rule Code:** ``CP04``
 
@@ -15,7 +15,7 @@ Explanation
 -----------
 
 Anti-pattern: Using Uppercase `NULL`, `TRUE`, `FALSE`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Using uppercase literals like `NULL`, `TRUE`, or `FALSE` is considered an anti-pattern because it breaks consistency with standard SQL conventions, where lowercase is preferred for literals. Mixing capitalization styles can confuse developers and lead to less readable code, especially in collaborative environments.
 
@@ -33,7 +33,7 @@ Using uppercase literals like `NULL`, `TRUE`, or `FALSE` is considered an anti-p
 In this example, the literals `NULL` and `TRUE` are written in uppercase, which deviates from best practices.
 
 Best Practice: Use Lowercase `null`, `true`, `false`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To maintain consistency and readability, always write the literals `null`, `true`, and `false` in lowercase. This adheres to common SQL style conventions and improves code clarity.
 

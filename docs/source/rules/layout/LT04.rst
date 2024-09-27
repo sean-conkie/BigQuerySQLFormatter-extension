@@ -1,0 +1,58 @@
+=========================================
+Rule: Place Commas at the End of the Line
+=========================================
+
+**Rule Code:** ``LT04``
+
+**Name:** ``trailing_commas``
+
+Overview
+--------
+
+In SQL queries, it is best practice to place commas at the end of each line when listing columns or elements. This improves readability, consistency, and maintainability, particularly in collaborative environments where code style and clarity are important. Placing commas at the start of the line can lead to confusion and inconsistencies when reading or editing queries.
+
+Explanation
+-----------
+
+Anti-pattern: Commas at the Start of a Line
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Placing commas at the start of a line, rather than at the end of the previous line, can make queries harder to read and less intuitive. This anti-pattern creates a disjointed flow, making it difficult to follow the structure of the query, especially when modifying or debugging it.
+
+**Example of Commas at the Start of a Line (Anti-pattern):**
+
+.. code-block:: sql
+
+    SELECT
+        foo.id
+      , foo.name
+    FROM foo;
+
+In this example, the commas are placed at the beginning of the second line, which disrupts the readability of the query and may cause confusion for developers.
+
+Best Practice: Place Commas at the End of a Line
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The best practice is to place commas at the end of each line when listing columns or items. This ensures a clear, logical flow and improves the readability of the query, making it easier to work with.
+
+**Refactored Example with Commas at the End of the Line (Best Practice):**
+
+.. code-block:: sql
+
+    SELECT
+        foo.id,
+        foo.name
+    FROM foo;
+
+In this refactored example, the commas are placed at the end of the first line, making the query more readable and consistent with best practices.
+
+Conclusion
+----------
+
+Placing commas at the end of the line is a simple but important rule for improving the readability and maintainability of SQL queries. By following this rule, developers ensure their code is more consistent, easier to modify, and easier for others to understand.
+
+Groups:
+-------
+
+- ``all``
+- ``layout``
