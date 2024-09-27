@@ -73,3 +73,5 @@ Layout rules are guidelines that help developers maintain a consistent and reada
 	Rule: Place Commas at the End of the Line <layout/LT04>
 	Rule: Function Names Must Be Immediately Followed by Parentheses <layout/LT06>
 	Rule: Select Targets Should Be on Separate Lines <layout/LT09>
+	Rule: SELECT Modifiers Must Be on the Same Line as SELECT <layout/LT10>
+	Rule: UNION Operators Should Be Surrounded by Newlines <layout/LT11>

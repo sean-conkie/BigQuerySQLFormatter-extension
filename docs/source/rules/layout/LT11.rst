@@ -1,0 +1,59 @@
+======================================================
+Rule: UNION Operators Should Be Surrounded by Newlines
+======================================================
+
+**Rule Code:** ``LT11``
+
+**Name:** ``union_checks``
+
+Overview
+--------
+
+In SQL queries, the `UNION` operator combines the result sets of two or more `SELECT` statements. For clarity and readability, the `UNION` operator should be placed on its own line, surrounded by newlines before and after. This helps visually separate different parts of the query, making it easier to read and understand, especially when working with complex queries that involve multiple `UNION` operators.
+
+Explanation
+-----------
+
+Anti-pattern: UNION Operator on the Same Line as Queries
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Placing the `UNION` operator on the same line as one of the `SELECT` statements can make the query harder to read and visually confusing. It may be difficult to distinguish between different parts of the query, especially in cases where multiple `UNION` operators are used.
+
+**Example of UNION Operator Without Newlines (Anti-pattern):**
+
+.. code-block:: sql
+
+    SELECT foo.id, foo.name
+    FROM foo
+    UNION SELECT bar.id, bar.name
+    FROM bar;
+
+In this example, the `UNION` operator is placed on the same line as the second `SELECT` statement, which reduces readability and makes the query harder to follow.
+
+Best Practice: UNION Operator Surrounded by Newlines
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The `UNION` operator should be placed on a separate line, surrounded by newlines before and after. This visually separates each `SELECT` statement, making the query more readable and easier to understand.
+
+**Refactored Example with UNION Operator on a Separate Line (Best Practice):**
+
+.. code-block:: sql
+
+    SELECT foo.id, foo.name
+    FROM foo
+    UNION
+    SELECT bar.id, bar.name
+    FROM bar;
+
+In this refactored example, the `UNION` operator is placed on its own line, surrounded by newlines. This makes the query much clearer and easier to read, especially when working with more complex queries.
+
+Conclusion
+----------
+
+Placing `UNION` operators on their own line and surrounding them with newlines improves the readability and maintainability of SQL queries. By following this rule, developers ensure that their queries are easy to follow and less prone to errors.
+
+Groups:
+-------
+
+- ``all``
+- ``layout``
