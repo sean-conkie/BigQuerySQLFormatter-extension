@@ -1,5 +1,6 @@
 import { ServerSettings } from '../../settings';
 import { aliasRules } from './aliasing/rules';
+import { ambiguousRules } from './ambiguous/rules';
 import { layoutRules } from './layout/rules';
 import { structureRules } from './structure/rules';
 import { Rule } from './base';
@@ -17,6 +18,7 @@ import { FileMap } from '../parser';
 export function initialiseRules(settings: ServerSettings, problems: number): Rule<string | FileMap>[] {
 	return [
 		...aliasRules(settings, problems),
+		...ambiguousRules(settings, problems),
 		...layoutRules(settings, problems),
 		...structureRules(settings, problems)
 	];
