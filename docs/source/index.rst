@@ -1,6 +1,9 @@
-# BigQuery SQL Formatter
+======================
+BigQuery SQL Formatter
+======================
 
-## VS Code extension providing BigQuery SQL syntax checking
+VS Code extension providing BigQuery SQL syntax checking
+--------------------------------------------------------
 
 The BigQuery SQL Formatter extension for Visual Studio Code provides syntax checking and formatting for BigQuery SQL queries. This extension aims to enhance the development experience for users working with BigQuery by offering features such as:
 
