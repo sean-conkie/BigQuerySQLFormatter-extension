@@ -4,13 +4,13 @@
 
 import { expect } from 'chai';
 import { defaultSettings } from '../../../../settings';
-import { StartOfFile } from '../../../../linter/rules/layout/LT13';
+import { LeftJoin } from '../../../../linter/rules/convention/CV08';
 
-describe('StartOfFile', () => {
-    let instance: StartOfFile;
+describe('LeftJoin', () => {
+    let instance: LeftJoin;
 
     beforeEach(() => {
-        instance = new StartOfFile(defaultSettings, 0);
+        instance = new LeftJoin(defaultSettings, 0);
     });
 
     it('should return null when rule is disabled', () => {
@@ -21,14 +21,14 @@ describe('StartOfFile', () => {
 
     it('should return diagnostic when rule is enabled and pattern matches', () => {
         instance.enabled = true;
-        const result = instance.evaluate(' select *\n  from table');
+        const result = instance.evaluate('select a.col, b.col from dataset.table a right join dataset.table b on a.col = b.col');
         expect(result).to.deep.equal([{
             code: instance.code,
             message: instance.message,
             severity: instance.severity,
             range: {
-                start: { line: 0, character: 0 },
-                end: { line: 0, character: 1 }
+                start: { line: 0, character: 41 },
+                end: { line: 0, character: 51 }
             },
             source: instance.source()
         }]);
@@ -36,7 +36,7 @@ describe('StartOfFile', () => {
 
     it('should return null when rule is enabled but pattern does not match', () => {
         instance.enabled = true;
-        const result = instance.evaluate('select *\n  from table');
+        const result = instance.evaluate('select a.col, b.col from dataset.table a left join dataset.table b on a.col = b.col');
         expect(result).to.be.null;
     });
 });
