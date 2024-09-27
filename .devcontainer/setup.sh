@@ -4,6 +4,8 @@
 source "$(dirname "$0")/colours.sh"
 # shellcheck source=.devcontainer/install_starship.sh
 source "$(dirname "$0")/install_starship.sh"
+# shellcheck source=.devcontainer/install_pyenv.sh
+source "$(dirname "$0")/install_pyenv.sh"
 
 
 echo -e "${PURPLE}#########################################${RESET}"
@@ -38,6 +40,9 @@ echo ""
 
 # install starship prompt
 install_starship
+
+# install pyenv
+install_pyenv
 
 # add yeoman
 echo -e "${BLUE}Installing Yeoman...${RESET}"
