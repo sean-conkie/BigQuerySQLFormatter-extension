@@ -141,3 +141,5 @@ dist
 *.vsix
 
 .env
+
+docs/build
