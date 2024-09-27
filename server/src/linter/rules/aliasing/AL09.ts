@@ -5,7 +5,8 @@ import {
   DiagnosticSeverity,
   DiagnosticRelatedInformation,
   Location,
-  Range
+  Range,
+  DiagnosticTag
 } from 'vscode-languageserver/node';
 import { RuleType } from '../enums';
 import { Rule } from '../base';
@@ -21,6 +22,7 @@ export class RedundantColumnAlias extends Rule<FileMap>{
   readonly pattern: RegExp = / +$/gm;
   readonly severity: DiagnosticSeverity = DiagnosticSeverity.Warning;
 	readonly type: RuleType = RuleType.PARSER;
+  readonly diagnosticTags: DiagnosticTag[] = [DiagnosticTag.Unnecessary];
 
   /**
    * Creates an instance of RedundantColumnAlias.

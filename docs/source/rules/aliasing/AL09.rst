@@ -1,0 +1,61 @@
+=================================
+Rule: Avoid Self-Aliasing Columns
+=================================
+
+**Rule Code:** ``AL09``
+
+**Name:** ``redundant_column_alias``
+
+Overview
+--------
+
+Self-aliasing a column is when you give a column an alias that is identical to the column name itself. This practice adds no value and only creates unnecessary redundancy in your SQL queries, making them harder to read and maintain. Columns should be referenced without redundant aliases unless the alias meaningfully changes how the column is understood or used.
+
+Self-aliasing is an anti-pattern because it introduces unnecessary complexity without any practical benefit.
+
+Explanation
+-----------
+
+Anti-pattern: Self-aliasing Columns
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Using self-aliases in SQL is redundant and should be avoided. Here is an example of the anti-pattern:
+
+**Example of Redundant Self-Alias (Anti-pattern):**
+
+.. code-block:: sql
+
+	SELECT
+		foo.id AS id,
+		foo.name AS name
+	FROM foo;
+
+
+In this example, each column is aliased to its own name, which adds no functional value and can be confusing for future readers of the query.
+
+Best Practice: Avoid Self-Aliasing
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Instead of self-aliasing, you should simply reference the columns directly. This keeps the query concise and easy to understand.
+
+**Refactored Example Without Self-Alias (Best Practice):**
+
+.. code-block:: sql
+
+	SELECT
+		foo.id,
+		foo.name
+	FROM foo;
+
+This version of the query is cleaner and avoids the unnecessary self-aliasing of columns. Only use an alias when it clarifies the purpose of the column, such as when performing calculations, combining fields, or renaming a column for clarity in the result set.
+
+Conclusion
+----------
+
+Self-aliasing columns do not improve query clarity or functionality and should be avoided. Following this rule ensures that SQL queries remain concise and maintainable.
+
+Groups:
+-------
+
+- ``all``
+- ``convention``
