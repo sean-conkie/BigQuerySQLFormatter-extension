@@ -1,0 +1,60 @@
+=================================
+Rule: Avoid Using `SELECT *`
+=================================
+
+**Rule Code:** ``AM04``
+
+**Name:** ``column_count``
+
+Overview
+--------
+
+Using `SELECT *` in SQL queries is considered an anti-pattern because it retrieves all columns from a table, which can lead to inefficient queries, ambiguity, and maintenance challenges. It is always better to explicitly define the columns you need, rather than selecting all columns by default.
+
+Explanation
+-----------
+
+Anti-pattern: Using `SELECT *`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When you use `SELECT *`, it fetches every column from the table, regardless of whether you actually need all of them. This can cause several issues:
+
+- **Performance:** Retrieving unnecessary columns increases the amount of data transferred and processed, especially in large tables.
+- **Ambiguity:** If a table structure changes (e.g., columns are added or removed), `SELECT *` can lead to unexpected results.
+- **Maintainability:** Queries using `SELECT *` are harder to read and understand because it’s not clear which columns are actually being used in the result.
+
+**Example of Using `SELECT *` (Anti-pattern):**
+
+.. code-block:: sql
+
+    SELECT *
+    FROM foo;
+
+In this example, all columns from the `foo` table are retrieved, even if only a few are actually needed for the query. This makes the query inefficient and harder to maintain.
+
+Best Practice: Specify Columns Explicitly
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Instead of using `SELECT *`, it is better to explicitly specify the columns that are needed. This improves both performance and maintainability by ensuring that only the necessary data is retrieved.
+
+**Refactored Example Without `SELECT *` (Best Practice):**
+
+.. code-block:: sql
+
+    SELECT
+        foo.id,
+        foo.name
+    FROM foo;
+
+In this refactored query, only the `id` and `name` columns are retrieved, reducing data overhead and making the query more readable and predictable.
+
+Conclusion
+----------
+
+Using `SELECT *` is an anti-pattern because it introduces performance inefficiencies, ambiguity, and maintenance challenges. It is best to explicitly define the columns you need in your queries, which leads to clearer, more efficient, and more maintainable SQL code.
+
+Groups:
+-------
+
+- ``all``
+- ``ambiguous``
