@@ -5,6 +5,7 @@
 import { expect } from 'chai';
 import { initialiseRules } from '../../../linter/rules/rules';
 import { aliasRules } from '../../../linter/rules/aliasing/rules';
+import { ambiguousRules } from '../../../linter/rules/ambiguous/rules';
 import { capitalisationRules } from '../../../linter/rules/capitalisation/rules';
 import { layoutRules } from '../../../linter/rules/layout/rules';
 import { structureRules } from '../../../linter/rules/structure/rules';
@@ -21,6 +22,7 @@ describe('initialiseRules', () => {
 
     it('should return an array with the same content as the result of the rules', () => {
         const layoutRulesResult = [...aliasRules(settings, problems),
+            ...ambiguousRules(settings, problems),
             ...capitalisationRules(settings, problems),
             ...layoutRules(settings, problems),
             ...structureRules(settings, problems)];
