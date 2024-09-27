@@ -1,6 +1,7 @@
 import { ServerSettings } from '../../settings';
 import { aliasRules } from './aliasing/rules';
 import { ambiguousRules } from './ambiguous/rules';
+import { capitalisationRules } from './capitalisation/rules';
 import { layoutRules } from './layout/rules';
 import { structureRules } from './structure/rules';
 import { Rule } from './base';
@@ -19,6 +20,7 @@ export function initialiseRules(settings: ServerSettings, problems: number): Rul
 	return [
 		...aliasRules(settings, problems),
 		...ambiguousRules(settings, problems),
+		...capitalisationRules(settings, problems),
 		...layoutRules(settings, problems),
 		...structureRules(settings, problems)
 	];
