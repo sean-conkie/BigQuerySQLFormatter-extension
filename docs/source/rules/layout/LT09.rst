@@ -1,0 +1,58 @@
+================================================
+Rule: Select Targets Should Be on Separate Lines
+================================================
+
+**Rule Code:** ``LT09``
+
+**Name:** ``select_targets``
+
+Overview
+--------
+
+In SQL queries, each target (column or expression) in a `SELECT` statement should be placed on a separate line. This best practice improves the readability and maintainability of the query, especially when working with multiple columns. Listing select targets on separate lines makes it easier to scan the code, track changes, and identify specific columns in long queries.
+
+Explanation
+-----------
+
+Anti-pattern: Select Targets on the Same Line
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Placing all select targets on a single line reduces readability, especially when dealing with multiple columns or complex expressions. This format makes it difficult to identify specific columns, increases the chances of errors, and makes it harder to modify the query as the number of targets grows.
+
+**Example of Select Targets on the Same Line (Anti-pattern):**
+
+.. code-block:: sql
+
+    SELECT foo.id, foo.name, foo.age, foo.salary
+    FROM foo;
+
+In this example, all select targets are on a single line, making the query harder to read and understand, especially when working with multiple columns or long queries.
+
+Best Practice: Select Targets on Separate Lines
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For better readability, each target in the `SELECT` clause should be written on a separate line. This allows developers to easily identify and manage each column or expression in the query, making the code more maintainable.
+
+**Refactored Example with Select Targets on Separate Lines (Best Practice):**
+
+.. code-block:: sql
+
+    SELECT
+        foo.id,
+        foo.name,
+        foo.age,
+        foo.salary
+    FROM foo;
+
+In this refactored example, each select target is placed on a separate line, making the query much easier to read and modify as necessary.
+
+Conclusion
+----------
+
+Placing select targets on separate lines ensures that SQL queries remain readable, scalable, and maintainable. Following this rule leads to clearer and more organized code, especially in queries involving multiple columns or complex logic.
+
+Groups:
+-------
+
+- ``all``
+- ``layout``

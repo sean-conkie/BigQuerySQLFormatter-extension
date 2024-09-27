@@ -15,7 +15,7 @@ export class Literals extends Rule<string> {
   readonly name: string = "literals";
   readonly code: string = "CP04";
   readonly message: string = "Capitalisation of boolean/null literal";
-	readonly relatedInformation: string = "Ensure all literal `null`/`true`/`false` values are lower case.";
+	readonly relatedInformation: string = "To maintain consistency and readability, always write the literals `null`, `true`, and `false` in lowercase.";
   readonly pattern: RegExp = /FALSE|TRUE|NULL/gm;
 
   /**

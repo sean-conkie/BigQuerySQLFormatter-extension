@@ -21,7 +21,7 @@ export class Functions extends Rule<FileMap> {
   readonly code: string = "LT06";
   readonly type: RuleType = RuleType.PARSER;
   readonly message: string = "Function name not immediately followed by parenthesis.";
-  readonly relatedInformation: string = "Function name not immediately followed by parenthesis.";
+  readonly relatedInformation: string = "Function names should always be immediately followed by parentheses without any space.";
   readonly severity: DiagnosticSeverity = DiagnosticSeverity.Warning;
 
   /**

@@ -27,6 +27,7 @@ export class TrailingComma extends Rule<FileMap> {
   readonly code: string = "LT04";
   readonly type: RuleType = RuleType.PARSER;
   readonly message: string = "Commas should be at the end of the line.";
+  readonly relatedInformation: string = "The best practice is to place commas at the end of each line when listing columns or items.";
 
   /**
    * Creates an instance of TrailingComma.
