@@ -30,7 +30,7 @@ describe('EndofFile', () => {
 								start: { line: 2, character: 12 },
 								end: { line: 2, character: 12 }
 						},
-						source: 'LT12 (end_of_file)'
+						source: instance.source()
 				}]);
 		});
 

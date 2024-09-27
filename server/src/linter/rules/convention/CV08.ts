@@ -1,30 +1,27 @@
 import { ServerSettings } from "../../../settings";
-import {
-  Diagnostic,
-  DiagnosticTag,
-} from 'vscode-languageserver/node';
+import { Diagnostic, DiagnosticSeverity } from 'vscode-languageserver/node';
 import { Rule } from '../base';
 
 
 /**
- * The ElseNull rule
- * @class ElseNull
+ * The LeftJoin rule
+ * @class LeftJoin
  * @extends Rule
  * @memberof Linter.Rules
  */
-export class ElseNull extends Rule<string> {
+export class LeftJoin extends Rule<string> {
   readonly name: string = "else_null";
-  readonly code: string = "ST01";
-  readonly message: string = "Omit `else null`.";
-	readonly relatedInformation: string = "Do not specify redundant `else null` in a case when statement.";
-  readonly pattern: RegExp = /else\s+null/gmi;
-  readonly diagnosticTags: DiagnosticTag[] = [DiagnosticTag.Unnecessary];
+  readonly code: string = "CV08";
+  readonly message: string = "Use LEFT JOIN instead of RIGHT JOIN.";
+	readonly relatedInformation: string = "It is recommended to avoid using RIGHT JOIN and instead use LEFT JOIN for consistency and readability, as it aligns with the natural left-to-right flow of reading SQL queries, making them easier to understand and maintain.";
+  readonly pattern: RegExp = /right\s+join/gmi;
+  readonly severity: DiagnosticSeverity = DiagnosticSeverity.Warning;
 
   /**
-   * Creates an instance of ElseNull.
+   * Creates an instance of LeftJoin.
    * @param {ServerSettings} settings The server settings
    * @param {number} problems The number of problems identified in the source code
-   * @memberof ElseNull
+   * @memberof LeftJoin
    */
   constructor(settings: ServerSettings, problems: number) {
     super(settings, problems);

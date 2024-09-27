@@ -6,7 +6,7 @@
  * @requires RuleType
  */
 
-import { Diagnostic, DiagnosticSeverity, Range } from 'vscode-languageserver/node';
+import { Diagnostic, DiagnosticSeverity, DiagnosticTag, Range } from 'vscode-languageserver/node';
 import { RuleType } from './enums';
 import { ServerSettings } from '../../settings';
 import { FileMap } from '../parser';
@@ -27,6 +27,7 @@ export abstract class Rule<T extends string | FileMap>{
 	readonly message: string = "";
 	readonly relatedInformation: string = "";
 	readonly pattern: RegExp = /./;
+	readonly diagnosticTags: DiagnosticTag[] = [];
 	severity: DiagnosticSeverity = DiagnosticSeverity.Error;
 	enabled: boolean = true;
 	settings: ServerSettings;
@@ -115,11 +116,14 @@ export abstract class Rule<T extends string | FileMap>{
 				message: this.relatedInformation
 			}];
 		}
+		if (this.diagnosticTags.length > 0) {
+			diagnostic.tags = this.diagnosticTags;
+		}
 		return diagnostic;
 	}
 
 	source(): string {
-		return `${this.code} (${this.name})`;
+		return this.name;
 	}
 
 }
