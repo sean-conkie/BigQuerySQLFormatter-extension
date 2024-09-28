@@ -1,0 +1,61 @@
+===========================================
+Rule: Use COALESCE Instead of IFNULL or NVL
+===========================================
+
+**Rule Code:** ``CV02``
+
+**Name:** ``coalesce``
+
+Overview
+--------
+
+In SQL, `COALESCE` should be used instead of `IFNULL` or `NVL` for handling `NULL` values in expressions. `COALESCE` is part of the SQL standard and is supported by a wide range of databases, making it more portable and consistent across different environments. In contrast, `IFNULL` and `NVL` are specific to certain database systems, which can lead to compatibility issues when working with different databases.
+
+Explanation
+-----------
+
+Anti-pattern: Using `IFNULL` or `NVL`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The use of database-specific functions like `IFNULL` (MySQL) or `NVL` (Oracle) can lead to portability issues when migrating SQL code between different databases. These functions are not part of the SQL standard, making the SQL queries less consistent and harder to maintain in diverse environments.
+
+**Example of Using `IFNULL` (Anti-pattern):**
+
+.. code-block:: sql
+
+    SELECT IFNULL(foo.value, 'default_value')
+    FROM foo;
+
+**Example of Using `NVL` (Anti-pattern):**
+
+.. code-block:: sql
+
+    SELECT NVL(foo.value, 'default_value')
+    FROM foo;
+
+In these examples, `IFNULL` and `NVL` are used, which can cause problems when running the query on different databases.
+
+Best Practice: Use `COALESCE`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+`COALESCE` is part of the SQL standard and works consistently across different databases, making it the preferred choice for handling `NULL` values. It can take multiple arguments and returns the first non-`NULL` value from the list, providing greater flexibility than `IFNULL` or `NVL`.
+
+**Refactored Example with `COALESCE` (Best Practice):**
+
+.. code-block:: sql
+
+    SELECT COALESCE(foo.value, 'default_value')
+    FROM foo;
+
+In this refactored example, `COALESCE` is used instead of `IFNULL` or `NVL`, ensuring the query is more portable and consistent across different database systems.
+
+Conclusion
+----------
+
+Using `COALESCE` instead of `IFNULL` or `NVL` ensures that SQL queries are portable, consistent, and easier to maintain across different databases. Since `COALESCE` is part of the SQL standard, it is widely supported and provides greater flexibility when handling `NULL` values.
+
+Groups:
+-------
+
+- `all <../..>`_
+- `convention <../..#convention-rules>`_
