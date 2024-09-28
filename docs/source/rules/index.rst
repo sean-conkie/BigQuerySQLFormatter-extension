@@ -56,6 +56,7 @@ By applying convention rules, teams can create a more collaborative and coherent
 .. toctree::
 	:maxdepth: 1
 
+	Rule: Use COALESCE Instead of IFNULL or NVL <convention/CV02>
 	Rule: Use LEFT JOIN Instead of RIGHT JOIN <convention/CV08>
 
 .. _layout-rules:

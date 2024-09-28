@@ -8,10 +8,12 @@
 
 import { Rule } from '../base';
 import { ServerSettings } from '../../../settings';
+import { Coalesce } from './CV02';
 import { LeftJoin } from './CV08';
 import { FileMap } from '../../parser';
 
-export const classes = [LeftJoin];
+export const classes = [Coalesce,
+												LeftJoin];
 
 export function conventionRules(settings: ServerSettings, problems: number): Rule<string | FileMap>[] {
 
