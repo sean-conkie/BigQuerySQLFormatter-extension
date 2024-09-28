@@ -16,6 +16,7 @@ export class LeftJoin extends Rule<string> {
 	readonly relatedInformation: string = "It is recommended to avoid using RIGHT JOIN and instead use LEFT JOIN for consistency and readability, as it aligns with the natural left-to-right flow of reading SQL queries, making them easier to understand and maintain.";
   readonly pattern: RegExp = /right\s+join/gmi;
   readonly severity: DiagnosticSeverity = DiagnosticSeverity.Warning;
+  readonly ruleGroup: string = 'convention';
 
   /**
    * Creates an instance of LeftJoin.

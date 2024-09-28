@@ -17,6 +17,7 @@ export class Distinct extends Rule<string> {
   readonly message: string = "DISTINCT used with parentheses.";
 	readonly relatedInformation: string = "Remove parentheses to be clear that the DISTINCT applies to all columns.";
   readonly pattern: RegExp = /select\s+(distinct\s*\((?:\w+\.)?\w+\))/gmi;
+  readonly ruleGroup: string = 'layout';
 
   /**
    * Creates an instance of Distinct.

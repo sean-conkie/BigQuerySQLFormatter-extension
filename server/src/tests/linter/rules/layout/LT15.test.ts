@@ -26,7 +26,8 @@ describe('ComparisonOperators', () => {
 				const parser = new Parser();
 				const result = instance.evaluate(await parser.parse({text:'select *\n  from dataset.table\n where 1 = 1\n   and 10 = 1', uri: 'test.sql', languageId: 'sql', version: 0}));
 				expect(result).to.deep.equal([{
-						code: instance.code,
+						code: instance.diagnosticCode,
+            codeDescription: {href: instance.diagnosticCodeDescription},
 						message: instance.message,
 						severity: instance.severity,
 						range: {
@@ -36,7 +37,8 @@ describe('ComparisonOperators', () => {
 						source: instance.source
 				},
 				{
-						code: instance.code,
+						code: instance.diagnosticCode,
+            codeDescription: {href: instance.diagnosticCodeDescription},
 						message: instance.message,
 						severity: instance.severity,
 						range: {
@@ -59,7 +61,8 @@ describe('ComparisonOperators', () => {
 				const parser = new Parser();
 				const result = instance.evaluate(await parser.parse({text:'select *\n  from dataset.table a\n  left join other.table b\n    on a.id = b.id\n   and a.date = b.date\n where 1  = 1\n   and 10 = 1', uri: 'test.sql', languageId: 'sql', version: 0}));
 				expect(result).to.deep.equal([{
-						code: instance.code,
+						code: instance.diagnosticCode,
+            codeDescription: {href: instance.diagnosticCodeDescription},
 						message: instance.message,
 						severity: instance.severity,
 						range: {
@@ -69,7 +72,8 @@ describe('ComparisonOperators', () => {
 						source: instance.source
 				},
 				{
-						code: instance.code,
+						code: instance.diagnosticCode,
+            codeDescription: {href: instance.diagnosticCodeDescription},
 						message: instance.message,
 						severity: instance.severity,
 						range: {

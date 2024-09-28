@@ -23,6 +23,7 @@ export class Functions extends Rule<FileMap> {
   readonly message: string = "Function name not immediately followed by parenthesis.";
   readonly relatedInformation: string = "Function names should always be immediately followed by parentheses without any space.";
   readonly severity: DiagnosticSeverity = DiagnosticSeverity.Warning;
+  readonly ruleGroup: string = 'layout';
 
   /**
    * Creates an instance of Functions.

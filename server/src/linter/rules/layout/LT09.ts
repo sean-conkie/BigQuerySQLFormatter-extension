@@ -21,6 +21,7 @@ export class SelectTargets extends Rule<FileMap> {
   readonly type: RuleType = RuleType.PARSER;
   readonly message: string = "Select targets should be on separate lines.";
   readonly relatedInformation: string = "For better readability, each target in the `SELECT` clause should be written on a separate line.";
+  readonly ruleGroup: string = 'layout';
 
   /**
    * Creates an instance of SelectTargets.

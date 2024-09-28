@@ -27,7 +27,8 @@ describe('ColumnCount', () => {
             end: { line: 0, character: 8 }
         };
         expect(result).to.deep.equal([{
-            code: instance.code,
+            code: instance.diagnosticCode,
+            codeDescription: {href: instance.diagnosticCodeDescription},
             message: instance.message,
             severity: instance.severity,
             range: range,

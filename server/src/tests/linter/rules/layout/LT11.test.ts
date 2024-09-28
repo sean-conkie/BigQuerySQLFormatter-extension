@@ -74,8 +74,9 @@ describe('UnionCheck', () => {
             instance.enabled = true;
             const result = instance.evaluate(element[1]);
             expect(result).to.deep.equal([{
-                code: instance.code,
-                message: instance.message,
+                code: instance.diagnosticCode,
+            codeDescription: {href: instance.diagnosticCodeDescription},
+            message: instance.message,
                 severity: instance.severity,
                 range: {
                     start: { line: parseInt(element[2]), character: parseInt(element[3]) },
@@ -114,8 +115,9 @@ describe('UnionCheck', () => {
                 instance.enabled = true;
                 const result = instance.evaluate(element[1]);
                 expect(result).to.deep.equal([{
-                    code: instance.code,
-                    message: instance.message,
+                    code: instance.diagnosticCode,
+            codeDescription: {href: instance.diagnosticCodeDescription},
+            message: instance.message,
                     severity: instance.severity,
                     range: {
                         start: { line: parseInt(element[2]), character: parseInt(element[3]) },
@@ -123,8 +125,9 @@ describe('UnionCheck', () => {
                     },
                     source: instance.source
                 },{
-                    code: instance.code,
-                    message: instance.message,
+                    code: instance.diagnosticCode,
+            codeDescription: {href: instance.diagnosticCodeDescription},
+            message: instance.message,
                     severity: instance.severity,
                     range: {
                         start: { line: parseInt(element[6]), character: parseInt(element[7]) },
