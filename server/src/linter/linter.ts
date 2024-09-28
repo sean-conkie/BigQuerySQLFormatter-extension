@@ -49,18 +49,18 @@ export class Linter {
 
 		const diagnostics: Diagnostic[] = [];
 
-		for (const rule of this.regexRules) {
-			const result = rule.evaluate(textDocument.text, textDocument.uri);
+		const abstractSyntaxTree: { [key: number]: StatementAST } = await parser.parse(textDocument);
+
+		for (const rule of this.parserRules) {
+			const result = rule.evaluate(abstractSyntaxTree, textDocument.uri);
 			if (result != null) {
 				diagnostics.push(...result);
 				this.problems = diagnostics.length;
 			}
 		}
 
-		const abstractSyntaxTree: { [key: number]: StatementAST } = await parser.parse(textDocument);
-
-		for (const rule of this.parserRules) {
-			const result = rule.evaluate(abstractSyntaxTree, textDocument.uri);
+		for (const rule of this.regexRules) {
+			const result = rule.evaluate(textDocument.text, textDocument.uri);
 			if (result != null) {
 				diagnostics.push(...result);
 				this.problems = diagnostics.length;
