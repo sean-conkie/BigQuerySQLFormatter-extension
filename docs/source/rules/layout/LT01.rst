@@ -54,5 +54,5 @@ Eliminating trailing whitespace from your code ensures that it remains clean and
 Groups:
 -------
 
-- ``all``
-- ``layout``
+- `all <../..>`_
+- `layout <../..#layout-rules>`_

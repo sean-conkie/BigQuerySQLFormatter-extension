@@ -75,3 +75,6 @@ Layout rules are guidelines that help developers maintain a consistent and reada
 	Rule: Select Targets Should Be on Separate Lines <layout/LT09>
 	Rule: SELECT Modifiers Must Be on the Same Line as SELECT <layout/LT10>
 	Rule: UNION Operators Should Be Surrounded by Newlines <layout/LT11>
+	Rule: SQL Files Must End with a Single Trailing Newline <layout/LT12>
+	Rule: SQL Files Must Not Begin with Newlines or Whitespace <layout/LT13>
+	Rule: Align Equal (`=`) Sign in Comparison Blocks <layout/LT15>

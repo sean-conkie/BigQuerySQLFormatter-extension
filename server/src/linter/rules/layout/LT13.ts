@@ -23,6 +23,7 @@ export class StartOfFile extends Rule<string> {
   readonly name: string = "start_of_file";
   readonly code: string = "LT13";
   readonly message: string = "Files must not begin with newlines or whitespace.";
+  readonly relatedInformation: string = "Ensuring files do not begin with newlines or whitespace promotes clean and predictable code formatting.";
   readonly pattern: RegExp = /^[\s]/;
 
 

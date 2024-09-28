@@ -1,6 +1,6 @@
-=================================
+=========================================================
 Rule: SELECT Modifiers Must Be on the Same Line as SELECT
-=================================
+=========================================================
 
 **Rule Code:** ``LT10``
 
@@ -15,7 +15,7 @@ Explanation
 -----------
 
 Anti-pattern: SELECT Modifiers on a Separate Line
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When modifiers like `DISTINCT` are placed on a separate line from the `SELECT` keyword, it can break the flow of the query and make it harder to understand. This layout may cause unnecessary confusion for developers when reading or modifying the query.
 
@@ -32,7 +32,7 @@ When modifiers like `DISTINCT` are placed on a separate line from the `SELECT` k
 In this example, `DISTINCT` is placed on a separate line, which breaks the connection between the `SELECT` keyword and its modifier, making the query less readable.
 
 Best Practice: SELECT Modifiers on the Same Line
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 For clarity and readability, any modifiers such as `DISTINCT` should be placed on the same line as the `SELECT` keyword. This keeps the query concise and ensures that the intent of the modifier is immediately clear to anyone reading the code.
 
@@ -55,5 +55,5 @@ Keeping `SELECT` modifiers on the same line as the `SELECT` keyword ensures that
 Groups:
 -------
 
-- ``all``
-- ``layout``
+- `all <../..>`_
+- `layout <../..#layout-rules>`_

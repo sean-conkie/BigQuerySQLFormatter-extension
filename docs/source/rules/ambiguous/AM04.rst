@@ -56,5 +56,5 @@ Using `SELECT *` is an anti-pattern because it introduces performance inefficien
 Groups:
 -------
 
-- ``all``
-- ``ambiguous``
+- `all <../..>`_
+- `ambiguous <../..#ambiguous-rules>`_

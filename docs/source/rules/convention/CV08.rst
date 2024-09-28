@@ -68,5 +68,5 @@ While ``RIGHT JOIN`` and ``LEFT JOIN`` are functionally equivalent when the tabl
 Groups:
 -------
 
-- ``all``
-- ``convention``
+- `all <../..>`_
+- `convention <../..#convention-rules>`_

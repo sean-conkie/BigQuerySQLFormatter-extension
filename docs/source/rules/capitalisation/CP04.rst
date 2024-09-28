@@ -58,5 +58,5 @@ Using lowercase for `null`, `true`, and `false` literals ensures consistency, re
 Groups:
 -------
 
-- ``all``
-- ``capitalisation``
+- `all <../..>`_
+- `capitalisation <../..#capitalisation-rules>`_

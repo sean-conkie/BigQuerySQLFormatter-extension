@@ -54,5 +54,5 @@ Placing select targets on separate lines ensures that SQL queries remain readabl
 Groups:
 -------
 
-- ``all``
-- ``layout``
+- `all <../..>`_
+- `layout <../..#layout-rules>`_

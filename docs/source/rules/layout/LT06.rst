@@ -54,5 +54,5 @@ Ensuring that function names are immediately followed by parentheses is a key ru
 Groups:
 -------
 
-- ``all``
-- ``layout``
+- `all <../..>`_
+- `layout <../..#layout-rules>`_

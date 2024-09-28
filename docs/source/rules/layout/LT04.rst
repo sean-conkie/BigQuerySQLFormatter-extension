@@ -54,5 +54,5 @@ Placing commas at the end of the line is a simple but important rule for improvi
 Groups:
 -------
 
-- ``all``
-- ``layout``
+- `all <../..>`_
+- `layout <../..#layout-rules>`_

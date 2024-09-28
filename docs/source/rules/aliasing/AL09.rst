@@ -57,5 +57,5 @@ Self-aliasing columns do not improve query clarity or functionality and should b
 Groups:
 -------
 
-- ``all``
-- ``convention``
+- `all <../..>`_
+- `convention <../..#convention-rules>`_

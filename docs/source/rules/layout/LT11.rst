@@ -55,5 +55,5 @@ Placing `UNION` operators on their own line and surrounding them with newlines i
 Groups:
 -------
 
-- ``all``
-- ``layout``
+- `all <../..>`_
+- `layout <../..#layout-rules>`_
