@@ -1,0 +1,54 @@
+========================================================
+Rule: SQL Files Must End with a Single Trailing Newline
+========================================================
+
+**Rule Code:** ``LT12``
+
+**Name:** ``end_of_file``
+
+Overview
+--------
+
+In SQL, it is a best practice to ensure that all SQL files end with a single trailing newline. This practice improves file consistency, compatibility with version control systems, and avoids potential issues when concatenating files or running scripts in certain environments. Ensuring a single trailing newline at the end of files promotes clean and predictable code formatting.
+
+Explanation
+-----------
+
+Anti-pattern: Missing or Excessive Trailing Newlines
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+SQL files that either lack a trailing newline or have multiple trailing newlines can cause issues when working with version control, such as inconsistent diffs or merge conflicts. Additionally, some compilers, interpreters, or environments expect files to end with a single newline and may raise errors or warnings if it is missing.
+
+**Example of a File Without a Trailing Newline (Anti-pattern):**
+
+.. code-block:: sql
+
+    SELECT foo.id, foo.name
+    FROM foo;
+
+In this example, the SQL file does not end with a trailing newline, which can cause compatibility issues with some tools or environments.
+
+Best Practice: Ensure a Single Trailing Newline
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To maintain clean formatting and avoid issues, SQL files should always end with exactly one newline. This makes the file consistent and compatible with tools like version control systems, compilers, and text editors.
+
+**Refactored Example with a Single Trailing Newline (Best Practice):**
+
+.. code-block:: sql
+
+    SELECT foo.id, foo.name
+    FROM foo;
+
+In this refactored example, there is exactly one trailing newline at the end of the SQL file, making it clean and compliant with best practices.
+
+Conclusion
+----------
+
+Ending SQL files with a single trailing newline ensures consistency, compatibility, and avoids formatting-related issues in various environments. Following this rule improves the readability and maintainability of your SQL files.
+
+Groups:
+-------
+
+- `all <../..>`_
+- `layout <../..#layout-rules>`_

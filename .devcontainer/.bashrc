@@ -11,3 +11,10 @@ export PATH=$PATH:/opt/python/3.12/bin
 
 eval "$(starship init bash)"
 
+
+export PYENV_ROOT="$HOME/.pyenv"
+command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
+
+
+alias activate="source .venv/bin/activate"

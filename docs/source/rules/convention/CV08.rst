@@ -1,59 +1,72 @@
-# Rule: Use `LEFT JOIN` Instead of `RIGHT JOIN`
+=================================================
+Rule: Use ``LEFT JOIN`` Instead of ``RIGHT JOIN``
+=================================================
 
-### Rule Code: CV08
-### Name: `left_join`
+**Rule Code:** ``CV08``
 
-## Overview
+**Name:** ``left_join``
 
-The SQL `JOIN` operations allow combining records from two or more tables based on a related column. There are various types of joins, such as `INNER JOIN`, `LEFT JOIN`, and `RIGHT JOIN`. While both `LEFT JOIN` and `RIGHT JOIN` can achieve the same results by reversing the table order, the **best practice** is to favor the use of `LEFT JOIN` over `RIGHT JOIN`.
+Overview
+--------
 
-## Explanation
+The SQL ``JOIN`` operations allow combining records from two or more tables based on a related column. There are various types of joins, such as ``INNER JOIN``, ``LEFT JOIN``, and ``RIGHT JOIN``. While both ``LEFT JOIN`` and ``RIGHT JOIN`` can achieve the same results by reversing the table order, the **best practice** is to favor the use of ``LEFT JOIN`` over ``RIGHT JOIN``.
 
-### Anti-pattern: Using `RIGHT JOIN`
+Explanation
+-----------
 
-The use of `RIGHT JOIN` in SQL is generally considered an anti-pattern for several reasons:
+Anti-pattern: Using ``RIGHT JOIN``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The use of ``RIGHT JOIN`` in SQL is generally considered an anti-pattern for several reasons:
+
 - It reverses the typical left-to-right reading flow of SQL queries.
 - It can make queries less readable and harder to understand, especially in complex queries.
-- `RIGHT JOIN` requires the reader to mentally reverse the order of tables to comprehend the results.
+- ``RIGHT JOIN`` requires the reader to mentally reverse the order of tables to comprehend the results.
 
-**Example of `RIGHT JOIN` usage (Anti-pattern):**
-```sql
-SELECT
-    foo.col1,
-    bar.col2
-FROM foo
-RIGHT JOIN bar
-    ON foo.bar_id = bar.id;
-```
+**Example of ``RIGHT JOIN`` usage (Anti-pattern):**
 
-## Best Practice: Use `LEFT JOIN` Instead
+.. code-block:: sql
 
-It is recommended to use `LEFT JOIN` because it:
+    SELECT
+        foo.col1,
+        bar.col2
+    FROM foo
+    RIGHT JOIN bar
+        ON foo.bar_id = bar.id;
 
-	•	Aligns with the natural left-to-right flow of reading and writing queries.
-	•	Enhances readability and consistency in SQL code.
-	•	Is more commonly used and understood in practice.
+Best Practice: Use ``LEFT JOIN`` Instead
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**Refactored query using `LEFT JOIN` (Best practice):**
-```sql
-SELECT
-    foo.col1,
-    bar.col2
-FROM bar
-LEFT JOIN foo
-    ON foo.bar_id = bar.id;
-```
+It is recommended to use ``LEFT JOIN`` because it:
 
-### Benefits of LEFT JOIN:
+- Aligns with the natural left-to-right flow of reading and writing queries.
+- Enhances readability and consistency in SQL code.
+- Is more commonly used and understood in practice.
 
-	•	The results and logic remain the same as RIGHT JOIN but in a more intuitive manner.
-	•	Promotes better maintainability and reduces confusion for other developers reviewing the code.
+**Refactored query using ``LEFT JOIN`` (Best practice):**
 
-## Conclusion
+.. code-block:: sql
 
-While RIGHT JOIN and LEFT JOIN are functionally equivalent when the table order is reversed, it is a best practice to use LEFT JOIN for better readability, consistency, and maintainability in SQL queries.
+    SELECT
+        foo.col1,
+        bar.col2
+    FROM bar
+    LEFT JOIN foo
+        ON foo.bar_id = bar.id;
+
+Benefits of ``LEFT JOIN``
+-------------------------
+
+- The results and logic remain the same as ``RIGHT JOIN`` but in a more intuitive manner.
+- Promotes better maintainability and reduces confusion for other developers reviewing the code.
+
+Conclusion
+----------
+
+While ``RIGHT JOIN`` and ``LEFT JOIN`` are functionally equivalent when the table order is reversed, it is a best practice to use ``LEFT JOIN`` for better readability, consistency, and maintainability in SQL queries.
 
 Groups:
+-------
 
-	•	all
-	•	convention
+- `all <../..>`_
+- `convention <../..#convention-rules>`_

@@ -25,7 +25,7 @@ describe('Linter', () => {
     });
 
     it('should verify source code and return diagnostics', async () => {
-        const source = {text:'select col from dataset.table', uri: 'test.sql', languageId: 'sql', version: 0};
+        const source = {text:'select col from dataset.table\n', uri: 'test.sql', languageId: 'sql', version: 0};
         const diagnostics: Diagnostic[] = [];
         for (const rule of linter.regexRules) {
             const result = rule.evaluate(source.text, null);

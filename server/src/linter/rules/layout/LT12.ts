@@ -14,6 +14,7 @@ export class EndofFile extends Rule<string> {
 	readonly name: string = "end_of_file";
 	readonly code: string = "LT12";
 	readonly message: string = "Files must end with a single trailing newline.";
+	readonly relatedInformation: string = "Ensuring a single trailing newline at the end of files promotes clean and predictable code formatting.";
 	readonly pattern: RegExp = /\S\n$/;
 
 

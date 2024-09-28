@@ -1,0 +1,58 @@
+================================================================
+Rule: Function Names Must Be Immediately Followed by Parentheses
+================================================================
+
+**Rule Code:** ``LT06``
+
+**Name:** ``functions``
+
+Overview
+--------
+
+In SQL, function names should always be immediately followed by parentheses without any space in between. This best practice ensures consistent code formatting, enhances readability, and avoids potential confusion. Adding a space between the function name and the parentheses is unnecessary and can lead to inconsistent code that is harder to maintain and understand.
+
+Explanation
+-----------
+
+Anti-pattern: Space Between Function Name and Parentheses
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Leaving a space between a function name and its parentheses can make the code look less professional and may cause confusion, especially in complex queries where consistency in formatting is important. This also deviates from common SQL style guidelines, leading to harder-to-read queries.
+
+**Example of Function Name with Space (Anti-pattern):**
+
+.. code-block:: sql
+
+    SELECT
+        COUNT (*),
+        MAX (foo.value)
+    FROM foo;
+
+In this example, there is a space between the function names (`COUNT` and `MAX`) and the opening parentheses, which breaks the consistency and readability of the query.
+
+Best Practice: No Space Between Function Name and Parentheses
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Function names should always be immediately followed by parentheses without any space. This ensures a cleaner, more professional appearance and maintains consistency in the code style.
+
+**Refactored Example with No Space (Best Practice):**
+
+.. code-block:: sql
+
+    SELECT
+        COUNT(*),
+        MAX(foo.value)
+    FROM foo;
+
+In this refactored example, the function names `COUNT` and `MAX` are directly followed by parentheses without any space, making the query cleaner and easier to read.
+
+Conclusion
+----------
+
+Ensuring that function names are immediately followed by parentheses is a key rule for maintaining a clean and consistent code style in SQL. By following this rule, developers improve the readability, professionalism, and maintainability of their queries.
+
+Groups:
+-------
+
+- `all <../..>`_
+- `layout <../..#layout-rules>`_
