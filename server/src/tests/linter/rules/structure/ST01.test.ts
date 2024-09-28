@@ -30,7 +30,7 @@ describe('ElseNull', () => {
                 start: { line: 0, character: 33 },
                 end: { line: 0, character: 42 }
             },
-            source: instance.source(),
+            source: instance.source,
             tags: [1]
         }]);
     });

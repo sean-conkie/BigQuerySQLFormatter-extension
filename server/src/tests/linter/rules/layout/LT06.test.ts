@@ -36,7 +36,7 @@ describe('Functions', () => {
                 start: { line: 0, character: 11 },
                 end: { line: 0, character: 12 }
             },
-            source: instance.source()
+            source: instance.source
         }]);
     });
 

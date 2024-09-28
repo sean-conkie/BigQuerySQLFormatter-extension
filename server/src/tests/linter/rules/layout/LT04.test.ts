@@ -36,7 +36,7 @@ describe('TrailingComma', () => {
                 start: { line: 1, character: 1 },
                 end: { line: 1, character: 2 }
             },
-            source: instance.source()
+            source: instance.source
         }]);
     });
 

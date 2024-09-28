@@ -31,7 +31,7 @@ describe('ColumnCount', () => {
             message: instance.message,
             severity: instance.severity,
             range: range,
-            source: instance.source()
+            source: instance.source
         }]);
     });
 

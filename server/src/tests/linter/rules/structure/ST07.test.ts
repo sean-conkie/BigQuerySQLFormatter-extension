@@ -30,7 +30,7 @@ describe('Using', () => {
                 start: { line: 0, character: 32 },
                 end: { line: 0, character: 58 }
             },
-            source: instance.source()
+            source: instance.source
         }]);
     });
 

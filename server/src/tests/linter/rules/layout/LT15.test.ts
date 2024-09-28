@@ -33,7 +33,7 @@ describe('ComparisonOperators', () => {
 								start: { line: 2, character: 9 },
 								end: { line: 2, character: 10 }
 						},
-						source: instance.source()
+						source: instance.source
 				},
 				{
 						code: instance.code,
@@ -43,7 +43,7 @@ describe('ComparisonOperators', () => {
 								start: { line: 3, character: 10 },
 								end: { line: 3, character: 11 }
 						},
-						source: instance.source()
+						source: instance.source
 				}]);
 		});
 
@@ -66,7 +66,7 @@ describe('ComparisonOperators', () => {
 								start: { line: 3, character: 12 },
 								end: { line: 3, character: 13 }
 						},
-						source: instance.source()
+						source: instance.source
 				},
 				{
 						code: instance.code,
@@ -76,7 +76,7 @@ describe('ComparisonOperators', () => {
 								start: { line: 4, character: 14 },
 								end: { line: 4, character: 15 }
 						},
-						source: instance.source()
+						source: instance.source
 				}]);
 		});
 

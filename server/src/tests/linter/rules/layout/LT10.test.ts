@@ -67,7 +67,7 @@ describe('SelectModifiers', () => {
                         start: { line: 0, character: 0 },
                         end: { line: expected_line, character: expected_character }
                     },
-                    source: instance.source()
+                    source: instance.source
                 }]);
             });
         });

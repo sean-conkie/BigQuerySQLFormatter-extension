@@ -30,7 +30,7 @@ describe('Literals', () => {
                 start: { line: 0, character: 7 },
                 end: { line: 0, character: 11 }
             },
-            source: instance.source()
+            source: instance.source
         }]);
     });
 

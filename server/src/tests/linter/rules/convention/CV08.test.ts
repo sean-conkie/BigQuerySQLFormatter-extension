@@ -30,7 +30,7 @@ describe('LeftJoin', () => {
                 start: { line: 0, character: 41 },
                 end: { line: 0, character: 51 }
             },
-            source: instance.source()
+            source: instance.source
         }]);
     });
 

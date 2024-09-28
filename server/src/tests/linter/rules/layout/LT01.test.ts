@@ -40,7 +40,7 @@ describe('TrailingSpaces', () => {
                     start: { line: parseInt(element[2]), character: parseInt(element[3]) },
                     end: { line: parseInt(element[4]), character: parseInt(element[5]) }
                 },
-                source: instance.source()
+                source: instance.source
             }]);
         });
     });
@@ -67,7 +67,7 @@ describe('TrailingSpaces', () => {
                         start: { line: parseInt(element[2]), character: parseInt(element[3]) },
                         end: { line: parseInt(element[4]), character: parseInt(element[5]) }
                     },
-                    source: instance.source()
+                    source: instance.source
                 },{
                     code: instance.code,
                     message: instance.message,
@@ -76,7 +76,7 @@ describe('TrailingSpaces', () => {
                         start: { line: parseInt(element[6]), character: parseInt(element[7]) },
                         end: { line: parseInt(element[8]), character: parseInt(element[9]) }
                     },
-                    source: instance.source()
+                    source: instance.source
                 }]);
             });
         });

@@ -36,7 +36,7 @@ describe('RedundantColumnAlias', () => {
                 start: { line: 0, character: 15 },
                 end: { line: 0, character: 19 }
             },
-            source: instance.source(),
+            source: instance.source,
             tags: [1]
         }]);
     });

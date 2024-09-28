@@ -1,17 +1,23 @@
-/**
- * @fileoverview Base class for a rule
- * @module linter/rules/base
- * @requires vscode-languageserver
- * @requires settings
- * @requires RuleType
- */
-
 import { Diagnostic, DiagnosticSeverity, DiagnosticTag, Range } from 'vscode-languageserver/node';
 import { RuleType } from './enums';
 import { ServerSettings } from '../../settings';
 import { FileMap } from '../parser';
+import packageJson from '../../../package.json';
 
 
+/**
+ * The version of the extension.
+ */
+const version: string = packageJson.version;
+
+
+/**
+ * Represents a position in a text document with a specific line and character.
+ * 
+ * @typedef {Object} MatchPosition
+ * @property {number} line - The line number in the document (0-based).
+ * @property {number} character - The character position within the line (0-based).
+ */
 export type MatchPosition = { line: number, character: number }
 
 /**
@@ -28,6 +34,7 @@ export abstract class Rule<T extends string | FileMap>{
 	readonly relatedInformation: string = "";
 	readonly pattern: RegExp = /./;
 	readonly diagnosticTags: DiagnosticTag[] = [];
+	readonly source: string = 'BigQuery SQL Formatter';
 	severity: DiagnosticSeverity = DiagnosticSeverity.Error;
 	enabled: boolean = true;
 	settings: ServerSettings;
@@ -105,7 +112,7 @@ export abstract class Rule<T extends string | FileMap>{
 			severity: this.severity,
 			range: range,
 			message: this.message,
-			source: this.source()
+			source: this.source
 		};
 		if (this.relatedInformation !== "" && documentUri != null) {
 			diagnostic.relatedInformation = [{
@@ -120,10 +127,6 @@ export abstract class Rule<T extends string | FileMap>{
 			diagnostic.tags = this.diagnosticTags;
 		}
 		return diagnostic;
-	}
-
-	source(): string {
-		return this.name;
 	}
 
 }
