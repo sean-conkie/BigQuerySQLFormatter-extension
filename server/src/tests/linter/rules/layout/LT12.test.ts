@@ -23,14 +23,15 @@ describe('EndofFile', () => {
 				instance.enabled = true;
 				const result = instance.evaluate('select *\n  from table');
 				expect(result).to.deep.equal([{
-						code: instance.code,
+						code: instance.diagnosticCode,
+            codeDescription: {href: instance.diagnosticCodeDescription},
 						message: instance.message,
 						severity: instance.severity,
 						range: {
 								start: { line: 2, character: 12 },
 								end: { line: 2, character: 12 }
 						},
-						source: instance.source()
+						source: instance.source
 				}]);
 		});
 

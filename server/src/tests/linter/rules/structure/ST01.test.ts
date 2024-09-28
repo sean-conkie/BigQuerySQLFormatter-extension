@@ -23,14 +23,15 @@ describe('ElseNull', () => {
         instance.enabled = true;
         const result = instance.evaluate('select case when col1 = 1 then 2 else null end col from table');
         expect(result).to.deep.equal([{
-            code: instance.code,
+            code: instance.diagnosticCode,
+            codeDescription: {href: instance.diagnosticCodeDescription},
             message: instance.message,
             severity: instance.severity,
             range: {
                 start: { line: 0, character: 33 },
                 end: { line: 0, character: 42 }
             },
-            source: instance.source(),
+            source: instance.source,
             tags: [1]
         }]);
     });

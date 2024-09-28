@@ -23,14 +23,15 @@ describe('Using', () => {
         instance.enabled = true;
         const result = instance.evaluate('select a.b from dataset.table a join dataset.table b using (key)');
         expect(result).to.deep.equal([{
-            code: instance.code,
+            code: instance.diagnosticCode,
+            codeDescription: {href: instance.diagnosticCodeDescription},
             message: instance.message,
             severity: instance.severity,
             range: {
                 start: { line: 0, character: 32 },
                 end: { line: 0, character: 58 }
             },
-            source: instance.source()
+            source: instance.source
         }]);
     });
 

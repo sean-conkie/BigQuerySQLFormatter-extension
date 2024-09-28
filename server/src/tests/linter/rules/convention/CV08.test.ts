@@ -23,14 +23,15 @@ describe('LeftJoin', () => {
         instance.enabled = true;
         const result = instance.evaluate('select a.col, b.col from dataset.table a right join dataset.table b on a.col = b.col');
         expect(result).to.deep.equal([{
-            code: instance.code,
+            code: instance.diagnosticCode,
+            codeDescription: {href: instance.diagnosticCodeDescription},
             message: instance.message,
             severity: instance.severity,
             range: {
                 start: { line: 0, character: 41 },
                 end: { line: 0, character: 51 }
             },
-            source: instance.source()
+            source: instance.source
         }]);
     });
 

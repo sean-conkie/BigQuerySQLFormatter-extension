@@ -27,6 +27,7 @@ export class TrailingSpaces extends Rule<string> {
   readonly message: string = "Trailing whitespace.";
   readonly pattern: RegExp = / +$/gm;
   readonly severity: DiagnosticSeverity = DiagnosticSeverity.Warning;
+  readonly ruleGroup: string = 'layout';
 
   /**
    * Creates an instance of TrailingSpaces.

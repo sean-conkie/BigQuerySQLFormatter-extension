@@ -23,6 +23,7 @@ export class RedundantColumnAlias extends Rule<FileMap>{
   readonly severity: DiagnosticSeverity = DiagnosticSeverity.Warning;
 	readonly type: RuleType = RuleType.PARSER;
   readonly diagnosticTags: DiagnosticTag[] = [DiagnosticTag.Unnecessary];
+  readonly ruleGroup: string = 'aliasing';
 
   /**
    * Creates an instance of RedundantColumnAlias.

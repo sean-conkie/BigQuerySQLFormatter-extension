@@ -60,14 +60,15 @@ describe('SelectModifiers', () => {
                 instance.enabled = true;
                 const result = instance.evaluate(new_sql);
                 expect(result).to.deep.equal([{
-                    code: instance.code,
-                    message: instance.message,
+                    code: instance.diagnosticCode,
+            codeDescription: {href: instance.diagnosticCodeDescription},
+            message: instance.message,
                     severity: instance.severity,
                     range: {
                         start: { line: 0, character: 0 },
                         end: { line: expected_line, character: expected_character }
                     },
-                    source: instance.source()
+                    source: instance.source
                 }]);
             });
         });

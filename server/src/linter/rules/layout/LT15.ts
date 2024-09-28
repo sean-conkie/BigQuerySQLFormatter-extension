@@ -29,6 +29,7 @@ export class ComparisonOperators extends Rule<FileMap> {
   readonly type: RuleType = RuleType.PARSER;
   readonly message: string = "Align Equal (`=`) Sign in Comparison Blocks.";
   readonly relatedInformation: string = "When the equal (`=`) signs in a `WHERE` clause or join conditions are misaligned across multiple rows, it reduces the readability and consistency of the query.";
+  readonly ruleGroup: string = 'layout';
 
   /**
    * Creates an instance of ComparisonOperators.

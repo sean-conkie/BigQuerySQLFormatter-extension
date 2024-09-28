@@ -14,7 +14,7 @@ echo -e "${PURPLE}#########################################${RESET}"
 echo ""
 
 echo -e "${BLUE}Update apt...${RESET}"
-sudo apt update -q
+apt update -q
 echo -e "${GREEN}Apt updated.${RESET}"
 echo ""
 

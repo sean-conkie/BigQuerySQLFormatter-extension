@@ -23,14 +23,15 @@ describe('Literals', () => {
         instance.enabled = true;
         const result = instance.evaluate('select NULL from table');
         expect(result).to.deep.equal([{
-            code: instance.code,
+            code: instance.diagnosticCode,
+            codeDescription: {href: instance.diagnosticCodeDescription},
             message: instance.message,
             severity: instance.severity,
             range: {
                 start: { line: 0, character: 7 },
                 end: { line: 0, character: 11 }
             },
-            source: instance.source()
+            source: instance.source
         }]);
     });
 

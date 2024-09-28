@@ -29,14 +29,15 @@ describe('RedundantColumnAlias', () => {
 
         const result = instance.evaluate(await parser.parse({text:'SELECT col1 as col1,col2\n FROM table', uri: 'test.sql', languageId: 'sql', version: 0}));
         expect(result).to.deep.equal([{
-            code: instance.code,
+            code: instance.diagnosticCode,
+            codeDescription: {href: instance.diagnosticCodeDescription},
             message: instance.message,
             severity: instance.severity,
             range: {
                 start: { line: 0, character: 15 },
                 end: { line: 0, character: 19 }
             },
-            source: instance.source(),
+            source: instance.source,
             tags: [1]
         }]);
     });

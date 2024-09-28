@@ -1,6 +1,6 @@
-=================================
+=================================================
 Rule: Align Equal (`=`) Sign in Comparison Blocks
-=================================
+=================================================
 
 **Rule Code:** ``LT15``
 
@@ -15,7 +15,7 @@ Explanation
 -----------
 
 Anti-pattern: Misaligned Equal Signs in Comparison Blocks
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When the equal (`=`) signs in a `WHERE` clause or join conditions are misaligned across multiple rows, it reduces the readability and consistency of the query. Developers may have difficulty quickly understanding the logic of the query, and future maintenance becomes more error-prone due to the lack of a clean structure.
 
@@ -32,7 +32,7 @@ When the equal (`=`) signs in a `WHERE` clause or join conditions are misaligned
 In this example, the equal signs in the `WHERE` clause are not aligned, making the query harder to read and follow.
 
 Best Practice: Align Equal Signs in Comparison Blocks
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 For better readability and consistency, align the equal (`=`) signs vertically across each row in comparison blocks. This structure makes the conditions more visually organized and easier to comprehend, especially in queries with multiple conditions.
 

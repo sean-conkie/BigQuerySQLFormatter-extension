@@ -24,6 +24,7 @@ export class SelectModifiers extends Rule<string> {
   readonly code: string = "LT10";
   readonly message: string = "SELECT modifiers (e.g. DISTINCT) must be on the same line as SELECT";
   readonly pattern: RegExp = /\bselect(?:\s*\n\s*(distinct|all|with|as)\b)/gi;
+  readonly ruleGroup: string = 'layout';
 
   /**
    * Creates an instance of SelectModifiers.

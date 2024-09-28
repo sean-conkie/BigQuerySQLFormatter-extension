@@ -1,17 +1,23 @@
-/**
- * @fileoverview Base class for a rule
- * @module linter/rules/base
- * @requires vscode-languageserver
- * @requires settings
- * @requires RuleType
- */
-
-import { Diagnostic, DiagnosticSeverity, DiagnosticTag, Range } from 'vscode-languageserver/node';
+import { Diagnostic, DiagnosticSeverity, DiagnosticTag, Range, URI } from 'vscode-languageserver/node';
 import { RuleType } from './enums';
 import { ServerSettings } from '../../settings';
 import { FileMap } from '../parser';
+import packageJson from '../../../package.json';
 
 
+/**
+ * The version of the extension.
+ */
+const version: string = packageJson.version;
+
+
+/**
+ * Represents a position in a text document with a specific line and character.
+ * 
+ * @typedef {Object} MatchPosition
+ * @property {number} line - The line number in the document (0-based).
+ * @property {number} character - The character position within the line (0-based).
+ */
 export type MatchPosition = { line: number, character: number }
 
 /**
@@ -28,6 +34,9 @@ export abstract class Rule<T extends string | FileMap>{
 	readonly relatedInformation: string = "";
 	readonly pattern: RegExp = /./;
 	readonly diagnosticTags: DiagnosticTag[] = [];
+	readonly source: string = 'BigQuery SQL Formatter';
+	readonly docsUrl: string = 'https://bigquerysqlformatter.readthedocs.io/en/';
+	ruleGroup: string = '';
 	severity: DiagnosticSeverity = DiagnosticSeverity.Error;
 	enabled: boolean = true;
 	settings: ServerSettings;
@@ -101,11 +110,12 @@ export abstract class Rule<T extends string | FileMap>{
 	 */
 	createDiagnostic(range: Range, documentUri: string | null = null): Diagnostic {
 		const diagnostic: Diagnostic = {
-			code: this.code,
+			code: this.diagnosticCode,
+			codeDescription: { href: this.diagnosticCodeDescription },
 			severity: this.severity,
 			range: range,
 			message: this.message,
-			source: this.source()
+			source: this.source
 		};
 		if (this.relatedInformation !== "" && documentUri != null) {
 			diagnostic.relatedInformation = [{
@@ -122,8 +132,33 @@ export abstract class Rule<T extends string | FileMap>{
 		return diagnostic;
 	}
 
-	source(): string {
-		return this.name;
+	/**
+	 * Gets the diagnostic code for the rule.
+	 * The diagnostic code is a string that combines the rule's code and name.
+	 * 
+	 * @returns {string} The diagnostic code in the format `${code}: ${name}`.
+	 */
+	public get diagnosticCode(): string {
+		return `${this.code}: ${this.name}`;
+	}
+
+	/**
+	 * Constructs the URL for the rule documentation based on the version, rule group, and code.
+	 *
+	 * @returns {string} The URL pointing to the rule documentation.
+	 */
+	public get ruleUrl(): string {
+		return `${version}/rules/${this.ruleGroup}/${this.code}.html`;
+	}
+
+	/**
+	 * Retrieves the diagnostic code description as a URI.
+	 *
+	 * @returns {URI} The full URL constructed from the rule URL and documentation URL.
+	 */
+	public get diagnosticCodeDescription(): URI {
+		const url = new URL(this.ruleUrl, this.docsUrl);
+		return url.href;
 	}
 
 }

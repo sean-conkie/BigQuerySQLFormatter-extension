@@ -19,6 +19,7 @@ export class ElseNull extends Rule<string> {
 	readonly relatedInformation: string = "Do not specify redundant `else null` in a case when statement.";
   readonly pattern: RegExp = /else\s+null/gmi;
   readonly diagnosticTags: DiagnosticTag[] = [DiagnosticTag.Unnecessary];
+  readonly ruleGroup: string = 'layout';
 
   /**
    * Creates an instance of ElseNull.
