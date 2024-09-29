@@ -15,8 +15,9 @@ function Initialise_pyenv() {
 
     export PYENV_ROOT="/root/.pyenv"
     command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
-    eval "$(pyenv init -)"  
+    eval "$(pyenv init -)"
 
+    setfacl -m u:node:rx /root
 
     echo -e "${GREEN}PyEnv initialised.${RESET}"
     echo ""
