@@ -1,10 +1,11 @@
 
 import { Rule } from '../base';
 import { ServerSettings } from '../../../settings';
+import { Table } from './AL01';
 import { RedundantColumnAlias } from './AL09';
 import { FileMap } from '../../parser';
 
-export const classes = [RedundantColumnAlias];
+export const classes = [RedundantColumnAlias, Table];
 
 /**
  * Generates an array of aliasing rules based on the provided settings and problems count.

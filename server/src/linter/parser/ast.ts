@@ -759,25 +759,16 @@ export class ObjectAST extends AST {
    * 
    */
   constructor(tokens: LineToken[] | Token[]) {
-    super();
+    super(tokens);
     const project = findToken(tokens, "entity.name.project.sql");
     const dataset = findToken(tokens, "entity.name.dataset.sql");
     const object = findToken(tokens, "entity.name.object.sql");
     const alias = findToken(tokens, "entity.name.alias.sql");
 
-    const statementTokens = [project, dataset, object, alias].filter((token) => token != null);
-    if (statementTokens.length === 0) {
-      return;
-    }
-
     this.project = project?.value ?? null;
     this.dataset = dataset?.value ?? null;
     this.object = object?.value ?? null;
     this.alias = alias?.value ?? null;
-    this.lineNumber = Math.min(...statementTokens.map((token) => token?.lineNumber ?? 0));
-    this.startIndex = Math.min(...statementTokens.map((token) => token?.startIndex ?? 0));
-    this.endIndex = Math.min(...statementTokens.map((token) => token?.endIndex ?? 0));
-    this.tokens = statementTokens.filter(token => token != null) as Token[];
   }
 }
 // endregion objects

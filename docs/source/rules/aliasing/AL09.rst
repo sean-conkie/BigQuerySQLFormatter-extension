@@ -58,4 +58,4 @@ Groups:
 -------
 
 - `all <../..>`_
-- `convention <../..#convention-rules>`_
+- `aliasing <../..#aliasing-rules>`_
