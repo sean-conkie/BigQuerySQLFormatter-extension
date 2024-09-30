@@ -3,8 +3,6 @@ import { ServerSettings } from "../../../settings";
 import {
   Diagnostic,
   DiagnosticSeverity,
-  DiagnosticRelatedInformation,
-  Location,
   Range,
   DiagnosticTag
 } from 'vscode-languageserver/node';

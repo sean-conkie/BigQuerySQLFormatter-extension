@@ -18,6 +18,10 @@ apt update -q
 echo -e "${GREEN}Apt updated.${RESET}"
 echo ""
 
+echo -e "${BLUE}Install acl...${RESET}"
+apt install acl -qqy
+echo -e "${GREEN}Acl installed.${RESET}"
+
 echo -e "${BLUE}Installing git autocomplete...${RESET}"
 GIT_AUTOCOMPLETE=/home/node/.git-completion.bash
 # add bash autocompletion

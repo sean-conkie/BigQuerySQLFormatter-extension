@@ -1,0 +1,56 @@
+=========================================================
+Rule: Always Use Implicit Aliases When Referencing Tables
+=========================================================
+
+**Rule Code:** ``AL01``
+
+**Name:** ``table``
+
+Overview
+--------
+
+In SQL queries, it is a best practice to use implicit aliases when referencing tables, meaning that the alias should be used directly without the `AS` keyword. Omitting `AS` when aliasing tables ensures that queries are shorter and easier to read. It also aligns with common SQL practices and avoids unnecessary keywords that can clutter the query. This rule promotes cleaner and more efficient code in both simple and complex SQL statements.
+
+Explanation
+-----------
+
+Anti-pattern: Using `AS` for Table Aliases
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When the `AS` keyword is used in table aliases, it unnecessarily increases the length and complexity of the query. Although using `AS` for aliasing columns is acceptable and sometimes necessary, it is redundant when aliasing tables, as most SQL engines do not require it.
+
+**Example of Using `AS` for Table Aliases (Anti-pattern):**
+
+.. code-block:: sql
+
+    SELECT o.id, c.name
+    FROM orders AS o
+    JOIN customers AS c ON o.customer_id = c.id;
+
+In this example, the `AS` keyword is used unnecessarily when aliasing the tables `orders` and `customers`, making the query more verbose than required.
+
+Best Practice: Use Implicit Aliases for Tables (Without `AS`)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For better readability and cleaner code, implicit aliases should be used when referencing tables. This means omitting the `AS` keyword, which reduces the length of the query and aligns with standard SQL practices.
+
+**Refactored Example with Implicit Table Aliases (Best Practice):**
+
+.. code-block:: sql
+
+    SELECT o.id, c.name
+    FROM orders o
+    JOIN customers c ON o.customer_id = c.id;
+
+In this refactored example, the table aliases `o` and `c` are used directly without `AS`, making the query more concise and easier to read.
+
+Conclusion
+----------
+
+Using implicit aliases without the `AS` keyword for table references improves the readability and conciseness of SQL queries. Following this rule ensures that SQL queries are cleaner, more aligned with standard practices, and easier to maintain.
+
+Groups:
+-------
+
+- `all <../..>`_
+- `aliasing <../..#aliasing-rules>`_

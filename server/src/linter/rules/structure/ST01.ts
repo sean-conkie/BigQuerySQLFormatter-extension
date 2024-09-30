@@ -16,7 +16,7 @@ export class ElseNull extends Rule<string> {
   readonly name: string = "else_null";
   readonly code: string = "ST01";
   readonly message: string = "Omit `else null`.";
-	readonly relatedInformation: string = "Do not specify redundant `else null` in a case when statement.";
+	readonly relatedInformation: string = "Do not specify redundant `else null` in a case when statement. Including `ELSE NULL` at the end of a `CASE WHEN` statement adds unnecessary complexity to the query.";
   readonly pattern: RegExp = /else\s+null/gmi;
   readonly diagnosticTags: DiagnosticTag[] = [DiagnosticTag.Unnecessary];
   readonly ruleGroup: string = 'layout';

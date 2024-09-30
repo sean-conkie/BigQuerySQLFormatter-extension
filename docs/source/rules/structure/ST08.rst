@@ -1,0 +1,54 @@
+=================================
+Rule: Do Not Use `DISTINCT` with Parentheses
+=================================
+
+**Rule Code:** ``ST08``
+
+**Name:** ``distinct``
+
+Overview
+--------
+
+In SQL, the `DISTINCT` keyword is used to remove duplicate rows from the result set. However, `DISTINCT` should not be used with parentheses, as it can cause confusion and is not part of the SQL standard. Using parentheses with `DISTINCT` can lead to incorrect assumptions about how the query works and may even result in errors in some databases. Instead, `DISTINCT` should be applied to the entire set of selected columns without parentheses.
+
+Explanation
+-----------
+
+Anti-pattern: Using `DISTINCT` with Parentheses
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Using parentheses after `DISTINCT` is an anti-pattern because it is not part of the SQL standard and can lead to incorrect interpretations of the query. Some developers mistakenly assume that `DISTINCT(a)` only applies the `DISTINCT` keyword to the column `a`, but `DISTINCT` always applies to all the columns in the `SELECT` list.
+
+**Example of `DISTINCT` with Parentheses (Anti-pattern):**
+
+.. code-block:: sql
+
+    SELECT DISTINCT(a), b
+    FROM my_table;
+
+In this example, `DISTINCT(a)` incorrectly suggests that the `DISTINCT` keyword only applies to column `a`, but in reality, the parentheses are unnecessary and can cause confusion.
+
+Best Practice: Use `DISTINCT` Without Parentheses
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To ensure clarity and adherence to the SQL standard, `DISTINCT` should be used without parentheses and should apply to all selected columns in the query. This improves the readability and correctness of the SQL query.
+
+**Refactored Example Without Parentheses (Best Practice):**
+
+.. code-block:: sql
+
+    SELECT DISTINCT a, b
+    FROM my_table;
+
+In this refactored example, `DISTINCT` is applied correctly without parentheses, ensuring that the query behaves as expected by removing duplicate rows based on both `a` and `b` columns.
+
+Conclusion
+----------
+
+Avoiding the use of parentheses with the `DISTINCT` keyword ensures that SQL queries are both correct and adherent to the SQL standard. Following this rule improves readability and prevents confusion, ensuring that the `DISTINCT` keyword applies to all selected columns in the query.
+
+Groups:
+-------
+
+- `all <../..>`_
+- `structure <../..#structure-rules>`_

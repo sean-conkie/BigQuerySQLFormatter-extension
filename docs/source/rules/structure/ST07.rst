@@ -1,0 +1,56 @@
+================================================
+Rule: Specify Join Keys Instead of Using `USING`
+================================================
+
+**Rule Code:** ``ST07``
+
+**Name:** ``using``
+
+Overview
+--------
+
+In SQL, joins between tables can be performed using either the `ON` clause or the `USING` clause. While `USING` can simplify syntax by reducing redundancy when the join key has the same name in both tables, it is considered a best practice to explicitly specify join keys using the `ON` clause. This is because `ON` provides more flexibility, clarity, and control over the join conditions, especially in complex queries. Explicitly specifying join keys ensures that the intent of the query is clear and minimizes potential confusion or ambiguity.
+
+Explanation
+-----------
+
+Anti-pattern: Using `USING` in Join Conditions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The `USING` clause simplifies join conditions by allowing you to specify the common column once, but this can lead to ambiguity when working with more complex queries or when join keys have different names. Additionally, `USING` can make the query harder to read and understand, especially in cases where join logic involves multiple columns or aliasing.
+
+**Example of Using `USING` (Anti-pattern):**
+
+.. code-block:: sql
+
+    SELECT *
+    FROM orders
+    JOIN customers USING (customer_id);
+
+In this example, `USING` is applied to join the `orders` and `customers` tables based on the `customer_id`. While this syntax is more concise, it can lead to ambiguity and lacks the explicitness that is beneficial for maintainability.
+
+Best Practice: Specify Join Keys Using `ON`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For greater clarity and flexibility, it is best to specify join keys explicitly using the `ON` clause. This makes the query more readable and maintainable, particularly in complex queries where control over the join logic is important.
+
+**Refactored Example with Explicit Join Keys (Best Practice):**
+
+.. code-block:: sql
+
+    SELECT *
+    FROM orders
+    JOIN customers ON orders.customer_id = customers.customer_id;
+
+In this refactored example, the `ON` clause is used to explicitly specify the join condition. This approach is clearer and more flexible, especially in cases where join keys have different names or when more complex logic is required.
+
+Conclusion
+----------
+
+Using the `ON` clause to specify join keys instead of `USING` ensures that SQL queries are more explicit, readable, and maintainable. Explicitly defining the join conditions provides greater flexibility and reduces ambiguity, making it easier for developers to understand and work with the query.
+
+Groups:
+-------
+
+- `all <../..>`_
+- `structure <../..#structure-rules>`_
