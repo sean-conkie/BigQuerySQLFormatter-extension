@@ -18,7 +18,6 @@ export class Table extends Rule<FileMap>{
   readonly message: string = "Implicit aliasing of tables.";
   readonly relatedInformation: string = "For better readability and cleaner code, implicit aliases should be used when referencing tables.";
   readonly pattern: RegExp = / +$/gm;
-  readonly severity: DiagnosticSeverity = DiagnosticSeverity.Warning;
 	readonly type: RuleType = RuleType.PARSER;
   readonly diagnosticTags: DiagnosticTag[] = [DiagnosticTag.Unnecessary];
   readonly ruleGroup: string = 'aliasing';
