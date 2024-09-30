@@ -62,9 +62,9 @@ By applying convention rules, teams can create a more collaborative and coherent
 
 .. _layout-rules:
 
-----------------
+------------
 Layout Rules
-----------------
+------------
 
 Layout rules are guidelines that help developers maintain a consistent and readable structure in their SQL queries. They typically focus on indentation, spacing, and alignment, helping developers create code that is easier to understand and maintain.
 
@@ -80,3 +80,17 @@ Layout rules are guidelines that help developers maintain a consistent and reada
 	Rule: SQL Files Must End with a Single Trailing Newline <layout/LT12>
 	Rule: SQL Files Must Not Begin with Newlines or Whitespace <layout/LT13>
 	Rule: Align Equal (`=`) Sign in Comparison Blocks <layout/LT15>
+
+.. _structure-rules:
+
+---------------
+Structure Rules
+---------------
+
+Structure rules are guidelines that help developers maintain a consistent and logical structure in their SQL queries. They typically focus on the organization of code, the use of control flow statements, and the handling of exceptions, helping developers create code that is easier to follow and debug.
+
+.. toctree::
+	:maxdepth: 1
+
+	Rule: Do Not Specify Redundant `ELSE NULL` in a `CASE WHEN` Statement <structure/ST01>
+	

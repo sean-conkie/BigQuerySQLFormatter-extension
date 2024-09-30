@@ -1,0 +1,61 @@
+=====================================================================
+Rule: Do Not Specify Redundant `ELSE NULL` in a `CASE WHEN` Statement
+=====================================================================
+
+**Rule Code:** ``ST01``
+
+**Name:** ``else_null``
+
+Overview
+--------
+
+In SQL, the `CASE WHEN` statement allows conditional logic. By default, if no conditions are met in a `CASE WHEN` statement and no `ELSE` clause is provided, the result will be `NULL`. Therefore, explicitly specifying `ELSE NULL` is redundant and should be avoided. Omitting the redundant `ELSE NULL` simplifies the query and improves readability, while still achieving the same result.
+
+Explanation
+-----------
+
+Anti-pattern: Specifying Redundant `ELSE NULL`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Including `ELSE NULL` at the end of a `CASE WHEN` statement adds unnecessary complexity to the query. Since the default behavior of `CASE WHEN` is to return `NULL` when none of the conditions are met, explicitly specifying `ELSE NULL` provides no additional value and makes the query harder to read.
+
+**Example of Redundant `ELSE NULL` in `CASE WHEN` (Anti-pattern):**
+
+.. code-block:: sql
+
+    SELECT 
+        CASE 
+            WHEN foo.value > 10 THEN 'High'
+            ELSE NULL
+        END AS value_description
+    FROM foo;
+
+In this example, the `ELSE NULL` clause is redundant because the `CASE WHEN` statement would return `NULL` by default if none of the conditions are satisfied.
+
+Best Practice: Omit Redundant `ELSE NULL`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For better readability and simpler queries, omit the `ELSE NULL` clause. The `CASE WHEN` statement will naturally return `NULL` when no conditions are met, making the `ELSE NULL` unnecessary.
+
+**Refactored Example Without Redundant `ELSE NULL` (Best Practice):**
+
+.. code-block:: sql
+
+    SELECT 
+        CASE 
+            WHEN foo.value > 10 THEN 'High'
+        END AS value_description
+    FROM foo;
+
+In this refactored example, the `ELSE NULL` clause is omitted, simplifying the query without changing the behavior.
+
+Conclusion
+----------
+
+Avoiding the redundant `ELSE NULL` in `CASE WHEN` statements improves the readability and conciseness of SQL queries. The default behavior of returning `NULL` makes the `ELSE NULL` clause unnecessary, so omitting it results in cleaner, more maintainable code.
+
+Groups:
+-------
+
+- `all <../..>`_
+- `structure <../..#structure-rules>`_
