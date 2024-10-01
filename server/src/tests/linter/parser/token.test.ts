@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { Token, LineToken, joinTokenValues, filterOutTokens, filterTokens } from '../../../linter/parser/token';
+import { Token, LineToken, joinTokenValues, excludeTokensWithMatchingScopes, includeTokensWithMatchingScopes } from '../../../linter/parser/token';
 import { GrammarToken, RuleStack } from '../../../linter/grammarLoader';
 import { INITIAL } from 'vscode-textmate';
 
@@ -82,7 +82,7 @@ describe('filterTokens Function', () => {
             new Token(['scope1', 'scope3'], 10, 15, 'value3')
         ];
         const scopes = ['scope1'];
-        const result = filterTokens(tokens, scopes);
+        const result = includeTokensWithMatchingScopes(tokens, scopes);
         expect(result).to.deep.equal([
             new Token(['scope1'], 0, 5, 'value1'),
             new Token(['scope1', 'scope3'], 10, 15, 'value3')
@@ -95,14 +95,14 @@ describe('filterTokens Function', () => {
             new Token(['scope3'], 5, 10, 'value2')
         ];
         const scopes = ['scope1'];
-        const result = filterTokens(tokens, scopes);
+        const result = includeTokensWithMatchingScopes(tokens, scopes);
         expect(result).to.deep.equal([]);
     });
 
     it('should return an empty array if the tokens array is empty', () => {
         const tokens: Token[] = [];
         const scopes = ['scope1'];
-        const result = filterTokens(tokens, scopes);
+        const result = includeTokensWithMatchingScopes(tokens, scopes);
         expect(result).to.deep.equal([]);
     });
 });
@@ -115,7 +115,7 @@ describe('filterOutTokens Function', () => {
             new Token(['scope1', 'scope3'], 10, 15, 'value3')
         ];
         const scopes = ['scope1'];
-        const result = filterOutTokens(tokens, scopes);
+        const result = excludeTokensWithMatchingScopes(tokens, scopes);
         expect(result).to.deep.equal([
             new Token(['scope2'], 5, 10, 'value2')
         ]);
@@ -127,14 +127,14 @@ describe('filterOutTokens Function', () => {
             new Token(['scope3'], 5, 10, 'value2')
         ];
         const scopes = ['scope1'];
-        const result = filterOutTokens(tokens, scopes);
+        const result = excludeTokensWithMatchingScopes(tokens, scopes);
         expect(result).to.deep.equal(tokens);
     });
 
     it('should return an empty array if the tokens array is empty', () => {
         const tokens: Token[] = [];
         const scopes = ['scope1'];
-        const result = filterOutTokens(tokens, scopes);
+        const result = excludeTokensWithMatchingScopes(tokens, scopes);
         expect(result).to.deep.equal([]);
     });
 });
