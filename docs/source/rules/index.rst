@@ -16,6 +16,7 @@ Aliasing rules are guidelines that help developers avoid common pitfalls when us
 	:maxdepth: 1
 
 	Rule: Always Use Implicit Aliases When Referencing Tables <aliasing/AL01>
+	Rule: Do Not Use Explicit Aliasing (`AS`) When Aliasing Columns <aliasing/AL02>
 	Rule: Avoid Self-Aliasing Columns <aliasing/AL09>
 
 .. _ambiguous-rules:
