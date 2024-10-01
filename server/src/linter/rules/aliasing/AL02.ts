@@ -15,7 +15,6 @@ export class ColumnAlias extends Rule<FileMap>{
   readonly code: string = "AL02";
   readonly message: string = "Explicit aliasing of columns.";
   readonly relatedInformation: string = "For better readability and cleaner code, implicit aliases should be used when referencing columns.";
-  readonly pattern: RegExp = / +$/gm;
 	readonly type: RuleType = RuleType.PARSER;
   readonly diagnosticTags: DiagnosticTag[] = [DiagnosticTag.Unnecessary];
   readonly ruleGroup: string = 'aliasing';
