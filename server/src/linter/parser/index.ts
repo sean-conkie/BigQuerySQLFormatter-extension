@@ -344,18 +344,18 @@ export class Parser {
 			expressionTokens.push(token);
 
 			if (rules.length === 1) {
-				const matchedRule = { "rule": rules.find((rule) => rule.scopes.join('|') === this.getMatchedTokens(expressionTokens)) ?? null, "tokens": expressionTokens, "matches": [] as MatchedRule[] };
+				const matchedRule = new MatchedRule(rules.find((rule) => rule.scopes.join('|') === this.getMatchedTokens(expressionTokens)) ?? null, expressionTokens);
 
 				if (matchedRule.rule && matchedRule.rule.recursive) {
 					const [matchedRules, y] = this.recursiveLookahead(tokens.slice(i + 1), null, matchedRule.rule.end);
-					matchedRule.matches.push(...matchedRules);
+					matchedRule.matches!.push(...matchedRules);
 					i += y;
 				}
 
 				if (matchedRule.rule) {
 					if (matchedRule.rule.children != null) {
 						const [matchedRules, y] = this.recursiveLookahead(tokens.slice(i + 1), syntaxRules.filter((rule) => matchedRule.rule?.children?.includes(rule.name)));
-						matchedRule.matches.push(...matchedRules);
+						matchedRule.matches!.push(...matchedRules);
 						i += y;
 					}
 					statement.processRule(matchedRule);
@@ -530,11 +530,11 @@ export class Parser {
 
 			expressionTokens.push(token);
 
-			const matchedRule = { "rule": workingRules.find((rule) => rule.scopes.join('|') === this.getMatchedTokens(expressionTokens)) ?? null, "tokens": expressionTokens, "matches": [] as MatchedRule[] };
+			const matchedRule = new MatchedRule( workingRules.find((rule) => rule.scopes.join('|') === this.getMatchedTokens(expressionTokens)) ?? null, expressionTokens);
 
 			if (matchedRule.rule && matchedRule.rule.recursive) {
 				const [matchedRules, y] = this.recursiveLookahead(tokens.slice(i + 1), null, matchedRule.rule.end);
-				matchedRule.matches.push(...matchedRules);
+				matchedRule.matches!.push(...matchedRules);
 				matches.push(matchedRule);
 				i += y;
 				loopCounter = i;

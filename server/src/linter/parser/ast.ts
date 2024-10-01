@@ -1,4 +1,4 @@
-import { Token, LineToken, joinTokenValues, filterOutTokens } from './token';
+import { Token, LineToken, joinTokenValues, excludeTokensWithMatchingScopes } from './token';
 import { MatchedRule } from './matches';
 import { findToken, sortTokens } from './utils';
 import { StatementType, JoinType, LogicalOperator, ComparisonOperator } from './enums';
@@ -30,7 +30,7 @@ abstract class AST {
 
     if (tokens.length > 0) {
       this.alias = findToken(tokens, "entity.name.tag")?.value ?? null;
-      this.lineNumber = filterOutTokens(tokens, ['punctuation.whitespace.leading.sql',
+      this.lineNumber = excludeTokensWithMatchingScopes(tokens, ['punctuation.whitespace.leading.sql',
         'punctuation.whitespace.trailing.sql',
         'punctuation.whitespace.sql',
         'punctuation.separator.comma.sql'])[0].lineNumber;
@@ -284,7 +284,7 @@ export class WindowAST extends AST {
    */
   constructor(match: MatchedRule) {
     super();
-    const emptyMatch = { rule: null, tokens: [], matches: [] };
+    const emptyMatch = new MatchedRule(null, []);
     const partitionByIndex = match.matches?.indexOf(match.matches?.find((match) => match.rule?.name === "keyword.partition") ?? emptyMatch) ?? 0;
     const orderByIndex = match.matches?.indexOf(match.matches?.find((match) => match.rule?.name === "keyword.order") ?? emptyMatch) ?? match.matches?.length;
 
@@ -334,8 +334,8 @@ export class ColumnFunctionAST extends AST {
 
       const keywordTokens = match.tokens.slice(slicePoint);
       const columnTokens = match.tokens.slice(0, slicePoint);
-      matchedRule.matches?.splice(indexOfMatch, 1, {
-        "rule": {
+      matchedRule.matches?.splice(indexOfMatch, 1, new MatchedRule(
+        {
           "type": "column",
           "name": "special.column",
           "scopes": [],
@@ -344,24 +344,19 @@ export class ColumnFunctionAST extends AST {
           "recursive": false,
           "children": null,
           "end": null
-        }, "tokens": columnTokens
-      });
+        },columnTokens));
 
-      matchedRule.matches?.splice(indexOfMatch + 1, 0, {
-        "rule": {
-          "type": "keyword",
-          "name": "special.keyword",
-          "scopes": [],
-          "lookahead": 0,
-          "negativeLookahead": null,
-          "recursive": false,
-          "children": null,
-          "end": null
-        }, "tokens": keywordTokens
-      });
-
+      matchedRule.matches?.splice(indexOfMatch + 1, 0, new MatchedRule({
+        "type": "keyword",
+        "name": "special.keyword",
+        "scopes": [],
+        "lookahead": 0,
+        "negativeLookahead": null,
+        "recursive": false,
+        "children": null,
+        "end": null
+      }, keywordTokens));
     });
-
     // window functions may contain an alias - pop it to the
     // function level matches
     const window: MatchedRule | null = matchedRule.matches?.find((match) => match.rule?.type === 'over') ?? null;
@@ -442,7 +437,7 @@ export class CaseStatementAST extends AST {
    * - Extracts the alias from the alias match, if present.
    */
   constructor(matchedRule: MatchedRule) {
-    super(matchedRule.tokens);
+    super(matchedRule.allTokens);
 
     const whenMatches = matchedRule.matches?.filter((match) => match.rule?.type === "when") ?? [];
     const thenMatches = matchedRule.matches?.filter((match) => match.rule?.type === "then") ?? [];
@@ -454,12 +449,13 @@ export class CaseStatementAST extends AST {
     }
 
     if (elseMatch) {
-      this.else = createColumn((elseMatch.matches ?? [{ rule: null, tokens: [] }])[0]);
+      this.else = createColumn((elseMatch.matches ?? [new MatchedRule(null, [])])[0]);
     }
 
     if (aliasMatch) {
       this.alias = findToken(aliasMatch.tokens, "entity.name.tag")?.value ?? null;
     }
+
   }
 }
 // endregion columns

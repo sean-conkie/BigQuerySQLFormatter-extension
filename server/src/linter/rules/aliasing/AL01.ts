@@ -2,8 +2,6 @@
 import { ServerSettings } from "../../../settings";
 import {
   Diagnostic,
-  DiagnosticSeverity,
-  Range,
   DiagnosticTag
 } from 'vscode-languageserver/node';
 import { RuleType } from '../enums';
@@ -14,8 +12,8 @@ import { ObjectAST, StatementAST } from '../../parser/ast';
 
 export class Table extends Rule<FileMap>{
   readonly name: string = "table";
-  readonly code: string = "AL1";
-  readonly message: string = "Implicit aliasing of tables.";
+  readonly code: string = "AL01";
+  readonly message: string = "Explicit aliasing of tables.";
   readonly relatedInformation: string = "For better readability and cleaner code, implicit aliases should be used when referencing tables.";
   readonly pattern: RegExp = / +$/gm;
 	readonly type: RuleType = RuleType.PARSER;
@@ -24,10 +22,10 @@ export class Table extends Rule<FileMap>{
 	readonly scope = 'keyword.as.sql';
 
   /**
-   * Creates an instance of RedundantColumnAlias.
+   * Creates an instance of Table.
    * @param {ServerSettings} settings The server settings
    * @param {number} problems The number of problems identified in the source code
-   * @memberof RedundantColumnAlias
+   * @memberof Table
    */
   constructor(settings: ServerSettings, problems: number) {
       super(settings, problems);
