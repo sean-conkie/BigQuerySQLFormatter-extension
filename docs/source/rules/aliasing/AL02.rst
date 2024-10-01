@@ -1,0 +1,54 @@
+===============================================================
+Rule: Do Not Use Explicit Aliasing (`AS`) When Aliasing Columns
+===============================================================
+
+**Rule Code:** ``AL02``
+
+**Name:** ``column``
+
+Overview
+--------
+
+In SQL, column aliasing is commonly used to rename the columns in the result set. While the `AS` keyword can be used for explicit aliasing, it is unnecessary when aliasing columns, as SQL supports implicit aliasing. Avoiding the use of `AS` when aliasing columns makes the query more concise without changing its meaning or functionality. This improves readability and aligns with common SQL practices.
+
+Explanation
+-----------
+
+Anti-pattern: Using `AS` for Column Aliasing
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Using `AS` when aliasing columns adds unnecessary verbosity to the query. Although it is syntactically correct, it serves no additional purpose, as implicit aliasing works just as well. The explicit use of `AS` in column aliases can make queries longer and harder to read, especially when there are many columns being aliased.
+
+**Example of Using `AS` for Column Aliasing (Anti-pattern):**
+
+.. code-block:: sql
+
+    SELECT foo.id AS identifier, foo.name AS customer_name
+    FROM foo;
+
+In this example, the `AS` keyword is explicitly used to alias the `id` and `name` columns. While this is correct, the `AS` keyword is unnecessary and can be omitted for cleaner, more concise code.
+
+Best Practice: Use Implicit Aliasing for Columns (Without `AS`)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For better readability and concise code, column aliases should be defined without using the `AS` keyword. This removes redundancy and improves the overall clarity of the SQL statement without altering its functionality.
+
+**Refactored Example with Implicit Column Aliasing (Best Practice):**
+
+.. code-block:: sql
+
+    SELECT foo.id identifier, foo.name customer_name
+    FROM foo;
+
+In this refactored example, the `AS` keyword is omitted, and the aliases for `id` and `name` are defined implicitly. The query is cleaner and easier to read without sacrificing functionality.
+
+Conclusion
+----------
+
+Avoiding the explicit use of the `AS` keyword when aliasing columns leads to cleaner and more concise SQL queries. Implicit aliasing is fully supported in SQL and improves readability, making it the preferred choice when renaming columns in the result set.
+
+Groups:
+-------
+
+- `all <../..>`_
+- `aliasing <../..#aliasing-rules>`_
