@@ -65,6 +65,9 @@ export class ComparisonOperators extends Rule<FileMap> {
       }
 
       const joins = ast[i].joins;
+      if (!joins) {
+        continue;
+      }
 
       joins.map((join) => {
         if (join.on instanceof ComparisonGroupAST) {

@@ -25,8 +25,14 @@ describe('Linter', () => {
     });
 
     it('should verify source code and return diagnostics', async () => {
-        const source = {text:'select col from dataset.table\n', uri: 'test.sql', languageId: 'sql', version: 0};
+        const source = {text:'\nselect col\nfrom dataset.table', uri: 'test.sql', languageId: 'sql', version: 0};
         const diagnostics: Diagnostic[] = [];
+        for (const rule of linter.parserRules) {
+            const result = rule.evaluate(source.text, null);
+            if (result != null) {
+                diagnostics.push(...result);
+            }
+        }
         for (const rule of linter.regexRules) {
             const result = rule.evaluate(source.text, null);
             if (result != null) {
@@ -40,6 +46,12 @@ describe('Linter', () => {
     it('should increment problems for each diagnostic', async () => {
         const source = {text:'\nselect col\nfrom dataset.table', uri: 'test.sql', languageId: 'sql', version: 0};
         const diagnostics: Diagnostic[] = [];
+        for (const rule of linter.parserRules) {
+            const result = rule.evaluate(source.text, null);
+            if (result != null) {
+                diagnostics.push(...result);
+            }
+        }
         for (const rule of linter.regexRules) {
             const result = rule.evaluate(source.text, null);
             if (result != null) {

@@ -51,6 +51,9 @@ export class SelectTargets extends Rule<FileMap> {
     for (const i in ast) {
 
       const columns = ast[i].columns;
+      if (!columns) {
+        continue;
+      }
 
       if (columns.length < 2) {
         continue;

@@ -52,18 +52,23 @@ export class Functions extends Rule<FileMap> {
     const errors: Diagnostic[] = [];
     for (const i in ast) {
       // check the columns for functions
-      for (const column of ast[i].columns) {
-        if (column instanceof ColumnFunctionAST) {
-          errors.push(...this.validateFunctionSyntax(column, documentUri));
-        }
+      if (ast[i].columns) {
+        ast[i].columns.map((column) => {
+          if (column instanceof ColumnFunctionAST) {
+            errors.push(...this.validateFunctionSyntax(column, documentUri));
+          }
+        });
       }
 
-      errors.push(...this.validateComparisonGroupFunctions(ast[i].where, documentUri));
+      if (ast[i].where) {
+        errors.push(...this.validateComparisonGroupFunctions(ast[i].where, documentUri));
+      }
 
-      ast[i].joins.forEach((join) => {
-        errors.push(...this.validateComparisonGroupFunctions(join.on, documentUri));
-      });
-
+      if (ast[i].joins) {
+        ast[i].joins.forEach((join) => {
+          errors.push(...this.validateComparisonGroupFunctions(join.on, documentUri));
+        });
+      }
     }
 
     return errors.length > 0 ? errors : null;

@@ -48,6 +48,9 @@ export class RedundantColumnAlias extends Rule<FileMap>{
 
 		const errors: Diagnostic[] = [];
     for (const i in ast) {
+
+      if (!ast[i].columns) { continue; }
+
       ast[i].columns.map((column) => {
         // check if the column is ColumnAST
         if (column instanceof ColumnAST) {
