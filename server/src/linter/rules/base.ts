@@ -65,33 +65,59 @@ export abstract class Rule<T extends string | FileMap>{
 		this.pattern.lastIndex = 0;
 
 		const diagnostics: Diagnostic[] = [];
-      
+		
 		let match;
 		while ((match = this.pattern.exec(test)) != null) {
-
-			const start: MatchPosition = this.getLineAndCharacter(test, match.index);
-			const end: MatchPosition = this.getLineAndCharacter(test, this.pattern.lastIndex);
-			const range = {
-				start: { line: start.line, character: start.character },
-				end: { line: end.line, character: end.character }
-			};
-
-			diagnostics.push(this.createDiagnostic(range, documentUri));
+				let groupStartIndex: number;
+				let groupEndIndex: number;
+				if (match.length > 1) {
+					[groupStartIndex, groupEndIndex] = this.getCaptureGroupIndices(match, 1);
+				} else {
+					groupStartIndex = match.index;
+					groupEndIndex = this.pattern.lastIndex;
+				}
+				const start: MatchPosition = this.getLineAndCharacter(test, groupStartIndex);
+				const end: MatchPosition = this.getLineAndCharacter(test, groupEndIndex);
+				const range = {
+						start: { line: start.line, character: start.character },
+						end: { line: end.line, character: end.character }
+				};
+		
+				diagnostics.push(this.createDiagnostic(range, documentUri));
 		}
-
+		
 		return diagnostics;
 		
 	}
+		
+	getCaptureGroupIndices(match: RegExpExecArray, groupNumber: number): [number, number] {
 
-	/**
-	 * Calculates the line and character position of a given index within a string.
-	 *
-	 * @param content - The string content to search within.
-	 * @param matchIndex - The index within the string for which to find the line and character position.
-	 * @returns An object containing the line and character position corresponding to the given index.
-	 * @throws Will throw an error if the match index is out of range of the content.
-	 */
-	getLineAndCharacter(content: string, matchIndex: number):  MatchPosition{
+			if (match[groupNumber] == null) {
+				return [match.index, match.index + match[0].length];
+			}
+
+			const overallMatchStartIndex = match.index;
+			let searchStart = 0;
+			for (let i = 1; i <= groupNumber; i++) {
+					const groupText = match[i];
+					if (groupText == null) {
+							continue; // Skip unmatched groups
+					}
+					const idxInMatch0 = match[0].indexOf(groupText, searchStart);
+					if (idxInMatch0 === -1) {
+							throw new Error('Group text not found in match[0]');
+					}
+					if (i === groupNumber) {
+							const groupStartIndex = overallMatchStartIndex + idxInMatch0;
+							const groupEndIndex = groupStartIndex + groupText.length;
+							return [groupStartIndex, groupEndIndex];
+					}
+					searchStart = idxInMatch0 + groupText.length;
+			}
+			throw new Error('Group number out of range');
+	}
+	
+	getLineAndCharacter(content: string, matchIndex: number): MatchPosition {
 			const lines = content.split('\n');
 			let runningTotal = 0;
 			for (let i = 0; i < lines.length; i++) {
