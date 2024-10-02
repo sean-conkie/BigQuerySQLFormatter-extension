@@ -1,0 +1,56 @@
+===========================================
+Rule: Do Not Use `DISTINCT` with `GROUP BY`
+===========================================
+
+**Rule Code:** ``AM01``
+
+**Name:** ``distinct``
+
+Overview
+--------
+
+In SQL, both the `GROUP BY` clause and the `DISTINCT` clause are used to handle duplicates in result sets, but they serve different purposes. When using `GROUP BY`, adding a `DISTINCT` clause is redundant because `GROUP BY` already groups rows by unique column values, effectively removing duplicates. Including both `GROUP BY` and `DISTINCT` in the same query leads to unnecessary complexity and can cause confusion. Queries should avoid combining these two clauses to keep the logic clear and the performance optimized.
+
+Explanation
+-----------
+
+Anti-pattern: Using `DISTINCT` with `GROUP BY`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When both `DISTINCT` and `GROUP BY` are used in a query, it results in redundant operations. `GROUP BY` already ensures that the result set contains unique groups based on the specified columns. Adding `DISTINCT` on top of this does not alter the outcome, but it adds unnecessary overhead and makes the query harder to understand.
+
+**Example of Using `DISTINCT` with `GROUP BY` (Anti-pattern):**
+
+.. code-block:: sql
+
+    SELECT DISTINCT category, COUNT(*)
+    FROM products
+    GROUP BY category;
+
+In this example, the `DISTINCT` keyword is redundant because the `GROUP BY category` already ensures that each category appears only once in the result set.
+
+Best Practice: Use `GROUP BY` Without `DISTINCT`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To avoid redundancy and simplify the query, the `DISTINCT` clause should not be used when `GROUP BY` is applied. This keeps the query clean, efficient, and easier to maintain.
+
+**Refactored Example Without `DISTINCT` (Best Practice):**
+
+.. code-block:: sql
+
+    SELECT category, COUNT(*)
+    FROM products
+    GROUP BY category;
+
+In this refactored example, the `DISTINCT` keyword is removed, as the `GROUP BY` clause already ensures unique results based on the `category` column.
+
+Conclusion
+----------
+
+Using `DISTINCT` in conjunction with `GROUP BY` is unnecessary and adds complexity to SQL queries. By following this rule and using only `GROUP BY`, developers can write cleaner, more efficient queries while avoiding redundant operations.
+
+Groups:
+-------
+
+- ``all``
+- ``ambiguous``
