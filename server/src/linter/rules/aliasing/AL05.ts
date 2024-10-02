@@ -15,7 +15,7 @@ export class UnusedAlias extends Rule<FileMap>{
   readonly name: string = "unused_alias";
   readonly code: string = "AL05";
   readonly message: string = "Columns must use table alias.";
-  readonly relatedInformation: string = "For better readability and cleaner code, implicit aliases should be used when referencing columns.";
+  readonly relatedInformation: string = "All columns should be referenced using the table alias when an alias is defined.";
 	readonly type: RuleType = RuleType.PARSER;
   readonly ruleGroup: string = 'aliasing';
 
