@@ -10,6 +10,7 @@ import { FileMap } from '../../parser';
 
 
 export class Distinct extends Rule<FileMap>{
+  readonly is_fix_compatible: boolean = false;
   readonly name: string = "column";
   readonly code: string = "AM01";
   readonly message: string = "Ambiguous use of DISTINCT in a SELECT statement with GROUP BY.";

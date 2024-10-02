@@ -7,9 +7,13 @@ import {
 	CompletionItemKind,
 	TextDocumentPositionParams,
 	TextDocumentSyncKind,
-	InitializeResult
+	InitializeResult,
+	CodeActionKind,
+	CodeActionParams,
+	CodeAction
 } from 'vscode-languageserver/node';
 import { defaultSettings, documentSettings, getDocumentSettings, ServerSettings } from './settings';
+import { Linter } from './linter/linter';
 import { validateTextDocument, validateTextDocumentChanges } from './validate';
 
 const connection = createConnection(ProposedFeatures.all);
@@ -44,6 +48,9 @@ connection.onInitialize((params: InitializeParams) => {
 			// Tell the client that this server supports code completion.
 			completionProvider: {
 				resolveProvider: true
+			},
+			codeActionProvider: {
+				codeActionKinds: [CodeActionKind.QuickFix]
 			}
 		}
 	};
@@ -126,6 +133,11 @@ connection.onDidOpenTextDocument(async (params) => {
 
 connection.onDidChangeTextDocument(async (params) => {
 	connection.sendDiagnostics(await validateTextDocumentChanges(params, await getDocumentSettings(params.textDocument.uri, connection, globalSettings, hasConfigurationCapability)));
+});
+
+connection.onCodeAction(async (params: CodeActionParams): Promise<CodeAction[]> => {
+	const linter = new Linter(globalSettings);
+	return linter.createCodeActions(params);
 });
 
 connection.listen();

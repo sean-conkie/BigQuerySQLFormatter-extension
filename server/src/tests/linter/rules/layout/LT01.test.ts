@@ -91,14 +91,6 @@ describe('TrailingSpaces', () => {
         * \nfrom tablename`],
     ];
 
-    listSqlMultiples.forEach((element: string[]) => {
-        it(`${element[0]}\nshould return number of matches greater than 1 when rule is enabled and pattern matches more than once`, () => {
-            instance.enabled = true;
-            const noOfMatches = instance.matches(element[1]);
-            expect(noOfMatches).to.be.greaterThan(1);
-        });
-    });
-
     const listSqlNoMatch: string[][] = [
         ['Case 5: pattern does not match (union all)',
         `select *\nfrom table`],

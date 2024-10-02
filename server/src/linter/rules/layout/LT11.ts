@@ -20,6 +20,7 @@ import { Rule } from '../base';
  * @memberof Linter.Rules
  */
 export class UnionCheck extends Rule<string> {
+  readonly is_fix_compatible: boolean = false;
   readonly name: string = "union_checks";
   readonly code: string = "LT11";
   readonly message: string = "Union operators should be surrounded by newlines.";

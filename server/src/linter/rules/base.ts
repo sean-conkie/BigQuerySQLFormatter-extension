@@ -1,4 +1,4 @@
-import { Diagnostic, DiagnosticSeverity, DiagnosticTag, Range, URI } from 'vscode-languageserver/node';
+import { CodeAction, Diagnostic, DiagnosticSeverity, DiagnosticTag, Range, TextDocumentIdentifier, URI } from 'vscode-languageserver/node';
 import { RuleType } from './enums';
 import { ServerSettings } from '../../settings';
 import { FileMap } from '../parser';
@@ -56,6 +56,8 @@ export abstract class Rule<T extends string | FileMap>{
 	}
 
 	abstract evaluate(test: T, documentUri: string | null): Diagnostic[] | null;
+
+  createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): CodeAction | null { return null; }
 
 	evaluateMultiRegexTest(test: string, documentUri: string | null = null): Diagnostic[] | null {
 

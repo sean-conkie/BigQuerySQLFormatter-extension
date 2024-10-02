@@ -16,6 +16,7 @@ import { ColumnAST } from '../../parser/ast';
  * @memberof Linter.Rules
  */
 export class SelectTargets extends Rule<FileMap> {
+  readonly is_fix_compatible: boolean = false;
   readonly name: string = "select_targets";
   readonly code: string = "LT09";
   readonly type: RuleType = RuleType.PARSER;

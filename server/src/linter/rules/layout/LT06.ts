@@ -17,6 +17,7 @@ import { ColumnFunctionAST, ComparisonAST, ComparisonGroupAST } from '../../pars
  * @memberof Linter.Rules
  */
 export class Functions extends Rule<FileMap> {
+  readonly is_fix_compatible: boolean = false;
   readonly name: string = "functions";
   readonly code: string = "LT06";
   readonly type: RuleType = RuleType.PARSER;

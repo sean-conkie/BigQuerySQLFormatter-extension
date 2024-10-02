@@ -20,6 +20,7 @@ import { Rule } from '../base';
  * @memberof Linter.Rules
  */
 export class SelectModifiers extends Rule<string> {
+  readonly is_fix_compatible: boolean = false;
   readonly name: string = "select_modifiers_check";
   readonly code: string = "LT10";
   readonly message: string = "SELECT modifiers (e.g. DISTINCT) must be on the same line as SELECT";

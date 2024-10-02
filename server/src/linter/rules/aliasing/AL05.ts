@@ -12,6 +12,7 @@ import { ArrayAST, Column, ColumnAST, ColumnFunctionAST, ComparisonAST, Comparis
 
 
 export class UnusedAlias extends Rule<FileMap>{
+  readonly is_fix_compatible: boolean = false;
   readonly name: string = "unused_alias";
   readonly code: string = "AL05";
   readonly message: string = "Columns must use table alias.";

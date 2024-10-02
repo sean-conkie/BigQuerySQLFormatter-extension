@@ -13,6 +13,7 @@ import { Rule } from '../base';
  * @memberof Linter.Rules
  */
 export class Using extends Rule<string> {
+  readonly is_fix_compatible: boolean = false;
   readonly name: string = "using";
   readonly code: string = "ST07";
   readonly message: string = "Specify join keys instead of using USING.";

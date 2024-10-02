@@ -10,6 +10,7 @@ import { Rule } from '../base';
  * @memberof Linter.Rules
  */
 export class Coalesce extends Rule<string> {
+  readonly is_fix_compatible: boolean = false;
   readonly name: string = "coalesce";
   readonly code: string = "CV02";
   readonly message: string = "Use COALESCE instead of IFNULL or NVL.";

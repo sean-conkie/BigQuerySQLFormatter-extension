@@ -9,8 +9,12 @@
 
 import { ServerSettings } from "../../../settings";
 import {
+  CodeAction,
+  CodeActionKind,
   Diagnostic,
-  DiagnosticSeverity
+  DiagnosticSeverity,
+  TextDocumentIdentifier,
+  TextEdit
 } from 'vscode-languageserver/node';
 import { MatchPosition, Rule } from '../base';
 
@@ -25,7 +29,7 @@ export class TrailingSpaces extends Rule<string> {
   readonly name: string = "trailing_sapces";
   readonly code: string = "LT01";
   readonly message: string = "Trailing whitespace.";
-  readonly pattern: RegExp = / +$/gm;
+  readonly pattern: RegExp = /(?<=\S)( +)(?:,|$)|^ +$/gm;
   readonly severity: DiagnosticSeverity = DiagnosticSeverity.Warning;
   readonly ruleGroup: string = 'layout';
 
@@ -59,16 +63,29 @@ export class TrailingSpaces extends Rule<string> {
     return null;
 
   }
+  
+  /**
+   * Creates a CodeAction to resolve the rule
+   * @param textDocument 
+   * @param diagnostic 
+   * @returns CodeAction
+   */
+  createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): CodeAction {
+    // Create a TextEdit to remove the trailing whitespace
+    const fix = CodeAction.create(
+        'Remove trailing whitespace',
+        {
+            changes: {
+                [textDocument.uri]: [
+                    TextEdit.replace(diagnostic.range, '')
+                ]
+            }
+        },
+        CodeActionKind.QuickFix
+    );
 
-
-  matches(test: string): number {
-
-    let noOfMatches: number = 0;
-    const matches = test.matchAll(this.pattern);
-    for (const match of matches) {
-      noOfMatches++;
-    }
-    return noOfMatches;
-
+    // Associate the fix with the diagnostic
+    fix.diagnostics = [diagnostic];
+    return fix;
   }
 }

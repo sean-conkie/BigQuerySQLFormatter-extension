@@ -11,6 +11,7 @@ import { ObjectAST, StatementAST } from '../../parser/ast';
 
 
 export class Table extends Rule<FileMap>{
+  readonly is_fix_compatible: boolean = false;
   readonly name: string = "table";
   readonly code: string = "AL01";
   readonly message: string = "Explicit aliasing of tables.";

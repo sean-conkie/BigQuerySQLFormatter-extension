@@ -10,6 +10,7 @@ import { Rule } from '../base';
  * @memberof Linter.Rules
  */
 export class ColumnCount extends Rule<string> {
+  readonly is_fix_compatible: boolean = false;
   readonly name: string = "column_count";
   readonly code: string = "AM04";
   readonly message: string = "Query produces an unknown number of result columns.";

@@ -1,5 +1,5 @@
 import { ServerSettings } from '../settings';
-import { Diagnostic, DidChangeTextDocumentParams, TextDocumentItem } from 'vscode-languageserver/node';
+import { Diagnostic, DidChangeTextDocumentParams, TextDocumentItem, CodeActionParams, CodeAction } from 'vscode-languageserver/node';
 import { Rule } from './rules/base';
 import { initialiseRules } from './rules/rules';
 import { RuleType } from './rules/enums';
@@ -103,6 +103,24 @@ export class Linter {
 
 		return diagnostics;
 
+	}
+
+	async createCodeActions(params: CodeActionParams): Promise<CodeAction[]> {
+		const codeActions: CodeAction[] = [];
+
+		params.context.diagnostics.map((diagnostic) => {
+			this.regexRules.map((rule) => {if (rule.diagnosticCode === diagnostic.code && rule.is_fix_compatible) {
+				const action = rule.createCodeAction(params.textDocument, diagnostic);
+				if (action) {
+					codeActions.push(action);}
+			}});
+			this.parserRules.map((rule) => {if (rule.diagnosticCode === diagnostic.code && rule.is_fix_compatible) {
+				const action = rule.createCodeAction(params.textDocument, diagnostic);
+				if (action) {
+					codeActions.push(action);}
+			}});
+		});
+		return codeActions;
 	}
 
 }

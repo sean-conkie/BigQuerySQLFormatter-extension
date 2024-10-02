@@ -11,6 +11,7 @@ import { excludeTokensWithMatchingScopes, includeTokensWithMatchingScopes } from
 
 
 export class ColumnAlias extends Rule<FileMap>{
+  readonly is_fix_compatible: boolean = false;
   readonly name: string = "column";
   readonly code: string = "AL02";
   readonly message: string = "Explicit aliasing of columns.";

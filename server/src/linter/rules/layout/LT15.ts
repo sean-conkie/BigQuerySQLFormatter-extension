@@ -24,6 +24,7 @@ import { ComparisonAST, ComparisonGroupAST } from '../../parser/ast';
  * @memberof Linter.Rules
  */
 export class ComparisonOperators extends Rule<FileMap> {
+  readonly is_fix_compatible: boolean = false;
   readonly name: string = "comparison_operators";
   readonly code: string = "LT15";
   readonly type: RuleType = RuleType.PARSER;

@@ -4,7 +4,11 @@ import {
   Diagnostic,
   DiagnosticSeverity,
   Range,
-  DiagnosticTag
+  DiagnosticTag,
+  CodeAction,
+  TextEdit,
+  TextDocumentIdentifier,
+  CodeActionKind
 } from 'vscode-languageserver/node';
 import { RuleType } from '../enums';
 import { Rule } from '../base';
@@ -90,5 +94,30 @@ export class RedundantColumnAlias extends Rule<FileMap>{
     }
 		
     return errors.length > 0 ? errors : null;
+  }
+  
+  /**
+   * Creates a CodeAction to resolve the rule
+   * @param textDocument 
+   * @param diagnostic 
+   * @returns CodeAction
+   */
+  createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): CodeAction {
+    // Create a TextEdit to remove the trailing whitespace
+    const fix = CodeAction.create(
+        'Remove redundant alias',
+        {
+            changes: {
+                [textDocument.uri]: [
+                    TextEdit.replace(diagnostic.range, '')
+                ]
+            }
+        },
+        CodeActionKind.QuickFix
+    );
+
+    // Associate the fix with the diagnostic
+    fix.diagnostics = [diagnostic];
+    return fix;
   }
 }

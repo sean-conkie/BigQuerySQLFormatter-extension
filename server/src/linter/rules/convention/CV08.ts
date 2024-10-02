@@ -10,6 +10,7 @@ import { Rule } from '../base';
  * @memberof Linter.Rules
  */
 export class LeftJoin extends Rule<string> {
+  readonly is_fix_compatible: boolean = false;
   readonly name: string = "else_null";
   readonly code: string = "CV08";
   readonly message: string = "Use LEFT JOIN instead of RIGHT JOIN.";

@@ -12,6 +12,7 @@ import { Rule } from '../base';
  * @memberof Linter.Rules
  */
 export class Literals extends Rule<string> {
+  readonly is_fix_compatible: boolean = false;
   readonly name: string = "literals";
   readonly code: string = "CP04";
   readonly message: string = "Capitalisation of boolean/null literal";
