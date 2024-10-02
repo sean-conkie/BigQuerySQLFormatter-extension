@@ -1318,6 +1318,23 @@
       "recursive": true,
       "children": null,
       "end": ["keyword.control.case.part.end.sql"]
+    },
+    {
+      "name": "group.by",
+      "scopes": ["keyword.group.sql"],
+      "type": "groupby",
+      "lookahead": 0,
+      "negativeLookahead": null,
+      "recursive": true,
+      "children": null,
+      "end": [
+        "keyword.order.sql",
+        "keyword.limit.sql",
+        "keyword.having.sql",
+        "keyword.qualify.sql",
+        "keyword.window.sql",
+        "punctuation.terminator.statement.semicolon.sql"
+      ]
     }
   ]
 }

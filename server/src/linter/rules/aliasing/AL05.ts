@@ -69,6 +69,14 @@ export class UnusedAlias extends Rule<FileMap>{
     if (statement.where) {
       statement.where?.comparisons.map(comparison => errors.push(...this.processComparison(comparison, documentUri)));
     }
+
+    if (statement.groupby) {
+      statement.groupby.map(group => errors.push(...this.processColumn(group, documentUri)));
+    }
+
+    if (statement.orderby) {
+      statement.orderby.map(order => errors.push(...this.processColumn(order, documentUri)));
+    }
     
     return errors;
 

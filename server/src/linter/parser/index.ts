@@ -277,6 +277,11 @@ export class Parser {
 		document.contentChanges.map((change) => this.handleContentChange(change, document.textDocument));
 	}
 
+	/**
+	 * Tokenizes the initial document.
+	 *
+	 * @param document - The text document item to tokenize.
+	 */
 	private tokenizeInitialDocument(document: TextDocumentItem) {
 		
 		const lineMap = new Map<number, string>();
@@ -672,12 +677,12 @@ export class Parser {
 		let start = 0;
 		while ((match = pattern.exec(source))) {
 			const m = {
-				"end": match.index,
+				"end": match.index + 1,
 				"start": start,
 				"line": lines.indexOf(lines.find((line) => (match?.index ?? -1) >= line.start && (match?.index ?? -1) < line.end) ?? lines[0]),
-				"statement": source.substring(start, match.index)
+				"statement": source.substring(start, match.index + 1)
 			};
-			start = match.index + 1;
+			start = m.end + 1;
 			statements.push(m);
 		}
 
@@ -686,6 +691,15 @@ export class Parser {
 				"start": 0,
 				"end": source.length,
 				"statement": source,
+				"line": lines.indexOf(lines.find((line) => source.length >= line.start && source.length < line.end) ?? lines[0]),
+			});
+		}
+
+		if (statements[statements.length - 1].end < source.length) {
+			statements.push({
+				"start": statements[statements.length - 1].end,
+				"end": source.length,
+				"statement": source.substring(statements[statements.length - 1].end, source.length),
 				"line": lines.indexOf(lines.find((line) => source.length >= line.start && source.length < line.end) ?? lines[0]),
 			});
 		}

@@ -782,9 +782,9 @@ export class StatementAST extends AST {
   from: ObjectAST | StatementAST | null = null;
   joins: JoinAST[] = [];
   where: ComparisonGroupAST | null = null;
-  groupby: ColumnAST[] = [];
+  groupby: Column[] = [];
   having: string | null = null;
-  orderby: ColumnAST[] = [];
+  orderby: Column[] = [];
   limit: number | null = null;
   statement: string | null = null;
 
@@ -821,6 +821,10 @@ export class StatementAST extends AST {
         this.joins.push(new JoinAST(matchedRule));
       } else if (rule.type === 'where') {
         this.where = new ComparisonGroupAST(matchedRule.matches ?? []);
+      } else if (rule.type === 'groupby') {
+        matchedRule.matches?.map(match => this.groupby.push(createColumn(match)));
+      } else if (rule.type === 'orderby') {
+        matchedRule.matches?.map(match => this.orderby.push(createColumn(match)));
       } else {
         this.columns.push(createColumn(matchedRule));
       }
