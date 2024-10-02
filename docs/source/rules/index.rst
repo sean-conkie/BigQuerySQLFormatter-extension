@@ -17,6 +17,8 @@ Aliasing rules are guidelines that help developers avoid common pitfalls when us
 
 	Rule: Always Use Implicit Aliases When Referencing Tables <aliasing/AL01>
 	Rule: Do Not Use Explicit Aliasing (`AS`) When Aliasing Columns <aliasing/AL02>
+	Rule: All Columns Should Have a Table Alias <aliasing/AL05>
+	Rule: Column Names in the Query Should Be Unique <aliasing/AL08>
 	Rule: Avoid Self-Aliasing Columns <aliasing/AL09>
 
 .. _ambiguous-rules:
@@ -94,4 +96,6 @@ Structure rules are guidelines that help developers maintain a consistent and lo
 	:maxdepth: 1
 
 	Rule: Do Not Specify Redundant `ELSE NULL` in a `CASE WHEN` Statement <structure/ST01>
+	Rule: Specify Join Keys Instead of Using `USING` <structure/ST07>
+	Rule: Do Not Use `DISTINCT` with Parentheses <structure/ST08>
 	

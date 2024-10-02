@@ -1,6 +1,6 @@
-=================================
+============================================
 Rule: Do Not Use `DISTINCT` with Parentheses
-=================================
+============================================
 
 **Rule Code:** ``ST08``
 
@@ -15,7 +15,7 @@ Explanation
 -----------
 
 Anti-pattern: Using `DISTINCT` with Parentheses
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Using parentheses after `DISTINCT` is an anti-pattern because it is not part of the SQL standard and can lead to incorrect interpretations of the query. Some developers mistakenly assume that `DISTINCT(a)` only applies the `DISTINCT` keyword to the column `a`, but `DISTINCT` always applies to all the columns in the `SELECT` list.
 
@@ -29,7 +29,7 @@ Using parentheses after `DISTINCT` is an anti-pattern because it is not part of 
 In this example, `DISTINCT(a)` incorrectly suggests that the `DISTINCT` keyword only applies to column `a`, but in reality, the parentheses are unnecessary and can cause confusion.
 
 Best Practice: Use `DISTINCT` Without Parentheses
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To ensure clarity and adherence to the SQL standard, `DISTINCT` should be used without parentheses and should apply to all selected columns in the query. This improves the readability and correctness of the SQL query.
 

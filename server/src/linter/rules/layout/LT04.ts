@@ -58,6 +58,9 @@ export class TrailingComma extends Rule<FileMap> {
     for (const i in ast) {
 
       const columns = ast[i].columns;
+      if (!columns) {
+        continue;
+      }
 
       for (const column of columns) {
         const filteredTokens = column.tokens.filter((token) => !token.scopes.includes("punctuation.whitespace.leading.sql"));

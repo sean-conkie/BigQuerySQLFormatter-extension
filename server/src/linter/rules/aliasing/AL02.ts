@@ -45,26 +45,26 @@ export class ColumnAlias extends Rule<FileMap>{
 		const errors: Diagnostic[] = [];
     for (const i in ast) {
 
-			ast[i].columns.map(column => {
+      if (ast[i].columns) {
+        ast[i].columns.map(column => {
+          const filteredTokesn = excludeTokensWithMatchingScopes(column.tokens, ['punctuation.whitespace.sql', 'punctuation.whitespace.leading.sql', 'punctuation.whitespace.trailing.sql']);
+          // find an 'keyword.as.sql' token that is followed by a 'meta.column.alias.sql'
+          const explicitAlias = filteredTokesn.find((token, index, tokens) => {
+            return token.scopes.includes('keyword.as.sql') && includeTokensWithMatchingScopes(tokens.slice(index + 1, index + 2), ['meta.column.alias.sql', 'meta.column.explicit.alias.sql']).length > 0;
+          });
 
-        const filteredTokesn = excludeTokensWithMatchingScopes(column.tokens, ['punctuation.whitespace.sql', 'punctuation.whitespace.leading.sql', 'punctuation.whitespace.trailing.sql']);
-        // find an 'keyword.as.sql' token that is followed by a 'meta.column.alias.sql'
-        const explicitAlias = filteredTokesn.find((token, index, tokens) => {
-          return token.scopes.includes('keyword.as.sql') && includeTokensWithMatchingScopes(tokens.slice(index + 1, index + 2), ['meta.column.alias.sql', 'meta.column.explicit.alias.sql']).length > 0;
+          if (explicitAlias) {
+            errors.push(this.createDiagnostic(
+              {start: {
+                line: explicitAlias.lineNumber??0,
+                character: explicitAlias.startIndex
+              }, end: {
+                line: explicitAlias.lineNumber??0,
+                character: explicitAlias.endIndex
+              }}, documentUri));
+          }
         });
-
-        if (explicitAlias) {
-          errors.push(this.createDiagnostic(
-            {start: {
-              line: explicitAlias.lineNumber??0,
-              character: explicitAlias.startIndex
-            }, end: {
-              line: explicitAlias.lineNumber??0,
-              character: explicitAlias.endIndex
-            }}, documentUri));
-        }
-			});
-
+      }
     }
 
     return errors.length > 0 ? errors : null;

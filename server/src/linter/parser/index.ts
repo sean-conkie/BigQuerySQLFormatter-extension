@@ -178,7 +178,6 @@ export class Parser {
 		
 			const newLines = change.text.split('\n');
 			const lineDelta = (newLines.length - 1) - linesBeingReplaced;
-			const documentLength = Math.max(cache.size, cache.size + lineDelta);
 		
 			const changedRange: ChangedRange = {
 				startLine: startLine,
@@ -186,13 +185,34 @@ export class Parser {
 				startIndex: change.range.start.character,
 				endIndex: change.range.end.character,
 			};
+
+			// if all checks pass then we are removing line(s)
+			if (lineDelta < 0) {
+				// alter the changedRange so that the starting line if the previous line and
+				// starting index is the end of that line.
+				// end line should now be the endLine - 1
+				changedRange.startLine = startLine - 1;
+				changedRange.endLine = endLine;
+				changedRange.startIndex = cache.get(startLine - 1)?.value.length ?? 0;
+				changedRange.endIndex = changedRange.startIndex;
+			}
+
+
 			// Create new cache incorporating changes
 			const newCache = new DocumentCache();
 			for (const [lineNumber, lineToken] of cache.entries()) {
 			// for (const lineNumber of range(changedRange.start, documentLength)) {
 				// const lineToken = cache.get(lineNumber);
 				if (lineNumber >= changedRange.endLine) {
-					newCache.set(lineNumber + lineDelta, lineToken!); // Shift lines up
+
+					// alter line numbers
+					lineToken!.lineNumber = lineNumber + lineDelta;
+					lineToken!.tokens = lineToken!.tokens.map((token) => {
+						token.lineNumber = lineNumber + lineDelta;
+						return token;
+					});
+
+					newCache.set(lineNumber + lineDelta, lineToken); // Shift lines up
 				} else if (lineNumber >= changedRange.startLine) {
 					// line is changed...
 					if (linesBeingReplaced === 0) {

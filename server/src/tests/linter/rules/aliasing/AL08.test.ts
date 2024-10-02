@@ -38,7 +38,6 @@ describe('UniqueColumn', () => {
                 end: { line: 0, character: 18 }
             },
             source: instance.source,
-            tags: [1]
         },
         {
             code: instance.diagnosticCode,
@@ -46,11 +45,10 @@ describe('UniqueColumn', () => {
             message: instance.message,
             severity: instance.severity,
             range: {
-                start: { line: 1, character: 0 },
+                start: { line: 1, character: 7 },
                 end: { line: 1, character: 18 }
             },
             source: instance.source,
-            tags: [1]
         }]);
     });
 

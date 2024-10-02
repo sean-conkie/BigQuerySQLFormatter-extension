@@ -1,0 +1,56 @@
+================================================
+Rule: Column Names in the Query Should Be Unique
+================================================
+
+**Rule Code:** ``AL08``
+
+**Name:** ``unique_column``
+
+Overview
+--------
+
+In SQL, it is important that column names in the result set are unique. If a query results in multiple columns with the same name, it can lead to confusion, errors, and ambiguity when retrieving data. Unique column names improve the readability and maintainability of SQL queries, making it clear which data is being referenced, especially in queries that involve joins or subqueries.
+
+Explanation
+-----------
+
+Anti-pattern: Duplicate Column Names in the Query
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When column names are not unique in a query, it can cause ambiguity in the result set. This can make it difficult to reference the correct column in subsequent operations, such as in programming code that consumes the query result. Duplicate column names may also cause runtime errors, depending on how the results are accessed.
+
+**Example of Duplicate Column Names (Anti-pattern):**
+
+.. code-block:: sql
+
+    SELECT orders.id, customers.id
+    FROM orders
+    JOIN customers ON orders.customer_id = customers.id;
+
+In this example, both the `orders` and `customers` tables have a column named `id`. Without unique column names, it becomes unclear which `id` is being referenced in the result set, leading to potential confusion and errors.
+
+Best Practice: Ensure Unique Column Names in the Query
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To avoid ambiguity, ensure that each column in the result set has a unique name. This can be achieved by aliasing columns appropriately when necessary, particularly when joining multiple tables that have columns with the same name.
+
+**Refactored Example with Unique Column Names (Best Practice):**
+
+.. code-block:: sql
+
+    SELECT orders.id AS order_id, customers.id AS customer_id
+    FROM orders
+    JOIN customers ON orders.customer_id = customers.id;
+
+In this refactored example, aliases are used to rename the `id` columns from both tables, making the result set clearer and ensuring that each column has a unique name.
+
+Conclusion
+----------
+
+Ensuring that column names in the query are unique is essential for improving the readability, maintainability, and accuracy of SQL queries. By aliasing columns where necessary, developers can avoid confusion and ensure that the query results are clear and unambiguous.
+
+Groups:
+-------
+
+- `all <../..>`_
+- `aliasing <../..#aliasing-rules>`_

@@ -48,12 +48,13 @@ export class Table extends Rule<FileMap>{
 				errors.push(...this.processExplicitAlias(ast[i].from, documentUri));
 			}
 
-			ast[i].joins.map(join => {
-				if (join.source) {
-					errors.push(...this.processExplicitAlias(join.source, documentUri));
-				}
-			});
-
+			if (ast[i].joins) {
+				ast[i].joins.map(join => {
+					if (join.source) {
+						errors.push(...this.processExplicitAlias(join.source, documentUri));
+					}
+				});
+			}
     }
 
     return errors.length > 0 ? errors : null;
