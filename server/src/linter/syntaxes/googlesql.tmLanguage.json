@@ -581,6 +581,13 @@
         },
         {
           "captures": {
+            "1": { "name": "keyword.qualify.sql" }
+          },
+          "match": "(?i)(?:\\b(qualify)\\b)",
+          "name": "meta.qualify.sql"
+        },
+        {
+          "captures": {
             "1": { "name": "keyword.window.sql" }
           },
           "match": "(?i)(?:\\b(window)\\b)",
