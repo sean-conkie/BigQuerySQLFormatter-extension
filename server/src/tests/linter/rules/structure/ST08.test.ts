@@ -28,7 +28,7 @@ describe('Distinct', () => {
             message: instance.message,
             severity: instance.severity,
             range: {
-                start: { line: 0, character: 0 },
+                start: { line: 0, character: 7 },
                 end: { line: 0, character: 18 }
             },
             source: instance.source

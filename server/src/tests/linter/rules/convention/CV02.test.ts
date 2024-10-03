@@ -29,7 +29,7 @@ describe('Coalesce', () => {
             severity: instance.severity,
             range: {
                 start: { line: 0, character: 7 },
-                end: { line: 0, character: 14 }
+                end: { line: 0, character: 13 }
             },
             source: instance.source
         }]);

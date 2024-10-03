@@ -71,7 +71,7 @@ export abstract class Rule<T extends string | FileMap>{
 				let groupStartIndex: number;
 				let groupEndIndex: number;
 				if (match.length > 1) {
-					[groupStartIndex, groupEndIndex] = this.getCaptureGroupIndices(match, 1);
+					[groupStartIndex, groupEndIndex] = this.getCaptureGroupIndices(match, match.slice(1).findIndex((group) => group != null) + 1);
 				} else {
 					groupStartIndex = match.index;
 					groupEndIndex = this.pattern.lastIndex;

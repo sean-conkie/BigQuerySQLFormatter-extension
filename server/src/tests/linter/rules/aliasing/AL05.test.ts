@@ -36,7 +36,7 @@ describe('UnusedAlias', () => {
             severity: instance.severity,
             range: {
                 start: { line: 0, character: 7 },
-                end: { line: 0, character: 11 }
+                end: { line: 0, character: 16 }
             },
             source: instance.source,
         }]);

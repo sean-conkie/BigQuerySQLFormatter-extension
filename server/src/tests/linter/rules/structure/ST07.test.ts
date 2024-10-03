@@ -28,7 +28,7 @@ describe('Using', () => {
             message: instance.message,
             severity: instance.severity,
             range: {
-                start: { line: 0, character: 32 },
+                start: { line: 0, character: 53 },
                 end: { line: 0, character: 58 }
             },
             source: instance.source

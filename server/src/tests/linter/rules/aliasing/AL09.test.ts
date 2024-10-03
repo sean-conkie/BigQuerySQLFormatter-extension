@@ -34,7 +34,7 @@ describe('RedundantColumnAlias', () => {
             message: instance.message,
             severity: instance.severity,
             range: {
-                start: { line: 0, character: 15 },
+                start: { line: 0, character: 11 },
                 end: { line: 0, character: 19 }
             },
             source: instance.source,

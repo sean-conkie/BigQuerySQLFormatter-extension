@@ -28,8 +28,8 @@ describe('ElseNull', () => {
             message: instance.message,
             severity: instance.severity,
             range: {
-                start: { line: 0, character: 33 },
-                end: { line: 0, character: 42 }
+                start: { line: 0, character: 32 },
+                end: { line: 0, character: 43 }
             },
             source: instance.source,
             tags: [1]

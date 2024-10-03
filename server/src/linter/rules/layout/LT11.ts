@@ -24,7 +24,7 @@ export class UnionCheck extends Rule<string> {
   readonly name: string = "union_checks";
   readonly code: string = "LT11";
   readonly message: string = "Union operators should be surrounded by newlines.";
-  readonly pattern: RegExp = /(?<!\n)\bunion( (all|distinct)|(?!( (all|distinct))))|\bunion( (all|distinct)|(?!( (all|distinct))))(?!\n)/gi;
+  readonly pattern: RegExp = /\S( *union +(?:all|distinct)) *|\n( *union (?:all|distinct) +)\S/gmi;
   readonly relatedInformation: string = "The `UNION` operator should be placed on a separate line, surrounded by newlines before and after.";
   readonly ruleGroup: string = 'layout';
 

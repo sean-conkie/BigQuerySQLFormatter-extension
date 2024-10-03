@@ -28,8 +28,8 @@ describe('EndofFile', () => {
 						message: instance.message,
 						severity: instance.severity,
 						range: {
-								start: { line: 2, character: 12 },
-								end: { line: 2, character: 12 }
+								start: { line: 1, character: 11 },
+								end: { line: 1, character: 11 }
 						},
 						source: instance.source
 				}]);

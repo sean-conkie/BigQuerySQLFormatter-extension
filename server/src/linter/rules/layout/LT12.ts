@@ -15,7 +15,7 @@ export class EndofFile extends Rule<string> {
 	readonly code: string = "LT12";
 	readonly message: string = "Files must end with a single trailing newline.";
 	readonly relatedInformation: string = "Ensuring a single trailing newline at the end of files promotes clean and predictable code formatting.";
-	readonly pattern: RegExp = /\S(\n{2,}|\n* +)\n?$/g;
+	readonly pattern: RegExp = /(?:\S(\n{2,}|\n* +\n?)$|\S($))/g;
   readonly ruleGroup: string = 'layout';
   readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
 
