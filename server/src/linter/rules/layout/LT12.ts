@@ -59,7 +59,7 @@ export class EndofFile extends Rule<string> {
             ]
         }
     };
-    const title = 'Remove trailing whitespace';
+    const title = 'Fix trailing newline';
     const actions: CodeAction[] = [];
     
     this.codeActionKind.map((kind) => {

@@ -161,7 +161,7 @@ export class Functions extends Rule<FileMap> {
             ]
         }
     };
-    const title = 'Remove trailing whitespace';
+    const title = 'Remove redundant whitespace';
     const actions: CodeAction[] = [];
     
     this.codeActionKind.map((kind) => {

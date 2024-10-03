@@ -82,7 +82,7 @@ export class StartOfFile extends Rule<string> {
             ]
         }
     };
-    const title = 'Remove trailing whitespace';
+    const title = 'Fix start of file';
     const actions: CodeAction[] = [];
     
     this.codeActionKind.map((kind) => {

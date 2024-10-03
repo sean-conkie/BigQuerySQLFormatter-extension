@@ -101,11 +101,11 @@ export abstract class Rule<T extends string | FileMap>{
 			for (let i = 1; i <= groupNumber; i++) {
 					const groupText = match[i];
 					if (groupText == null) {
-							continue; // Skip unmatched groups
+						continue; // Skip unmatched groups
 					}
 					const idxInMatch0 = match[0].indexOf(groupText, searchStart);
 					if (idxInMatch0 === -1) {
-							throw new Error('Group text not found in match[0]');
+						return [match.index, match.index + match[0].length];
 					}
 					if (i === groupNumber) {
 							const groupStartIndex = overallMatchStartIndex + idxInMatch0;
@@ -114,7 +114,7 @@ export abstract class Rule<T extends string | FileMap>{
 					}
 					searchStart = idxInMatch0 + groupText.length;
 			}
-			throw new Error('Group number out of range');
+			return [match.index, match.index + match[0].length];
 	}
 	
 	getLineAndCharacter(content: string, matchIndex: number): MatchPosition {

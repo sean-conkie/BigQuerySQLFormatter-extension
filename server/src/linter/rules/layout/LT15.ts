@@ -174,7 +174,7 @@ export class ComparisonOperators extends Rule<FileMap> {
     if (requiredIndex == null) {
       return [];
     }
-    
+
     const offset = requiredIndex - diagnostic.range.start.character;
     text = ' '.repeat(offset) + text;
   
@@ -185,7 +185,7 @@ export class ComparisonOperators extends Rule<FileMap> {
             ]
         }
     };
-    const title = 'Remove trailing whitespace';
+    const title = 'Format comparison operators';
     const actions: CodeAction[] = [];
     
     this.codeActionKind.map((kind) => {
