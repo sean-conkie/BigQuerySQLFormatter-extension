@@ -104,7 +104,7 @@ then
 fi
 
 source .venv/bin/activate
-if ! pip instal -r ./docs/requirements.txt
+if ! pip install -r ./docs/requirements.txt
 then
     echo -e "${RED}Failed to install Sphinx.${RESET}"
     exit 1
