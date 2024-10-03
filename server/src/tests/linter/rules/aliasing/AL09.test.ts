@@ -27,7 +27,7 @@ describe('RedundantColumnAlias', () => {
 
         const parser = new Parser();
 
-        const result = instance.evaluate(await parser.parse({text:'SELECT col1 as col1,col2\n FROM table', uri: 'test.sql', languageId: 'sql', version: 0}));
+        const result = instance.evaluate(await parser.parse({text:'SELECT col1 as col1,\n       col2\n FROM table', uri: 'test.sql', languageId: 'sql', version: 0}));
         expect(result).to.deep.equal([{
             code: instance.diagnosticCode,
             codeDescription: {href: instance.diagnosticCodeDescription},

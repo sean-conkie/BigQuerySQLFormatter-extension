@@ -762,7 +762,7 @@
             "4": { "name": "keyword.as.sql" },
             "5": { "name": "entity.name.tag" }
           },
-          "match": "(?i)([\\w_]+)(\\.)([\\w_]+)[ \\t]+(as)[ \\t]+(\\3)(?=\\s*?(?:,|\\n|from))",
+          "match": "(?i)(?:([\\w_]+)(\\.))?([\\w_]+)[ \\t]+(as)[ \\t]+(\\3)(?=\\s*?(?:,|\\n|from))",
           "name": "meta.column.explicit.alias.redundant.sql"
         },
         {
@@ -772,7 +772,7 @@
             "3": { "name": "entity.other.column.sql" },
             "4": { "name": "entity.name.tag" }
           },
-          "match": "(?i)([\\w_]+)(\\.)([\\w_]+)[ \\t]+(?:(?>as|(\\3)))(?=\\s*?(?:,|\\n|from))",
+          "match": "(?i)(?:([\\w_]+)(\\.))?([\\w_]+)[ \\t]+(?:(?>as|(\\3)))(?=\\s*?(?:,|\\n|from))",
           "name": "meta.column.implicit.alias.redundant.sql"
         },
         {
@@ -783,7 +783,7 @@
             "4": { "name": "keyword.as.sql" },
             "5": { "name": "entity.name.tag" }
           },
-          "match": "(?i)([\\w_]+)(\\.)([\\w_]+)[ \\t]+(as)[ \\t]+([\\w_]+)(?=\\s*?(?:,|\\n|from))",
+          "match": "(?i)(?:([\\w_]+)(\\.))?([\\w_]+)[ \\t]+(as)[ \\t]+([\\w_]+)(?=\\s*?(?:,|\\n|from))",
           "name": "meta.column.explicit.alias.sql"
         },
         {
@@ -793,7 +793,7 @@
             "3": { "name": "entity.other.column.sql" },
             "4": { "name": "keyword.as.sql" }
           },
-          "match": "(?i)([\\w_]+)(\\.)([\\w_]+)[ \\t]+(as)(?=\\s*?(?:,|\\n|from))",
+          "match": "(?i)(?:([\\w_]+)(\\.))?([\\w_]+)[ \\t]+(as)(?=\\s*?(?:,|\\n|from))",
           "name": "meta.column.explicit.alias.missing.sql"
         },
         {
