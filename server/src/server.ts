@@ -50,7 +50,7 @@ connection.onInitialize((params: InitializeParams) => {
 				resolveProvider: true
 			},
 			codeActionProvider: {
-				codeActionKinds: [CodeActionKind.QuickFix]
+				codeActionKinds: [CodeActionKind.QuickFix, CodeActionKind.SourceFixAll]
 			}
 		}
 	};

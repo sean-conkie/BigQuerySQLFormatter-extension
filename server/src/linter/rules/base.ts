@@ -57,7 +57,7 @@ export abstract class Rule<T extends string | FileMap>{
 
 	abstract evaluate(test: T, documentUri: string | null): Diagnostic[] | null;
 
-  createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): CodeAction | null { return null; }
+  createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): CodeAction[] | null { return null; }
 
 	evaluateMultiRegexTest(test: string, documentUri: string | null = null): Diagnostic[] | null {
 

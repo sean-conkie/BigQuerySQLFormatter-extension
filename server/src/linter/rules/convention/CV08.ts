@@ -1,5 +1,5 @@
 import { ServerSettings } from "../../../settings";
-import { Diagnostic, DiagnosticSeverity } from 'vscode-languageserver/node';
+import { CodeAction, CodeActionKind, Diagnostic, DiagnosticSeverity, TextDocumentIdentifier, TextEdit } from 'vscode-languageserver/node';
 import { Rule } from '../base';
 
 
@@ -10,7 +10,6 @@ import { Rule } from '../base';
  * @memberof Linter.Rules
  */
 export class LeftJoin extends Rule<string> {
-  readonly is_fix_compatible: boolean = false;
   readonly name: string = "else_null";
   readonly code: string = "CV08";
   readonly message: string = "Use LEFT JOIN instead of RIGHT JOIN.";
@@ -18,6 +17,7 @@ export class LeftJoin extends Rule<string> {
   readonly pattern: RegExp = /right\s+join/gmi;
   readonly severity: DiagnosticSeverity = DiagnosticSeverity.Warning;
   readonly ruleGroup: string = 'convention';
+  readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
 
   /**
    * Creates an instance of LeftJoin.
@@ -48,5 +48,36 @@ export class LeftJoin extends Rule<string> {
 
     return null;
 
+  }
+  
+  /**
+   * Creates a set of code actions to fix diagnostics.
+   *
+   * @param textDocument - The identifier of the text document where the diagnostic was reported.
+   * @param diagnostic - The diagnostic information about the issue to be fixed.
+   * @returns An array of code actions that can be applied to fix the issue.
+   */
+  createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): CodeAction[] {
+    const edit = {
+        changes: {
+            [textDocument.uri]: [
+                TextEdit.replace(diagnostic.range, 'left join')
+            ]
+        }
+    };
+    const title = 'Replace with `left join`';
+    const actions: CodeAction[] = [];
+    
+    this.codeActionKind.map((kind) => {
+      const fix = CodeAction.create(
+        title,
+        edit,
+        kind
+      );
+      fix.diagnostics = [diagnostic];
+      actions.push(fix);
+    });
+
+    return actions;
   }
 }

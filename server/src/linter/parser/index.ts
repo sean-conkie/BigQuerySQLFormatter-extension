@@ -251,20 +251,43 @@ export class Parser {
 		}
 	}
 
+	/**
+	 * Processes a line replacement by updating the line with the new content.
+	 *
+	 * @param index - The index of the line to be replaced.
+	 * @param newLine - The new content for the line.
+	 * @param newLinesCount - The number of new lines to be added.
+	 * @param lineNumber - The current line number.
+	 * @param lineToken - The token representing the line.
+	 * @param change - The range of changes to be applied.
+	 * @returns A tuple containing the updated line number and the updated line token.
+	 */
 	private processLineReplace(index: number, newLine: string, newLinesCount: number, lineNumber: number, lineToken: LineToken, change: ChangedRange): [number, LineToken] {
 		return this.processLineUpdate(index, newLine, newLinesCount, lineNumber-index, lineToken, change);
 	}
+
+	/**
+	 * Processes an update to a line of text, adjusting the line number and token as necessary.
+	 *
+	 * @param index - The index of the line being updated relative to the change.
+	 * @param newLine - The new content of the line.
+	 * @param newLinesCount - The total number of new lines introduced by the change.
+	 * @param lineNumber - The original line number before the update.
+	 * @param lineToken - The token associated with the original line.
+	 * @param change - The range of the change within the line.
+	 * @returns A tuple containing the new line number and the updated line token.
+	 */
 	private processLineUpdate(index: number, newLine: string, newLinesCount: number, lineNumber: number, lineToken: LineToken, change: ChangedRange): [number, LineToken] {
 		const newLineNumber = lineNumber + index;
 		const retainedLinePrefix = index === 0 ? lineToken!.value.substring(0, change.startIndex) : '';
 		const retainedLineSuffix = index === (newLinesCount - 1) ? lineToken!.value.substring(change.endIndex) : '';
 		const value = retainedLinePrefix + newLine + retainedLineSuffix;
-		if (value !== lineToken?.value) {
+		if (value === lineToken?.value && lineToken?.lineNumber === newLineNumber) {
+			return [newLineNumber, lineToken!];
+		} else {
 			const ruleStack = lineToken === undefined ? null : lineToken.ruleStack;
 			const tokens = Parser.tokenize(this.grammar!, new Map([[newLineNumber, value]]), ruleStack);
 			return [newLineNumber, tokens[0]];
-		} else {
-			return [newLineNumber, lineToken!];
 		}
 	}
 

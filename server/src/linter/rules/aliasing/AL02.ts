@@ -51,7 +51,17 @@ export class ColumnAlias extends Rule<FileMap>{
           const filteredTokesn = excludeTokensWithMatchingScopes(column.tokens, ['punctuation.whitespace.sql', 'punctuation.whitespace.leading.sql', 'punctuation.whitespace.trailing.sql']);
           // find an 'keyword.as.sql' token that is followed by a 'meta.column.alias.sql'
           const explicitAlias = filteredTokesn.find((token, index, tokens) => {
-            return token.scopes.includes('keyword.as.sql') && includeTokensWithMatchingScopes(tokens.slice(index + 1, index + 2), ['meta.column.alias.sql', 'meta.column.explicit.alias.sql']).length > 0;
+            return token
+                    .scopes
+                    .includes('keyword.as.sql') && 
+                    includeTokensWithMatchingScopes(
+                      tokens.slice(index + 1, index + 2),
+                      [
+                        'meta.column.alias.sql',
+                        'meta.column.explicit.alias.sql',
+                        'meta.column.explicit.alias.missing.sql'
+                      ])
+                      .length > 0;
           });
 
           if (explicitAlias) {

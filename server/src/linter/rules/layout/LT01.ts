@@ -16,7 +16,7 @@ import {
   TextDocumentIdentifier,
   TextEdit
 } from 'vscode-languageserver/node';
-import { MatchPosition, Rule } from '../base';
+import { Rule } from '../base';
 
 
 /**
@@ -29,9 +29,10 @@ export class TrailingSpaces extends Rule<string> {
   readonly name: string = "trailing_sapces";
   readonly code: string = "LT01";
   readonly message: string = "Trailing whitespace.";
-  readonly pattern: RegExp = /(?<=\S)( +)(?:,|$)|^ +$/gm;
+  readonly pattern: RegExp = /(?<=\S)( +)(?:,|$|\))|^ +$/gm;
   readonly severity: DiagnosticSeverity = DiagnosticSeverity.Warning;
   readonly ruleGroup: string = 'layout';
+  readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
 
   /**
    * Creates an instance of TrailingSpaces.
@@ -65,27 +66,33 @@ export class TrailingSpaces extends Rule<string> {
   }
   
   /**
-   * Creates a CodeAction to resolve the rule
-   * @param textDocument 
-   * @param diagnostic 
-   * @returns CodeAction
+   * Creates a set of code actions to fix diagnostics.
+   *
+   * @param textDocument - The identifier of the text document where the diagnostic was reported.
+   * @param diagnostic - The diagnostic information about the issue to be fixed.
+   * @returns An array of code actions that can be applied to fix the issue.
    */
-  createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): CodeAction {
-    // Create a TextEdit to remove the trailing whitespace
-    const fix = CodeAction.create(
-        'Remove trailing whitespace',
-        {
-            changes: {
-                [textDocument.uri]: [
-                    TextEdit.replace(diagnostic.range, '')
-                ]
-            }
-        },
-        CodeActionKind.QuickFix
-    );
+  createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): CodeAction[] {
+    const edit = {
+        changes: {
+            [textDocument.uri]: [
+                TextEdit.replace(diagnostic.range, '')
+            ]
+        }
+    };
+    const title = 'Remove trailing whitespace';
+    const actions: CodeAction[] = [];
+    
+    this.codeActionKind.map((kind) => {
+      const fix = CodeAction.create(
+        title,
+        edit,
+        kind
+      );
+      fix.diagnostics = [diagnostic];
+      actions.push(fix);
+    });
 
-    // Associate the fix with the diagnostic
-    fix.diagnostics = [diagnostic];
-    return fix;
+    return actions;
   }
 }

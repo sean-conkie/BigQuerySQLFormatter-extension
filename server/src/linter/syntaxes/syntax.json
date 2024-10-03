@@ -151,6 +151,20 @@
       "end": null
     },
     {
+      "name": "column.explicit.alias.missing",
+      "scopes": [
+        "entity.name.alias.sql",
+        "entity.other.column.sql",
+        "keyword.as.sql"
+      ],
+      "type": "column",
+      "lookahead": 3,
+      "negativeLookahead": ["entity.name.tag"],
+      "recursive": false,
+      "children": null,
+      "end": null
+    },
+    {
       "name": "column.explicit.alias.no.prefix",
       "scopes": [
         "entity.other.column.sql",
