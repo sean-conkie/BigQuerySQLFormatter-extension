@@ -7,7 +7,6 @@ import {
 import { RuleType } from '../enums';
 import { Rule } from '../base';
 import { FileMap } from '../../parser';
-import { excludeTokensWithMatchingScopes, includeTokensWithMatchingScopes } from '../../parser/token';
 import { ArrayAST, Column, ColumnAST, ColumnFunctionAST, ComparisonAST, ComparisonGroupAST, StatementAST } from '../../parser/ast';
 
 
@@ -50,6 +49,13 @@ export class UnusedAlias extends Rule<FileMap>{
     return errors.length > 0 ? errors : null;
   }
 
+  /**
+   * Processes a statement and generates diagnostics for any issues found.
+   * 
+   * @param statement - The statement to process, which can be an instance of `StatementAST`.
+   * @param documentUri - The URI of the document being processed, or null if not applicable.
+   * @returns An array of `Diagnostic` objects representing any issues found in the statement.
+   */
   private processStatement(statement: StatementAST, documentUri: string | null = null): Diagnostic[] {
     const errors: Diagnostic[] = [];
 
@@ -80,9 +86,15 @@ export class UnusedAlias extends Rule<FileMap>{
     }
     
     return errors;
-
   }
 
+  /**
+   * Processes a column and generates diagnostics for any issues found.
+   *
+   * @param column - The column to process, which can be an instance of `ColumnAST` or `ColumnFunctionAST`.
+   * @param documentUri - The URI of the document being processed, or null if not applicable.
+   * @returns An array of `Diagnostic` objects representing any issues found in the column.
+   */
   private processColumn(column: Column, documentUri: string | null = null): Diagnostic[] {
     const errors: Diagnostic[] = [];
 
@@ -102,6 +114,13 @@ export class UnusedAlias extends Rule<FileMap>{
     return errors;
   }
 
+  /**
+   * Processes a comparison or a group of comparisons and returns an array of diagnostics.
+   *
+   * @param comparison - The comparison or group of comparisons to process.
+   * @param documentUri - The URI of the document being processed, if available.
+   * @returns An array of diagnostics generated from processing the comparison(s).
+   */
   private processComparison(comparison: ComparisonGroupAST | ComparisonAST, documentUri: string | null = null): Diagnostic[] {
     const errors: Diagnostic[] = [];
 

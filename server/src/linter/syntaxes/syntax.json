@@ -791,7 +791,13 @@
       ],
       "type": "from",
       "lookahead": 0,
-      "negativeLookahead": null,
+      "negativeLookahead": [
+        "keyword.join.sql",
+        "keyword.where.sql",
+        "keyword.group.sql",
+        "keyword.order.sql",
+        "keyword.select.limit.sql"
+      ],
       "recursive": false,
       "children": null,
       "end": null
@@ -807,7 +813,13 @@
       ],
       "type": "from",
       "lookahead": 0,
-      "negativeLookahead": null,
+      "negativeLookahead": [
+        "keyword.join.sql",
+        "keyword.where.sql",
+        "keyword.group.sql",
+        "keyword.order.sql",
+        "keyword.select.limit.sql"
+      ],
       "recursive": false,
       "children": null,
       "end": null
@@ -853,7 +865,13 @@
       ],
       "type": "from",
       "lookahead": 0,
-      "negativeLookahead": null,
+      "negativeLookahead": [
+        "keyword.join.sql",
+        "keyword.where.sql",
+        "keyword.group.sql",
+        "keyword.order.sql",
+        "keyword.select.limit.sql"
+      ],
       "recursive": false,
       "children": null,
       "end": null
@@ -868,21 +886,13 @@
       ],
       "type": "from",
       "lookahead": 0,
-      "negativeLookahead": null,
-      "recursive": false,
-      "children": null,
-      "end": null
-    },
-    {
-      "name": "from.dataset.object.no.alias",
-      "scopes": [
-        "keyword.from.sql",
-        "entity.name.dataset.sql",
-        "entity.name.object.sql"
+      "negativeLookahead": [
+        "keyword.join.sql",
+        "keyword.where.sql",
+        "keyword.group.sql",
+        "keyword.order.sql",
+        "keyword.select.limit.sql"
       ],
-      "type": "from",
-      "lookahead": 0,
-      "negativeLookahead": ["keyword.as.sql", "entity.name.alias.sql"],
       "recursive": false,
       "children": null,
       "end": null
@@ -915,7 +925,14 @@
       ],
       "type": "join",
       "lookahead": 0,
-      "negativeLookahead": null,
+      "negativeLookahead": [
+        "keyword.join.sql",
+        "keyword.where.sql",
+        "keyword.group.sql",
+        "keyword.order.sql",
+        "keyword.select.limit.sql",
+        "keyword.expression.join.on.sql"
+      ],
       "recursive": false,
       "children": null,
       "end": null
@@ -933,7 +950,14 @@
       ],
       "type": "join",
       "lookahead": 0,
-      "negativeLookahead": null,
+      "negativeLookahead": [
+        "keyword.join.sql",
+        "keyword.where.sql",
+        "keyword.group.sql",
+        "keyword.order.sql",
+        "keyword.select.limit.sql",
+        "keyword.expression.join.on.sql"
+      ],
       "recursive": false,
       "children": null,
       "end": null
@@ -950,7 +974,14 @@
       ],
       "type": "join",
       "lookahead": 0,
-      "negativeLookahead": null,
+      "negativeLookahead": [
+        "keyword.join.sql",
+        "keyword.where.sql",
+        "keyword.group.sql",
+        "keyword.order.sql",
+        "keyword.select.limit.sql",
+        "keyword.expression.join.on.sql"
+      ],
       "recursive": false,
       "children": null,
       "end": null
@@ -966,13 +997,35 @@
       ],
       "type": "join",
       "lookahead": 0,
-      "negativeLookahead": null,
+      "negativeLookahead": [
+        "keyword.join.sql",
+        "keyword.where.sql",
+        "keyword.group.sql",
+        "keyword.order.sql",
+        "keyword.select.limit.sql",
+        "keyword.expression.join.on.sql"
+      ],
       "recursive": false,
       "children": null,
       "end": null
     },
     {
-      "name": "join.no.project.explicit.alias",
+      "name": "join.no.alias",
+      "scopes": [
+        "keyword.join.sql",
+        "entity.name.project.sql",
+        "entity.name.dataset.sql",
+        "entity.name.object.sql"
+      ],
+      "type": "join",
+      "lookahead": 0,
+      "negativeLookahead": ["keyword.as.sql", "entity.name.alias.sql"],
+      "recursive": false,
+      "children": null,
+      "end": null
+    },
+    {
+      "name": "join.dataset.object.explicit.alias",
       "scopes": [
         "keyword.join.sql",
         "entity.name.dataset.sql",
@@ -982,13 +1035,20 @@
       ],
       "type": "join",
       "lookahead": 0,
-      "negativeLookahead": null,
+      "negativeLookahead": [
+        "keyword.join.sql",
+        "keyword.where.sql",
+        "keyword.group.sql",
+        "keyword.order.sql",
+        "keyword.select.limit.sql",
+        "keyword.expression.join.on.sql"
+      ],
       "recursive": false,
       "children": ["join.on", "join.on.bracket"],
       "end": null
     },
     {
-      "name": "join.no.project.implicit.alias",
+      "name": "join.dataset.object.implicit.alias",
       "scopes": [
         "keyword.join.sql",
         "entity.name.dataset.sql",
@@ -997,7 +1057,28 @@
       ],
       "type": "join",
       "lookahead": 0,
-      "negativeLookahead": null,
+      "negativeLookahead": [
+        "keyword.join.sql",
+        "keyword.where.sql",
+        "keyword.group.sql",
+        "keyword.order.sql",
+        "keyword.select.limit.sql",
+        "keyword.expression.join.on.sql"
+      ],
+      "recursive": false,
+      "children": ["join.on", "join.on.bracket"],
+      "end": null
+    },
+    {
+      "name": "join.dataset.object.no.alias",
+      "scopes": [
+        "keyword.join.sql",
+        "entity.name.dataset.sql",
+        "entity.name.object.sql"
+      ],
+      "type": "join",
+      "lookahead": 0,
+      "negativeLookahead": ["keyword.as.sql", "entity.name.alias.sql"],
       "recursive": false,
       "children": ["join.on", "join.on.bracket"],
       "end": null
