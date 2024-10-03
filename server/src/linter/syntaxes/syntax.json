@@ -790,14 +790,8 @@
         "entity.name.alias.sql"
       ],
       "type": "from",
-      "lookahead": 0,
-      "negativeLookahead": [
-        "keyword.join.sql",
-        "keyword.where.sql",
-        "keyword.group.sql",
-        "keyword.order.sql",
-        "keyword.select.limit.sql"
-      ],
+      "lookahead": 5,
+      "negativeLookahead": null,
       "recursive": false,
       "children": null,
       "end": null
@@ -812,14 +806,8 @@
         "entity.name.alias.sql"
       ],
       "type": "from",
-      "lookahead": 0,
-      "negativeLookahead": [
-        "keyword.join.sql",
-        "keyword.where.sql",
-        "keyword.group.sql",
-        "keyword.order.sql",
-        "keyword.select.limit.sql"
-      ],
+      "lookahead": 4,
+      "negativeLookahead": null,
       "recursive": false,
       "children": null,
       "end": null
@@ -864,14 +852,8 @@
         "entity.name.alias.sql"
       ],
       "type": "from",
-      "lookahead": 0,
-      "negativeLookahead": [
-        "keyword.join.sql",
-        "keyword.where.sql",
-        "keyword.group.sql",
-        "keyword.order.sql",
-        "keyword.select.limit.sql"
-      ],
+      "lookahead": 4,
+      "negativeLookahead": null,
       "recursive": false,
       "children": null,
       "end": null
@@ -885,14 +867,8 @@
         "entity.name.alias.sql"
       ],
       "type": "from",
-      "lookahead": 0,
-      "negativeLookahead": [
-        "keyword.join.sql",
-        "keyword.where.sql",
-        "keyword.group.sql",
-        "keyword.order.sql",
-        "keyword.select.limit.sql"
-      ],
+      "lookahead": 3,
+      "negativeLookahead": null,
       "recursive": false,
       "children": null,
       "end": null
@@ -924,15 +900,8 @@
         "entity.name.alias.sql"
       ],
       "type": "join",
-      "lookahead": 0,
-      "negativeLookahead": [
-        "keyword.join.sql",
-        "keyword.where.sql",
-        "keyword.group.sql",
-        "keyword.order.sql",
-        "keyword.select.limit.sql",
-        "keyword.expression.join.on.sql"
-      ],
+      "lookahead": 7,
+      "negativeLookahead": null,
       "recursive": false,
       "children": null,
       "end": null
@@ -949,15 +918,8 @@
         "entity.name.alias.sql"
       ],
       "type": "join",
-      "lookahead": 0,
-      "negativeLookahead": [
-        "keyword.join.sql",
-        "keyword.where.sql",
-        "keyword.group.sql",
-        "keyword.order.sql",
-        "keyword.select.limit.sql",
-        "keyword.expression.join.on.sql"
-      ],
+      "lookahead": 6,
+      "negativeLookahead": null,
       "recursive": false,
       "children": null,
       "end": null
@@ -973,15 +935,8 @@
         "entity.name.alias.sql"
       ],
       "type": "join",
-      "lookahead": 0,
-      "negativeLookahead": [
-        "keyword.join.sql",
-        "keyword.where.sql",
-        "keyword.group.sql",
-        "keyword.order.sql",
-        "keyword.select.limit.sql",
-        "keyword.expression.join.on.sql"
-      ],
+      "lookahead": 5,
+      "negativeLookahead": null,
       "recursive": false,
       "children": null,
       "end": null
@@ -996,15 +951,8 @@
         "entity.name.alias.sql"
       ],
       "type": "join",
-      "lookahead": 0,
-      "negativeLookahead": [
-        "keyword.join.sql",
-        "keyword.where.sql",
-        "keyword.group.sql",
-        "keyword.order.sql",
-        "keyword.select.limit.sql",
-        "keyword.expression.join.on.sql"
-      ],
+      "lookahead": 4,
+      "negativeLookahead": null,
       "recursive": false,
       "children": null,
       "end": null
@@ -1034,15 +982,8 @@
         "entity.name.alias.sql"
       ],
       "type": "join",
-      "lookahead": 0,
-      "negativeLookahead": [
-        "keyword.join.sql",
-        "keyword.where.sql",
-        "keyword.group.sql",
-        "keyword.order.sql",
-        "keyword.select.limit.sql",
-        "keyword.expression.join.on.sql"
-      ],
+      "lookahead": 4,
+      "negativeLookahead": null,
       "recursive": false,
       "children": ["join.on", "join.on.bracket"],
       "end": null
@@ -1056,15 +997,8 @@
         "entity.name.alias.sql"
       ],
       "type": "join",
-      "lookahead": 0,
-      "negativeLookahead": [
-        "keyword.join.sql",
-        "keyword.where.sql",
-        "keyword.group.sql",
-        "keyword.order.sql",
-        "keyword.select.limit.sql",
-        "keyword.expression.join.on.sql"
-      ],
+      "lookahead": 3,
+      "negativeLookahead": null,
       "recursive": false,
       "children": ["join.on", "join.on.bracket"],
       "end": null
