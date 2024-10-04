@@ -26,6 +26,8 @@ export class RedundantColumnAlias extends Rule<FileMap>{
 	readonly type: RuleType = RuleType.PARSER;
   readonly diagnosticTags: DiagnosticTag[] = [DiagnosticTag.Unnecessary];
   readonly ruleGroup: string = 'aliasing';
+  readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
+  readonly codeActionTitle = 'Remove redundant column alias';
 
   /**
    * Creates an instance of RedundantColumnAlias.
@@ -108,12 +110,11 @@ export class RedundantColumnAlias extends Rule<FileMap>{
             ]
         }
     };
-    const title = 'Remove redundant column alias';
     const actions: CodeAction[] = [];
     
-    [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix].map((kind) => {
+    this.codeActionKind.map((kind) => {
       const fix = CodeAction.create(
-        title,
+        this.codeActionTitle,
         edit,
         kind
       );

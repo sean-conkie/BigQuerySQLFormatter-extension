@@ -119,7 +119,6 @@ export class ColumnAlias extends Rule<FileMap>{
             ]
         }
     };
-    const title = 'Remove ambiguous DISTINCT clause';
     const actions: CodeAction[] = [];
     
     this.codeActionKind.map((kind) => {

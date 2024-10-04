@@ -42,6 +42,35 @@ describe('RedundantColumnAlias', () => {
         }]);
     });
 
+    it('should return codeaction when rule is enabled and as used', async () => {
+        instance.enabled = true;
+
+
+        const parser = new Parser();
+
+        const diagnostics = instance.evaluate(await parser.parse({text:'SELECT col1 as col1,\n       col2\n FROM table', uri: 'test.sql', languageId: 'sql', version: 0}));
+        const actions = instance.createCodeAction({uri: 'test.sql'}, diagnostics![0]);
+        expect(actions).to.deep.equal(instance.codeActionKind.map(kind => {
+            return {
+                title: instance.codeActionTitle, edit:{
+                changes: {
+                        ['test.sql']: [
+                            {
+                                newText: '',
+                                range: {
+                                    start: { line: 0, character: 11 },
+                                    end: { line: 0, character: 19 }
+                                }
+                            }
+                        ]
+                    }
+                },
+                kind: kind,
+                diagnostics: diagnostics
+            };
+        }));
+    });
+
     it('should return null when rule is enabled but pattern does not match', async () => {
         instance.enabled = true;
 
