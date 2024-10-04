@@ -25,6 +25,7 @@ export class Table extends Rule<FileMap>{
   readonly ruleGroup: string = 'aliasing';
 	readonly scope = 'keyword.as.sql';
   readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
+  readonly codeActionTitle = 'Remove explicit alias';
 
   /**
    * Creates an instance of Table.
@@ -130,12 +131,12 @@ export class Table extends Rule<FileMap>{
             ]
         }
     };
-    const title = 'Remove ambiguous DISTINCT clause';
+
     const actions: CodeAction[] = [];
     
     this.codeActionKind.map((kind) => {
       const fix = CodeAction.create(
-        title,
+        this.codeActionTitle,
         edit,
         kind
       );
