@@ -33,6 +33,7 @@ Ambiguous rules are guidelines that help developers avoid ambiguity and improve 
 .. toctree::
 	:maxdepth: 1
 
+	Rule: Do Not Use `DISTINCT` with `GROUP BY` <ambiguous/AM01>
 	Rule: Avoid Using `SELECT *` <ambiguous/AM04>
 
 .. _capitalisation-rules:
@@ -61,6 +62,7 @@ By applying convention rules, teams can create a more collaborative and coherent
 .. toctree::
 	:maxdepth: 1
 
+	Rule: Use `!=` Not `<>` <convention/CV01>
 	Rule: Use COALESCE Instead of IFNULL or NVL <convention/CV02>
 	Rule: Use LEFT JOIN Instead of RIGHT JOIN <convention/CV08>
 

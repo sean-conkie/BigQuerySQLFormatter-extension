@@ -1,0 +1,56 @@
+=================================
+Rule: Use `!=` Not `<>`
+=================================
+
+**Rule Code:** ``CV01``
+
+**Name:** ``not_equal``
+
+Overview
+--------
+
+In SQL, both `!=` and `<>` can be used as operators to represent "not equal to." However, it is recommended to use `!=` instead of `<>` for consistency and readability. The `!=` operator is more commonly used and widely recognized in modern SQL syntax across different database systems, making it the preferred choice. Consistently using `!=` aligns with conventional coding practices, improving code readability and uniformity across queries.
+
+Explanation
+-----------
+
+Anti-pattern: Using `<>` for Not Equal
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The `<>` operator is a valid way to express "not equal to" in SQL, but it is less commonly used compared to `!=`. Using `<>` can lead to inconsistencies in code, especially when some queries use `!=` and others use `<>`. This lack of uniformity can cause confusion and reduce the readability of the SQL code.
+
+**Example of Using `<>` for Not Equal (Anti-pattern):**
+
+.. code-block:: sql
+
+    SELECT *
+    FROM orders
+    WHERE status <> 'shipped';
+
+In this example, the `<>` operator is used to check if the `status` column is not equal to `'shipped'`. While this is valid syntax, it is less commonly used and can lead to inconsistencies in SQL coding style.
+
+Best Practice: Use `!=` for Not Equal
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For consistency and clarity, it is recommended to use `!=` instead of `<>`. The `!=` operator is more widely recognized and consistent with modern SQL conventions. This ensures that the SQL code is easy to read and maintain, especially in teams with multiple developers.
+
+**Refactored Example Using `!=` (Best Practice):**
+
+.. code-block:: sql
+
+    SELECT *
+    FROM orders
+    WHERE status != 'shipped';
+
+In this refactored example, the `!=` operator is used, providing clearer, more consistent syntax for expressing "not equal to."
+
+Conclusion
+----------
+
+Using `!=` instead of `<>` ensures that SQL queries are consistent, readable, and adhere to modern conventions. Following this rule reduces ambiguity and makes the SQL code easier to understand and maintain across various database systems.
+
+Groups:
+-------
+
+- `all <../..>`_
+- `convention <../..#convention-rules>`_

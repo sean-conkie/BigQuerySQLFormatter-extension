@@ -4,7 +4,6 @@ import { Diagnostic } from 'vscode-languageserver/node';
 import { RuleType } from '../enums';
 import { Rule } from '../base';
 import { FileMap } from '../../parser';
-import { StatementAST } from '../../parser/ast';
 import { excludeTokensWithMatchingScopes, includeTokensWithMatchingScopes } from '../../parser/token';
 
 

@@ -1,9 +1,6 @@
 
 import { ServerSettings } from "../../../settings";
-import {
-  Diagnostic,
-  DiagnosticTag
-} from 'vscode-languageserver/node';
+import { Diagnostic } from 'vscode-languageserver/node';
 import { RuleType } from '../enums';
 import { Rule } from '../base';
 import { FileMap } from '../../parser';

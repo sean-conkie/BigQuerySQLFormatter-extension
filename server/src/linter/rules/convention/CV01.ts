@@ -13,7 +13,7 @@ export class NotEqual extends Rule<string> {
   readonly name: string = "not_equal";
   readonly code: string = "CV01";
   readonly message: string = "Use `!=` instead of `<>.";
-	readonly relatedInformation: string = ".";
+	readonly relatedInformation: string = "For consistency and clarity, it is recommended to use `!=` instead of `<>`.";
   readonly pattern: RegExp = /<>/gmi;
   readonly severity: DiagnosticSeverity = DiagnosticSeverity.Warning;
   readonly ruleGroup: string = 'convention';
