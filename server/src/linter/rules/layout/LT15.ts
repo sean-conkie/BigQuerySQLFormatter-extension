@@ -37,6 +37,7 @@ export class ComparisonOperators extends Rule<FileMap> {
   readonly relatedInformation: string = "When the equal (`=`) signs in a `WHERE` clause or join conditions are misaligned across multiple rows, it reduces the readability and consistency of the query.";
   readonly ruleGroup: string = 'layout';
   readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
+  readonly codeActionTitle = 'Format comparison operators';
 
   /**
    * Creates an instance of ComparisonOperators.
@@ -185,12 +186,11 @@ export class ComparisonOperators extends Rule<FileMap> {
             ]
         }
     };
-    const title = 'Format comparison operators';
     const actions: CodeAction[] = [];
     
     this.codeActionKind.map((kind) => {
       const fix = CodeAction.create(
-        title,
+        this.codeActionTitle,
         edit,
         kind
       );
