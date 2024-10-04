@@ -25,6 +25,7 @@ export class ElseNull extends Rule<string> {
   readonly diagnosticTags: DiagnosticTag[] = [DiagnosticTag.Unnecessary];
   readonly ruleGroup: string = 'layout';
   readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
+  readonly codeActionTitle = 'Remove redundant `else null`';
 
   /**
    * Creates an instance of ElseNull.
@@ -72,12 +73,11 @@ export class ElseNull extends Rule<string> {
             ]
         }
     };
-    const title = 'Remove redundant `else null`';
     const actions: CodeAction[] = [];
     
     this.codeActionKind.map((kind) => {
       const fix = CodeAction.create(
-        title,
+        this.codeActionTitle,
         edit,
         kind
       );
