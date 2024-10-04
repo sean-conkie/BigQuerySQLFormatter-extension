@@ -31,6 +31,7 @@ export class StartOfFile extends Rule<string> {
   readonly pattern: RegExp = /^[\s]/;
   readonly ruleGroup: string = 'layout';
   readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
+  readonly codeActionTitle = 'Fix start of file';
 
 
   /**
@@ -82,12 +83,11 @@ export class StartOfFile extends Rule<string> {
             ]
         }
     };
-    const title = 'Fix start of file';
     const actions: CodeAction[] = [];
     
     this.codeActionKind.map((kind) => {
       const fix = CodeAction.create(
-        title,
+        this.codeActionTitle,
         edit,
         kind
       );
