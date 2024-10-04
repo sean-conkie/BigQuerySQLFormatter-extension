@@ -13,7 +13,7 @@ export class TableAlias extends Rule<FileMap>{
   readonly name: string = "table_alias";
   readonly code: string = "AL06";
   readonly message: string = "Tables must use an alias.";
-  readonly relatedInformation: string = ".";
+  readonly relatedInformation: string = "Using aliases for tables simplifies the query, improves readability, and makes it easier to reference table columns.";
 	readonly type: RuleType = RuleType.PARSER;
   readonly ruleGroup: string = 'aliasing';
 
@@ -51,7 +51,7 @@ export class TableAlias extends Rule<FileMap>{
               'punctuation.whitespace.sql',
               'punctuation.whitespace.leading.sql',
               'punctuation.whitespace.trailing.sql',
-              'keyword.join.sql'
+              'keyword.from.sql'
             ]);
 
           errors.push(this.createDiagnostic({
