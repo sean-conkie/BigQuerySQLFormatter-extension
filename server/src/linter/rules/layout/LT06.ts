@@ -29,6 +29,7 @@ export class Functions extends Rule<FileMap> {
   readonly severity: DiagnosticSeverity = DiagnosticSeverity.Warning;
   readonly ruleGroup: string = 'layout';
   readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
+  readonly codeActionTitle = 'Remove redundant whitespace';
 
   /**
    * Creates an instance of Functions.
@@ -161,12 +162,11 @@ export class Functions extends Rule<FileMap> {
             ]
         }
     };
-    const title = 'Remove redundant whitespace';
     const actions: CodeAction[] = [];
     
     this.codeActionKind.map((kind) => {
       const fix = CodeAction.create(
-        title,
+        this.codeActionTitle,
         edit,
         kind
       );

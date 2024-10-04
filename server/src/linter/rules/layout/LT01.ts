@@ -81,7 +81,6 @@ export class TrailingSpaces extends Rule<string> {
             ]
         }
     };
-    const title = 'Remove trailing whitespace';
     const actions: CodeAction[] = [];
     
     this.codeActionKind.map((kind) => {

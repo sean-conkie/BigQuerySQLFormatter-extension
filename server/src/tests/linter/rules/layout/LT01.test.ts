@@ -5,8 +5,7 @@
 import { expect } from 'chai';
 import { defaultSettings } from '../../../../settings';
 import { TrailingSpaces } from '../../../../linter/rules/layout/LT01';
-import { FileMap, Parser } from '../../../../linter/parser';
-import { StatementAST } from '../../../../linter/parser/ast';
+import { Parser } from '../../../../linter/parser';
 
 describe('TrailingSpaces', () => {
     let instance: TrailingSpaces;
