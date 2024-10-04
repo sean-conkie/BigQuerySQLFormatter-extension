@@ -18,6 +18,7 @@ export class LeftJoin extends Rule<string> {
   readonly severity: DiagnosticSeverity = DiagnosticSeverity.Warning;
   readonly ruleGroup: string = 'convention';
   readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
+  readonly codeActionTitle = 'Replace with `left join`';
 
   /**
    * Creates an instance of LeftJoin.
@@ -65,12 +66,11 @@ export class LeftJoin extends Rule<string> {
             ]
         }
     };
-    const title = 'Replace with `left join`';
     const actions: CodeAction[] = [];
     
     this.codeActionKind.map((kind) => {
       const fix = CodeAction.create(
-        title,
+        this.codeActionTitle,
         edit,
         kind
       );

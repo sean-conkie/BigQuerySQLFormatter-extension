@@ -33,6 +33,7 @@ export class TrailingSpaces extends Rule<string> {
   readonly severity: DiagnosticSeverity = DiagnosticSeverity.Warning;
   readonly ruleGroup: string = 'layout';
   readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
+  readonly codeActionTitle = 'Remove trailing whitespace';
 
   /**
    * Creates an instance of TrailingSpaces.
@@ -85,7 +86,7 @@ export class TrailingSpaces extends Rule<string> {
     
     this.codeActionKind.map((kind) => {
       const fix = CodeAction.create(
-        title,
+        this.codeActionTitle,
         edit,
         kind
       );
