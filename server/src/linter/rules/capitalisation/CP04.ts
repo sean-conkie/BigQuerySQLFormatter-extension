@@ -24,6 +24,7 @@ export class Literals extends Rule<string> {
   readonly pattern: RegExp = /FALSE|TRUE|NULL/gm;
   readonly ruleGroup: string = 'capitalisation';
   readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
+  readonly codeActionTitle = 'Convert to lowercase';
 
   /**
    * Creates an instance of Literals.
@@ -79,12 +80,11 @@ export class Literals extends Rule<string> {
             ]
         }
     };
-    const title = 'Convert to lowercase';
     const actions: CodeAction[] = [];
     
     this.codeActionKind.map((kind) => {
       const fix = CodeAction.create(
-        title,
+        this.codeActionTitle,
         edit,
         kind
       );

@@ -23,6 +23,7 @@ export class Distinct extends Rule<FileMap>{
   readonly diagnosticTags: DiagnosticTag[] = [DiagnosticTag.Unnecessary];
   readonly ruleGroup: string = 'ambiguous';
   readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
+  readonly codeActionTitle = 'Remove ambiguous DISTINCT clause';
 
   /**
    * Creates an instance of Distinct.
@@ -89,12 +90,11 @@ export class Distinct extends Rule<FileMap>{
             ]
         }
     };
-    const title = 'Remove ambiguous DISTINCT clause';
     const actions: CodeAction[] = [];
     
     this.codeActionKind.map((kind) => {
       const fix = CodeAction.create(
-        title,
+        this.codeActionTitle,
         edit,
         kind
       );

@@ -42,6 +42,35 @@ describe('Distinct', () => {
         }]);
     });
 
+    it('should return codeaction when rule is enabled and as used', async () => {
+        instance.enabled = true;
+
+
+        const parser = new Parser();
+
+        const diagnostics = instance.evaluate(await parser.parse({text:'SELECT distinct a.a\n  from dataset.table a\n group by a.a', uri: 'test.sql', languageId: 'sql', version: 0}));
+        const actions = instance.createCodeAction({uri: 'test.sql'}, diagnostics![0]);
+        expect(actions).to.deep.equal(instance.codeActionKind.map(kind => {
+            return {
+                title: instance.codeActionTitle, edit:{
+                changes: {
+                        ['test.sql']: [
+                            {
+                                newText: '',
+                                range: {
+                                    start: { line: 0, character: 6 },
+                                    end: { line: 0, character: 15 }
+                                }
+                            }
+                        ]
+                    }
+                },
+                kind: kind,
+                diagnostics: diagnostics
+            };
+        }));
+    });
+
     it('should return null when rule is enabled but pattern does not match', async () => {
         instance.enabled = true;
 

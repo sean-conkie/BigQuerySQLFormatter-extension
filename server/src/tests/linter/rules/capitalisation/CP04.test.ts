@@ -5,6 +5,7 @@
 import { expect } from 'chai';
 import { defaultSettings } from '../../../../settings';
 import { Literals } from '../../../../linter/rules/capitalisation/CP04';
+import { Parser } from '../../../../linter/parser';
 
 describe('Literals', () => {
     let instance: Literals;
@@ -33,6 +34,33 @@ describe('Literals', () => {
             },
             source: instance.source
         }]);
+    });
+
+    it('should return codeaction when rule is enabled and as used', async () => {
+        instance.enabled = true;
+        const parser = new Parser();
+        await parser.parse({text:'select NULL from table', uri: 'literals.sql', languageId: 'sql', version: 0});
+        const diagnostics = instance.evaluate('select NULL from table');
+        const actions = instance.createCodeAction({uri: 'literals.sql'}, diagnostics![0]);
+        expect(actions).to.deep.equal(instance.codeActionKind.map(kind => {
+            return {
+                title: instance.codeActionTitle, edit:{
+                changes: {
+                        ['literals.sql']: [
+                            {
+                                newText: 'null',
+                                range: {
+                                    start: { line: 0, character: 7 },
+                                    end: { line: 0, character: 11 }
+                                }
+                            }
+                        ]
+                    }
+                },
+                kind: kind,
+                diagnostics: diagnostics
+            };
+        }));
     });
 
     it('should return null when rule is enabled but pattern does not match', () => {
