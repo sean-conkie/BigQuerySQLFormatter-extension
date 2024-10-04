@@ -42,6 +42,26 @@ describe('TableAlias', () => {
         }]);
     });
 
+    it('should return diagnostic when rule is enabled and as used - join', async () => {
+        instance.enabled = true;
+
+
+        const parser = new Parser();
+
+        const result = instance.evaluate(await parser.parse({text:'SELECT t.col1 as c\n FROM dataset.table t\n inner join dataset.other_table\n;\n', uri: 'test.sql', languageId: 'sql', version: 0}));
+        expect(result).to.deep.equal([{
+            code: instance.diagnosticCode,
+            codeDescription: {href: instance.diagnosticCodeDescription},
+            message: instance.message,
+            severity: instance.severity,
+            range: {
+                start: { line: 2, character: 12 },
+                end: { line: 2, character: 31 }
+            },
+            source: instance.source,
+        }]);
+    });
+
     it('should return null when rule is enabled but pattern does not match', async () => {
         instance.enabled = true;
 
