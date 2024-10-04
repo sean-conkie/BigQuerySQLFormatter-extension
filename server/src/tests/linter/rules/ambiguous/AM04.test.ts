@@ -23,7 +23,7 @@ describe('ColumnCount', () => {
         instance.enabled = true;
         const result = instance.evaluate('select * from table');
         const range = {
-            start: { line: 0, character: 0 },
+            start: { line: 0, character: 7 },
             end: { line: 0, character: 8 }
         };
         expect(result).to.deep.equal([{

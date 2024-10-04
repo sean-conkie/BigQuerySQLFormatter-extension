@@ -1,5 +1,5 @@
 import { ServerSettings } from "../../../settings";
-import { Diagnostic, DiagnosticSeverity } from 'vscode-languageserver/node';
+import { CodeAction, CodeActionKind, Diagnostic, DiagnosticSeverity, TextDocumentIdentifier, TextEdit } from 'vscode-languageserver/node';
 import { Rule } from '../base';
 
 
@@ -17,6 +17,8 @@ export class LeftJoin extends Rule<string> {
   readonly pattern: RegExp = /right\s+join/gmi;
   readonly severity: DiagnosticSeverity = DiagnosticSeverity.Warning;
   readonly ruleGroup: string = 'convention';
+  readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
+  readonly codeActionTitle = 'Replace with `left join`';
 
   /**
    * Creates an instance of LeftJoin.
@@ -47,5 +49,35 @@ export class LeftJoin extends Rule<string> {
 
     return null;
 
+  }
+  
+  /**
+   * Creates a set of code actions to fix diagnostics.
+   *
+   * @param textDocument - The identifier of the text document where the diagnostic was reported.
+   * @param diagnostic - The diagnostic information about the issue to be fixed.
+   * @returns An array of code actions that can be applied to fix the issue.
+   */
+  createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): CodeAction[] {
+    const edit = {
+        changes: {
+            [textDocument.uri]: [
+                TextEdit.replace(diagnostic.range, 'left join')
+            ]
+        }
+    };
+    const actions: CodeAction[] = [];
+    
+    this.codeActionKind.map((kind) => {
+      const fix = CodeAction.create(
+        this.codeActionTitle,
+        edit,
+        kind
+      );
+      fix.diagnostics = [diagnostic];
+      actions.push(fix);
+    });
+
+    return actions;
   }
 }

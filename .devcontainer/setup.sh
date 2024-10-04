@@ -88,6 +88,30 @@ fi
 echo -e "${GREEN}shellcheck installed.${RESET}"
 echo ""
 
+# add Sphinx
+echo -e "${BLUE}Installing Sphinx...${RESET}"
+
+if [[ -d .venv ]]
+then
+    echo -e "${YELLOW}Virtual environment already exists. Removing...${YELLOW}"
+    rm -rf .venv
+fi
+
+if ! python -m venv .venv
+then
+    echo -e "${RED}Failed to create virtual environment.${RESET}"
+    exit 1
+fi
+
+source .venv/bin/activate
+if ! pip install -r ./docs/requirements.txt
+then
+    echo -e "${RED}Failed to install Sphinx.${RESET}"
+    exit 1
+fi
+echo -e "${GREEN}Sphinx installed.${RESET}"
+echo ""
+
 echo -e "${PURPLE}#########################################${RESET}"
 echo -e "${PURPLE}Setup complete!!${RESET}"
 echo -e "${PURPLE}#########################################${RESET}"

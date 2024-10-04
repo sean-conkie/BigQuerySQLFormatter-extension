@@ -3,13 +3,17 @@ import { ServerSettings } from "../../../settings";
 import {
   Diagnostic,
   DiagnosticSeverity,
-  Range,
-  DiagnosticTag
+  DiagnosticTag,
+  CodeAction,
+  TextEdit,
+  TextDocumentIdentifier,
+  CodeActionKind
 } from 'vscode-languageserver/node';
 import { RuleType } from '../enums';
 import { Rule } from '../base';
 import { FileMap } from '../../parser';
 import { ColumnAST } from '../../parser/ast';
+import { includeTokensWithMatchingScopes } from '../../parser/token';
 
 
 export class RedundantColumnAlias extends Rule<FileMap>{
@@ -22,6 +26,8 @@ export class RedundantColumnAlias extends Rule<FileMap>{
 	readonly type: RuleType = RuleType.PARSER;
   readonly diagnosticTags: DiagnosticTag[] = [DiagnosticTag.Unnecessary];
   readonly ruleGroup: string = 'aliasing';
+  readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
+  readonly codeActionTitle = 'Remove redundant column alias';
 
   /**
    * Creates an instance of RedundantColumnAlias.
@@ -54,34 +60,31 @@ export class RedundantColumnAlias extends Rule<FileMap>{
       ast[i].columns.map((column) => {
         // check if the column is ColumnAST
         if (column instanceof ColumnAST) {
-          if (column.redundantAlias()) {
+          const redundantAliasTokens = includeTokensWithMatchingScopes(
+            column.tokens,
+            [
+              'meta.column.explicit.alias.redundant.sql',
+              'meta.column.implicit.alias.redundant.sql'
+            ]);
 
-            const alias = column.tokens.find((token) => token.scopes.includes('entity.name.tag'));
-            let range: Range | undefined = undefined;
-            if (!alias) {
-              range = {
-                start: {
-                  line: column.tokens[0].lineNumber??0,
-                  character: column.tokens[0].startIndex??0
-                },
-                end: {
-                  line: column.tokens[column.tokens.length -1].lineNumber??0,
-                  character: column.tokens[column.tokens.length -1].endIndex??0
-                }
-              };
-            } else {
-              range = {
-                start: {
-                  line: alias.lineNumber??0,
-                  character: alias.startIndex??0
-                },
-                end: {
-                  line: alias.lineNumber??0,
-                  character: alias.endIndex??0
-                }
-              };
-            }
+          if (redundantAliasTokens.length > 0) {
+            const alias = includeTokensWithMatchingScopes(
+              column.tokens,
+              [
+                'entity.other.column.sql',
+                'entity.name.tag',
+              ]);
 
+            const range = {
+              start: {
+                line: alias[0].lineNumber??0,
+                character: alias[0].endIndex??0
+              },
+              end: {
+                line: alias[alias.length -1].lineNumber??0,
+                character: alias[alias.length -1].endIndex??0
+              }
+            };
             errors.push(this.createDiagnostic(range, documentUri));
 
           }
@@ -90,5 +93,35 @@ export class RedundantColumnAlias extends Rule<FileMap>{
     }
 		
     return errors.length > 0 ? errors : null;
+  }
+  
+  /**
+   * Creates a set of code actions to fix diagnostics.
+   *
+   * @param textDocument - The identifier of the text document where the diagnostic was reported.
+   * @param diagnostic - The diagnostic information about the issue to be fixed.
+   * @returns An array of code actions that can be applied to fix the issue.
+   */
+  createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): CodeAction[] {
+    const edit = {
+        changes: {
+            [textDocument.uri]: [
+                TextEdit.replace(diagnostic.range, '')
+            ]
+        }
+    };
+    const actions: CodeAction[] = [];
+    
+    this.codeActionKind.map((kind) => {
+      const fix = CodeAction.create(
+        this.codeActionTitle,
+        edit,
+        kind
+      );
+      fix.diagnostics = [diagnostic];
+      actions.push(fix);
+    });
+
+    return actions;
   }
 }

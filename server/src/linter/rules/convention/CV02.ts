@@ -1,5 +1,5 @@
 import { ServerSettings } from "../../../settings";
-import { Diagnostic, DiagnosticSeverity } from 'vscode-languageserver/node';
+import { CodeAction, CodeActionKind, CodeActionParams, Diagnostic, DiagnosticSeverity, TextDocumentIdentifier, TextEdit } from 'vscode-languageserver/node';
 import { Rule } from '../base';
 
 
@@ -14,9 +14,11 @@ export class Coalesce extends Rule<string> {
   readonly code: string = "CV02";
   readonly message: string = "Use COALESCE instead of IFNULL or NVL.";
 	readonly relatedInformation: string = "Using `COALESCE` instead of `IFNULL` or `NVL` ensures that SQL queries are portable, consistent, and easier to maintain across different databases.";
-  readonly pattern: RegExp = /(?:ifnull|nvl)\s*\(/gmi;
+  readonly pattern: RegExp = /(ifnull|nvl)\s*\(/gmi;
   readonly severity: DiagnosticSeverity = DiagnosticSeverity.Warning;
   readonly ruleGroup: string = 'convention';
+  readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
+  readonly codeActionTitle = 'Replace with `coalesce`';
 
   /**
    * Creates an instance of Coalesce.
@@ -47,5 +49,35 @@ export class Coalesce extends Rule<string> {
 
     return null;
 
+  }
+  
+  /**
+   * Creates a set of code actions to fix diagnostics.
+   *
+   * @param textDocument - The identifier of the text document where the diagnostic was reported.
+   * @param diagnostic - The diagnostic information about the issue to be fixed.
+   * @returns An array of code actions that can be applied to fix the issue.
+   */
+  createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): CodeAction[] {
+    const edit = {
+        changes: {
+            [textDocument.uri]: [
+                TextEdit.replace(diagnostic.range, 'coalesce')
+            ]
+        }
+    };
+    const actions: CodeAction[] = [];
+    
+    this.codeActionKind.map((kind) => {
+      const fix = CodeAction.create(
+        this.codeActionTitle,
+        edit,
+        kind
+      );
+      fix.diagnostics = [diagnostic];
+      actions.push(fix);
+    });
+
+    return actions;
   }
 }

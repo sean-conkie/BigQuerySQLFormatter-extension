@@ -14,6 +14,7 @@ import { sortTokens } from '../../parser/utils';
 
 
 export class UniqueColumn extends Rule<FileMap>{
+  readonly is_fix_compatible: boolean = false;
   readonly name: string = "unique_column";
   readonly code: string = "AL08";
   readonly message: string = "Column names should be unique.";

@@ -151,6 +151,20 @@
       "end": null
     },
     {
+      "name": "column.explicit.alias.missing",
+      "scopes": [
+        "entity.name.alias.sql",
+        "entity.other.column.sql",
+        "keyword.as.sql"
+      ],
+      "type": "column",
+      "lookahead": 3,
+      "negativeLookahead": ["entity.name.tag"],
+      "recursive": false,
+      "children": null,
+      "end": null
+    },
+    {
       "name": "column.explicit.alias.no.prefix",
       "scopes": [
         "entity.other.column.sql",
@@ -776,7 +790,7 @@
         "entity.name.alias.sql"
       ],
       "type": "from",
-      "lookahead": 0,
+      "lookahead": 5,
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
@@ -792,7 +806,7 @@
         "entity.name.alias.sql"
       ],
       "type": "from",
-      "lookahead": 0,
+      "lookahead": 4,
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
@@ -838,7 +852,7 @@
         "entity.name.alias.sql"
       ],
       "type": "from",
-      "lookahead": 0,
+      "lookahead": 4,
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
@@ -853,22 +867,8 @@
         "entity.name.alias.sql"
       ],
       "type": "from",
-      "lookahead": 0,
+      "lookahead": 3,
       "negativeLookahead": null,
-      "recursive": false,
-      "children": null,
-      "end": null
-    },
-    {
-      "name": "from.dataset.object.no.alias",
-      "scopes": [
-        "keyword.from.sql",
-        "entity.name.dataset.sql",
-        "entity.name.object.sql"
-      ],
-      "type": "from",
-      "lookahead": 0,
-      "negativeLookahead": ["keyword.as.sql", "entity.name.alias.sql"],
       "recursive": false,
       "children": null,
       "end": null
@@ -900,7 +900,7 @@
         "entity.name.alias.sql"
       ],
       "type": "join",
-      "lookahead": 0,
+      "lookahead": 7,
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
@@ -918,7 +918,7 @@
         "entity.name.alias.sql"
       ],
       "type": "join",
-      "lookahead": 0,
+      "lookahead": 6,
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
@@ -935,7 +935,7 @@
         "entity.name.alias.sql"
       ],
       "type": "join",
-      "lookahead": 0,
+      "lookahead": 5,
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
@@ -951,14 +951,29 @@
         "entity.name.alias.sql"
       ],
       "type": "join",
-      "lookahead": 0,
+      "lookahead": 4,
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
       "end": null
     },
     {
-      "name": "join.no.project.explicit.alias",
+      "name": "join.no.alias",
+      "scopes": [
+        "keyword.join.sql",
+        "entity.name.project.sql",
+        "entity.name.dataset.sql",
+        "entity.name.object.sql"
+      ],
+      "type": "join",
+      "lookahead": 0,
+      "negativeLookahead": ["keyword.as.sql", "entity.name.alias.sql"],
+      "recursive": false,
+      "children": null,
+      "end": null
+    },
+    {
+      "name": "join.dataset.object.explicit.alias",
       "scopes": [
         "keyword.join.sql",
         "entity.name.dataset.sql",
@@ -967,14 +982,14 @@
         "entity.name.alias.sql"
       ],
       "type": "join",
-      "lookahead": 0,
+      "lookahead": 4,
       "negativeLookahead": null,
       "recursive": false,
       "children": ["join.on", "join.on.bracket"],
       "end": null
     },
     {
-      "name": "join.no.project.implicit.alias",
+      "name": "join.dataset.object.implicit.alias",
       "scopes": [
         "keyword.join.sql",
         "entity.name.dataset.sql",
@@ -982,8 +997,22 @@
         "entity.name.alias.sql"
       ],
       "type": "join",
-      "lookahead": 0,
+      "lookahead": 3,
       "negativeLookahead": null,
+      "recursive": false,
+      "children": ["join.on", "join.on.bracket"],
+      "end": null
+    },
+    {
+      "name": "join.dataset.object.no.alias",
+      "scopes": [
+        "keyword.join.sql",
+        "entity.name.dataset.sql",
+        "entity.name.object.sql"
+      ],
+      "type": "join",
+      "lookahead": 0,
+      "negativeLookahead": ["keyword.as.sql", "entity.name.alias.sql"],
       "recursive": false,
       "children": ["join.on", "join.on.bracket"],
       "end": null

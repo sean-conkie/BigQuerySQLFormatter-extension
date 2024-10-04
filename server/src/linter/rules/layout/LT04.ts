@@ -11,6 +11,7 @@ import { ServerSettings } from "../../../settings";
 import { RuleType } from '../enums';
 import {
   Diagnostic,
+  TextDocumentIdentifier,
 } from 'vscode-languageserver/node';
 import { Rule } from '../base';
 import { FileMap } from '../../parser';
@@ -23,6 +24,7 @@ import { FileMap } from '../../parser';
  * @memberof Linter.Rules
  */
 export class TrailingComma extends Rule<FileMap> {
+  readonly is_fix_compatible: boolean = false;
   readonly name: string = "trailing_commas";
   readonly code: string = "LT04";
   readonly type: RuleType = RuleType.PARSER;
@@ -92,4 +94,5 @@ export class TrailingComma extends Rule<FileMap> {
 
     return errors.length > 0 ? errors : null;
   }
+  createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): null { return null; }
 }

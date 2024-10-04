@@ -1,13 +1,18 @@
 
 import { ServerSettings } from "../../../settings";
 import {
+	CodeAction,
+  CodeActionKind,
   Diagnostic,
-  DiagnosticTag
+  DiagnosticTag,
+	TextDocumentIdentifier,
+	TextEdit
 } from 'vscode-languageserver/node';
 import { RuleType } from '../enums';
 import { Rule } from '../base';
 import { FileMap } from '../../parser';
 import { ObjectAST, StatementAST } from '../../parser/ast';
+import { globalTokenCache } from '../../parser/tokenCache';
 
 
 export class Table extends Rule<FileMap>{
@@ -19,6 +24,8 @@ export class Table extends Rule<FileMap>{
   readonly diagnosticTags: DiagnosticTag[] = [DiagnosticTag.Unnecessary];
   readonly ruleGroup: string = 'aliasing';
 	readonly scope = 'keyword.as.sql';
+  readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
+  readonly codeActionTitle = 'Remove explicit alias';
 
   /**
    * Creates an instance of Table.
@@ -60,6 +67,13 @@ export class Table extends Rule<FileMap>{
     return errors.length > 0 ? errors : null;
   }
 
+	/**
+	 * Processes explicit aliasing in the given AST object and returns an array of diagnostics.
+	 *
+	 * @param object - The AST object to process, which can be either an ObjectAST or a StatementAST.
+	 * @param documentUri - The URI of the document being processed, or null if not applicable.
+	 * @returns An array of Diagnostic objects representing any issues found with explicit aliasing.
+	 */
 	private processExplicitAlias(object: ObjectAST | StatementAST, documentUri: string | null): Diagnostic[] {
 
 		const errors: Diagnostic[] = [];
@@ -84,4 +98,52 @@ export class Table extends Rule<FileMap>{
 		}
 		return errors;
 	}
+  
+  /**
+   * Creates a set of code actions to fix diagnostics.
+   *
+   * @param textDocument - The identifier of the text document where the diagnostic was reported.
+   * @param diagnostic - The diagnostic information about the issue to be fixed.
+   * @returns An array of code actions that can be applied to fix the issue.
+   */
+  createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): CodeAction[] {
+    const cachedDocument = globalTokenCache.get(textDocument.uri);
+    const extendedRange = {start: {line: diagnostic.range.start.line, character: diagnostic.range.start.character - 1}, end: {line: diagnostic.range.end.line, character: diagnostic.range.end.character + 1}};
+    const text = cachedDocument?.getText(extendedRange)??'';
+    let startOffset = 0;
+    let endOffset = 0;
+
+    if (/ as(?: |\n)/i.test(text)) {
+      // remove the starting space
+      startOffset = 1;
+    } else if (/as /i.test(text)) {
+      // remove the ending space
+      endOffset = 1;
+    }
+
+    diagnostic.range.start.character -= startOffset;
+    diagnostic.range.end.character += endOffset;
+
+    const edit = {
+        changes: {
+            [textDocument.uri]: [
+                TextEdit.replace(diagnostic.range, '')
+            ]
+        }
+    };
+
+    const actions: CodeAction[] = [];
+    
+    this.codeActionKind.map((kind) => {
+      const fix = CodeAction.create(
+        this.codeActionTitle,
+        edit,
+        kind
+      );
+      fix.diagnostics = [diagnostic];
+      actions.push(fix);
+    });
+
+    return actions;
+  }
 }

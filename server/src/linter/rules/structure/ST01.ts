@@ -1,7 +1,11 @@
 import { ServerSettings } from "../../../settings";
 import {
+  CodeAction,
+  CodeActionKind,
   Diagnostic,
   DiagnosticTag,
+  TextDocumentIdentifier,
+  TextEdit,
 } from 'vscode-languageserver/node';
 import { Rule } from '../base';
 
@@ -17,9 +21,11 @@ export class ElseNull extends Rule<string> {
   readonly code: string = "ST01";
   readonly message: string = "Omit `else null`.";
 	readonly relatedInformation: string = "Do not specify redundant `else null` in a case when statement. Including `ELSE NULL` at the end of a `CASE WHEN` statement adds unnecessary complexity to the query.";
-  readonly pattern: RegExp = /else\s+null/gmi;
+  readonly pattern: RegExp = /(?<=\S)\s+else\s+null */gmi;
   readonly diagnosticTags: DiagnosticTag[] = [DiagnosticTag.Unnecessary];
   readonly ruleGroup: string = 'layout';
+  readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
+  readonly codeActionTitle = 'Remove redundant `else null`';
 
   /**
    * Creates an instance of ElseNull.
@@ -50,5 +56,35 @@ export class ElseNull extends Rule<string> {
 
     return null;
 
+  }
+  
+  /**
+   * Creates a set of code actions to fix diagnostics.
+   *
+   * @param textDocument - The identifier of the text document where the diagnostic was reported.
+   * @param diagnostic - The diagnostic information about the issue to be fixed.
+   * @returns An array of code actions that can be applied to fix the issue.
+   */
+  createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): CodeAction[] {
+    const edit = {
+        changes: {
+            [textDocument.uri]: [
+                TextEdit.replace(diagnostic.range, '')
+            ]
+        }
+    };
+    const actions: CodeAction[] = [];
+    
+    this.codeActionKind.map((kind) => {
+      const fix = CodeAction.create(
+        this.codeActionTitle,
+        edit,
+        kind
+      );
+      fix.diagnostics = [diagnostic];
+      actions.push(fix);
+    });
+
+    return actions;
   }
 }

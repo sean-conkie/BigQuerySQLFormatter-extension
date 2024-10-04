@@ -5,15 +5,15 @@
 
 import { expect } from 'chai';
 import { defaultSettings } from '../../../../settings';
-import { UnusedAlias } from '../../../../linter/rules/aliasing/AL05';
+import { TableAlias } from '../../../../linter/rules/aliasing/AL06';
 import { FileMap, Parser } from '../../../../linter/parser';
 import { StatementAST } from '../../../../linter/parser/ast';
 
-describe('UnusedAlias', () => {
-    let instance: UnusedAlias;
+describe('TableAlias', () => {
+    let instance: TableAlias;
 
     beforeEach(() => {
-        instance = new UnusedAlias(defaultSettings, 0);
+        instance = new TableAlias(defaultSettings, 0);
     });
 
     it('should return null when rule is disabled', () => {
@@ -22,41 +22,21 @@ describe('UnusedAlias', () => {
         expect(result).to.be.null;
     });
 
-    it('should return diagnostic when rule is enabled and as used - column', async () => {
+    it('should return diagnostic when rule is enabled and as used', async () => {
         instance.enabled = true;
 
 
         const parser = new Parser();
 
-        const result = instance.evaluate(await parser.parse({text:'SELECT col1 as c\n FROM dataset.table t', uri: 'test.sql', languageId: 'sql', version: 0}));
+        const result = instance.evaluate(await parser.parse({text:'SELECT col1 as c\n FROM dataset.table\n;\n', uri: 'test.sql', languageId: 'sql', version: 0}));
         expect(result).to.deep.equal([{
             code: instance.diagnosticCode,
             codeDescription: {href: instance.diagnosticCodeDescription},
             message: instance.message,
             severity: instance.severity,
             range: {
-                start: { line: 0, character: 7 },
-                end: { line: 0, character: 16 }
-            },
-            source: instance.source,
-        }]);
-    });
-
-    it('should return diagnostic when rule is enabled and as used - where', async () => {
-        instance.enabled = true;
-
-
-        const parser = new Parser();
-
-        const result = instance.evaluate(await parser.parse({text:'SELECT t.col1 as c\n FROM dataset.table t where col2 = 3', uri: 'test.sql', languageId: 'sql', version: 0}));
-        expect(result).to.deep.equal([{
-            code: instance.diagnosticCode,
-            codeDescription: {href: instance.diagnosticCodeDescription},
-            message: instance.message,
-            severity: instance.severity,
-            range: {
-                start: { line: 1, character: 28 },
-                end: { line: 1, character: 32 }
+                start: { line: 1, character: 6 },
+                end: { line: 1, character: 19 }
             },
             source: instance.source,
         }]);
@@ -68,15 +48,15 @@ describe('UnusedAlias', () => {
 
         const parser = new Parser();
 
-        const result = instance.evaluate(await parser.parse({text:'SELECT t.col1 as c\n       b.col1 as b FROM dataset.table t\n  left join dataset.table1 b on col1 = b.col2', uri: 'test.sql', languageId: 'sql', version: 0}));
+        const result = instance.evaluate(await parser.parse({text:'SELECT t.col1 as c\n FROM dataset.table t\n inner join dataset.other_table\n;\n', uri: 'test.sql', languageId: 'sql', version: 0}));
         expect(result).to.deep.equal([{
             code: instance.diagnosticCode,
             codeDescription: {href: instance.diagnosticCodeDescription},
             message: instance.message,
             severity: instance.severity,
             range: {
-                start: { line: 2, character: 32 },
-                end: { line: 2, character: 36 }
+                start: { line: 2, character: 12 },
+                end: { line: 2, character: 31 }
             },
             source: instance.source,
         }]);

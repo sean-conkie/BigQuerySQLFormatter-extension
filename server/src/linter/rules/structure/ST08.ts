@@ -12,6 +12,7 @@ import { Rule } from '../base';
  * @memberof Linter.Rules
  */
 export class Distinct extends Rule<string> {
+  readonly is_fix_compatible: boolean = false;
   readonly name: string = "distinct";
   readonly code: string = "ST08";
   readonly message: string = "DISTINCT used with parentheses.";

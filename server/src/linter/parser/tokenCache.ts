@@ -1,5 +1,5 @@
 
-import { DocumentUri } from 'vscode-languageserver';
+import { DocumentUri, Range } from 'vscode-languageserver';
 import { LineToken } from './token';
 
 export const globalTokenCache: TokenCache = new Map<DocumentUri, DocumentCache>();
@@ -13,8 +13,26 @@ export class DocumentCache {
 		return this.cache.get(token);
 	}
 
-	public getText(): string {
+	public getText(range?: Range): string {
 		const lines: string[] = [];
+
+		if (range) {
+			const start = range.start.line;
+			const end = range.end.line;
+
+			for (let i = start; i <= end; i++) {
+				const lineToken = this.cache.get(i);
+				if (lineToken) {
+
+					const startIndex = range.start.line === i ? range.start.character : 0;
+					const endIndex = range.end.line === i ? range.end.character : lineToken.value.length;
+
+					lines.push(lineToken.value.substring(startIndex, endIndex));
+				}
+			}
+			return lines.join('\n');
+		}
+
 		this.cache.forEach((lineToken: LineToken) => lines.push(lineToken.value));
 		return lines.join('\n');
 	}

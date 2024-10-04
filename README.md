@@ -24,3 +24,17 @@ over RIGHT JOIN for better readability and maintainability.
 
 This extension is particularly useful for developers and data analysts who frequently write and maintain BigQuery SQL
 queries, providing them with tools to improve code quality and productivity.
+
+## Configuration
+
+### Fix on save
+
+Add the following to your `settings.json`.
+
+```json
+  "[googlesql]": {
+    "editor.codeActionsOnSave": {
+      "source.fixAll": "explicit"
+    }
+  },
+```

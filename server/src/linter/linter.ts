@@ -1,5 +1,5 @@
 import { ServerSettings } from '../settings';
-import { Diagnostic, DidChangeTextDocumentParams, TextDocumentItem } from 'vscode-languageserver/node';
+import { Diagnostic, DidChangeTextDocumentParams, TextDocumentItem, CodeActionParams, CodeAction, CodeActionKind, Range, TextEdit } from 'vscode-languageserver/node';
 import { Rule } from './rules/base';
 import { initialiseRules } from './rules/rules';
 import { RuleType } from './rules/enums';
@@ -104,5 +104,73 @@ export class Linter {
 		return diagnostics;
 
 	}
+
+	async createCodeActions(params: CodeActionParams): Promise<CodeAction[]> {
+		const codeActions: CodeAction[] = [];
+
+		params.context.diagnostics.map((diagnostic) => {
+			this.regexRules.map((rule) => {if (rule.diagnosticCode === diagnostic.code && rule.is_fix_compatible) {
+				const action = rule.createCodeAction(params.textDocument, diagnostic);
+				if (action) {
+					codeActions.push(...action);}
+			}});
+			this.parserRules.map((rule) => {if (rule.diagnosticCode === diagnostic.code && rule.is_fix_compatible) {
+				const action = rule.createCodeAction(params.textDocument, diagnostic);
+				if (action) {
+					codeActions.push(...action);}
+			}});
+		});
+
+
+		// split codeActions into two arrays `textEdits` where the code action is SourceFixAll and `quickFixes` where the code action is QuickFix
+		const textEdits: CodeAction[] = [];
+		const quickFixes: CodeAction[] = [];
+		codeActions.map((action) => {
+			if (action.kind === CodeActionKind.SourceFixAll) {
+				textEdits.push(action);
+			} else if (action.kind === CodeActionKind.QuickFix) {
+				quickFixes.push(action);
+			}
+		});
+
+		// Sort the TextEdits by their start positions in reverse order. This way, edits later in the document are applied first, preventing earlier
+		// edits from shifting the positions of later ones.
+		textEdits.sort((a, b) => {
+			const aStart = a.diagnostics![0].range.start;
+			const bStart = b.diagnostics![0].range.start;
+	
+			if (aStart.line !== bStart.line) {
+					return bStart.line - aStart.line;
+			}
+			return bStart.character - aStart.character;
+		});
+
+		// Remove overlapping edits
+		const nonOverlappingEdits: CodeAction[] = [];
+		let lastRange: Range | null = null;
+
+		for (const edit of textEdits) {
+				if (lastRange && this.areRangesOverlapping(edit.diagnostics![0].range, lastRange)) {
+						// Skip this edit or adjust the range
+						continue;
+				}
+				nonOverlappingEdits.push(edit);
+				lastRange = edit.diagnostics![0].range;
+		}
+
+		return [...nonOverlappingEdits, ...quickFixes];
+	}
+
+	private areRangesOverlapping(range1: Range, range2: Range): boolean {
+    const range1End = range1.end;
+    const range2Start = range2.start;
+
+    if (range1End.line < range2Start.line) return false;
+    if (range1End.line === range2Start.line && range1End.character <= range2Start.character)
+        return false;
+
+    return true;
+}
+
 
 }

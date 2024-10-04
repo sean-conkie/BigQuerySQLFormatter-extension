@@ -9,10 +9,14 @@
 
 import { ServerSettings } from "../../../settings";
 import {
+  CodeAction,
+  CodeActionKind,
   Diagnostic,
-  DiagnosticSeverity
+  DiagnosticSeverity,
+  TextDocumentIdentifier,
+  TextEdit
 } from 'vscode-languageserver/node';
-import { MatchPosition, Rule } from '../base';
+import { Rule } from '../base';
 
 
 /**
@@ -25,9 +29,11 @@ export class TrailingSpaces extends Rule<string> {
   readonly name: string = "trailing_sapces";
   readonly code: string = "LT01";
   readonly message: string = "Trailing whitespace.";
-  readonly pattern: RegExp = / +$/gm;
+  readonly pattern: RegExp = /(?<=\S)( +)(?:,|$|\))|^ +$/gm;
   readonly severity: DiagnosticSeverity = DiagnosticSeverity.Warning;
   readonly ruleGroup: string = 'layout';
+  readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
+  readonly codeActionTitle = 'Remove trailing whitespace';
 
   /**
    * Creates an instance of TrailingSpaces.
@@ -59,16 +65,34 @@ export class TrailingSpaces extends Rule<string> {
     return null;
 
   }
+  
+  /**
+   * Creates a set of code actions to fix diagnostics.
+   *
+   * @param textDocument - The identifier of the text document where the diagnostic was reported.
+   * @param diagnostic - The diagnostic information about the issue to be fixed.
+   * @returns An array of code actions that can be applied to fix the issue.
+   */
+  createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): CodeAction[] {
+    const edit = {
+        changes: {
+            [textDocument.uri]: [
+                TextEdit.replace(diagnostic.range, '')
+            ]
+        }
+    };
+    const actions: CodeAction[] = [];
+    
+    this.codeActionKind.map((kind) => {
+      const fix = CodeAction.create(
+        this.codeActionTitle,
+        edit,
+        kind
+      );
+      fix.diagnostics = [diagnostic];
+      actions.push(fix);
+    });
 
-
-  matches(test: string): number {
-
-    let noOfMatches: number = 0;
-    const matches = test.matchAll(this.pattern);
-    for (const match of matches) {
-      noOfMatches++;
-    }
-    return noOfMatches;
-
+    return actions;
   }
 }

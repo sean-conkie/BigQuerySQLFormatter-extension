@@ -42,6 +42,35 @@ describe('Table', () => {
         }]);
     });
 
+    it('should return codeaction when rule is enabled and as used', async () => {
+        instance.enabled = true;
+
+
+        const parser = new Parser();
+
+        const diagnostics = instance.evaluate(await parser.parse({text:'SELECT t.col1\n FROM dataset.table as t', uri: 'test.sql', languageId: 'sql', version: 0}));
+        const actions = instance.createCodeAction({uri: 'test.sql'}, diagnostics![0]);
+        expect(actions).to.deep.equal(instance.codeActionKind.map(kind => {
+            return {
+                title: instance.codeActionTitle, edit:{
+                changes: {
+                        ['test.sql']: [
+                            {
+                                newText: '',
+                                range: {
+                                    start: { line: 1, character: 19 },
+                                    end: { line: 1, character: 22 }
+                                }
+                            }
+                        ]
+                    }
+                },
+                kind: kind,
+                diagnostics: diagnostics
+            };
+        }));
+    });
+
     it('should return null when rule is enabled but pattern does not match', async () => {
         instance.enabled = true;
 
