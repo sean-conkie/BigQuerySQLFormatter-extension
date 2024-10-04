@@ -25,6 +25,7 @@ export class ColumnAlias extends Rule<FileMap>{
   readonly ruleGroup: string = 'aliasing';
 	readonly scope = 'keyword.as.sql';
   readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
+  readonly codeActionTitle = 'Remove explicit alias';
 
   /**
    * Creates an instance of ColumnAlias.
@@ -123,7 +124,7 @@ export class ColumnAlias extends Rule<FileMap>{
     
     this.codeActionKind.map((kind) => {
       const fix = CodeAction.create(
-        title,
+        this.codeActionTitle,
         edit,
         kind
       );
