@@ -18,6 +18,7 @@ export class EndofFile extends Rule<string> {
 	readonly pattern: RegExp = /(?:\S(\n{2,}|\n* +\n?)$|\S($))/g;
   readonly ruleGroup: string = 'layout';
   readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
+  readonly codeActionTitle = 'Fix trailing newline';
 
 
 	constructor(settings: any, problems: number) {
@@ -59,12 +60,11 @@ export class EndofFile extends Rule<string> {
             ]
         }
     };
-    const title = 'Fix trailing newline';
     const actions: CodeAction[] = [];
     
     this.codeActionKind.map((kind) => {
       const fix = CodeAction.create(
-        title,
+        this.codeActionTitle,
         edit,
         kind
       );
