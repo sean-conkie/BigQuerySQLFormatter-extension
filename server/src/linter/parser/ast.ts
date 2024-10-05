@@ -410,7 +410,16 @@ export class CaseStatementWhenAST extends AST {
    */
   constructor(when: MatchedRule, then: MatchedRule) {
 
-    const tokens = [...when.tokens, ...then.tokens];
+    const tokens = [];
+    
+    if (when.tokens.length > 0) {
+      tokens.push(...when.tokens);
+    }
+    
+    if (then.tokens.length > 0) {
+      tokens.push(...then.tokens);
+    }
+
     super(tokens);
 
     this.when = new ComparisonGroupAST(when.matches ?? []);
