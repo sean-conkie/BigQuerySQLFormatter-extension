@@ -59,15 +59,15 @@
     "whitespace": {
       "patterns": [
         {
-          "match": "^ *",
+          "match": "^(?: |\\t)*",
           "name": "punctuation.whitespace.leading.sql"
         },
         {
-          "match": " *$",
+          "match": "(?: |\\t)*$",
           "name": "punctuation.whitespace.trailing.sql"
         },
         {
-          "match": " *",
+          "match": "(?: |\\t)*",
           "name": "punctuation.whitespace.sql"
         }
       ]

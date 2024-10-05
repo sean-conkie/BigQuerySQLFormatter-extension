@@ -11,11 +11,14 @@ import { ServerSettings } from '../../../settings';
 import { NotEqual } from './CV01';
 import { Coalesce } from './CV02';
 import { LeftJoin } from './CV08';
+import { SpacesNotTabs } from './CV12';
 import { FileMap } from '../../parser';
 
 export const classes = [NotEqual,
 												Coalesce,
-												LeftJoin];
+												LeftJoin,
+												SpacesNotTabs
+											];
 
 export function conventionRules(settings: ServerSettings, problems: number): Rule<string | FileMap>[] {
 
