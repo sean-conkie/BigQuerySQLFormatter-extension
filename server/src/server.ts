@@ -4,17 +4,19 @@ import {
 	InitializeParams,
 	DidChangeConfigurationNotification,
 	CompletionItem,
-	CompletionItemKind,
 	TextDocumentPositionParams,
 	TextDocumentSyncKind,
 	InitializeResult,
 	CodeActionKind,
 	CodeActionParams,
-	CodeAction
+	CodeAction,
+	HoverParams,
+	Hover
 } from 'vscode-languageserver/node';
 import { defaultSettings, documentSettings, getDocumentSettings, ServerSettings } from './settings';
 import { Linter } from './linter/linter';
 import { validateTextDocument, validateTextDocumentChanges } from './validate';
+import { CompletionBuilder } from './completions';
 
 const connection = createConnection(ProposedFeatures.all);
 
@@ -51,7 +53,8 @@ connection.onInitialize((params: InitializeParams) => {
 			},
 			codeActionProvider: {
 				codeActionKinds: [CodeActionKind.QuickFix, CodeActionKind.SourceFixAll]
-			}
+			},
+			hoverProvider: true
 		}
 	};
 	if (hasWorkspaceFolderCapability) {
@@ -91,27 +94,6 @@ connection.onDidChangeWatchedFiles(_change => {
 	connection.console.log('We received a file change event');
 });
 
-// This handler provides the initial list of the completion items.
-connection.onCompletion(
-	(_textDocumentPosition: TextDocumentPositionParams): CompletionItem[] => {
-		// The pass parameter contains the position of the text document in
-		// which code complete got requested. For the example we ignore this
-		// info and always provide the same completion items.
-		return [
-			{
-				label: 'TypeScript',
-				kind: CompletionItemKind.Text,
-				data: 1
-			},
-			{
-				label: 'JavaScript',
-				kind: CompletionItemKind.Text,
-				data: 2
-			}
-		];
-	}
-);
-
 // This handler resolves additional information for the item selected in
 // the completion list.
 connection.onCompletionResolve(
@@ -138,6 +120,16 @@ connection.onDidChangeTextDocument(async (params) => {
 connection.onCodeAction(async (params: CodeActionParams): Promise<CodeAction[]> => {
 	const linter = new Linter(globalSettings);
 	return linter.createCodeActions(params);
+});
+
+connection.onCompletion((params: TextDocumentPositionParams): CompletionItem[] => {
+	const completionBuilder = new CompletionBuilder(params.textDocument.uri);
+	return completionBuilder.getCompletions(params);
+});
+
+connection.onHover((params: HoverParams): Hover | null => {
+	const completionBuilder = new CompletionBuilder(params.textDocument.uri);
+	return completionBuilder.getHover(params);
 });
 
 connection.listen();
