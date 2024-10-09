@@ -400,6 +400,11 @@
           "name": "meta.function.sql"
         },
         {
+          "captures": { "1": { "name": "support.function.utility.sql" } },
+          "match": "(?i)\\b(generate_uuid)\\b",
+          "name": "meta.function.sql"
+        },
+        {
           "match": "(?i)\\b(EXACT_COUNT_DISTINCT|FIRST|GROUP_CONCAT(_UNQUOTED)?|LAST|NEST|NTH|QUANTILES|TOP|UNIQUE)(?=\\s*\\()",
           "name": "invalid.deprecated.legacy.aggregate.sql"
         },
