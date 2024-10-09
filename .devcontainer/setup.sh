@@ -93,7 +93,7 @@ echo -e "${BLUE}Installing Sphinx...${RESET}"
 
 if [[ -d .venv ]]
 then
-    echo -e "${YELLOW}Virtual environment already exists. Removing...${YELLOW}"
+    echo -e "${YELLOW}Virtual environment already exists. Removing...${RESET}"
     rm -rf .venv
 fi
 

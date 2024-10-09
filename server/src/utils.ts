@@ -48,6 +48,10 @@ export function getWordAt(text: string, pos: number): string | null {
     return null;
   }
 
+  if (text.charAt(pos) === ' ') {
+    return null;
+  }
+
   // Start and end positions of the word
   let start = pos;
   let end = pos;
