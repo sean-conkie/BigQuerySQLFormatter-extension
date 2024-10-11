@@ -52,6 +52,8 @@ select case when cc.enddate is null then 1 else null end as is_current -- noqa
 
 ```
 
+<img width="523" alt="image" src="https://github.com/user-attachments/assets/536963df-f8f5-42b8-8554-205dfaaf6c9a">
+
 To disable specific rules for a line add comment `-- noqa` followed by a comma separated list of rules.
 
 ```sql
@@ -59,3 +61,7 @@ select case when cc.enddate is null then 1 else null end as is_current -- noqa: 
   from dataset.table cc;
 
 ```
+
+<img width="757" alt="image" src="https://github.com/user-attachments/assets/0bd8c99a-a0ae-44de-9c56-f0d9623d3dcc">
+
+
