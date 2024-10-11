@@ -4,27 +4,27 @@ import { Rule } from '../base';
 
 
 /**
- * The Count rule
- * @class Count
+ * The IsNull rule
+ * @class IsNull
  * @extends Rule
  * @memberof Linter.Rules
  */
-export class Count extends Rule<string> {
-  readonly name: string = "count_rows";
-  readonly code: string = "CV04";
-  readonly message: string = "Use COUNT(1) to express “count number of rows”.";
-	readonly relatedInformation: string = "For clarity and to follow best practices, it is recommended to use `COUNT(1)` when counting rows.";
-  readonly pattern: RegExp = /count\s*?\(\s*?(?:distinct\s*?)?(\*)\s*?\)/gmi;
+export class IsNull extends Rule<string> {
+  readonly name: string = "is_null";
+  readonly code: string = "CV05";
+  readonly message: string = "Comparisons with NULL should use “IS” or “IS NOT”.";
+	readonly relatedInformation: string = "Using `=` or `!=` to compare a column with `NULL` is an anti-pattern because these operators do not behave as expected with `NULL` values.";
+  readonly pattern: RegExp = /(!?=)\s*?null/gmi;
   readonly severity: DiagnosticSeverity = DiagnosticSeverity.Warning;
   readonly ruleGroup: string = 'convention';
   readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
-  readonly codeActionTitle = 'Replace with `1`';
+  readonly codeActionTitle = 'Replace with ';
 
   /**
-   * Creates an instance of Count.
+   * Creates an instance of IsNull.
    * @param {ServerSettings} settings The server settings
    * @param {number} problems The number of problems identified in the source code
-   * @memberof Count
+   * @memberof IsNull
    */
   constructor(settings: ServerSettings, problems: number) {
     super(settings, problems);
@@ -59,10 +59,11 @@ export class Count extends Rule<string> {
    * @returns An array of code actions that can be applied to fix the issue.
    */
   createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): CodeAction[] {
+    const text = diagnostic.range.end.character - diagnostic.range.start.character === 1? 'is' : 'is null';
     const edit = {
         changes: {
             [textDocument.uri]: [
-                TextEdit.replace(diagnostic.range, '1')
+                TextEdit.replace(diagnostic.range, text)
             ]
         }
     };
@@ -70,7 +71,7 @@ export class Count extends Rule<string> {
     
     this.codeActionKind.map((kind) => {
       const fix = CodeAction.create(
-        this.codeActionTitle,
+        `${this.codeActionTitle}${text}`,
         edit,
         kind
       );

@@ -11,6 +11,7 @@ import { ServerSettings } from '../../../settings';
 import { NotEqual } from './CV01';
 import { Coalesce } from './CV02';
 import { Count } from './CV04';
+import { IsNull } from './CV05';
 import { LeftJoin } from './CV08';
 import { SpacesNotTabs } from './CV12';
 import { FileMap } from '../../parser';
@@ -18,6 +19,7 @@ import { FileMap } from '../../parser';
 export const classes = [NotEqual,
 												Coalesce,
 												Count,
+												IsNull,
 												LeftJoin,
 												SpacesNotTabs
 											];
