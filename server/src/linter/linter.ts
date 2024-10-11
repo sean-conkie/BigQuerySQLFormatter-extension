@@ -52,7 +52,7 @@ export class Linter {
 		// Parse the source code
 		const parser = new Parser();
 
-		let diagnostics: Diagnostic[] = [];
+		const diagnostics: Diagnostic[] = [];
 
 		const abstractSyntaxTree: { [key: number]: StatementAST } = await parser.parse(textDocument);
 
@@ -78,23 +78,7 @@ export class Linter {
 
 		this.problems = diagnostics.length;
 
-		const directives: Directive[] = this.createDirectives(textDocument.uri);
-		directives.map((directive) => {
-			diagnostics = diagnostics.filter((diagnostic) => {
-
-				if (directive.code !== 'noqa') {
-
-					const lineMatch = diagnostic.range.start.line === directive.start.line;
-					const codeMatch = `${diagnostic.code}`.includes(directive.code);
-
-					return lineMatch && codeMatch ? false : true;
-				}
-
-				return diagnostic.range.start.line !== directive.start.line;
-			});
-		});
-
-		return diagnostics;
+		return this.filterDiagnostics(diagnostics, this.createDirectives(textDocument.uri));
 	}
 
 	/**
@@ -113,7 +97,7 @@ export class Linter {
 
 		const parser = new Parser();
 
-		let diagnostics: Diagnostic[] = [];
+		const diagnostics: Diagnostic[] = [];
 
 		const abstractSyntaxTree: { [key: number]: StatementAST } = await parser.parseChange(textDocumentChangeParams);
 
@@ -132,7 +116,21 @@ export class Linter {
 			}
 		}
 
-		const directives: Directive[] = this.createDirectives(textDocumentChangeParams.textDocument.uri);
+		return this.filterDiagnostics(diagnostics, this.createDirectives(textDocumentChangeParams.textDocument.uri));
+	}
+
+	/**
+	 * Filters the diagnostics based on the provided directives.
+	 * 
+	 * @param diagnostics - An array of `Diagnostic` objects to be filtered.
+	 * @param directives - An array of `Directive` objects that specify the filtering criteria.
+	 * @returns An array of `Diagnostic` objects that have been filtered according to the directives.
+	 * 
+	 * The function iterates over each directive and filters out diagnostics that match the directive's criteria.
+	 * If the directive's code is not 'noqa', it checks if the diagnostic's line and code match the directive's line and code.
+	 * If they match, the diagnostic is filtered out. If the directive's code is 'noqa', it filters out diagnostics that match the directive's line.
+	 */
+	private filterDiagnostics(diagnostics: Diagnostic[], directives: Directive[]): Diagnostic[] {
 		directives.map((directive) => {
 			diagnostics = diagnostics.filter((diagnostic) => {
 
@@ -147,10 +145,19 @@ export class Linter {
 				return diagnostic.range.start.line !== directive.start.line;
 			});
 		});
-
+		
 		return diagnostics;
 	}
 
+	/**
+	 * Creates an array of directives from the given document URI.
+	 * 
+	 * This function searches for directive strings in the document text and extracts their ranges.
+	 * It supports directives in the format `-- noqa` followed by optional codes.
+	 * 
+	 * @param documentUri - The URI of the document to search for directives.
+	 * @returns An array of `Directive` objects, each containing the start and end positions of the directive and the associated code.
+	 */
 	private createDirectives(documentUri: string): Directive[] {
 		// find all the directive strings and their ranges
 		const baseRe = /-- +noqa(?:: +(?:(?:\w+)[ ,]*)+)?/gmi;
@@ -264,6 +271,4 @@ export class Linter {
 
     return true;
 	}
-
-
 }
