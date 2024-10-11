@@ -1,0 +1,66 @@
+=========================================================
+Rule: Comparisons with `NULL` Should Use `IS` or `IS NOT`
+=========================================================
+
+**Rule Code:** ``CV05``
+
+**Name:** ``is_null``
+
+Overview
+--------
+
+In SQL, comparisons with `NULL` values must be made using the `IS` or `IS NOT` operators. This is because `NULL` in SQL represents an unknown or missing value, and comparisons using standard operators like `=` or `!=` will not work as expected. Using `IS NULL` and `IS NOT NULL` provides a clear and explicit way to handle `NULL` values in conditions, avoiding potential logical errors and improving the readability of queries.
+
+Explanation
+-----------
+
+Anti-pattern: Using `=` or `!=` for `NULL` Comparisons
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Using `=` or `!=` to compare a column with `NULL` is an anti-pattern because these operators do not behave as expected with `NULL` values. Since `NULL` represents an unknown value, comparisons using `=` or `!=` will always return `false`, which can lead to incorrect query results.
+
+**Example of Incorrect `NULL` Comparison (Anti-pattern):**
+
+.. code-block:: sql
+
+    SELECT *
+    FROM orders
+    WHERE order_status = NULL;
+
+In this example, the query is incorrectly attempting to compare `order_status` with `NULL` using the `=` operator, which will not return the expected results because `NULL` cannot be compared using standard equality operators.
+
+Best Practice: Use `IS NULL` or `IS NOT NULL` for `NULL` Comparisons
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To correctly check for `NULL` values, use the `IS NULL` or `IS NOT NULL` operators. These operators explicitly check for the presence or absence of `NULL` values in a column, ensuring that the query works as intended.
+
+**Refactored Example Using `IS NULL` (Best Practice):**
+
+.. code-block:: sql
+
+    SELECT *
+    FROM orders
+    WHERE order_status IS NULL;
+
+In this refactored example, the query correctly checks whether `order_status` is `NULL` using the `IS NULL` operator. This ensures that the query behaves as expected.
+
+**Refactored Example Using `IS NOT NULL` (Best Practice):**
+
+.. code-block:: sql
+
+    SELECT *
+    FROM orders
+    WHERE order_status IS NOT NULL;
+
+This example demonstrates how to check for non-`NULL` values using the `IS NOT NULL` operator, which is the correct approach when filtering out `NULL` values.
+
+Conclusion
+----------
+
+Comparisons with `NULL` should always use `IS` or `IS NOT` to ensure correct behavior and avoid logical errors. Following this rule helps improve the clarity and accuracy of SQL queries that involve `NULL` values.
+
+Groups:
+-------
+
+- `all <../..>`_
+- `convention <../..#convention-rules>`_
