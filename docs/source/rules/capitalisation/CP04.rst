@@ -25,8 +25,8 @@ Using uppercase literals like `NULL`, `TRUE`, or `FALSE` is considered an anti-p
 
     select foo.id,
            foo.name,
-           NULL AS missing_value,
-           TRUE AS is_active
+           NULL      missing_value,
+           TRUE      is_active
       from foo;
 
 In this example, the literals `NULL` and `TRUE` are written in uppercase, which deviates from best practices.
@@ -42,8 +42,8 @@ To maintain consistency and readability, always write the literals `null`, `true
 
     select foo.id,
            foo.name,
-           null AS missing_value,
-           true AS is_active
+           null      missing_value,
+           true      is_active
       from foo;
 
 In this refactored query, the literals `null` and `true` are written in lowercase, making the query more consistent and easier to read.
