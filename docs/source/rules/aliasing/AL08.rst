@@ -23,7 +23,8 @@ When column names are not unique in a query, it can cause ambiguity in the resul
 
 .. code-block:: sql
 
-    select orders.id, customers.id
+    select orders.id,
+           customers.id
       from orders
       join customers
         on orders.customer_id = customers.id;
@@ -39,7 +40,8 @@ To avoid ambiguity, ensure that each column in the result set has a unique name.
 
 .. code-block:: sql
 
-    select orders.id AS order_id, customers.id AS customer_id
+    select orders.id     order_id,
+           customers.id  customer_id
       from orders
       join customers
         on orders.customer_id = customers.id;
