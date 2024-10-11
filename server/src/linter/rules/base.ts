@@ -3,22 +3,13 @@ import { RuleType } from './enums';
 import { ServerSettings } from '../../settings';
 import { FileMap } from '../parser';
 import packageJson from '../../../package.json';
+import { getRegexMatchRanges } from './regex';
 
 
 /**
  * The version of the extension.
  */
 const version: string = packageJson.version;
-
-
-/**
- * Represents a position in a text document with a specific line and character.
- * 
- * @typedef {Object} MatchPosition
- * @property {number} line - The line number in the document (0-based).
- * @property {number} character - The character position within the line (0-based).
- */
-export type MatchPosition = { line: number, character: number }
 
 /**
  * Abstract class for a rule
@@ -59,75 +50,24 @@ export abstract class Rule<T extends string | FileMap>{
 
   createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): CodeAction[] | null { return null; }
 
-	evaluateMultiRegexTest(test: string, documentUri: string | null = null): Diagnostic[] | null {
-
-		// Reset the regex, regexes are stateful
-		this.pattern.lastIndex = 0;
-
+	/**
+	 * Evaluates the given test string against a predefined regex pattern and returns an array of diagnostics.
+	 * Each diagnostic represents a match found in the test string.
+	 *
+	 * @param test - The string to be tested against the regex pattern.
+	 * @param documentUri - An optional URI of the document being evaluated. Defaults to null.
+	 * @returns An array of `Diagnostic` objects representing the matches found, or null if no matches are found.
+	 */
+	evaluateRegexPatterns(test: string, documentUri: string | null = null): Diagnostic[] | null {
 		const diagnostics: Diagnostic[] = [];
-		
-		let match;
-		while ((match = this.pattern.exec(test)) != null) {
-				let groupStartIndex: number;
-				let groupEndIndex: number;
-				if (match.length > 1) {
-					[groupStartIndex, groupEndIndex] = this.getCaptureGroupIndices(match, match.slice(1).findIndex((group) => group != null) + 1);
-				} else {
-					groupStartIndex = match.index;
-					groupEndIndex = this.pattern.lastIndex;
-				}
-				const start: MatchPosition = this.getLineAndCharacter(test, groupStartIndex);
-				const end: MatchPosition = this.getLineAndCharacter(test, groupEndIndex);
-				const range = {
-						start: { line: start.line, character: start.character },
-						end: { line: end.line, character: end.character }
-				};
-		
-				diagnostics.push(this.createDiagnostic(range, documentUri));
-		}
-		
+
+		getRegexMatchRanges(this.pattern, test)?.map((range) => {
+			diagnostics.push(this.createDiagnostic(range, documentUri));
+		});
+
 		return diagnostics;
-		
 	}
-		
-	getCaptureGroupIndices(match: RegExpExecArray, groupNumber: number): [number, number] {
 
-			if (match[groupNumber] == null) {
-				return [match.index, match.index + match[0].length];
-			}
-
-			const overallMatchStartIndex = match.index;
-			let searchStart = 0;
-			for (let i = 1; i <= groupNumber; i++) {
-					const groupText = match[i];
-					if (groupText == null) {
-						continue; // Skip unmatched groups
-					}
-					const idxInMatch0 = match[0].indexOf(groupText, searchStart);
-					if (idxInMatch0 === -1) {
-						return [match.index, match.index + match[0].length];
-					}
-					if (i === groupNumber) {
-							const groupStartIndex = overallMatchStartIndex + idxInMatch0;
-							const groupEndIndex = groupStartIndex + groupText.length;
-							return [groupStartIndex, groupEndIndex];
-					}
-					searchStart = idxInMatch0 + groupText.length;
-			}
-			return [match.index, match.index + match[0].length];
-	}
-	
-	getLineAndCharacter(content: string, matchIndex: number): MatchPosition {
-			const lines = content.split('\n');
-			let runningTotal = 0;
-			for (let i = 0; i < lines.length; i++) {
-					if (runningTotal + lines[i].length + 1 > matchIndex) {
-							return { line: i, character: matchIndex - runningTotal };
-					}
-					runningTotal += lines[i].length + 1;
-			}
-			throw new Error('Match index out of range');
-	}
 
 	/**
 	 * Creates a diagnostic object for reporting issues in the code.
