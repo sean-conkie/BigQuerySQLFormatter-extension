@@ -23,10 +23,10 @@ Anti-pattern: ...
 
 .. code-block:: sql
 
-	SELECT
+	select
 		foo.id AS id,
 		foo.name AS name
-	FROM foo;
+	from foo;
 
 
 ...
@@ -40,10 +40,10 @@ Best Practice: ...
 
 .. code-block:: sql
 
-	SELECT
+	select
 		foo.id,
 		foo.name
-	FROM foo;
+	from foo;
 
 ...
 

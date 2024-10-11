@@ -23,15 +23,15 @@ The use of database-specific functions like `IFNULL` (MySQL) or `NVL` (Oracle) c
 
 .. code-block:: sql
 
-    SELECT IFNULL(foo.value, 'default_value')
-    FROM foo;
+    select ifnull(foo.value, 'default_value')
+      from foo;
 
 **Example of Using `NVL` (Anti-pattern):**
 
 .. code-block:: sql
 
-    SELECT NVL(foo.value, 'default_value')
-    FROM foo;
+    select nvl(foo.value, 'default_value')
+      from foo;
 
 In these examples, `IFNULL` and `NVL` are used, which can cause problems when running the query on different databases.
 
@@ -44,8 +44,8 @@ Best Practice: Use `COALESCE`
 
 .. code-block:: sql
 
-    SELECT COALESCE(foo.value, 'default_value')
-    FROM foo;
+    select coalesce(foo.value, 'default_value')
+      from foo;
 
 In this refactored example, `COALESCE` is used instead of `IFNULL` or `NVL`, ensuring the query is more portable and consistent across different database systems.
 

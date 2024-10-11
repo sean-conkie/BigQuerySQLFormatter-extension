@@ -23,12 +23,11 @@ Leaving a space between a function name and its parentheses can make the code lo
 
 .. code-block:: sql
 
-    SELECT
-        COUNT (*),
-        MAX (foo.value)
-    FROM foo;
+    select count (*),
+           max (foo.value)
+      from foo;
 
-In this example, there is a space between the function names (`COUNT` and `MAX`) and the opening parentheses, which breaks the consistency and readability of the query.
+In this example, there is a space between the function names (`count` and `MAX`) and the opening parentheses, which breaks the consistency and readability of the query.
 
 Best Practice: No Space Between Function Name and Parentheses
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -39,12 +38,11 @@ Function names should always be immediately followed by parentheses without any 
 
 .. code-block:: sql
 
-    SELECT
-        COUNT(*),
-        MAX(foo.value)
-    FROM foo;
+    select count(*),
+           max(foo.value)
+      from foo;
 
-In this refactored example, the function names `COUNT` and `MAX` are directly followed by parentheses without any space, making the query cleaner and easier to read.
+In this refactored example, the function names `count` and `MAX` are directly followed by parentheses without any space, making the query cleaner and easier to read.
 
 Conclusion
 ----------

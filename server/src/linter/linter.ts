@@ -6,6 +6,11 @@ import { RuleType } from './rules/enums';
 import { FileMap, Parser } from './parser';
 import { StatementAST } from './parser/ast';
 import { globalTokenCache } from './parser/tokenCache';
+import { getRegexMatchRanges } from './rules/regex';
+
+interface Directive extends Range {
+	code: string
+}
 
 /**
  * Object for linting SQL code
@@ -47,7 +52,7 @@ export class Linter {
 		// Parse the source code
 		const parser = new Parser();
 
-		const diagnostics: Diagnostic[] = [];
+		let diagnostics: Diagnostic[] = [];
 
 		const abstractSyntaxTree: { [key: number]: StatementAST } = await parser.parse(textDocument);
 
@@ -73,15 +78,42 @@ export class Linter {
 
 		this.problems = diagnostics.length;
 
+		const directives: Directive[] = this.createDirectives(textDocument.uri);
+		directives.map((directive) => {
+			diagnostics = diagnostics.filter((diagnostic) => {
+
+				if (directive.code !== 'noqa') {
+
+					const lineMatch = diagnostic.range.start.line === directive.start.line;
+					const codeMatch = `${diagnostic.code}`.includes(directive.code);
+
+					return lineMatch && codeMatch ? false : true;
+				}
+
+				return diagnostic.range.start.line !== directive.start.line;
+			});
+		});
+
 		return diagnostics;
-		
 	}
 
+	/**
+	 * Verifies changes in the text document and returns a list of diagnostics.
+	 *
+	 * @param textDocumentChangeParams - The parameters containing details of the text document change.
+	 * @returns A promise that resolves to an array of `Diagnostic` objects.
+	 *
+	 * The function performs the following steps:
+	 * 1. Parses the changes in the text document to generate an abstract syntax tree (AST).
+	 * 2. Evaluates the AST against a set of parser rules and collects diagnostics.
+	 * 3. Retrieves the text of the document and evaluates it against a set of regex rules, collecting additional diagnostics.
+	 * 4. Filters out diagnostics that are on lines with `-- noqa` directives.
+	 */
 	async verifyChanges(textDocumentChangeParams: DidChangeTextDocumentParams): Promise<Diagnostic[]> {
 
 		const parser = new Parser();
 
-		const diagnostics: Diagnostic[] = [];
+		let diagnostics: Diagnostic[] = [];
 
 		const abstractSyntaxTree: { [key: number]: StatementAST } = await parser.parseChange(textDocumentChangeParams);
 
@@ -92,7 +124,6 @@ export class Linter {
 				this.problems = diagnostics.length;
 			}
 		}
-
 		for (const rule of this.regexRules) {
 			const result = rule.evaluate(globalTokenCache.get(textDocumentChangeParams.textDocument.uri)!.getText(), textDocumentChangeParams.textDocument.uri);
 			if (result != null) {
@@ -101,10 +132,65 @@ export class Linter {
 			}
 		}
 
-		return diagnostics;
+		const directives: Directive[] = this.createDirectives(textDocumentChangeParams.textDocument.uri);
+		directives.map((directive) => {
+			diagnostics = diagnostics.filter((diagnostic) => {
 
+				if (directive.code !== 'noqa') {
+
+					const lineMatch = diagnostic.range.start.line === directive.start.line;
+					const codeMatch = `${diagnostic.code}`.includes(directive.code);
+
+					return lineMatch && codeMatch ? false : true;
+				}
+
+				return diagnostic.range.start.line !== directive.start.line;
+			});
+		});
+
+		return diagnostics;
 	}
 
+	private createDirectives(documentUri: string): Directive[] {
+		// find all the directive strings and their ranges
+		const baseRe = /-- +noqa(?:: +(?:(?:\w+)[ ,]*)+)?/gmi;
+		const directives: Directive[] = [];
+		const ranges: Range[] | null = getRegexMatchRanges(baseRe, globalTokenCache.get(documentUri)!.getText());
+
+		if (ranges != null) {
+			ranges.map((range) => {
+				const text = globalTokenCache.get(documentUri)!.getText(range).replace('-- noqa', '');
+				const subRanges = getRegexMatchRanges(/\w+/gmi, text);
+
+				if (subRanges == null || subRanges.length === 0) {
+					// no codes so just add the range
+					directives.push({start: range.start, end: range.end, code: 'noqa'});
+				} else {
+					// add each code
+					subRanges.map((subRange) => {
+						const code = text.substring(subRange.start.character, subRange.end.character);
+						directives.push({start: range.start, end: range.end, code: code});
+					});
+				}
+			});
+		}
+
+		return directives;
+	}
+
+	/**
+	 * Creates code actions based on the provided diagnostics and rules.
+	 * 
+	 * @param params - The parameters for the code action request, including the text document and diagnostics.
+	 * @returns A promise that resolves to an array of code actions.
+	 * 
+	 * The function performs the following steps:
+	 * 1. Iterates over the diagnostics and applies regex and parser rules to generate initial code actions.
+	 * 2. Splits the generated code actions into two arrays: `textEdits` for SourceFixAll actions and `quickFixes` for QuickFix actions.
+	 * 3. Sorts the `textEdits` by their start positions in reverse order to ensure later edits are applied first.
+	 * 4. Removes overlapping edits from the `textEdits` array.
+	 * 5. Combines the non-overlapping `textEdits` with the `quickFixes` and returns the result.
+	 */
 	async createCodeActions(params: CodeActionParams): Promise<CodeAction[]> {
 		const codeActions: CodeAction[] = [];
 
@@ -161,6 +247,13 @@ export class Linter {
 		return [...nonOverlappingEdits, ...quickFixes];
 	}
 
+	/**
+	 * Determines if two ranges are overlapping.
+	 *
+	 * @param range1 - The first range to compare.
+	 * @param range2 - The second range to compare.
+	 * @returns `true` if the ranges overlap, otherwise `false`.
+	 */
 	private areRangesOverlapping(range1: Range, range2: Range): boolean {
     const range1End = range1.end;
     const range2Start = range2.start;
@@ -170,7 +263,7 @@ export class Linter {
         return false;
 
     return true;
-}
+	}
 
 
 }

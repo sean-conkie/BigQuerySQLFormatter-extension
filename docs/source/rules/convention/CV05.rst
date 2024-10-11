@@ -23,9 +23,9 @@ Using `=` or `!=` to compare a column with `NULL` is an anti-pattern because the
 
 .. code-block:: sql
 
-    SELECT *
-    FROM orders
-    WHERE order_status = NULL;
+    select *
+      from orders
+     where order_status = null;
 
 In this example, the query is incorrectly attempting to compare `order_status` with `NULL` using the `=` operator, which will not return the expected results because `NULL` cannot be compared using standard equality operators.
 
@@ -38,9 +38,9 @@ To correctly check for `NULL` values, use the `IS NULL` or `IS NOT NULL` operato
 
 .. code-block:: sql
 
-    SELECT *
-    FROM orders
-    WHERE order_status IS NULL;
+    select *
+      from orders
+     where order_status is null;
 
 In this refactored example, the query correctly checks whether `order_status` is `NULL` using the `IS NULL` operator. This ensures that the query behaves as expected.
 
@@ -48,9 +48,9 @@ In this refactored example, the query correctly checks whether `order_status` is
 
 .. code-block:: sql
 
-    SELECT *
-    FROM orders
-    WHERE order_status IS NOT NULL;
+    select *
+      from orders
+     where order_status is not null;
 
 This example demonstrates how to check for non-`NULL` values using the `IS NOT NULL` operator, which is the correct approach when filtering out `NULL` values.
 

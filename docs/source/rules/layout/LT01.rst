@@ -23,12 +23,11 @@ Trailing whitespace refers to any spaces or tabs at the end of a line after the 
 
 .. code-block:: sql
 
-    SELECT
-        foo.id,
-        foo.name
-    FROM foo;...
+    select foo.id,
+           foo.name
+      from foo;...
 
-In the example above, each line contains unnecessary trailing whitespace after the columns and `FROM` clause, which makes the query harder to maintain and track changes.
+In the example above, each line contains unnecessary trailing whitespace after the columns and `from` clause, which makes the query harder to maintain and track changes.
 
 Best Practice: Remove Trailing Whitespace
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -39,10 +38,9 @@ To improve readability and avoid unnecessary changes in version control, all tra
 
 .. code-block:: sql
 
-    SELECT
-        foo.id,
-        foo.name
-    FROM foo;
+    select foo.id,
+           foo.name
+      from foo;
 
 In this refactored example, there is no trailing whitespace, making the code cleaner and more manageable.
 

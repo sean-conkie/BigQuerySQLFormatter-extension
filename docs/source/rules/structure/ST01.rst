@@ -23,12 +23,13 @@ Including `ELSE NULL` at the end of a `CASE WHEN` statement adds unnecessary com
 
 .. code-block:: sql
 
-    SELECT 
-        CASE 
-            WHEN foo.value > 10 THEN 'High'
-            ELSE NULL
-        END AS value_description
-    FROM foo;
+    select case
+             when foo.value > 10 then
+               'high'
+             else
+               null
+           end value_description
+      from foo;
 
 In this example, the `ELSE NULL` clause is redundant because the `CASE WHEN` statement would return `NULL` by default if none of the conditions are satisfied.
 
@@ -41,11 +42,11 @@ For better readability and simpler queries, omit the `ELSE NULL` clause. The `CA
 
 .. code-block:: sql
 
-    SELECT 
-        CASE 
-            WHEN foo.value > 10 THEN 'High'
-        END AS value_description
-    FROM foo;
+    select case
+             when foo.value > 10 then
+               'high'
+           end value_description
+      from foo;
 
 In this refactored example, the `ELSE NULL` clause is omitted, simplifying the query without changing the behavior.
 

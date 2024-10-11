@@ -23,9 +23,9 @@ When the `AS` keyword is used in table aliases, it unnecessarily increases the l
 
 .. code-block:: sql
 
-    SELECT o.id, c.name
-    FROM orders AS o
-    JOIN customers AS c ON o.customer_id = c.id;
+    select o.id, c.name
+      from orders AS o
+      join customers AS c ON o.customer_id = c.id;
 
 In this example, the `AS` keyword is used unnecessarily when aliasing the tables `orders` and `customers`, making the query more verbose than required.
 
@@ -38,9 +38,9 @@ For better readability and cleaner code, implicit aliases should be used when re
 
 .. code-block:: sql
 
-    SELECT o.id, c.name
-    FROM orders o
-    JOIN customers c ON o.customer_id = c.id;
+    select o.id, c.name
+      from orders o
+      join customers c ON o.customer_id = c.id;
 
 In this refactored example, the table aliases `o` and `c` are used directly without `AS`, making the query more concise and easier to read.
 

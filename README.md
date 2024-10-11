@@ -39,3 +39,23 @@ Add the following to your `settings.json`.
     }
   },
 ```
+
+### Disable Rules
+
+#### In-line directive
+
+To disable all rules for a line add comment `-- noqa`.
+
+```sql
+select case when cc.enddate is null then 1 else null end as is_current -- noqa
+  from dataset.table cc;
+
+```
+
+To disable specific rules for a line add comment `-- noqa` followed by a comma separated list of rules.
+
+```sql
+select case when cc.enddate is null then 1 else null end as is_current -- noqa: ST01
+  from dataset.table cc;
+
+```

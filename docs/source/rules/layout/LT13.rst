@@ -25,10 +25,11 @@ SQL files that begin with one or more blank lines or unnecessary spaces at the s
 
     
 
-    SELECT foo.id, foo.name
-    FROM foo;
+    select foo.id,
+           foo.name
+      from foo;
 
-In this example, the file starts with multiple unnecessary newlines before the `SELECT` statement. This breaks the consistency of the file structure and reduces readability.
+In this example, the file starts with multiple unnecessary newlines before the `select` statement. This breaks the consistency of the file structure and reduces readability.
 
 Best Practice: Remove Leading Newlines or Whitespace
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -39,10 +40,11 @@ SQL files should begin immediately with the first relevant statement or comment.
 
 .. code-block:: sql
 
-    SELECT foo.id, foo.name
-    FROM foo;
+    select foo.id,
+           foo.name
+      from foo;
 
-In this refactored example, the file starts directly with the `SELECT` statement, with no leading newlines or spaces, ensuring a clean and readable format.
+In this refactored example, the file starts directly with the `select` statement, with no leading newlines or spaces, ensuring a clean and readable format.
 
 Conclusion
 ----------

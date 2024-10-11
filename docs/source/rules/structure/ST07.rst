@@ -23,9 +23,9 @@ The `USING` clause simplifies join conditions by allowing you to specify the com
 
 .. code-block:: sql
 
-    SELECT *
-    FROM orders
-    JOIN customers USING (customer_id);
+    select *
+      from orders
+      join customers using (customer_id);
 
 In this example, `USING` is applied to join the `orders` and `customers` tables based on the `customer_id`. While this syntax is more concise, it can lead to ambiguity and lacks the explicitness that is beneficial for maintainability.
 
@@ -38,9 +38,10 @@ For greater clarity and flexibility, it is best to specify join keys explicitly 
 
 .. code-block:: sql
 
-    SELECT *
-    FROM orders
-    JOIN customers ON orders.customer_id = customers.customer_id;
+    select *
+      from orders
+      join customers 
+        on orders.customer_id = customers.customer_id;
 
 In this refactored example, the `ON` clause is used to explicitly specify the join condition. This approach is clearer and more flexible, especially in cases where join keys have different names or when more complex logic is required.
 

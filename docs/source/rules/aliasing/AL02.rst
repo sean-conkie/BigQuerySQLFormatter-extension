@@ -23,8 +23,8 @@ Using `AS` when aliasing columns adds unnecessary verbosity to the query. Althou
 
 .. code-block:: sql
 
-    SELECT foo.id AS identifier, foo.name AS customer_name
-    FROM foo;
+    select foo.id AS identifier, foo.name AS customer_name
+      from foo;
 
 In this example, the `AS` keyword is explicitly used to alias the `id` and `name` columns. While this is correct, the `AS` keyword is unnecessary and can be omitted for cleaner, more concise code.
 
@@ -37,8 +37,8 @@ For better readability and concise code, column aliases should be defined withou
 
 .. code-block:: sql
 
-    SELECT foo.id identifier, foo.name customer_name
-    FROM foo;
+    select foo.id identifier, foo.name customer_name
+      from foo;
 
 In this refactored example, the `AS` keyword is omitted, and the aliases for `id` and `name` are defined implicitly. The query is cleaner and easier to read without sacrificing functionality.
 

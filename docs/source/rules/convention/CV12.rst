@@ -23,9 +23,10 @@ Using tabs for indentation can lead to inconsistent formatting because different
 
 .. code-block:: sql
 
-    SELECT *
-    FROM    orders
-        JOIN customers ON orders.customer_id = customers.id;
+    select *
+      from orders
+      join customers
+        on orders.customer_id = customers.id;
 
 In this example, tabs are used for indentation, which can result in inconsistent alignment depending on the viewer's editor settings.
 
@@ -38,9 +39,10 @@ To ensure consistent formatting and readability across different environments, s
 
 .. code-block:: sql
 
-    SELECT *
-    FROM    orders
-    JOIN    customers ON orders.customer_id = customers.id;
+    select *
+      from orders
+      join customers
+        on orders.customer_id = customers.id;
 
 In this refactored example, spaces are used for indentation, ensuring that the code appears consistent across different editors and systems.
 

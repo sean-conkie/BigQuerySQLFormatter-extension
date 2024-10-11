@@ -30,7 +30,7 @@ describe('ElseNull', () => {
             severity: instance.severity,
             range: {
                 start: { line: 0, character: 32 },
-                end: { line: 0, character: 43 }
+                end: { line: 0, character: 42 }
             },
             source: instance.source,
             tags: [1]
@@ -54,7 +54,7 @@ describe('ElseNull', () => {
                                 newText: '',
                                 range: {
                                     start: { line: 0, character: 32 },
-                                    end: { line: 0, character: 43 }
+                                    end: { line: 0, character: 42 }
                                 }
                             }
                         ]

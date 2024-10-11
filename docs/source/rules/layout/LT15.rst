@@ -9,7 +9,7 @@ Rule: Align Equal (`=`) Sign in Comparison Blocks
 Overview
 --------
 
-In SQL queries, when multiple equality comparisons are used in `WHERE` clauses or join conditions, it is a best practice to align the equal (`=`) signs in the same column for each comparison. This alignment improves readability, making it easier for developers to quickly scan and understand the conditions being applied. Consistent formatting also helps in collaborative environments where multiple developers are working on the same codebase.
+In SQL queries, when multiple equality comparisons are used in `where` clauses or join conditions, it is a best practice to align the equal (`=`) signs in the same column for each comparison. This alignment improves readability, making it easier for developers to quickly scan and understand the conditions being applied. Consistent formatting also helps in collaborative environments where multiple developers are working on the same codebase.
 
 Explanation
 -----------
@@ -17,19 +17,19 @@ Explanation
 Anti-pattern: Misaligned Equal Signs in Comparison Blocks
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-When the equal (`=`) signs in a `WHERE` clause or join conditions are misaligned across multiple rows, it reduces the readability and consistency of the query. Developers may have difficulty quickly understanding the logic of the query, and future maintenance becomes more error-prone due to the lack of a clean structure.
+When the equal (`=`) signs in a `where` clause or join conditions are misaligned across multiple rows, it reduces the readability and consistency of the query. Developers may have difficulty quickly understanding the logic of the query, and future maintenance becomes more error-prone due to the lack of a clean structure.
 
 **Example of Misaligned Equal Signs (Anti-pattern):**
 
 .. code-block:: sql
 
-    SELECT *
-    FROM foo
-    WHERE foo.id = 1
-      AND foo.name   = 'John'
-      AND foo.age= 30;
+    select *
+      from foo
+     where foo.id = 1
+       and foo.name   = 'john'
+       and foo.age= 30;
 
-In this example, the equal signs in the `WHERE` clause are not aligned, making the query harder to read and follow.
+In this example, the equal signs in the `where` clause are not aligned, making the query harder to read and follow.
 
 Best Practice: Align Equal Signs in Comparison Blocks
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -40,18 +40,18 @@ For better readability and consistency, align the equal (`=`) signs vertically a
 
 .. code-block:: sql
 
-    SELECT *
-    FROM foo
-    WHERE foo.id   = 1
-      AND foo.name = 'John'
-      AND foo.age  = 30;
+    select *
+      from foo
+     where foo.id   = 1
+       and foo.name = 'john'
+       and foo.age  = 30;
 
-In this refactored example, the equal signs are aligned in the same column for each comparison in the `WHERE` clause, making the query cleaner and more readable.
+In this refactored example, the equal signs are aligned in the same column for each comparison in the `where` clause, making the query cleaner and more readable.
 
 Conclusion
 ----------
 
-Aligning the equal (`=`) signs in comparison blocks improves the readability and maintainability of SQL queries. Following this rule makes it easier for developers to quickly understand complex `WHERE` clauses or join conditions, reducing the chance of errors and improving overall code quality.
+Aligning the equal (`=`) signs in comparison blocks improves the readability and maintainability of SQL queries. Following this rule makes it easier for developers to quickly understand complex `where` clauses or join conditions, reducing the chance of errors and improving overall code quality.
 
 Groups:
 -------
