@@ -1,0 +1,54 @@
+======================================================
+Rule: Use `COUNT(1)` to Express “Count Number of Rows”
+======================================================
+
+**Rule Code:** ``CV04``
+
+**Name:** ``count``
+
+Overview
+--------
+
+In SQL, the `COUNT()` function is used to count the number of rows in a result set. While both `COUNT(*)` and `COUNT(1)` can be used to achieve this, it is recommended to use `COUNT(1)` as a convention for expressing "count number of rows". The use of `COUNT(1)` can be seen as more explicit and efficient because it avoids ambiguity, though functionally both expressions behave the same in most SQL engines. This convention ensures consistency across SQL codebases.
+
+Explanation
+-----------
+
+Anti-pattern: Using `COUNT(*)`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The use of `COUNT(*)` is syntactically correct but can be considered less explicit. Some developers prefer to avoid using the asterisk (`*`) due to its use in other SQL contexts (e.g., `SELECT *`), where it implies selecting all columns. Although SQL engines optimize `COUNT(*)` to count rows, using `COUNT(1)` can be more explicit, indicating the intent to count rows without confusion.
+
+**Example of Using `COUNT(*)` (Anti-pattern):**
+
+.. code-block:: sql
+
+    SELECT COUNT(*)
+    FROM orders;
+
+In this example, `COUNT(*)` is used to count the number of rows in the `orders` table. While this is valid, it can be seen as less explicit than using `COUNT(1)`.
+
+Best Practice: Use `COUNT(1)` to Count Rows
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For clarity and to follow best practices, it is recommended to use `COUNT(1)` when counting rows. This syntax avoids ambiguity and explicitly expresses the intent to count rows without referring to column data or all columns with the `*`.
+
+**Refactored Example Using `COUNT(1)` (Best Practice):**
+
+.. code-block:: sql
+
+    SELECT COUNT(1)
+    FROM orders;
+
+In this refactored example, `COUNT(1)` is used to count the number of rows in the `orders` table, providing a clearer and more consistent expression of the intent to count rows.
+
+Conclusion
+----------
+
+Using `COUNT(1)` to count rows ensures that SQL queries are clear, explicit, and follow conventional best practices. While both `COUNT(*)` and `COUNT(1)` are functionally similar, the latter is preferred for expressing row counts, promoting consistency and avoiding ambiguity in SQL codebases.
+
+Groups:
+-------
+
+- `all <../..>`_
+- `convention <../..#convention-rules>`_
