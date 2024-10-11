@@ -23,9 +23,10 @@ When a query does not use table aliases, it forces the query to reference the fu
 
 .. code-block:: sql
 
-    SELECT orders.id, orders.date, customers.name
-    FROM orders
-    JOIN customers ON orders.customer_id = customers.id;
+    select orders.id, orders.date, customers.name
+      from orders
+      join customers
+        on orders.customer_id = customers.id;
 
 In this example, the full table names `orders` and `customers` are repeatedly referenced, making the query verbose and less readable.
 
@@ -38,9 +39,10 @@ Using aliases for tables simplifies the query, improves readability, and makes i
 
 .. code-block:: sql
 
-    SELECT o.id, o.date, c.name
-    FROM orders o
-    JOIN customers c ON o.customer_id = c.id;
+    select o.id, o.date, c.name
+      from orders o
+      join customers c
+        on o.customer_id = c.id;
 
 In this refactored example, the tables `orders` and `customers` are given the aliases `o` and `c`, respectively. This makes the query more concise and easier to read, especially when the query becomes more complex.
 

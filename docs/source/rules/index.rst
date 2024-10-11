@@ -34,7 +34,7 @@ Ambiguous rules are guidelines that help developers avoid ambiguity and improve 
 	:maxdepth: 1
 
 	Rule: Do Not Use `DISTINCT` with `GROUP BY` <ambiguous/AM01>
-	Rule: Avoid Using `SELECT *` <ambiguous/AM04>
+	Rule: Avoid Using `select *` <ambiguous/AM04>
 
 .. _capitalisation-rules:
 
@@ -64,9 +64,9 @@ By applying convention rules, teams can create a more collaborative and coherent
 
 	Rule: Use `!=` Not `<>` <convention/CV01>
 	Rule: Use COALESCE Instead of IFNULL or NVL <convention/CV02>
-	Rule: Use `COUNT(1)` to Express “Count Number of Rows” <convention/CV04>
+	Rule: Use `count(1)` to Express “Count Number of Rows” <convention/CV04>
 	Rule: Comparisons with `NULL` Should Use `IS` or `IS NOT` <convention/CV05>
-	Rule: Use LEFT JOIN Instead of RIGHT JOIN <convention/CV08>
+	Rule: Use LEFT join Instead of RIGHT join <convention/CV08>
 	Rule: Use Spaces for Indentation, Not Tabs <convention/CV12>
 
 .. _layout-rules:
@@ -84,7 +84,7 @@ Layout rules are guidelines that help developers maintain a consistent and reada
 	Rule: Place Commas at the End of the Line <layout/LT04>
 	Rule: Function Names Must Be Immediately Followed by Parentheses <layout/LT06>
 	Rule: Select Targets Should Be on Separate Lines <layout/LT09>
-	Rule: SELECT Modifiers Must Be on the Same Line as SELECT <layout/LT10>
+	Rule: select Modifiers Must Be on the Same Line as select <layout/LT10>
 	Rule: UNION Operators Should Be Surrounded by Newlines <layout/LT11>
 	Rule: SQL Files Must End with a Single Trailing Newline <layout/LT12>
 	Rule: SQL Files Must Not Begin with Newlines or Whitespace <layout/LT13>

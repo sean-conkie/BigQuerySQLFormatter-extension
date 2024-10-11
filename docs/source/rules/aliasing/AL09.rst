@@ -25,10 +25,9 @@ Using self-aliases in SQL is redundant and should be avoided. Here is an example
 
 .. code-block:: sql
 
-	SELECT
-		foo.id AS id,
-		foo.name AS name
-	FROM foo;
+  select foo.id AS id,
+         foo.name AS name
+    from foo;
 
 
 In this example, each column is aliased to its own name, which adds no functional value and can be confusing for future readers of the query.
@@ -42,10 +41,9 @@ Instead of self-aliasing, you should simply reference the columns directly. This
 
 .. code-block:: sql
 
-	SELECT
-		foo.id,
-		foo.name
-	FROM foo;
+  select foo.id,
+         foo.name
+    from foo;
 
 This version of the query is cleaner and avoids the unnecessary self-aliasing of columns. Only use an alias when it clarifies the purpose of the column, such as when performing calculations, combining fields, or renaming a column for clarity in the result set.
 

@@ -23,9 +23,9 @@ The `<>` operator is a valid way to express "not equal to" in SQL, but it is les
 
 .. code-block:: sql
 
-    SELECT *
-    FROM orders
-    WHERE status <> 'shipped';
+    select *
+      from orders
+     where status <> 'shipped';
 
 In this example, the `<>` operator is used to check if the `status` column is not equal to `'shipped'`. While this is valid syntax, it is less commonly used and can lead to inconsistencies in SQL coding style.
 
@@ -38,9 +38,9 @@ For consistency and clarity, it is recommended to use `!=` instead of `<>`. The 
 
 .. code-block:: sql
 
-    SELECT *
-    FROM orders
-    WHERE status != 'shipped';
+    select *
+      from orders
+     where status != 'shipped';
 
 In this refactored example, the `!=` operator is used, providing clearer, more consistent syntax for expressing "not equal to."
 

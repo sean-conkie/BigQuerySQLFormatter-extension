@@ -23,9 +23,10 @@ When both `DISTINCT` and `GROUP BY` are used in a query, it results in redundant
 
 .. code-block:: sql
 
-    SELECT DISTINCT category, COUNT(*)
-    FROM products
-    GROUP BY category;
+    select distinct category,
+           count(*)
+      from products
+     group by category;
 
 In this example, the `DISTINCT` keyword is redundant because the `GROUP BY category` already ensures that each category appears only once in the result set.
 
@@ -38,9 +39,10 @@ To avoid redundancy and simplify the query, the `DISTINCT` clause should not be 
 
 .. code-block:: sql
 
-    SELECT category, COUNT(*)
-    FROM products
-    GROUP BY category;
+    select category,
+           count(*)
+      from products
+     group by category;
 
 In this refactored example, the `DISTINCT` keyword is removed, as the `GROUP BY` clause already ensures unique results based on the `category` column.
 
@@ -52,5 +54,5 @@ Using `DISTINCT` in conjunction with `GROUP BY` is unnecessary and adds complexi
 Groups:
 -------
 
-- ``all``
-- ``ambiguous``
+- `all <../..>`_
+- `ambiguous <../..#ambiguous-rules>`_

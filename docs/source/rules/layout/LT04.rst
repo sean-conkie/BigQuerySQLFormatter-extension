@@ -23,10 +23,9 @@ Placing commas at the start of a line, rather than at the end of the previous li
 
 .. code-block:: sql
 
-    SELECT
-        foo.id
-      , foo.name
-    FROM foo;
+    select foo.id
+         , foo.name
+      from foo;
 
 In this example, the commas are placed at the beginning of the second line, which disrupts the readability of the query and may cause confusion for developers.
 
@@ -39,10 +38,9 @@ The best practice is to place commas at the end of each line when listing column
 
 .. code-block:: sql
 
-    SELECT
-        foo.id,
-        foo.name
-    FROM foo;
+    select foo.id,
+           foo.name
+      from foo;
 
 In this refactored example, the commas are placed at the end of the first line, making the query more readable and consistent with best practices.
 

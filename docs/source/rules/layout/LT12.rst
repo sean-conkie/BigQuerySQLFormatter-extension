@@ -23,8 +23,9 @@ SQL files that either lack a trailing newline or have multiple trailing newlines
 
 .. code-block:: sql
 
-    SELECT foo.id, foo.name
-    FROM foo;
+    select foo.id,
+           foo.name
+      from foo;
 
 In this example, the SQL file does not end with a trailing newline, which can cause compatibility issues with some tools or environments.
 
@@ -37,8 +38,9 @@ To maintain clean formatting and avoid issues, SQL files should always end with 
 
 .. code-block:: sql
 
-    SELECT foo.id, foo.name
-    FROM foo;
+    select foo.id,
+           foo.name
+      from foo;
 
 In this refactored example, there is exactly one trailing newline at the end of the SQL file, making it clean and compliant with best practices.
 

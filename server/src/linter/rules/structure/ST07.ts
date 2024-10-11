@@ -46,7 +46,7 @@ export class Using extends Rule<string> {
     }
 
     if (this.pattern.test(test)) {
-      return this.evaluateMultiRegexTest(test, documentUri);
+      return this.evaluateRegexPatterns(test, documentUri);
     }
 
     return null;

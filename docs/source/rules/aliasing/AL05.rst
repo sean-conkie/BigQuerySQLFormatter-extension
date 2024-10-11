@@ -23,8 +23,8 @@ In some cases, developers may assign a table alias but fail to use it when refer
 
 .. code-block:: sql
 
-    SELECT foo 
-    FROM bar b;
+    select foo 
+      from bar b;
 
 In this example, the table `bar` has been assigned the alias `b`, but the column `foo` is referenced without using the alias. This inconsistency can lead to confusion, especially in more complex queries.
 
@@ -37,8 +37,8 @@ For better readability and consistency, all columns should be referenced using t
 
 .. code-block:: sql
 
-    SELECT b.foo
-    FROM bar b;
+    select b.foo
+      from bar b;
 
 In this refactored example, the column `foo` is referenced with the table alias `b`, providing clarity and consistency throughout the query.
 
