@@ -64,6 +64,7 @@ By applying convention rules, teams can create a more collaborative and coherent
 
 	Rule: Use `!=` Not `<>` <convention/CV01>
 	Rule: Use COALESCE Instead of IFNULL or NVL <convention/CV02>
+	Rule: Use `COUNT(1)` to Express “Count Number of Rows” <convention/CV04>
 	Rule: Use LEFT JOIN Instead of RIGHT JOIN <convention/CV08>
 	Rule: Use Spaces for Indentation, Not Tabs <convention/CV12>
 
