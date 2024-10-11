@@ -1,6 +1,7 @@
 # Configuration file for the Sphinx documentation builder.
 import json
 from pathlib import Path
+
 # -- Project information
 
 project = "BigQuery SQL Formatter"
