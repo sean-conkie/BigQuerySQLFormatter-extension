@@ -4,7 +4,7 @@ Rule: Use `COUNT(1)` to Express “Count Number of Rows”
 
 **Rule Code:** ``CV04``
 
-**Name:** ``count``
+**Name:** ``count_rows``
 
 Overview
 --------

@@ -10,7 +10,7 @@ import { Rule } from '../base';
  * @memberof Linter.Rules
  */
 export class Count extends Rule<string> {
-  readonly name: string = "count";
+  readonly name: string = "count_rows";
   readonly code: string = "CV04";
   readonly message: string = "Use COUNT(1) to express “count number of rows”.";
 	readonly relatedInformation: string = "";
