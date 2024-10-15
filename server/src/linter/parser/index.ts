@@ -653,16 +653,12 @@ export class Parser {
 			if (matchedRule.rule && matchedRule.rule.recursive) {
 				const [matchedRules, y] = this.recursiveLookahead(tokens.slice(i + 1), null, matchedRule.rule.end);
 				matchedRule.matches!.push(...matchedRules);
-				matches.push(matchedRule);
 				i += y;
-				loopCounter = i;
-				reset();
-				if (exitOnMatch) {
-					break;
-				}
-				continue;
-			} else if (matchedRule.rule) {
+			}
+
+			if (matchedRule.rule) {
 				matches.push(matchedRule);
+				loopCounter = i;
 				reset();
 				if (exitOnMatch) {
 					break;
