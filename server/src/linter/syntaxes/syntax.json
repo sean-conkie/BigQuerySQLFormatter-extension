@@ -958,6 +958,20 @@
       "alias": false
     },
     {
+      "name": "from.subquery",
+      "scopes": [
+        "keyword.from.sql",
+        "punctuation.definition.section.bracket.round.begin.sql"
+      ],
+      "type": "subquery",
+      "lookahead": 1,
+      "negativeLookahead": null,
+      "recursive": false,
+      "children": null,
+      "end": null,
+      "alias": true
+    },
+    {
       "name": "join.backtick.explicit.alias",
       "scopes": [
         "keyword.join.sql",

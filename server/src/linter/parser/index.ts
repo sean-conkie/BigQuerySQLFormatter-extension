@@ -1,12 +1,13 @@
 import syntaxJson from '../syntaxes/syntax.json';
 import { GrammarLoader, Grammar, GrammarTokenizeLineResult, RuleStack } from '../grammarLoader';
-import { Token, LineToken } from './token';
+import { Token, LineToken, includeTokensWithMatchingScopes } from './token';
 import { Rule } from './matches';
 import { StatementAST } from './ast';
 import { MatchObj, MatchedRule } from './matches';
 import { globalTokenCache, DocumentCache } from './tokenCache';
 import { DidChangeTextDocumentParams, TextDocumentItem, TextDocumentContentChangeEvent, VersionedTextDocumentIdentifier } from 'vscode-languageserver';
 import { range } from '../../utils';
+import { findToken  } from './utils';
 
 const punctuation: string[] = syntaxJson.punctuation;
 const skipTokens: string[] = syntaxJson.skipTokens;
@@ -393,6 +394,49 @@ export class Parser {
 			if (rules.length === 1) {
 				const matchedRule = new MatchedRule(rules.find((rule) => rule.scopes.join('|') === this.getMatchedTokens(expressionTokens)) ?? null, expressionTokens);
 
+				if (matchedRule.rule && matchedRule.rule.type === 'subquery') {
+					// process subquery
+					// subqueries need to be processed separately as they are not part of the main statement
+					// create a subset of tokens, using parentheses as the start and end tokens
+					const subqueryTokens: Token[] = [];
+
+					let parenCounter = 0;
+
+					for (let j = i; j < tokens.length; j++) {
+						const subqueryToken = tokens[j];
+						subqueryTokens.push(subqueryToken);
+						if (subqueryToken.scopes.filter((scope) => recursiveGroupBegin.includes(scope)).length > 0) {
+							parenCounter++;
+						} else if (subqueryToken.scopes.filter((scope) => recursiveGroupEnd.includes(scope)).length > 0) {
+							parenCounter--;
+						}
+						if (parenCounter === 0) {
+							i = j + 1;
+							break;
+						}
+					}
+
+					const subqueryStatement = this.parseStatement(subqueryTokens.slice(1, subqueryTokens.length - 1));
+
+					if (matchedRule.rule.alias === true) {
+						const [matchedRules, y] = this.recursiveLookahead(tokens.slice(i + 1), syntaxRules.filter((rule) => ["implicit.alias", "explicit.alias"].includes(rule.name)));
+						if (matchedRules.length > 0) {
+							const alias = includeTokensWithMatchingScopes(matchedRules[0].tokens, ["entity.name.alias.sql", "entity.name.tag"]);
+							if (alias.length > 0) {
+								subqueryStatement.alias = alias[0].value;
+							}
+						}
+						i += y;
+					}
+
+					if (matchedRule.rule.name === "from.subquery") {
+						statement.from = subqueryStatement;
+					}
+					reset();
+					continue;
+
+				}
+
 				if (matchedRule.rule && matchedRule.rule.recursive) {
 					const [matchedRules, y] = this.recursiveLookahead(tokens.slice(i + 1), null, matchedRule.rule.end);
 					matchedRule.matches!.push(...matchedRules);
@@ -468,13 +512,26 @@ export class Parser {
 		let tokenCounter: number = currentMatchCount - 1;
 
 		// if we have already matched all the tokens in the rule return the rule
-		if (checkIndex === rule.scopes.length && rule.negativeLookahead === null) {
+		if (checkIndex === rule.scopes.length && rule.negativeLookahead == null) {
 			return rule;
 		}
 
 		// filter tokens to exclude skips and punctuation
 		const filteredTokens = tokens.filter((token) => token.scopes.map((t) => skipTokens.includes(t)).includes(true) || token.scopes.filter((scope) => !skipTokens.includes(scope.split('.')[0])).length > 0)
 			.filter((token) => !token.scopes.map((t) => punctuation.includes(t)).includes(true));
+
+
+		const lengthCheck = filteredTokens.length + tokenCounter;
+		// if we've matched all the tokens but we have a negativeLookahead, then if filtered length is less
+		// than the number of tokens we need to check return the rule
+		if (checkIndex === rule.scopes.length && lengthCheck < rule.lookahead) {
+			return rule;
+		}
+
+		// if filtered length is less than the number of tokens we need to check return null
+		if (lengthCheck < rule.lookahead) {
+			return null;
+		}
 
 		// loop through the tokens by index
 		for (let i = 0; i < filteredTokens.length; i++) {
