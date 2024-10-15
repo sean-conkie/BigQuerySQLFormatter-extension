@@ -649,7 +649,7 @@
       "patterns": [
         {
           "captures": {
-            "1": { "name": "keyword.order.sql" }
+            "1": { "name": "keyword.order.direction.sql" }
           },
           "match": "(?i)\\b(desc|asc)\\b",
           "name": "meta.order.sql"

@@ -4,7 +4,7 @@ import { Diagnostic } from 'vscode-languageserver/node';
 import { RuleType } from '../enums';
 import { Rule } from '../base';
 import { FileMap } from '../../parser';
-import { ArrayAST, Column, ColumnAST, ColumnFunctionAST, ComparisonAST, ComparisonGroupAST, StatementAST } from '../../parser/ast';
+import { ArrayAST, CaseStatementAST, Column, ColumnAST, ColumnFunctionAST, ComparisonAST, ComparisonGroupAST, OrderAST, StatementAST } from '../../parser/ast';
 
 
 export class UnusedAlias extends Rule<FileMap>{
@@ -92,7 +92,7 @@ export class UnusedAlias extends Rule<FileMap>{
    * @param documentUri - The URI of the document being processed, or null if not applicable.
    * @returns An array of `Diagnostic` objects representing any issues found in the column.
    */
-  private processColumn(column: Column, documentUri: string | null = null): Diagnostic[] {
+  private processColumn(column: Column | OrderAST, documentUri: string | null = null): Diagnostic[] {
     const errors: Diagnostic[] = [];
 
     if (column instanceof ColumnAST) {
@@ -106,6 +106,29 @@ export class UnusedAlias extends Rule<FileMap>{
       }
     } else if (column instanceof ColumnFunctionAST) {
       column.parameters.map(parameter => errors.push(...this.processColumn(parameter, documentUri)));
+
+      if (column.over != null) {
+        column.over?.partition?.map(partition => errors.push(...this.processColumn(partition, documentUri)));
+        column.over?.order?.map(order => errors.push(...this.processColumn(order, documentUri)));
+      }
+    } else if (column instanceof OrderAST) {
+      if (column.column != null) {
+        errors.push(...this.processColumn(column.column, documentUri));
+      }
+    } else if (column instanceof CaseStatementAST) {
+      column.when.map((when) => {
+        if (when.when != null) {
+          errors.push(...this.processComparison(when.when, documentUri));
+        }
+        if (when.then != null) {
+          errors.push(...this.processColumn(when.then, documentUri));
+        }
+      });
+
+      if (column.else != null) {
+        errors.push(...this.processColumn(column.else, documentUri));
+      }
+
     }
 
     return errors;

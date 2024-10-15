@@ -222,7 +222,7 @@
       "lookahead": 1,
       "negativeLookahead": ["keyword.as.sql", "entity.name.tag"],
       "recursive": false,
-      "children": null,
+      "children": ["keyword.order.direction"],
       "end": null,
       "alias": false
     },
@@ -268,7 +268,7 @@
         "entity.name.tag"
       ],
       "recursive": false,
-      "children": null,
+      "children": ["keyword.order.direction"],
       "end": null,
       "alias": false
     },
@@ -459,7 +459,7 @@
       "lookahead": 2,
       "negativeLookahead": ["keyword.as.sql", "entity.name.tag"],
       "recursive": false,
-      "children": null,
+      "children": ["keyword.order.direction"],
       "end": null,
       "alias": false
     },
@@ -470,7 +470,7 @@
       "lookahead": 1,
       "negativeLookahead": ["keyword.as.sql", "entity.name.tag"],
       "recursive": false,
-      "children": null,
+      "children": ["keyword.order.direction"],
       "end": null,
       "alias": false
     },
@@ -824,6 +824,17 @@
       "name": "keyword.order",
       "scopes": ["keyword.order.sql"],
       "type": "keyword",
+      "lookahead": 0,
+      "negativeLookahead": null,
+      "recursive": false,
+      "children": null,
+      "end": null,
+      "alias": false
+    },
+    {
+      "name": "keyword.order.direction",
+      "scopes": ["keyword.order.direction.sql"],
+      "type": "direction",
       "lookahead": 0,
       "negativeLookahead": null,
       "recursive": false,

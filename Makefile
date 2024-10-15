@@ -24,4 +24,4 @@ version:
 	@npm version $(VERSION)
 	@cd ./server && npm version $(VERSION) && cd ..
 	@cd ./client && npm version $(VERSION)
-	echo "Version $(VERSION) set"
+	@echo "Version $(VERSION) set"

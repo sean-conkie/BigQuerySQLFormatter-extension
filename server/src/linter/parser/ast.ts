@@ -258,6 +258,23 @@ export class KeywordAST extends ASTWithValue<string> {
 export class OrderAST extends AST {
   column: Column | null = null;
   direction: string | null = null;
+
+  constructor(matchedRule: MatchedRule) {
+    super(matchedRule.tokens);
+
+    const column = createColumn(matchedRule);
+    const directionMatch = matchedRule.matches?.find((match) => match.rule?.type === 'direction') ?? null;
+
+    this.column = column;
+    this.tokens.push(...column.tokens);
+
+    if (directionMatch) {
+      this.direction = findToken(directionMatch.tokens, "keyword.order.direction.sql")?.value ?? null;
+      this.tokens.push(...directionMatch.tokens);
+    }
+
+  }
+
 }
 
 /**
@@ -292,7 +309,7 @@ export class WindowAST extends AST {
     const orderMatches = match.matches?.slice((orderByIndex ?? 0) + 1);
 
     this.partition = partitionMatches?.map((match) => createColumn(match) ?? null).filter((column) => column != null) as Column[];
-    this.order = orderMatches?.map((match) => new OrderAST()) ?? [];
+    this.order = orderMatches?.map((match) => new OrderAST(match)) ?? [];
   }
 }
 

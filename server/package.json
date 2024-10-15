@@ -1,7 +1,7 @@
 {
   "name": "bigquerysqlformatter-language-server",
   "description": "Language server.",
-  "version": "0.0.6",
+  "version": "0.2.1",
   "author": "sean-conkie",
   "license": "MIT",
   "engines": {
