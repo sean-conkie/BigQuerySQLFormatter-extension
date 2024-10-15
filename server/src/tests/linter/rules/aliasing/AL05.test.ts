@@ -62,6 +62,66 @@ describe('UnusedAlias', () => {
         }]);
     });
 
+    it('should return diagnostic when rule is enabled and as used - case', async () => {
+        instance.enabled = true;
+
+
+        const parser = new Parser();
+
+        const result = instance.evaluate(await parser.parse({text:'SELECT t.col1 as c\n       case when 1 = 1 then col2 end col2\n FROM dataset.table t;\n', uri: 'test.sql', languageId: 'sql', version: 0}));
+        expect(result).to.deep.equal([{
+            code: instance.diagnosticCode,
+            codeDescription: {href: instance.diagnosticCodeDescription},
+            message: instance.message,
+            severity: instance.severity,
+            range: {
+                start: { line: 1, character: 28 },
+                end: { line: 1, character: 32 }
+            },
+            source: instance.source,
+        }]);
+    });
+
+    it('should return diagnostic when rule is enabled and as used - over', async () => {
+        instance.enabled = true;
+
+
+        const parser = new Parser();
+
+        const result = instance.evaluate(await parser.parse({text:'SELECT t.col1 as c\n       lead(id,1) over (partition by col order by col2) col2\n FROM dataset.table t;\n', uri: 'test.sql', languageId: 'sql', version: 0}));
+        expect(result).to.deep.equal([{
+            code: instance.diagnosticCode,
+            codeDescription: {href: instance.diagnosticCodeDescription},
+            message: instance.message,
+            severity: instance.severity,
+            range: {
+                start: { line: 1, character: 12 },
+                end: { line: 1, character: 14 }
+            },
+            source: instance.source,
+        },{
+            code: instance.diagnosticCode,
+            codeDescription: {href: instance.diagnosticCodeDescription},
+            message: instance.message,
+            severity: instance.severity,
+            range: {
+                start: { line: 1, character: 37 },
+                end: { line: 1, character: 40 }
+            },
+            source: instance.source,
+        },{
+            code: instance.diagnosticCode,
+            codeDescription: {href: instance.diagnosticCodeDescription},
+            message: instance.message,
+            severity: instance.severity,
+            range: {
+                start: { line: 1, character: 50 },
+                end: { line: 1, character: 54 }
+            },
+            source: instance.source,
+        }]);
+    });
+
     it('should return diagnostic when rule is enabled and as used - join', async () => {
         instance.enabled = true;
 
