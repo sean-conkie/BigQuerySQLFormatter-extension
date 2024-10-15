@@ -512,7 +512,7 @@ export class Parser {
 		let tokenCounter: number = currentMatchCount - 1;
 
 		// if we have already matched all the tokens in the rule return the rule
-		if (checkIndex === rule.scopes.length && rule.negativeLookahead === null) {
+		if (checkIndex === rule.scopes.length && rule.negativeLookahead == null) {
 			return rule;
 		}
 
@@ -520,8 +520,16 @@ export class Parser {
 		const filteredTokens = tokens.filter((token) => token.scopes.map((t) => skipTokens.includes(t)).includes(true) || token.scopes.filter((scope) => !skipTokens.includes(scope.split('.')[0])).length > 0)
 			.filter((token) => !token.scopes.map((t) => punctuation.includes(t)).includes(true));
 
+
+		const lengthCheck = filteredTokens.length + tokenCounter;
+		// if we've matched all the tokens but we have a negativeLookahead, then if filtered length is less
+		// than the number of tokens we need to check return the rule
+		if (checkIndex === rule.scopes.length && lengthCheck < rule.lookahead) {
+			return rule;
+		}
+
 		// if filtered length is less than the number of tokens we need to check return null
-		if (filteredTokens.length < rule.lookahead) {
+		if (lengthCheck < rule.lookahead) {
 			return null;
 		}
 
