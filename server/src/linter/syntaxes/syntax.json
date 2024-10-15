@@ -39,7 +39,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "dml.project",
@@ -54,7 +55,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "dml.alias",
@@ -64,7 +66,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "dml.dataset",
@@ -78,7 +81,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "dml.ddl.project",
@@ -94,7 +98,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "dml.ddl.alias",
@@ -108,7 +113,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "dml.ddl.dataset",
@@ -123,7 +129,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "select.distinct",
@@ -133,7 +140,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "column.explicit.alias",
@@ -148,7 +156,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "column.explicit.alias.missing",
@@ -162,7 +171,8 @@
       "negativeLookahead": ["entity.name.tag"],
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "column.explicit.alias.no.prefix",
@@ -176,7 +186,8 @@
       "negativeLookahead": ["punctuation.separator.comma.sql"],
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "column.implicit.alias",
@@ -190,7 +201,8 @@
       "negativeLookahead": ["punctuation.separator.comma.sql"],
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "column.implicit.alias.no.prefix",
@@ -200,7 +212,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "column.no.alias",
@@ -210,7 +223,8 @@
       "negativeLookahead": ["keyword.as.sql", "entity.name.tag"],
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "special.cast.column",
@@ -225,7 +239,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "special.cast.column.no.prefix",
@@ -239,17 +254,23 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "column.no.prefix",
       "scopes": ["entity.other.column.sql"],
       "type": "column",
       "lookahead": 0,
-      "negativeLookahead": ["keyword.as.sql", "entity.name.tag"],
+      "negativeLookahead": [
+        "punctuation.separator.comma.sql",
+        "keyword.as.sql",
+        "entity.name.tag"
+      ],
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "explicit.alias",
@@ -259,7 +280,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "keyword.cast.type",
@@ -269,7 +291,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "column.explicit.alias.trailing.comma",
@@ -285,7 +308,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "column.explicit.alias.no.prefix.trailing.comma",
@@ -300,7 +324,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "column.implicit.alias.trailing.comma",
@@ -315,7 +340,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "column.implicit.alias.no.prefix.trailing.comma",
@@ -329,7 +355,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "column.no.alias.trailing.comma",
@@ -343,7 +370,8 @@
       "negativeLookahead": ["keyword.as.sql", "entity.name.tag"],
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "column.no.prefix.trailing.comma",
@@ -353,7 +381,8 @@
       "negativeLookahead": ["keyword.as.sql", "entity.name.tag"],
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "column.explicit.alias.leading.comma",
@@ -369,7 +398,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "column.explicit.alias.no.prefix.leading.comma",
@@ -384,7 +414,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "column.implicit.alias.leading.comma",
@@ -399,7 +430,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "column.implicit.alias.no.prefix.leading.comma",
@@ -413,7 +445,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "column.no.alias.leading.comma",
@@ -427,7 +460,8 @@
       "negativeLookahead": ["keyword.as.sql", "entity.name.tag"],
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "column.no.prefix.leading.comma",
@@ -437,7 +471,8 @@
       "negativeLookahead": ["keyword.as.sql", "entity.name.tag"],
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "implicit.alias",
@@ -447,7 +482,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "function.string",
@@ -459,8 +495,9 @@
       "lookahead": 0,
       "negativeLookahead": null,
       "recursive": true,
-      "children": ["function.over", "implicit.alias", "explicit.alias"],
-      "end": null
+      "children": ["function.over"],
+      "end": null,
+      "alias": true
     },
     {
       "name": "function.hash",
@@ -472,8 +509,9 @@
       "lookahead": 0,
       "negativeLookahead": null,
       "recursive": true,
-      "children": ["function.over", "implicit.alias", "explicit.alias"],
-      "end": null
+      "children": ["function.over"],
+      "end": null,
+      "alias": true
     },
     {
       "name": "function.aggregate.array",
@@ -485,8 +523,9 @@
       "lookahead": 0,
       "negativeLookahead": null,
       "recursive": true,
-      "children": ["function.over", "implicit.alias", "explicit.alias"],
-      "end": null
+      "children": ["function.over"],
+      "end": null,
+      "alias": true
     },
     {
       "name": "function.aggregate",
@@ -498,8 +537,9 @@
       "lookahead": 0,
       "negativeLookahead": null,
       "recursive": true,
-      "children": ["function.over", "implicit.alias", "explicit.alias"],
-      "end": null
+      "children": ["function.over"],
+      "end": null,
+      "alias": true
     },
     {
       "name": "function.scalar",
@@ -511,8 +551,9 @@
       "lookahead": 0,
       "negativeLookahead": null,
       "recursive": true,
-      "children": ["function.over", "implicit.alias", "explicit.alias"],
-      "end": null
+      "children": ["function.over"],
+      "end": null,
+      "alias": true
     },
     {
       "name": "function.cast",
@@ -524,8 +565,9 @@
       "lookahead": 0,
       "negativeLookahead": null,
       "recursive": true,
-      "children": ["function.over", "implicit.alias", "explicit.alias"],
-      "end": null
+      "children": ["function.over"],
+      "end": null,
+      "alias": true
     },
     {
       "name": "function.date",
@@ -537,8 +579,9 @@
       "lookahead": 0,
       "negativeLookahead": null,
       "recursive": true,
-      "children": ["function.over", "implicit.alias", "explicit.alias"],
-      "end": null
+      "children": ["function.over"],
+      "end": null,
+      "alias": true
     },
     {
       "name": "function.net",
@@ -550,8 +593,9 @@
       "lookahead": 0,
       "negativeLookahead": null,
       "recursive": true,
-      "children": ["function.over", "implicit.alias", "explicit.alias"],
-      "end": null
+      "children": ["function.over"],
+      "end": null,
+      "alias": true
     },
     {
       "name": "function.math",
@@ -563,8 +607,9 @@
       "lookahead": 0,
       "negativeLookahead": null,
       "recursive": true,
-      "children": ["function.over", "implicit.alias", "explicit.alias"],
-      "end": null
+      "children": ["function.over"],
+      "end": null,
+      "alias": true
     },
     {
       "name": "function.string.param",
@@ -576,8 +621,9 @@
       "lookahead": 0,
       "negativeLookahead": null,
       "recursive": true,
-      "children": ["function.over", "implicit.alias", "explicit.alias"],
-      "end": null
+      "children": ["function.over"],
+      "end": null,
+      "alias": true
     },
     {
       "name": "function.json",
@@ -589,8 +635,9 @@
       "lookahead": 0,
       "negativeLookahead": null,
       "recursive": true,
-      "children": ["function.over", "implicit.alias", "explicit.alias"],
-      "end": null
+      "children": ["function.over"],
+      "end": null,
+      "alias": true
     },
     {
       "name": "function.window",
@@ -602,8 +649,9 @@
       "lookahead": 0,
       "negativeLookahead": null,
       "recursive": true,
-      "children": ["function.over", "implicit.alias", "explicit.alias"],
-      "end": null
+      "children": ["function.over"],
+      "end": null,
+      "alias": true
     },
     {
       "name": "function.over",
@@ -615,8 +663,9 @@
       "lookahead": 0,
       "negativeLookahead": null,
       "recursive": true,
-      "children": ["implicit.alias", "explicit.alias"],
-      "end": null
+      "children": null,
+      "end": null,
+      "alias": true
     },
     {
       "name": "function.conditional",
@@ -628,8 +677,9 @@
       "lookahead": 0,
       "negativeLookahead": null,
       "recursive": true,
-      "children": ["function.over", "implicit.alias", "explicit.alias"],
-      "end": null
+      "children": ["function.over"],
+      "end": null,
+      "alias": true
     },
     {
       "name": "function.debug",
@@ -641,8 +691,9 @@
       "lookahead": 0,
       "negativeLookahead": null,
       "recursive": true,
-      "children": ["function.over", "implicit.alias", "explicit.alias"],
-      "end": null
+      "children": ["function.over"],
+      "end": null,
+      "alias": true
     },
     {
       "name": "function.gis",
@@ -654,8 +705,9 @@
       "lookahead": 0,
       "negativeLookahead": null,
       "recursive": true,
-      "children": ["function.over", "implicit.alias", "explicit.alias"],
-      "end": null
+      "children": ["function.over"],
+      "end": null,
+      "alias": true
     },
     {
       "name": "function.ml",
@@ -667,8 +719,9 @@
       "lookahead": 0,
       "negativeLookahead": null,
       "recursive": true,
-      "children": ["function.over", "implicit.alias", "explicit.alias"],
-      "end": null
+      "children": ["function.over"],
+      "end": null,
+      "alias": true
     },
     {
       "name": "function.keys",
@@ -680,8 +733,9 @@
       "lookahead": 0,
       "negativeLookahead": null,
       "recursive": true,
-      "children": ["function.over", "implicit.alias", "explicit.alias"],
-      "end": null
+      "children": ["function.over"],
+      "end": null,
+      "alias": true
     },
     {
       "name": "function.aead",
@@ -693,8 +747,9 @@
       "lookahead": 0,
       "negativeLookahead": null,
       "recursive": true,
-      "children": ["function.over", "implicit.alias", "explicit.alias"],
-      "end": null
+      "children": ["function.over"],
+      "end": null,
+      "alias": true
     },
     {
       "name": "function.federated",
@@ -706,8 +761,9 @@
       "lookahead": 0,
       "negativeLookahead": null,
       "recursive": true,
-      "children": ["function.over", "implicit.alias", "explicit.alias"],
-      "end": null
+      "children": ["function.over"],
+      "end": null,
+      "alias": true
     },
     {
       "name": "keyword.function",
@@ -717,7 +773,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "keyword.boolean",
@@ -727,7 +784,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "keyword.boolean.explicit.alias",
@@ -737,7 +795,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "keyword.boolean.explicit.alias",
@@ -747,7 +806,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "keyword.partition",
@@ -757,7 +817,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "keyword.order",
@@ -767,7 +828,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "keyword.math",
@@ -777,7 +839,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "from.project.dataset.object.explicit.alias",
@@ -794,7 +857,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "from.project.dataset.object.implicit.alias",
@@ -810,7 +874,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "from.project.dataset.object.no.alias",
@@ -825,7 +890,8 @@
       "negativeLookahead": ["keyword.as.sql", "entity.name.alias.sql"],
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "from.project.dataset.object.no.alias",
@@ -840,7 +906,8 @@
       "negativeLookahead": ["keyword.as.sql", "entity.name.alias.sql"],
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "from.dataset.object.explicit.alias",
@@ -856,7 +923,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "from.dataset.object.implicit.alias",
@@ -871,7 +939,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "from.dataset.object.no.alias",
@@ -885,7 +954,8 @@
       "negativeLookahead": ["keyword.as.sql", "entity.name.alias.sql"],
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "join.backtick.explicit.alias",
@@ -904,7 +974,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "join.backtick.implicit.alias",
@@ -922,7 +993,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "join.explicit.alias",
@@ -939,7 +1011,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "join.implicit.alias",
@@ -955,7 +1028,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "join.no.alias",
@@ -970,7 +1044,8 @@
       "negativeLookahead": ["keyword.as.sql", "entity.name.alias.sql"],
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "join.dataset.object.explicit.alias",
@@ -986,7 +1061,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": ["join.on", "join.on.bracket"],
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "join.dataset.object.implicit.alias",
@@ -1001,7 +1077,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": ["join.on", "join.on.bracket"],
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "join.dataset.object.no.alias",
@@ -1015,7 +1092,8 @@
       "negativeLookahead": ["keyword.as.sql", "entity.name.alias.sql"],
       "recursive": false,
       "children": ["join.on", "join.on.bracket"],
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "join.on",
@@ -1034,7 +1112,8 @@
         "keyword.group.sql",
         "keyword.order.sql",
         "keyword.select.limit.sql"
-      ]
+      ],
+      "alias": false
     },
     {
       "name": "join.on.bracket",
@@ -1054,7 +1133,8 @@
         "keyword.group.sql",
         "keyword.order.sql",
         "keyword.select.limit.sql"
-      ]
+      ],
+      "alias": false
     },
     {
       "name": "comparison.operator",
@@ -1064,7 +1144,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "logical.operator.and",
@@ -1076,7 +1157,8 @@
       ],
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "logical.operator.or",
@@ -1088,7 +1170,8 @@
       ],
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "comparison.group",
@@ -1098,7 +1181,8 @@
       "negativeLookahead": null,
       "recursive": true,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "comparison.group.or",
@@ -1111,7 +1195,8 @@
       "negativeLookahead": null,
       "recursive": true,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "comparison.group.and",
@@ -1124,7 +1209,8 @@
       "negativeLookahead": null,
       "recursive": true,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "comparison.not.in",
@@ -1137,7 +1223,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "comparison.is.not",
@@ -1150,7 +1237,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "comparison.is.in",
@@ -1160,7 +1248,8 @@
       "negativeLookahead": ["keyword.expression.negative.comparison.sql"],
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "where",
@@ -1174,7 +1263,8 @@
         "keyword.group.sql",
         "keyword.order.sql",
         "keyword.select.limit.sql"
-      ]
+      ],
+      "alias": false
     },
     {
       "name": "limit.offset",
@@ -1184,7 +1274,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "limit.no.offset",
@@ -1194,7 +1285,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "string.single",
@@ -1204,7 +1296,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "string.double",
@@ -1214,7 +1307,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "string.single.explicit.alias",
@@ -1228,7 +1322,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "string.single.implicit.alias",
@@ -1238,7 +1333,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "string.double.explicit.alias",
@@ -1252,7 +1348,8 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "string.double.implicit.alias",
@@ -1266,17 +1363,19 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "number",
       "scopes": ["constant.numeric.sql"],
       "type": "number",
       "lookahead": 0,
-      "negativeLookahead": null,
+      "negativeLookahead": ["keyword.as.sql", "entity.name.tag"],
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "keyword.null",
@@ -1286,27 +1385,30 @@
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "number.explicit.alias",
       "scopes": ["constant.numeric.sql", "keyword.as.sql", "entity.name.tag"],
       "type": "number",
-      "lookahead": 0,
+      "lookahead": 2,
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "number.implicit.alias",
       "scopes": ["constant.numeric.sql", "entity.name.tag"],
       "type": "number",
-      "lookahead": 0,
+      "lookahead": 1,
       "negativeLookahead": null,
       "recursive": false,
       "children": null,
-      "end": null
+      "end": null,
+      "alias": false
     },
     {
       "name": "case.statement",
@@ -1315,8 +1417,9 @@
       "lookahead": 0,
       "negativeLookahead": null,
       "recursive": true,
-      "children": ["implicit.alias", "explicit.alias"],
-      "end": ["keyword.control.case.end.sql"]
+      "children": ["case.statement.end"],
+      "end": ["keyword.control.case.end.sql"],
+      "alias": true
     },
     {
       "name": "case.statement.when",
@@ -1326,7 +1429,8 @@
       "negativeLookahead": null,
       "recursive": true,
       "children": null,
-      "end": ["keyword.control.case.part.end.sql"]
+      "end": ["keyword.control.case.part.end.sql"],
+      "alias": false
     },
     {
       "name": "case.statement.then",
@@ -1336,7 +1440,8 @@
       "negativeLookahead": null,
       "recursive": true,
       "children": null,
-      "end": ["keyword.control.case.part.end.sql"]
+      "end": ["keyword.control.case.part.end.sql"],
+      "alias": false
     },
     {
       "name": "case.statement.else",
@@ -1346,7 +1451,19 @@
       "negativeLookahead": null,
       "recursive": true,
       "children": null,
-      "end": ["keyword.control.case.part.end.sql"]
+      "end": ["keyword.control.case.part.end.sql"],
+      "alias": false
+    },
+    {
+      "name": "case.statement.end",
+      "scopes": ["keyword.control.case.end.sql"],
+      "type": "end",
+      "lookahead": 0,
+      "negativeLookahead": null,
+      "recursive": false,
+      "children": null,
+      "end": null,
+      "alias": false
     },
     {
       "name": "group.by",
@@ -1363,7 +1480,8 @@
         "keyword.qualify.sql",
         "keyword.window.sql",
         "punctuation.terminator.statement.semicolon.sql"
-      ]
+      ],
+      "alias": false
     }
   ]
 }

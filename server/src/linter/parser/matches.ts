@@ -99,5 +99,6 @@ export type Rule = {
 	negativeLookahead: string[] | null,
 	recursive: boolean,
 	children: string[] | null,
-	end: string[] | null
+	end: string[] | null,
+  alias: boolean
 }

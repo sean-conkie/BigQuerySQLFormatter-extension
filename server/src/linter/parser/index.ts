@@ -7,7 +7,6 @@ import { MatchObj, MatchedRule } from './matches';
 import { globalTokenCache, DocumentCache } from './tokenCache';
 import { DidChangeTextDocumentParams, TextDocumentItem, TextDocumentContentChangeEvent, VersionedTextDocumentIdentifier } from 'vscode-languageserver';
 import { range } from '../../utils';
-import { start } from 'repl';
 
 const punctuation: string[] = syntaxJson.punctuation;
 const skipTokens: string[] = syntaxJson.skipTokens;
@@ -150,7 +149,7 @@ export class Parser {
 
 			s.statement = statement.statement;
 			fileMap[i] = s;
-			startLine = statement.line;
+			startLine = statement.line + 1;
 
 		}
 
@@ -406,6 +405,11 @@ export class Parser {
 						matchedRule.matches!.push(...matchedRules);
 						i += y;
 					}
+					if (matchedRule.rule.alias === true) {
+						const [matchedRules, y] = this.recursiveLookahead(tokens.slice(i + 1), syntaxRules.filter((rule) => ["implicit.alias", "explicit.alias"].includes(rule.name)));
+						matchedRule.matches!.push(...matchedRules);
+						i += y;
+					}
 					statement.processRule(matchedRule);
 					reset();
 					continue;
@@ -517,7 +521,11 @@ export class Parser {
 		let tokenCounter: number = 0;
 		let reCheck: boolean = true; // used to stop infinite loops
 		const setRules = () => {
-			rules == null ? workingRules = syntaxRules : workingRules = rules;
+			if (rules == null) {
+					workingRules = syntaxRules;
+			} else {
+					workingRules = rules;
+			}
 		};
 		const reset = () => {
 			setRules();
@@ -565,6 +573,11 @@ export class Parser {
 				if (reCheck) {
 					i--; // restart checking from the last token
 					reCheck = false;
+				} else if (reCheck === false && rules != null && exitOnMatch) {
+					// in this scenario we are searching for a sepcific rule subset
+					// the token has been checked and no rules have matched so exit.
+					loopCounter = 0; // reset loop counter because we never matched anything
+					break;
 				} else {
 					reCheck = true;
 				}

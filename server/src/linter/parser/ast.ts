@@ -336,25 +336,27 @@ export class ColumnFunctionAST extends AST {
       const columnTokens = match.tokens.slice(0, slicePoint);
       matchedRule.matches?.splice(indexOfMatch, 1, new MatchedRule(
         {
-          "type": "column",
-          "name": "special.column",
-          "scopes": [],
-          "lookahead": 0,
-          "negativeLookahead": null,
-          "recursive": false,
-          "children": null,
-          "end": null
+          type: "column",
+          name: "special.column",
+          scopes: [],
+          lookahead: 0,
+          negativeLookahead: null,
+          recursive: false,
+          children: null,
+          end: null,
+          alias: false
         },columnTokens));
 
       matchedRule.matches?.splice(indexOfMatch + 1, 0, new MatchedRule({
-        "type": "keyword",
-        "name": "special.keyword",
-        "scopes": [],
-        "lookahead": 0,
-        "negativeLookahead": null,
-        "recursive": false,
-        "children": null,
-        "end": null
+        type: "keyword",
+        name: "special.keyword",
+        scopes: [],
+        lookahead: 0,
+        negativeLookahead: null,
+        recursive: false,
+        children: null,
+        end: null,
+        alias: false
       }, keywordTokens));
     });
     // window functions may contain an alias - pop it to the

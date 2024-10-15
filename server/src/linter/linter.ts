@@ -1,5 +1,5 @@
 import { ServerSettings } from '../settings';
-import { Diagnostic, DidChangeTextDocumentParams, TextDocumentItem, CodeActionParams, CodeAction, CodeActionKind, Range, TextEdit } from 'vscode-languageserver/node';
+import { Diagnostic, DidChangeTextDocumentParams, TextDocumentItem, CodeActionParams, CodeAction, CodeActionKind, Range } from 'vscode-languageserver/node';
 import { Rule } from './rules/base';
 import { initialiseRules } from './rules/rules';
 import { RuleType } from './rules/enums';
