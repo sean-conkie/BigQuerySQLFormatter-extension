@@ -96,7 +96,7 @@ export class UnusedAlias extends Rule<FileMap>{
     const errors: Diagnostic[] = [];
 
     if (column instanceof ColumnAST) {
-      if (column.source == null) {
+      if (column.source == null && column.column != null) {
         const columnToken = column.tokens.find(token => token.scopes.includes("meta.column.sql"));
         if (columnToken) {
           errors.push(this.createDiagnostic({start: {line: columnToken.lineNumber ?? 0, character: columnToken.startIndex ?? 0}, end: {line: columnToken.lineNumber ?? 0, character: columnToken.endIndex ?? 0}}, documentUri));
