@@ -526,6 +526,16 @@
         },
         {
           "captures": {
+            "1": { "name": "keyword.from.sql" },
+            "2": {
+              "name": "punctuation.definition.section.bracket.round.begin.sql"
+            }
+          },
+          "match": "(?i)\\b(from)\\b\\s*(\\()",
+          "name": "meta.source.subquery.sql"
+        },
+        {
+          "captures": {
             "1": { "name": "keyword.expression.operator.or.sql" },
             "2": { "name": "keyword.expression.operator.and.sql" }
           },
