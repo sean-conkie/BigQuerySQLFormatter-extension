@@ -3,7 +3,7 @@
   "description": "VSCode part of a language server",
   "author": "sean-conkie",
   "license": "MIT",
-  "version": "0.0.6",
+  "version": "0.2.1",
   "publisher": "vscode",
   "repository": {
     "type": "git",
