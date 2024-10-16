@@ -24,9 +24,9 @@ version: ensure-clean
 	@echo "Setting version to $(VERSION)"
 	@cd ./server && npm version $(VERSION) && cd ..
 	@cd ./client && npm version $(VERSION) && cd ..
+	@npm version $(VERSION) --no-git-tag-version
 	@git add .
 	@git commit -m "Version $(VERSION)" -q
-	@npm version $(VERSION) --no-git-tag-version
 	@echo "Version $(VERSION) set"
 
 ensure-clean:
