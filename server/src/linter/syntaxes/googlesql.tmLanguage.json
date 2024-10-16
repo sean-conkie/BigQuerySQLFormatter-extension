@@ -777,7 +777,7 @@
             "4": { "name": "keyword.as.sql" },
             "5": { "name": "entity.name.tag" }
           },
-          "match": "(?i)(?:([\\w_]+)(\\.))?([\\w_]+)[ \\t]+(as)[ \\t]+(\\3)(?=\\s*?(?:,|\\n|from))",
+          "match": "(?i)(?:([\\w_]+)(\\.))?([\\w_]+)[ \\t]+(as)[ \\t]+(\\3)(?=\\s*?(?:,|\\n|from|\\-+))",
           "name": "meta.column.explicit.alias.redundant.sql"
         },
         {
@@ -787,7 +787,7 @@
             "3": { "name": "entity.other.column.sql" },
             "4": { "name": "entity.name.tag" }
           },
-          "match": "(?i)(?:([\\w_]+)(\\.))?([\\w_]+)[ \\t]+(?:(?>as|(\\3)))(?=\\s*?(?:,|\\n|from))",
+          "match": "(?i)(?:([\\w_]+)(\\.))?([\\w_]+)[ \\t]+(?:(?>as|(\\3)))(?=\\s*?(?:,|\\n|from|\\-+))",
           "name": "meta.column.implicit.alias.redundant.sql"
         },
         {
@@ -798,7 +798,7 @@
             "4": { "name": "keyword.as.sql" },
             "5": { "name": "entity.name.tag" }
           },
-          "match": "(?i)(?:([\\w_]+)(\\.))?([\\w_]+)[ \\t]+(as)[ \\t]+([\\w_]+)(?=\\s*?(?:,|\\n|from))",
+          "match": "(?i)(?:([\\w_]+)(\\.))?([\\w_]+)[ \\t]+(as)[ \\t]+([\\w_]+)(?=\\s*?(?:,|\\n|from|\\-+))",
           "name": "meta.column.explicit.alias.sql"
         },
         {
@@ -808,7 +808,7 @@
             "3": { "name": "entity.other.column.sql" },
             "4": { "name": "keyword.as.sql" }
           },
-          "match": "(?i)(?:([\\w_]+)(\\.))?([\\w_]+)[ \\t]+(as)(?=\\s*?(?:,|\\n|from))",
+          "match": "(?i)(?:([\\w_]+)(\\.))?([\\w_]+)[ \\t]+(as)(?=\\s*?(?:,|\\n|from|\\-+))",
           "name": "meta.column.explicit.alias.missing.sql"
         },
         {
@@ -818,7 +818,7 @@
             "3": { "name": "entity.other.column.sql" },
             "4": { "name": "entity.name.tag" }
           },
-          "match": "(?i)([\\w_]+)(\\.)([\\w_]+)[ \\t]+(?:(?>as|([\\w_]+)))(?=\\s*?(?:,|\\n|from))",
+          "match": "(?i)([\\w_]+)(\\.)([\\w_]+)[ \\t]+(?:(?>as|([\\w_]+)))(?=\\s*?(?:,|\\n|from|\\-+))",
           "name": "meta.column.implicit.alias.sql"
         },
         {
@@ -832,44 +832,53 @@
         },
         {
           "captures": {
+            "1": { "name": "entity.name.alias.sql" },
+            "2": { "name": "punctuation.separator.period.sql" },
+            "3": { "name": "keyword.operator.star.sql" }
+          },
+          "match": "(?i)([\\w_]+)(\\.)(\\*)",
+          "name": "meta.keyword.star.alias.sql"
+        },
+        {
+          "captures": {
             "1": { "name": "entity.other.column.sql" }
           },
-          "match": "(?i)^[ \\t]*?([\\w_]+)(?=\\s*?(?:,|\\n|from))",
+          "match": "(?i)^[ \\t]*?([\\w_]+)(?=\\s*?(?:,|\\n|from|\\-+))",
           "name": "meta.column.sql"
         },
         {
           "captures": {
             "1": { "name": "entity.other.column.sql" }
           },
-          "match": "(?i)(?<=select )([\\w_]+)(?=\\s*?(?:,|\\n|from))",
+          "match": "(?i)(?<=select )([\\w_]+)(?=\\s*?(?:,|\\n|from|\\-+))",
           "name": "meta.column.sql"
         },
         {
           "captures": {
             "1": { "name": "entity.other.column.sql" }
           },
-          "match": "(?i)(?<=distinct )([\\w_]+)(?=\\s*?(?:,|\\n|from))",
+          "match": "(?i)(?<=distinct )([\\w_]+)(?=\\s*?(?:,|\\n|from|\\-+))",
           "name": "meta.column.sql"
         },
         {
           "captures": {
             "1": { "name": "entity.other.column.sql" }
           },
-          "match": "(?i)(?<=by )([\\w_]+)(?=\\s*?(?:,|\\n|from))",
+          "match": "(?i)(?<=by )([\\w_]+)(?=\\s*?(?:,|\\n|from|\\-+))",
           "name": "meta.column.sql"
         },
         {
           "captures": {
             "1": { "name": "entity.other.column.sql" }
           },
-          "match": "(?i)(?<=\\()([\\w_]+)(?=\\s*?(?:,|\\n|from))",
+          "match": "(?i)(?<=\\()([\\w_]+)(?=\\s*?(?:,|\\n|from|\\-+))",
           "name": "meta.column.sql"
         },
         {
           "captures": {
             "1": { "name": "entity.other.column.sql" }
           },
-          "match": "(?i)(?<=,)[ \\t]*?(\\w+)(?=\\s*?(?:,|\\n|from))",
+          "match": "(?i)(?<=,)[ \\t]*?([\\w_]+)(?=\\s*?(?:,|\\n|from|\\-+))",
           "name": "meta.column.sql"
         },
         {
@@ -877,14 +886,14 @@
             "1": { "name": "keyword.as.sql" },
             "2": { "name": "entity.name.tag" }
           },
-          "match": "(?i)(?:(as)[ \\t]+)?([\\w_]+)(?=\\s*?(?:,|\\n|from))",
+          "match": "(?i)(?:(as)[ \\t]+)?([\\w_]+)(?=\\s*?(?:,|\\n|from|\\-+))",
           "name": "meta.column.alias.sql"
         },
         {
           "captures": {
             "1": { "name": "keyword.as.sql" }
           },
-          "match": "(?i)(?:(as)(?=\\s*?(?:,|\\n|from)))",
+          "match": "(?i)(?:(as)(?=\\s*?(?:,|\\n|from|\\-+)))",
           "name": "meta.column.alias.missing.sql"
         },
         {

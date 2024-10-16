@@ -15,7 +15,7 @@ export class ColumnCount extends Rule<string> {
   readonly code: string = "AM04";
   readonly message: string = "Query produces an unknown number of result columns.";
 	readonly relatedInformation: string = "Querying all columns using * produces a query result where the number or ordering of columns changes if the upstream table’s schema changes. This should be avoided because it can cause slow performance, cause important schema changes to go undetected, or break production code.";
-  readonly pattern: RegExp = /select\s+(\*)/gmi;
+  readonly pattern: RegExp = /((?:[\w_]+\.)?\*)/gmi;
   readonly ruleGroup: string = 'ambiguous';
 
   /**

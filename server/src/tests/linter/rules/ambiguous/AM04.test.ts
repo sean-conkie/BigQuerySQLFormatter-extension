@@ -36,6 +36,23 @@ describe('ColumnCount', () => {
         }]);
     });
 
+    it('should return diagnostic when rule is enabled and pattern matches - alias', () => {
+        instance.enabled = true;
+        const result = instance.evaluate('select t.* from table t');
+        const range = {
+            start: { line: 0, character: 7 },
+            end: { line: 0, character: 10 }
+        };
+        expect(result).to.deep.equal([{
+            code: instance.diagnosticCode,
+            codeDescription: {href: instance.diagnosticCodeDescription},
+            message: instance.message,
+            severity: instance.severity,
+            range: range,
+            source: instance.source
+        }]);
+    });
+
     it('should return null when rule is enabled but pattern does not match', () => {
         instance.enabled = true;
         const result = instance.evaluate('select col from table');
