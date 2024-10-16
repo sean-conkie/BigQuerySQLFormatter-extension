@@ -146,16 +146,6 @@ export class ComparisonOperators extends Rule<FileMap> {
     return errors;
 
   }
-
-  /**
-   * Generates a unique cache key based on the provided range.
-   *
-   * @param range - The range object containing start and end positions.
-   * @returns A string that uniquely identifies the range.
-   */
-  private createCacheKey(range: Range): string {
-    return `${range.start.line}|${range.start.character}|${range.end.line}|${range.end.character}`;
-  }
   
   /**
    * Creates a set of code actions to fix diagnostics.

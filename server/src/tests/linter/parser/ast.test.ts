@@ -12,7 +12,7 @@ describe('StringAST Class', () => {
         expect(stringAST.tokens).to.deep.equal(tokens);
         expect(stringAST.value).to.equal('value1value2');
         expect(stringAST.alias).to.be.null;
-        expect(stringAST.lineNumber).to.equal(1);
+        expect(stringAST.startLine).to.equal(1);
         expect(stringAST.startIndex).to.equal(0);
         expect(stringAST.endIndex).to.equal(10);
     });
@@ -23,7 +23,7 @@ describe('StringAST Class', () => {
         expect(stringAST.tokens).to.deep.equal(tokens);
         expect(stringAST.value).to.be.null;
         expect(stringAST.alias).to.be.null;
-        expect(stringAST.lineNumber).to.be.null;
+        expect(stringAST.startLine).to.be.null;
         expect(stringAST.startIndex).to.be.null;
         expect(stringAST.endIndex).to.be.null;
     });
@@ -38,7 +38,7 @@ describe('StringAST Class', () => {
         expect(stringAST.tokens).to.deep.equal(tokens);
         expect(stringAST.value).to.equal('value1value2value3');
         expect(stringAST.alias).to.be.null;
-        expect(stringAST.lineNumber).to.equal(1);
+        expect(stringAST.startLine).to.equal(1);
         expect(stringAST.startIndex).to.equal(0);
         expect(stringAST.endIndex).to.equal(15);
     });

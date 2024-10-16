@@ -101,7 +101,7 @@ export class UnusedAlias extends Rule<FileMap>{
         if (columnToken) {
           errors.push(this.createDiagnostic({start: {line: columnToken.lineNumber ?? 0, character: columnToken.startIndex ?? 0}, end: {line: columnToken.lineNumber ?? 0, character: columnToken.endIndex ?? 0}}, documentUri));
         } else {
-          errors.push(this.createDiagnostic({start: {line: column.lineNumber ?? 0, character: column.startIndex ?? 0}, end: {line: column.lineNumber ?? 0, character: column.endIndex ?? 0}}, documentUri));
+          errors.push(this.createDiagnostic({start: {line: column.startLine ?? 0, character: column.startIndex ?? 0}, end: {line: column.startLine ?? 0, character: column.endIndex ?? 0}}, documentUri));
         }
       }
     } else if (column instanceof ColumnFunctionAST) {

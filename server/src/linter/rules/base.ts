@@ -129,4 +129,15 @@ export abstract class Rule<T extends string | FileMap>{
 		return url.href;
 	}
 
+
+  /**
+   * Generates a unique cache key based on the provided range.
+   *
+   * @param range - The range object containing start and end positions.
+   * @returns A string that uniquely identifies the range.
+   */
+  createCacheKey(range: Range): string {
+    return `${range.start.line}|${range.start.character}|${range.end.line}|${range.end.character}`;
+  }
+
 }

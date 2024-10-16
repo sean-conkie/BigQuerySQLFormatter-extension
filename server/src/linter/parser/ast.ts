@@ -14,28 +14,34 @@ import { StatementType, JoinType, LogicalOperator, ComparisonOperator } from './
  * @abstract
  * @property {Token[]} tokens - An array of tokens associated with this AST node.
  * @property {string | null} alias - An optional alias for the AST node.
- * @property {number | null} lineNumber - The line number where this AST node starts.
+ * @property {number | null} startLine - The line number where this AST node starts.
  * @property {number | null} startIndex - The start index of this AST node in the source code.
  * @property {number | null} endIndex - The end index of this AST node in the source code.
  */
 abstract class AST {
   tokens: Token[] = [];
   alias: string | null = null;
-  lineNumber: number | null = null;
+  startLine: number | null = null;
   startIndex: number | null = null;
   endIndex: number | null = null;
+  endLine: number | null = null;
 
   constructor(tokens: Token[] = []) {
     this.tokens = sortTokens(tokens);
 
-    if (tokens.length > 0) {
-      this.alias = findToken(tokens, "entity.name.tag")?.value ?? null;
-      this.lineNumber = excludeTokensWithMatchingScopes(tokens, ['punctuation.whitespace.leading.sql',
+    if (this.tokens.length > 0) {
+      const filteredTokens = excludeTokensWithMatchingScopes(this.tokens, [
+        'punctuation.whitespace.leading.sql',
         'punctuation.whitespace.trailing.sql',
         'punctuation.whitespace.sql',
-        'punctuation.separator.comma.sql'])[0].lineNumber;
-      this.startIndex = tokens[0].startIndex;
-      this.endIndex = tokens[tokens.length - 1].endIndex;
+        'punctuation.separator.comma.sql',
+        'comment.line.double-dash.sql'
+      ]);
+      this.alias = findToken(tokens, "entity.name.tag")?.value ?? null;
+      this.startLine = filteredTokens[0].lineNumber;
+      this.startIndex = filteredTokens[0].startIndex;
+      this.endIndex = this.tokens[this.tokens.length - 1].endIndex;
+      this.endLine = this.tokens[this.tokens.length - 1].lineNumber;
     }    
   }
 }
@@ -707,7 +713,7 @@ export class ArrayAST extends AST {
    */
   constructor(matchedRules: MatchedRule[]) {
     super();
-    this.lineNumber = matchedRules[0].tokens[0].lineNumber;
+    this.startLine = matchedRules[0].tokens[0].lineNumber;
     this.startIndex = matchedRules[0].tokens[0].startIndex;
     this.endIndex = matchedRules[matchedRules.length - 1].tokens[matchedRules[matchedRules.length - 1].tokens.length - 1].endIndex;
     this.tokens = matchedRules.map((match) => match.tokens).flat();
