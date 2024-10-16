@@ -1,0 +1,58 @@
+=============================================
+Rule: Columns Should Be Indented Consistently
+=============================================
+
+**Rule Code:** ``LT02``
+
+**Name:** ``indent_select``
+
+Overview
+--------
+
+In SQL queries, consistent indentation of columns improves readability, maintainability, and clarity, especially in longer queries. Proper indentation makes it easier to visually distinguish between different components of the query, such as columns in the `SELECT` clause, and improves the overall organization of the code. Consistently formatting SQL queries also ensures that queries are easier to understand and maintain in collaborative environments.
+
+Explanation
+-----------
+
+Anti-pattern: Inconsistent Column Indentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Inconsistent indentation of columns in the `SELECT` clause makes queries difficult to read and can lead to confusion, especially when the query grows in complexity. Misaligned columns can make it hard to quickly scan the query and understand the data being selected, which can result in errors during maintenance or debugging.
+
+**Example of Inconsistent Column Indentation (Anti-pattern):**
+
+.. code-block:: sql
+
+    SELECT t.col1,
+    t.col2,
+       t.col3
+    FROM dataset.table t;
+
+In this example, the columns in the `SELECT` clause are misaligned, leading to poor readability and an unstructured look.
+
+Best Practice: Consistent Indentation of Columns
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For better readability, each column in the `SELECT` clause should be consistently indented. The preferred convention is to align the columns vertically to the same starting point, making the query easier to read and maintain.
+
+**Refactored Example with Consistent Column Indentation (Best Practice):**
+
+.. code-block:: sql
+
+    SELECT t.col1,
+           t.col2,
+           t.col3
+      FROM dataset.table t;
+
+In this refactored example, the columns are properly indented, with each column aligned vertically and consistently indented. This structure makes the query easier to understand and maintain, and the alignment improves the overall readability.
+
+Conclusion
+----------
+
+Consistent indentation of columns in SQL queries improves readability and maintainability, making it easier to understand the query structure at a glance. Following this rule ensures that queries are formatted in a clean and professional manner, reducing the chance of errors and making the code easier to collaborate on.
+
+Groups:
+-------
+
+- `all <../..>`_
+- `layout <../..#layout-rules>`_

@@ -35,7 +35,7 @@ export class IndentSelect extends Rule<FileMap> {
   readonly code: string = "LT02";
   readonly type: RuleType = RuleType.PARSER;
   readonly message: string = "Incorrect Indentation.";
-  readonly relatedInformation: string = "";
+  readonly relatedInformation: string = "Inconsistent indentation of columns in the `SELECT` clause makes queries difficult to read and can lead to confusion, especially when the query grows in complexity.";
   readonly ruleGroup: string = 'layout';
   readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
   readonly codeActionTitle = 'Update Indentation';
