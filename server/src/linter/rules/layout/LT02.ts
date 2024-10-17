@@ -138,7 +138,6 @@ export class Indent extends Rule<FileMap> {
           }
 
           const [additionalIdentNumber, newRange] = this.createIndentErrorOutputs(
-            offset,
             errorOffset,
             errorRange
           );
@@ -169,7 +168,6 @@ export class Indent extends Rule<FileMap> {
           }
 
           const [additionalIdentNumber, newRange] = this.createIndentErrorOutputs(
-            aliasIndex,
             errorOffset,
             errorRange
           );
@@ -204,7 +202,6 @@ export class Indent extends Rule<FileMap> {
           }
 
           const [additionalIdentNumber, newRange] = this.createIndentErrorOutputs(
-            keywordOffset,
             errorOffset,
             errorRange
           );
@@ -238,7 +235,6 @@ export class Indent extends Rule<FileMap> {
           }
 
           const [additionalIdentNumber, newRange] = this.createIndentErrorOutputs(
-            joinOffset,
             errorOffset,
             errorRange
           );
@@ -268,7 +264,6 @@ export class Indent extends Rule<FileMap> {
             }
 
             const [additionalIdentNumber, newRange] = this.createIndentErrorOutputs(
-              onOffset,
               errorOffset,
               errorRange
             );
@@ -312,7 +307,6 @@ export class Indent extends Rule<FileMap> {
           }
 
           const [additionalIdentNumber, newRange] = this.createIndentErrorOutputs(
-            whereOffset,
             errorOffset,
             errorRange
           );
@@ -381,7 +375,6 @@ export class Indent extends Rule<FileMap> {
           }
 
           const [additionalIdentNumber, newRange] = this.createIndentErrorOutputs(
-            comparisonOffset,
             errorOffset,
             errorRange
           );

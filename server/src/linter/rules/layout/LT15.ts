@@ -137,7 +137,7 @@ export class ComparisonOperators extends Rule<FileMap> {
             character: operator.startIndex
           }
         }
-        const [additionalIdentNumber, newRange] = this.createIndentErrorOutputs(requiredIndex, errorOffset, errorRange);
+        const [additionalIdentNumber, newRange] = this.createIndentErrorOutputs(errorOffset, errorRange);
         errors.push(this.createDiagnostic(newRange, documentUri));
         cache!.set(this.createCacheKey(newRange), additionalIdentNumber);
       }

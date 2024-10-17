@@ -150,7 +150,7 @@ export abstract class Rule<T extends string | FileMap>{
    * @param errorRange - The range object representing the start and end positions of the error.
    * @returns A tuple containing the additional indent number and the updated error range.
    */
-  createIndentErrorOutputs(offset: number, errorOffset: number, errorRange: Range): [number, Range] {
+  createIndentErrorOutputs(errorOffset: number, errorRange: Range): [number, Range] {
     let additionalIdentNumber = 0;
 
     if (errorOffset > 0) {
