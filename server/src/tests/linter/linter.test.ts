@@ -37,13 +37,13 @@ describe('Linter', () => {
     });
 
     it('should ignore rules for lines with directives', async () => {
-        const source = {text:'select case when cc.enddate is null then 1 else null end as is_current, -- noqa\nfrom dataset.table cc;\n', uri: 'test.sql', languageId: 'sql', version: 0};
+        const source = {text:'select case when cc.enddate is null then 1 else null end as is_current, -- noqa\n  from dataset.table cc;\n', uri: 'test.sql', languageId: 'sql', version: 0};
         const result = await linter.verify(source);
         expect(result.length).to.be.equal(0);
     });
 
     it('should ignore only rules mentioned for lines with directives', async () => {
-        const source = {text:'select case when cc.enddate is null then 1 else null end as is_current, -- noqa: ST01\nfrom dataset.table cc;\n', uri: 'test.sql', languageId: 'sql', version: 0};
+        const source = {text:'select case when cc.enddate is null then 1 else null end as  is_current -- noqa: ST01\n  from dataset.table cc;\n', uri: 'test.sql', languageId: 'sql', version: 0};
         const result = await linter.verify(source);
         expect(result.length).to.be.equal(1);
     });

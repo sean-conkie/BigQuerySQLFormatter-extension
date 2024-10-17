@@ -9,7 +9,7 @@
 import { Rule } from '../base';
 import { ServerSettings } from '../../../settings';
 import { TrailingSpaces } from './LT01';
-import { IndentSelect } from './LT02';
+import { Indent } from './LT02';
 import { TrailingComma } from './LT04';
 import { Functions } from './LT06';
 import { SelectTargets } from './LT09';
@@ -21,7 +21,7 @@ import { ComparisonOperators } from './LT15';
 import { FileMap } from '../../parser';
 
 export const classes = [TrailingSpaces,
-												IndentSelect,
+												Indent,
 												TrailingComma,
 												Functions,
 												SelectTargets,

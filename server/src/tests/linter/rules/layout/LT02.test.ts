@@ -4,15 +4,15 @@
 
 import { expect } from 'chai';
 import { defaultSettings } from '../../../../settings';
-import { IndentSelect } from '../../../../linter/rules/layout/LT02';
+import { Indent } from '../../../../linter/rules/layout/LT02';
 import { FileMap, Parser } from '../../../../linter/parser';
 import { StatementAST } from '../../../../linter/parser/ast';
 
 describe('IndentSelect', () => {
-    let instance: IndentSelect;
+    let instance: Indent;
 
     beforeEach(() => {
-        instance = new IndentSelect(defaultSettings, 0);
+        instance = new Indent(defaultSettings, 0);
     });
 
     it('should return null when rule is disabled', () => {

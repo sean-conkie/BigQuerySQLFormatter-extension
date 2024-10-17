@@ -28,15 +28,15 @@ abstract class AST {
 
   constructor(tokens: Token[] = []) {
     this.tokens = sortTokens(tokens);
+    const filteredTokens = excludeTokensWithMatchingScopes(this.tokens, [
+      'punctuation.whitespace.leading.sql',
+      'punctuation.whitespace.trailing.sql',
+      'punctuation.whitespace.sql',
+      'punctuation.separator.comma.sql',
+      'comment.line.double-dash.sql'
+    ]);
 
-    if (this.tokens.length > 0) {
-      const filteredTokens = excludeTokensWithMatchingScopes(this.tokens, [
-        'punctuation.whitespace.leading.sql',
-        'punctuation.whitespace.trailing.sql',
-        'punctuation.whitespace.sql',
-        'punctuation.separator.comma.sql',
-        'comment.line.double-dash.sql'
-      ]);
+    if (filteredTokens.length > 0) {
       this.alias = findToken(tokens, "entity.name.tag")?.value ?? null;
       this.startLine = filteredTokens[0].lineNumber;
       this.startIndex = filteredTokens[0].startIndex;
@@ -437,11 +437,11 @@ export class CaseStatementWhenAST extends AST {
 
     const tokens = [];
     
-    if (when.tokens.length > 0) {
+    if (when.tokens != null && when.tokens.length > 0) {
       tokens.push(...when.tokens);
     }
     
-    if (then.tokens.length > 0) {
+    if (then.tokens != null && then.tokens.length > 0) {
       tokens.push(...then.tokens);
     }
 
@@ -554,8 +554,8 @@ export class ComparisonGroupAST extends AST {
    * - `startIndex`: The start index of the first token.
    * - `endIndex`: The end index of the last token.
    */
-  constructor(matches: MatchedRule[], logicalOperator: LogicalOperator | null = null) {
-    super();
+  constructor(matches: MatchedRule[], logicalOperator: LogicalOperator | null = null, tokens: Token[] = []) {
+    super(tokens);
     if (matches.length === 0) {
       return;
     }
@@ -667,6 +667,19 @@ export class ComparisonGroupAST extends AST {
     }
 
     this.tokens = sortTokens(this.tokens);
+    const filteredTokens = excludeTokensWithMatchingScopes(this.tokens, [
+      'punctuation.whitespace.leading.sql',
+      'punctuation.whitespace.trailing.sql',
+      'punctuation.whitespace.sql',
+      'punctuation.separator.comma.sql',
+      'comment.line.double-dash.sql'
+    ]);
+    if (filteredTokens.length > 0) {
+      this.startLine = filteredTokens[0].lineNumber;
+      this.startIndex = filteredTokens[0].startIndex;
+      this.endIndex = filteredTokens[filteredTokens.length - 1].endIndex;
+      this.endLine = filteredTokens[filteredTokens.length - 1].lineNumber;
+    }
   }
 }
 
@@ -758,8 +771,9 @@ export class JoinAST extends AST {
 
     this.on = new ComparisonGroupAST(matchedRule.matches ?? []);
     this.tokens.push(...this.on.tokens);
-
+    this.tokens = sortTokens(this.tokens);
     this.endIndex = this.tokens[this.tokens.length - 1].endIndex;
+    this.endLine = this.tokens[this.tokens.length - 1].lineNumber;
   }
 }
 
@@ -854,7 +868,7 @@ export class StatementAST extends AST {
       } else if (rule.type === 'join') {
         this.joins.push(new JoinAST(matchedRule));
       } else if (rule.type === 'where') {
-        this.where = new ComparisonGroupAST(matchedRule.matches ?? []);
+        this.where = new ComparisonGroupAST(matchedRule.matches ?? [], null, matchedRule.tokens);
       } else if (rule.type === 'groupby') {
         matchedRule.matches?.map(match => this.groupby.push(createColumn(match)));
       } else if (rule.type === 'orderby') {
