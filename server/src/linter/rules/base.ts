@@ -145,7 +145,6 @@ export abstract class Rule<T extends string | FileMap>{
   /**
    * Creates error outputs for indentation issues.
    *
-   * @param offset - The current offset of the indentation.
    * @param errorOffset - The offset indicating how much the indentation is off by.
    * @param errorRange - The range object representing the start and end positions of the error.
    * @returns A tuple containing the additional indent number and the updated error range.
