@@ -19,6 +19,7 @@ import {
 import { Rule } from '../base';
 import { FileMap } from '../../parser';
 import { ComparisonAST, ComparisonGroupAST } from '../../parser/ast';
+import { Token } from '../../parser/token';
 
 type RangeCache = Map<string, number>
 const documentCache: Map<DocumentUri, RangeCache> = new Map<DocumentUri, RangeCache>();
@@ -90,61 +91,62 @@ export class ComparisonOperators extends Rule<FileMap> {
 
   private processComparisonGroup(comparison: ComparisonGroupAST, documentUri: string | null = null): Diagnostic[] {
     const errors: Diagnostic[] = [];
-    const operators: Range[] = [];
-    let operatorIndex: number | null = null;
-    let indexError = false;
+    const operators: Token[] = [];
     const operatorIndexes: number[] = [];
-    let cache = documentCache.get(documentUri!);
-    if (!cache) {
-      cache = new Map<string, number>();
-    }
     
     for (const comp of comparison.comparisons) {
       if (comp instanceof ComparisonGroupAST && comp.comparisons.length > 1) {
         errors.push(...this.processComparisonGroup(comp, documentUri));
       } else if (comp instanceof ComparisonAST) {
 
-        if (comp.operator == null) {
+        const operator = comp.operator;
+        if (operator == null) {
           continue;
         }
         // find all the operators
-        const operator = comp.operator!;
-        const offset = operator.indexOf('=');
-        if (offset > -1) {
-          const operatorToken = comp.tokens.filter((token) => token.value === operator)[0];
-          const index = operatorToken.startIndex + offset;
-          operatorIndexes.push(index);
-          if (operatorIndex == null) {
-            operatorIndex = index;
-          } else if (operatorIndex !== index) {
-            indexError = true;
-          }
-          operators.push({
-            start: {
-              line: operatorToken.lineNumber!,
-              character: index
-            },
-            end: {
-              line: operatorToken.lineNumber!,
-              character: operatorToken.endIndex
-            }
-          });
+        const operatorToken = comp.tokens.filter((token) => token.value === operator)[0];
+        if (comp.left != null) {
+          operatorIndexes.push(comp.left.endIndex??0);
         }
+        operators.push(operatorToken);
       }
     }
 
-    if (indexError) {
-      const requiredIndex = Math.max(...operatorIndexes);
-      operators.map((operator) => {
-        cache!.set(this.createCacheKey(operator), requiredIndex);
-        errors.push(this.createDiagnostic(operator, documentUri));
-      });
+    let cache = documentCache.get(documentUri!);
+    if (!cache) {
+      cache = new Map<string, number>();
     }
+
+    const requiredIndex = Math.max(...operatorIndexes) + 2;
+    operators.map((operator) => {
+      // adjust the startIndex to account for gte & lte & neq
+      // we want the '=' to line up so add 1 to the index
+      let operatorStartIndex = operator.startIndex;
+      if (operator.value.trim().length > 1 || operator.value.indexOf('=') === -1) {
+        operatorStartIndex++;
+      }
+      if (operatorStartIndex !== requiredIndex) {
+        const errorOffset = requiredIndex - operatorStartIndex;
+        const errorRange = {
+          start: {
+            line: operator.lineNumber!,
+            character: operator.startIndex
+          },
+          end: {
+            line: operator.lineNumber!,
+            character: operator.startIndex
+          }
+        }
+        const [additionalIdentNumber, newRange] = this.createIndentErrorOutputs(requiredIndex, errorOffset, errorRange);
+        errors.push(this.createDiagnostic(newRange, documentUri));
+        cache!.set(this.createCacheKey(newRange), additionalIdentNumber);
+      }
+
+    });
 
     documentCache.set(documentUri!, cache);
 
     return errors;
-
   }
   
   /**
@@ -156,18 +158,17 @@ export class ComparisonOperators extends Rule<FileMap> {
    */
   createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): CodeAction[] {
     const cachedDocument = documentCache.get(textDocument.uri);
-    let text = '=';
+    let text = '';
     if (!cachedDocument) {
       return [];
     }
 
-    const requiredIndex = cachedDocument.get(this.createCacheKey(diagnostic.range));
-    if (requiredIndex == null) {
+    const additionalIdentNumber = cachedDocument.get(this.createCacheKey(diagnostic.range));
+    if (additionalIdentNumber == null) {
       return [];
     }
 
-    const offset = requiredIndex - diagnostic.range.start.character;
-    text = ' '.repeat(offset) + text;
+    text = ' '.repeat(additionalIdentNumber) + text;
   
     const edit = {
         changes: {

@@ -396,35 +396,6 @@ export class Indent extends Rule<FileMap> {
     return results;
   }
 
-  /**
-   * Creates error outputs for indentation issues.
-   *
-   * @param offset - The current offset of the indentation.
-   * @param errorOffset - The offset indicating how much the indentation is off by.
-   * @param errorRange - The range object representing the start and end positions of the error.
-   * @returns A tuple containing the additional indent number and the updated error range.
-   */
-  private createIndentErrorOutputs(offset: number, errorOffset: number, errorRange: Range): [number, Range] {
-    let additionalIdentNumber = 0;
-
-    if (errorOffset > 0) {
-      // if error offset is greater than 0 then
-      // the column is indented too far to the left
-      // and needs to be moved to the right
-      additionalIdentNumber = errorOffset;
-
-    } else if (errorOffset < 0) {
-      // if error offset is less than 0 then
-      // the column is indented too far to the right
-      // and needs to be moved to the left
-
-      errorRange.start.character = offset;
-
-    }
-
-    return [additionalIdentNumber, errorRange];
-  }
-
   createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): CodeAction[] {
     const cachedDocument = documentCache.get(textDocument.uri);
     let text = '';
@@ -460,5 +431,4 @@ export class Indent extends Rule<FileMap> {
 
     return actions;
   }
-
 }
