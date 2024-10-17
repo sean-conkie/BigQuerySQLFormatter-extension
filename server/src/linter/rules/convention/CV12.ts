@@ -1,30 +1,29 @@
 import { ServerSettings } from "../../../settings";
-import { CodeAction, CodeActionKind, Diagnostic, DiagnosticSeverity, TextDocumentIdentifier, TextEdit } from 'vscode-languageserver/node';
+import { Diagnostic, DiagnosticSeverity, TextDocumentIdentifier } from 'vscode-languageserver/node';
 import { Rule } from '../base';
 
 
 /**
- * The SpacesNotTabs rule
- * @class SpacesNotTabs
+ * The AllDistinct rule
+ * @class AllDistinct
  * @extends Rule
  * @memberof Linter.Rules
  */
-export class SpacesNotTabs extends Rule<string> {
-  readonly name: string = "spaces_not_tabs";
+export class AllDistinct extends Rule<string> {
+  readonly is_fix_compatible: boolean = false;
+  readonly name: string = "all_distinct";
   readonly code: string = "CV12";
-  readonly message: string = "Use spaces for indentation instead of tabs.";
-	readonly relatedInformation: string = "To ensure consistent formatting and readability across different environments, spaces should be used for indentation.";
-  readonly pattern: RegExp = /\t+/gmi;
+  readonly message: string = "Set operators require all|distinct";
+	readonly relatedInformation: string = "To ensure better readability and prevent errors, the trailing comma should be omitted in `SELECT` statements.";
+  readonly pattern: RegExp = /union\s+(?!all|distinct)|(?:except|intersect)\s+(?!distinct)/gmi;
   readonly severity: DiagnosticSeverity = DiagnosticSeverity.Warning;
   readonly ruleGroup: string = 'convention';
-  readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
-  readonly codeActionTitle = 'Replace with spaces';
 
   /**
-   * Creates an instance of SpacesNotTabs.
+   * Creates an instance of AllDistinct.
    * @param {ServerSettings} settings The server settings
    * @param {number} problems The number of problems identified in the source code
-   * @memberof SpacesNotTabs
+   * @memberof AllDistinct
    */
   constructor(settings: ServerSettings, problems: number) {
     super(settings, problems);
@@ -58,27 +57,5 @@ export class SpacesNotTabs extends Rule<string> {
    * @param diagnostic - The diagnostic information about the issue to be fixed.
    * @returns An array of code actions that can be applied to fix the issue.
    */
-  createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): CodeAction[] {
-    const count = diagnostic.range.end.character - diagnostic.range.start.character;
-    const edit = {
-        changes: {
-            [textDocument.uri]: [
-                TextEdit.replace(diagnostic.range, ' '.repeat(count * 2))
-            ]
-        }
-    };
-    const actions: CodeAction[] = [];
-    
-    this.codeActionKind.map((kind) => {
-      const fix = CodeAction.create(
-        this.codeActionTitle,
-        edit,
-        kind
-      );
-      fix.diagnostics = [diagnostic];
-      actions.push(fix);
-    });
-
-    return actions;
-  }
+  createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): null { return null; }
 }
