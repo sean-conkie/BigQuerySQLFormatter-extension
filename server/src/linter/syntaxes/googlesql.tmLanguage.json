@@ -521,7 +521,7 @@
             "8": { "name": "keyword.as.sql" },
             "9": { "name": "entity.name.alias.sql" }
           },
-          "match": "(?i)(?:(from)|((?:(?:(?:inner|cross|(?:left|right|full)(?:\\s+outer)?)\\s+)join)))(?:\\s+(`?)(?:([\\w_]+)\\.)?(?:([\\w_]+)\\.([\\w_]+))(`?)(?:\\s+(?:(as)\\s+)?([\\w_]+))?)",
+          "match": "(?i)(?:(from|update)|((?:(?:(?:inner|cross|(?:left|right|full)(?:\\s+outer)?)\\s+)join)))(?:\\s+(`?)(?:([\\w_]+)\\.)?(?:([\\w_]+)\\.([\\w_]+))(`?)(?:\\s+(?:(as)\\s+)?([\\w_]+))?)",
           "name": "meta.source.sql"
         },
         {

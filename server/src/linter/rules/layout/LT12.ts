@@ -10,7 +10,7 @@
 import { CodeAction, CodeActionKind, Diagnostic, TextDocumentIdentifier, TextEdit } from 'vscode-languageserver';
 import { Rule } from '../base';
 
-export class EndofFile extends Rule<string> {
+export class EndOfFile extends Rule<string> {
 	readonly name: string = "end_of_file";
 	readonly code: string = "LT12";
 	readonly message: string = "Files must end with a single trailing newline.";

@@ -340,7 +340,7 @@ export class Parser {
 	 */
 	private parseStatement(tokens: Token[]): StatementAST {
 
-		const statement = new StatementAST();
+		const statement = new StatementAST(tokens);
 
 		if (tokens.length === 0) {
 			return statement;
@@ -351,7 +351,7 @@ export class Parser {
 		let tokenCounter: number = 0;
 		let reCheck: boolean = true; // used to stop infinite loops
 		statement.tokens = tokens;
-		statement.lineNumber = tokens[0].lineNumber;
+		statement.startLine = tokens[0].lineNumber;
 
 		const reset = () => {
 			rules = syntaxJson.rules;

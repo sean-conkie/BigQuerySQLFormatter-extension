@@ -81,6 +81,7 @@ Layout rules are guidelines that help developers maintain a consistent and reada
 	:maxdepth: 1
 
 	Rule: Delete Trailing Whitespace <layout/LT01>
+	Rule: Columns Should Be Indented Consistently <layout/LT02>
 	Rule: Place Commas at the End of the Line <layout/LT04>
 	Rule: Function Names Must Be Immediately Followed by Parentheses <layout/LT06>
 	Rule: Select Targets Should Be on Separate Lines <layout/LT09>

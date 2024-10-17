@@ -4,14 +4,14 @@
 
 import { expect } from 'chai';
 import { defaultSettings } from '../../../../settings';
-import { EndofFile } from '../../../../linter/rules/layout/LT12';
+import { EndOfFile } from '../../../../linter/rules/layout/LT12';
 import { Parser } from '../../../../linter/parser';
 
 describe('EndofFile', () => {
-		let instance: EndofFile;
+		let instance: EndOfFile;
 
 		beforeEach(() => {
-				instance = new EndofFile(defaultSettings, 0);
+				instance = new EndOfFile(defaultSettings, 0);
 		});
 
 		it('should return null when rule is disabled', () => {
