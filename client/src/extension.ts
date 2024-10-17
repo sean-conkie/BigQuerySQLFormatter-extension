@@ -5,7 +5,7 @@ The language server is implemented in the server folder.
 */
 
 import * as path from 'path';
-import { workspace, ExtensionContext } from 'vscode';
+import { commands, workspace, ExtensionContext, window, StatusBarAlignment } from 'vscode';
 
 import {
 	LanguageClient,
@@ -56,6 +56,53 @@ export function activate(context: ExtensionContext) {
 
 	// Start the client. This will also launch the server
 	client.start();
+
+  // Create a new status bar item
+  const statusBarItem = window.createStatusBarItem(StatusBarAlignment.Right, 100);
+  statusBarItem.command = 'extension.selectOption';
+  statusBarItem.text = 'Select Option';
+  statusBarItem.tooltip = 'Click to select an option';
+  statusBarItem.show();
+  context.subscriptions.push(statusBarItem);
+
+	// Register the command that is invoked when the status bar item is clicked
+  context.subscriptions.push(
+    commands.registerCommand('extension.selectOption', async () => {
+      const options = ['Option 1', 'Option 2', 'Option 3'];
+      const selectedProject = await window.showQuickPick(options, {
+        placeHolder: 'Select an option',
+      });
+
+      if (selectedProject) {
+        const editor = window.activeTextEditor;
+        if (editor) {
+          const documentUri = editor.document.uri.toString();
+
+          // Store the selected option against the documentUri
+					context.workspaceState.update(documentUri, selectedProject);
+
+          // Optionally, send the selected option to the server via LSP
+          client.sendNotification('custom/optionSelected', {
+            uri: documentUri,
+            option: selectedProject,
+          });
+
+          // Update the status bar item text
+          statusBarItem.text = `Option: ${selectedProject}`;
+
+          window.showInformationMessage(`Selected '${selectedProject}' for ${editor.document.fileName}`);
+        }
+      }
+    })
+  );
+
+	window.onDidChangeActiveTextEditor((editor) => {
+		if (editor) {
+			const documentUri = editor.document.uri.toString();
+			const selectedProject = context.workspaceState.get(documentUri) || 'Select Option';
+			statusBarItem.text = `Option: ${selectedProject}`;
+		}
+	});
 }
 
 export function deactivate(): Thenable<void> | undefined {
