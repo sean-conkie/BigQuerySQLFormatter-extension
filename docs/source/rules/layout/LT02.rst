@@ -1,55 +1,57 @@
-=============================================
-Rule: Columns Should Be Indented Consistently
-=============================================
+================================================
+Rule: Statements Should Be Indented Consistently
+================================================
 
 **Rule Code:** ``LT02``
 
-**Name:** ``indent_select``
+**Name:** ``indent``
 
 Overview
 --------
 
-In SQL queries, consistent indentation of columns improves readability, maintainability, and clarity, especially in longer queries. Proper indentation makes it easier to visually distinguish between different components of the query, such as columns in the `SELECT` clause, and improves the overall organization of the code. Consistently formatting SQL queries also ensures that queries are easier to understand and maintain in collaborative environments.
+In SQL queries, consistent indentation of statements is essential for improving readability, maintainability, and clarity. Proper indentation allows developers to quickly understand the structure of a query, making it easier to spot errors, follow logic, and maintain the code over time. Consistently indented SQL queries also promote better collaboration within teams by ensuring that code is structured in a predictable and clean manner.
 
 Explanation
 -----------
 
-Anti-pattern: Inconsistent Column Indentation
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Inconsistent indentation of columns in the `SELECT` clause makes queries difficult to read and can lead to confusion, especially when the query grows in complexity. Misaligned columns can make it hard to quickly scan the query and understand the data being selected, which can result in errors during maintenance or debugging.
-
-**Example of Inconsistent Column Indentation (Anti-pattern):**
-
-.. code-block:: sql
-
-    SELECT t.col1,
-    t.col2,
-       t.col3
-    FROM dataset.table t;
-
-In this example, the columns in the `SELECT` clause are misaligned, leading to poor readability and an unstructured look.
-
-Best Practice: Consistent Indentation of Columns
+Anti-pattern: Inconsistent Statement Indentation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-For better readability, each column in the `SELECT` clause should be consistently indented. The preferred convention is to align the columns vertically to the same starting point, making the query easier to read and maintain.
+When SQL statements are not consistently indented, it becomes difficult to understand the flow and structure of the query. Misaligned statements make it harder to identify which elements belong together, resulting in potential errors during query writing and debugging.
 
-**Refactored Example with Consistent Column Indentation (Best Practice):**
+**Example of Inconsistent Statement Indentation (Anti-pattern):**
 
 .. code-block:: sql
 
-    SELECT t.col1,
-           t.col2,
-           t.col3
-      FROM dataset.table t;
+    select t.col1,
+    t.col2
+    from dataset.table t
+    where t.col1 > 100
+     and t.col2 = 'active';
 
-In this refactored example, the columns are properly indented, with each column aligned vertically and consistently indented. This structure makes the query easier to understand and maintain, and the alignment improves the overall readability.
+In this example, the lack of consistent indentation between the `SELECT`, `FROM`, and `WHERE` clauses reduces readability, making the query appear disorganized and harder to maintain.
+
+Best Practice: Consistent Indentation of Statements
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For improved readability and maintainability, all SQL statements should be indented consistently. A common practice is to align columns in the `SELECT` clause vertically, with subsequent clauses (`FROM`, `WHERE`, etc.) indented appropriately. This makes it easier to understand the flow of the query and simplifies maintenance.
+
+**Refactored Example with Consistent Statement Indentation (Best Practice):**
+
+.. code-block:: sql
+
+    select t.col1,
+           t.col2
+      from dataset.table t
+     where t.col1 > 100
+       and t.col2 = 'active';
+
+In this refactored example, the `SELECT`, `FROM`, and `WHERE` clauses are properly indented, and the conditions within the `WHERE` clause are aligned. This creates a more readable and organized query, making it easier to follow and maintain.
 
 Conclusion
 ----------
 
-Consistent indentation of columns in SQL queries improves readability and maintainability, making it easier to understand the query structure at a glance. Following this rule ensures that queries are formatted in a clean and professional manner, reducing the chance of errors and making the code easier to collaborate on.
+Consistent indentation of SQL statements is key to improving query readability and maintainability. Following this rule ensures that SQL queries are structured clearly, making them easier to work with in collaborative environments. Clean and predictable indentation helps developers avoid errors and makes the code easier to understand and maintain.
 
 Groups:
 -------
