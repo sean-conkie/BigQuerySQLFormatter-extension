@@ -123,62 +123,12 @@ export class Indent extends Rule<FileMap> {
         }
 
         // process leading indentation
-        if (column.startIndex !== offset) {
-
-          const errorOffset = offset - (column.startIndex??0);
-          const errorRange = {
-            start: {
-              line: column.startLine??0,
-              character: column.startIndex??0
-            },
-            end: {
-              line: column.startLine??0,
-              character: column.startIndex??0
-            }
-          }
-
-          const [additionalIdentNumber, newRange] = this.createIndentErrorOutputs(
-            errorOffset,
-            errorRange
-          );
-
-          errors.push(this.createDiagnostic(
-            newRange,
-            documentUri
-          ));
-          cache.set(this.createCacheKey(newRange), additionalIdentNumber);
-        }
+        this.checkIndentationError(column.startLine??0, column.startIndex??0, offset, errors, cache!, documentUri);
       });
 
       const aliasIndex = Math.max(...columnEndIndexes) + 2;
 
-      aliasRanges.map((aliasRange) => {
-        if (aliasRange.start.character !== aliasIndex) {
-
-          const errorOffset = aliasIndex - aliasRange.start.character;
-          const errorRange = {
-            start: {
-              line: aliasRange.start.line,
-              character: aliasRange.start.character
-            },
-            end: {
-              line: aliasRange.start.line,
-              character: aliasRange.start.character
-            }
-          }
-
-          const [additionalIdentNumber, newRange] = this.createIndentErrorOutputs(
-            errorOffset,
-            errorRange
-          );
-
-          errors.push(this.createDiagnostic(
-            newRange,
-            documentUri
-          ));
-          cache.set(this.createCacheKey(newRange), additionalIdentNumber);
-        }
-      });
+      aliasRanges.map((aliasRange) => this.checkIndentationError(aliasRange.start.line, aliasRange.start.character, aliasIndex, errors, cache!, documentUri));
 
       if (from) {
 
@@ -187,31 +137,7 @@ export class Indent extends Rule<FileMap> {
         const keywordLength = (fromToken?.value.length??0) + 1;
         const keywordOffset = offset - keywordLength;
 
-        if (from.startIndex !== keywordOffset) {
-
-          const errorOffset = keywordOffset - (from.startIndex??0);
-          const errorRange = {
-            start: {
-              line: from.startLine??0,
-              character: from.startIndex??0
-            },
-            end: {
-              line: from.startLine??0,
-              character: from.startIndex??0
-            }
-          }
-
-          const [additionalIdentNumber, newRange] = this.createIndentErrorOutputs(
-            errorOffset,
-            errorRange
-          );
-
-          errors.push(this.createDiagnostic(
-            newRange,
-            documentUri
-          ));
-          cache.set(this.createCacheKey(newRange), additionalIdentNumber);
-        }
+        this.checkIndentationError(from.startLine??0, from.startIndex??0, keywordOffset, errors, cache!, documentUri);
       }
 
       joins.map((join) => {
@@ -220,71 +146,15 @@ export class Indent extends Rule<FileMap> {
         let joinOffset = joinParts != null && joinParts.length > 1 && joinParts[0] === 'left' ? 2 : 1;
         joinOffset = offset - (offset - joinOffset);
 
-        if (join.startIndex != joinOffset) {
-
-          const errorOffset = joinOffset - (join.startIndex??0);
-          const errorRange = {
-            start: {
-              line: join.startLine??0,
-              character: join.startIndex??0
-            },
-            end: {
-              line: join.startLine??0,
-              character: join.startIndex??0
-            }
-          }
-
-          const [additionalIdentNumber, newRange] = this.createIndentErrorOutputs(
-            errorOffset,
-            errorRange
-          );
-
-          errors.push(this.createDiagnostic(
-            newRange,
-            documentUri
-          ));
-          cache.set(this.createCacheKey(newRange), additionalIdentNumber);
-
-        }
+        this.checkIndentationError(join.startLine??0, join.startIndex??0, joinOffset, errors, cache!, documentUri);
 
         if (join.on) {
           const onOffset = offset - 3;
-          if (join.on.startIndex !== onOffset) {
-
-            const errorOffset = onOffset - (join.on.startIndex??0);
-            const errorRange = {
-              start: {
-                line: join.on.startLine??0,
-                character: join.on.startIndex??0
-              },
-              end: {
-                line: join.on.startLine??0,
-                character: join.on.startIndex??0
-              }
-            }
-
-            const [additionalIdentNumber, newRange] = this.createIndentErrorOutputs(
-              errorOffset,
-              errorRange
-            );
-
-            errors.push(this.createDiagnostic(
-              newRange,
-              documentUri
-            ));
-            cache.set(this.createCacheKey(newRange), additionalIdentNumber);
-          }
+          this.checkIndentationError(join.on.startLine??0, join.on.startIndex??0, onOffset, errors, cache!, documentUri);
 
           // process comparison groups
           const comparisonResults = this.processComparisons(join.on.comparisons, offset);
-          comparisonResults.map((result) => {
-            const [additionalIdentNumber, newRange] = result;
-            errors.push(this.createDiagnostic(
-              newRange,
-              documentUri
-            ));
-            cache.set(this.createCacheKey(newRange), additionalIdentNumber);
-          });
+          this.processComparisonResults(comparisonResults, errors, cache!, documentUri);
         }
       });
 
@@ -292,48 +162,82 @@ export class Indent extends Rule<FileMap> {
         const whereToken = findToken(where.tokens, 'keyword.where.sql');
         const whereOffset = offset - (offset - 1);
 
-        if (where.startIndex !== whereOffset) {
-
-          const errorOffset = whereOffset - (where.startIndex??0);
-          const errorRange = {
-            start: {
-              line: whereToken?.lineNumber??0,
-              character: whereToken?.startIndex??0
-            },
-            end: {
-              line: whereToken?.lineNumber??0,
-              character: whereToken?.startIndex??0
-            }
-          }
-
-          const [additionalIdentNumber, newRange] = this.createIndentErrorOutputs(
-            errorOffset,
-            errorRange
-          );
-
-          errors.push(this.createDiagnostic(
-            newRange,
-            documentUri
-          ));
-          cache.set(this.createCacheKey(newRange), additionalIdentNumber);
-        }
+        this.checkIndentationError(where.startLine??0, where.startIndex??0, whereOffset, errors, cache!, documentUri);
 
         // process comparison groups
         const comparisonResults = this.processComparisons(where.comparisons, offset);
-        comparisonResults.map((result) => {
-          const [additionalIdentNumber, newRange] = result;
-          errors.push(this.createDiagnostic(
-            newRange,
-            documentUri
-          ));
-          cache.set(this.createCacheKey(newRange), additionalIdentNumber);
-        });
+        this.processComparisonResults(comparisonResults, errors, cache!, documentUri);
       }
     }
 
     documentCache.set(documentUri!, cache);
 
     return errors.length > 0 ? errors : null;
+  }
+
+
+  /**
+   * Checks for indentation errors in the given line and character position.
+   * If an error is found, it creates a diagnostic error and updates the cache.
+   *
+   * @param startLine - The line number where the check starts.
+   * @param startCharacter - The character position where the check starts.
+   * @param desiredOffset - The desired indentation offset.
+   * @param errors - An array to store diagnostic errors.
+   * @param cache - A cache to store indentation error information.
+   * @param documentUri - The URI of the document being checked.
+   */
+  private checkIndentationError(
+    startLine: number,
+    startCharacter: number,
+    desiredOffset: number,
+    errors: Diagnostic[],
+    cache: Map<string, number>,
+    documentUri: string | null
+  ): void {
+    if (startCharacter !== desiredOffset) {
+      const errorOffset = desiredOffset - startCharacter;
+
+      const errorRange = {
+        start: {
+          line: startLine,
+          character: startCharacter,
+        },
+        end: {
+          line: startLine,
+          character: startCharacter,
+        },
+      };
+
+      const [additionalIndentNumber, newRange] = this.createIndentErrorOutputs(
+        errorOffset,
+        errorRange
+      );
+
+      errors.push(this.createDiagnostic(newRange, documentUri));
+      cache.set(this.createCacheKey(newRange), additionalIndentNumber);
+    }
+  }
+
+  /**
+   * Processes the comparison results by creating diagnostics and updating the cache.
+   *
+   * @param comparisonResults - An array of tuples where each tuple contains an additional indent number and a range.
+   * @param errors - An array to which diagnostics will be added.
+   * @param cache - A map used to cache the additional indent numbers associated with specific ranges.
+   * @param documentUri - The URI of the document being processed, or null if not applicable.
+   * @returns void
+   */
+  private processComparisonResults(
+    comparisonResults: [number, Range][],
+    errors: Diagnostic[],
+    cache: Map<string, number>,
+    documentUri: string | null
+  ): void {
+    comparisonResults.forEach(([additionalIndentNumber, newRange]) => {
+      errors.push(this.createDiagnostic(newRange, documentUri));
+      cache.set(this.createCacheKey(newRange), additionalIndentNumber);
+    });
   }
 
   /**
