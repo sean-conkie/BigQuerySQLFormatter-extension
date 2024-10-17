@@ -1,0 +1,56 @@
+===========================================================
+Rule: Select Statements Should Not Include a Trailing Comma
+===========================================================
+
+**Rule Code:** ``CV03``
+
+**Name:** ``select_trailing_comma``
+
+Overview
+--------
+
+In SQL queries, select statements should not include a trailing comma after the last column or expression in the `SELECT` clause. A trailing comma serves no functional purpose and can lead to errors in certain SQL engines. Removing trailing commas improves readability and consistency while ensuring the query runs smoothly across different environments. Queries should always follow this best practice to avoid potential issues and maintain clean, concise code.
+
+Explanation
+-----------
+
+Anti-pattern: Including a Trailing Comma in `SELECT` Statements
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Including a trailing comma after the last column in a `SELECT` statement is an anti-pattern because it can cause syntax errors or lead to confusion, especially when the query is edited or extended. Trailing commas make the code appear incomplete and can break SQL parsers in certain environments.
+
+**Example of Trailing Comma in `SELECT` (Anti-pattern):**
+
+.. code-block:: sql
+
+    select t.col1,
+           t.col2,
+      from dataset.table t;
+
+In this example, there is a trailing comma after `t.col2`, which can result in a syntax error or make the query harder to maintain.
+
+Best Practice: Avoid Trailing Comma in `SELECT` Statements
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To ensure better readability and prevent errors, the trailing comma should be omitted in `SELECT` statements. The list of columns or expressions should end with the last meaningful item, without an unnecessary comma.
+
+**Refactored Example Without Trailing Comma (Best Practice):**
+
+.. code-block:: sql
+
+    select t.col1,
+           t.col2
+      from dataset.table t;
+
+In this refactored example, the trailing comma has been removed, resulting in a cleaner and more correct SQL query.
+
+Conclusion
+----------
+
+Avoiding trailing commas in `SELECT` statements is essential for maintaining clean and error-free SQL code. Following this rule ensures that queries are compatible across different databases, reduces potential syntax errors, and promotes consistent formatting in SQL queries.
+
+Groups:
+-------
+
+- `all <../..>`_
+- `convention <../..#convention-rules>`_
