@@ -59,15 +59,15 @@
     "whitespace": {
       "patterns": [
         {
-          "match": "^ *",
+          "match": "^(?: |\\t)*",
           "name": "punctuation.whitespace.leading.sql"
         },
         {
-          "match": " *$",
+          "match": "(?: |\\t)*$",
           "name": "punctuation.whitespace.trailing.sql"
         },
         {
-          "match": " *",
+          "match": "(?: |\\t)*",
           "name": "punctuation.whitespace.sql"
         }
       ]
@@ -400,6 +400,11 @@
           "name": "meta.function.sql"
         },
         {
+          "captures": { "1": { "name": "support.function.utility.sql" } },
+          "match": "(?i)\\b(generate_uuid)\\b",
+          "name": "meta.function.sql"
+        },
+        {
           "match": "(?i)\\b(EXACT_COUNT_DISTINCT|FIRST|GROUP_CONCAT(_UNQUOTED)?|LAST|NEST|NTH|QUANTILES|TOP|UNIQUE)(?=\\s*\\()",
           "name": "invalid.deprecated.legacy.aggregate.sql"
         },
@@ -516,8 +521,18 @@
             "8": { "name": "keyword.as.sql" },
             "9": { "name": "entity.name.alias.sql" }
           },
-          "match": "(?i)(?:(from)|((?:(?:(?:inner|cross|(?:left|right|full)(?:\\s+outer)?)\\s+)join)))(?:\\s+(`?)(?:([\\w_]+)\\.)?(?:([\\w_]+)\\.([\\w_]+))(`?)(?:\\s+(?:(as)\\s+)?([\\w_]+))?)",
+          "match": "(?i)(?:(from|update)|((?:(?:(?:inner|cross|(?:left|right|full)(?:\\s+outer)?)\\s+)join)))(?:\\s+(`?)(?:([\\w_]+)\\.)?(?:([\\w_]+)\\.([\\w_]+))(`?)(?:\\s+(?:(as)\\s+)?([\\w_]+))?)",
           "name": "meta.source.sql"
+        },
+        {
+          "captures": {
+            "1": { "name": "keyword.from.sql" },
+            "2": {
+              "name": "punctuation.definition.section.bracket.round.begin.sql"
+            }
+          },
+          "match": "(?i)\\b(from)\\b\\s*(\\()",
+          "name": "meta.source.subquery.sql"
         },
         {
           "captures": {
@@ -581,6 +596,13 @@
         },
         {
           "captures": {
+            "1": { "name": "keyword.qualify.sql" }
+          },
+          "match": "(?i)(?:\\b(qualify)\\b)",
+          "name": "meta.qualify.sql"
+        },
+        {
+          "captures": {
             "1": { "name": "keyword.window.sql" }
           },
           "match": "(?i)(?:\\b(window)\\b)",
@@ -627,7 +649,7 @@
       "patterns": [
         {
           "captures": {
-            "1": { "name": "keyword.order.sql" }
+            "1": { "name": "keyword.order.direction.sql" }
           },
           "match": "(?i)\\b(desc|asc)\\b",
           "name": "meta.order.sql"
@@ -700,7 +722,7 @@
           "captures": {
             "1": { "name": "keyword.operator.comparison.sql" }
           },
-          "match": "([!<>]?=|<>|<|>)",
+          "match": "((?:[!<>] *)?=|<>|<|>)",
           "name": "meta.comparison.sql"
         },
         {
@@ -755,8 +777,8 @@
             "4": { "name": "keyword.as.sql" },
             "5": { "name": "entity.name.tag" }
           },
-          "match": "(?i)([\\w_]+)(\\.)([\\w_]+)[ \\t]+(as)[ \\t]+([\\w_]+)(?=\\s*?(?:,|\\n|from))",
-          "name": "meta.column.explicit.alias.sql"
+          "match": "(?i)(?:([\\w_]+)(\\.))?([\\w_]+)[ \\t]+(as)[ \\t]+(\\3)(?=\\s*?(?:,|\\n|from|\\-+))",
+          "name": "meta.column.explicit.alias.redundant.sql"
         },
         {
           "captures": {
@@ -765,7 +787,38 @@
             "3": { "name": "entity.other.column.sql" },
             "4": { "name": "entity.name.tag" }
           },
-          "match": "(?i)([\\w_]+)(\\.)([\\w_]+)[ \\t]+(?:(?>as|([\\w_]+)))(?=\\s*?(?:,|\\n|from))",
+          "match": "(?i)(?:([\\w_]+)(\\.))?([\\w_]+)[ \\t]+(?:(?>as|(\\3)))(?=\\s*?(?:,|\\n|from|\\-+))",
+          "name": "meta.column.implicit.alias.redundant.sql"
+        },
+        {
+          "captures": {
+            "1": { "name": "entity.name.alias.sql" },
+            "2": { "name": "punctuation.separator.period.sql" },
+            "3": { "name": "entity.other.column.sql" },
+            "4": { "name": "keyword.as.sql" },
+            "5": { "name": "entity.name.tag" }
+          },
+          "match": "(?i)(?:([\\w_]+)(\\.))?([\\w_]+)[ \\t]+(as)[ \\t]+([\\w_]+)(?=\\s*?(?:,|\\n|from|\\-+))",
+          "name": "meta.column.explicit.alias.sql"
+        },
+        {
+          "captures": {
+            "1": { "name": "entity.name.alias.sql" },
+            "2": { "name": "punctuation.separator.period.sql" },
+            "3": { "name": "entity.other.column.sql" },
+            "4": { "name": "keyword.as.sql" }
+          },
+          "match": "(?i)(?:([\\w_]+)(\\.))?([\\w_]+)[ \\t]+(as)(?=\\s*?(?:,|\\n|from|\\-+))",
+          "name": "meta.column.explicit.alias.missing.sql"
+        },
+        {
+          "captures": {
+            "1": { "name": "entity.name.alias.sql" },
+            "2": { "name": "punctuation.separator.period.sql" },
+            "3": { "name": "entity.other.column.sql" },
+            "4": { "name": "entity.name.tag" }
+          },
+          "match": "(?i)([\\w_]+)(\\.)([\\w_]+)[ \\t]+(?:(?>as|([\\w_]+)))(?=\\s*?(?:,|\\n|from|\\-+))",
           "name": "meta.column.implicit.alias.sql"
         },
         {
@@ -779,23 +832,53 @@
         },
         {
           "captures": {
+            "1": { "name": "entity.name.alias.sql" },
+            "2": { "name": "punctuation.separator.period.sql" },
+            "3": { "name": "keyword.operator.star.sql" }
+          },
+          "match": "(?i)([\\w_]+)(\\.)(\\*)",
+          "name": "meta.keyword.star.alias.sql"
+        },
+        {
+          "captures": {
             "1": { "name": "entity.other.column.sql" }
           },
-          "match": "(?i)^[ \\t]*?([\\w_]+)(?=\\s*?(?:,|\\n|from))",
+          "match": "(?i)^[ \\t]*?([\\w_]+)(?=\\s*?(?:,|\\n|from|\\-+))",
           "name": "meta.column.sql"
         },
         {
           "captures": {
             "1": { "name": "entity.other.column.sql" }
           },
-          "match": "(?i)(?<=select )([\\w_]+)(?=\\s*?(?:,|\\n|from))",
+          "match": "(?i)(?<=select )([\\w_]+)(?=\\s*?(?:,|\\n|from|\\-+))",
           "name": "meta.column.sql"
         },
         {
           "captures": {
             "1": { "name": "entity.other.column.sql" }
           },
-          "match": "(?i)(?<=,)[ \\t]*?(\\w+)(?=\\s*?(?:,|\\n|from))",
+          "match": "(?i)(?<=distinct )([\\w_]+)(?=\\s*?(?:,|\\n|from|\\-+))",
+          "name": "meta.column.sql"
+        },
+        {
+          "captures": {
+            "1": { "name": "entity.other.column.sql" }
+          },
+          "match": "(?i)(?<=by )([\\w_]+)(?=\\s*?(?:,|\\n|from|\\-+))",
+          "name": "meta.column.sql"
+        },
+        {
+          "captures": {
+            "1": { "name": "entity.other.column.sql" }
+          },
+          "match": "(?i)(?<=\\()([\\w_]+)(?=\\s*?(?:,|\\n|from|\\-+))",
+          "name": "meta.column.sql"
+        },
+        {
+          "captures": {
+            "1": { "name": "entity.other.column.sql" }
+          },
+          "match": "(?i)(?<=,)[ \\t]*?([\\w_]+)(?=\\s*?(?:,|\\n|from|\\-+))",
           "name": "meta.column.sql"
         },
         {
@@ -803,8 +886,15 @@
             "1": { "name": "keyword.as.sql" },
             "2": { "name": "entity.name.tag" }
           },
-          "match": "(?i)(?:(as)[ \\t]+)?([\\w_]+)(?=\\s*?(?:,|\\n|from))",
+          "match": "(?i)(?:(as)[ \\t]+)?([\\w_]+)(?=\\s*?(?:,|\\n|from|\\-+))",
           "name": "meta.column.alias.sql"
+        },
+        {
+          "captures": {
+            "1": { "name": "keyword.as.sql" }
+          },
+          "match": "(?i)(?:(as)(?=\\s*?(?:,|\\n|from|\\-+)))",
+          "name": "meta.column.alias.missing.sql"
         },
         {
           "captures": {

@@ -1,0 +1,56 @@
+=================================
+Rule: Delete Trailing Whitespace
+=================================
+
+**Rule Code:** ``LT01``
+
+**Name:** ``trailing_space``
+
+Overview
+--------
+
+Trailing whitespace at the end of lines is often invisible in most text editors, but it can cause issues such as unnecessary diffs in version control, increased file size, and inconsistent formatting. It is a best practice to ensure that no trailing whitespace exists in the code to maintain a clean and consistent layout.
+
+Explanation
+-----------
+
+Anti-pattern: Having Trailing Whitespace
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Trailing whitespace refers to any spaces or tabs at the end of a line after the last visible character. This often occurs unintentionally and serves no functional purpose, leading to cluttered code and potential issues during collaboration.
+
+**Example of Trailing Whitespace (Anti-pattern):**
+
+.. code-block:: sql
+
+    select foo.id,
+           foo.name
+      from foo;...
+
+In the example above, each line contains unnecessary trailing whitespace after the columns and `from` clause, which makes the query harder to maintain and track changes.
+
+Best Practice: Remove Trailing Whitespace
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To improve readability and avoid unnecessary changes in version control, all trailing whitespace should be removed from the code. This creates cleaner, more professional code and prevents merge conflicts caused by non-visible changes.
+
+**Refactored Example Without Trailing Whitespace (Best Practice):**
+
+.. code-block:: sql
+
+    select foo.id,
+           foo.name
+      from foo;
+
+In this refactored example, there is no trailing whitespace, making the code cleaner and more manageable.
+
+Conclusion
+----------
+
+Eliminating trailing whitespace from your code ensures that it remains clean and free of unnecessary clutter. By following this rule, you promote better collaboration and avoid potential issues with version control and formatting.
+
+Groups:
+-------
+
+- `all <../..>`_
+- `layout <../..#layout-rules>`_

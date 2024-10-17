@@ -1,0 +1,58 @@
+==========================================================
+Rule: SQL Files Must Not Begin with Newlines or Whitespace
+==========================================================
+
+**Rule Code:** ``LT13``
+
+**Name:** ``start_of_file``
+
+Overview
+--------
+
+SQL files should not begin with any newlines or whitespace. Starting files with unnecessary whitespace or newlines creates inconsistent formatting and reduces readability. It is a best practice to start SQL files immediately with relevant content, such as a comment or the first SQL statement. Clean, well-structured files are easier to work with and maintain.
+
+Explanation
+-----------
+
+Anti-pattern: SQL Files Starting with Newlines or Whitespace
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+SQL files that begin with one or more blank lines or unnecessary spaces at the start are considered poorly formatted. This can cause issues in environments where files are concatenated or processed sequentially, and it may also lead to confusion when reviewing or maintaining the code.
+
+**Example of a File Starting with Newlines (Anti-pattern):**
+
+.. code-block:: sql
+
+    
+
+    select foo.id,
+           foo.name
+      from foo;
+
+In this example, the file starts with multiple unnecessary newlines before the `select` statement. This breaks the consistency of the file structure and reduces readability.
+
+Best Practice: Remove Leading Newlines or Whitespace
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+SQL files should begin immediately with the first relevant statement or comment. Removing leading newlines and whitespace helps maintain clean and professional code formatting, making the file easier to read and work with.
+
+**Refactored Example with No Leading Newlines or Whitespace (Best Practice):**
+
+.. code-block:: sql
+
+    select foo.id,
+           foo.name
+      from foo;
+
+In this refactored example, the file starts directly with the `select` statement, with no leading newlines or spaces, ensuring a clean and readable format.
+
+Conclusion
+----------
+
+SQL files must begin without any newlines or leading whitespace to promote consistent, professional formatting and improve readability. Following this rule ensures that files are easier to maintain and understand, especially when processed in automated systems or used in collaborative environments.
+
+Groups:
+-------
+
+- `all <../..>`_
+- `layout <../..#layout-rules>`_

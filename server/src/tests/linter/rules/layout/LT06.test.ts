@@ -29,15 +29,44 @@ describe('Functions', () => {
 
         const result = instance.evaluate(await parser.parse({text:'SELECT cast (1 as string),\n col2\n FROM table', uri: 'test.sql', languageId: 'sql', version: 0}));
         expect(result).to.deep.equal([{
-            code: instance.code,
+            code: instance.diagnosticCode,
+            codeDescription: {href: instance.diagnosticCodeDescription},
             message: instance.message,
             severity: instance.severity,
             range: {
                 start: { line: 0, character: 11 },
                 end: { line: 0, character: 12 }
             },
-            source: instance.source()
+            source: instance.source
         }]);
+    });
+
+    it('should return codeaction when rule is enabled and as used', async () => {
+        instance.enabled = true;
+
+
+        const parser = new Parser();
+        const diagnostics = instance.evaluate(await parser.parse({text:'SELECT cast (1 as string),\n col2\n FROM table', uri: 'test.sql', languageId: 'sql', version: 0}));
+        const actions = instance.createCodeAction({uri: 'test.sql'}, diagnostics![0]);
+        expect(actions).to.deep.equal(instance.codeActionKind.map(kind => {
+            return {
+                title: instance.codeActionTitle, edit:{
+                changes: {
+                        ['test.sql']: [
+                            {
+                                newText: '',
+                                range: {
+                                    start: { line: 0, character: 11 },
+                                    end: { line: 0, character: 12 }
+                                }
+                            }
+                        ]
+                    }
+                },
+                kind: kind,
+                diagnostics: diagnostics
+            };
+        }));
     });
 
     it('should return null when rule is enabled but pattern does not match', async () => {

@@ -43,7 +43,7 @@ describe('SelectModifiers', () => {
         `select   \n      <modifier> column from tablename`,'1','6'],
 
         ['modifier not on same line as select and multiple new lines before modifier (modifier: <modifier>)',
-        `select \n\n\n<modifier> column from tablename`,'3','0']
+        `select \n\n\n<modifier> column from tablename`,'3', '0'],
     ];
     
 
@@ -53,21 +53,24 @@ describe('SelectModifiers', () => {
             case_number++;
             const new_title: string = element[0].replace('<modifier>', mod);
             const new_sql: string = element[1].replace('<modifier>', mod);
-            const expected_line: number = parseInt(element[2]);
-            const expected_character: number = parseInt(element[3]) + mod.length;
+            const start_line: number = parseInt(element[2]);
+            const start_character: number = parseInt(element[3]);
+            const end_line: number = parseInt(element[2]);
+            const end_character: number = parseInt(element[3]) + mod.length;
 
             it(`Case ${case_number}: ${new_title}\nshould return diagnostic when rule is enabled and pattern matches`, () => {
                 instance.enabled = true;
                 const result = instance.evaluate(new_sql);
                 expect(result).to.deep.equal([{
-                    code: instance.code,
-                    message: instance.message,
+                    code: instance.diagnosticCode,
+            codeDescription: {href: instance.diagnosticCodeDescription},
+            message: instance.message,
                     severity: instance.severity,
                     range: {
-                        start: { line: 0, character: 0 },
-                        end: { line: expected_line, character: expected_character }
+                        start: { line: start_line, character: start_character },
+                        end: { line: end_line, character: end_character }
                     },
-                    source: 'LT10 (select_modifiers_check)'
+                    source: instance.source
                 }]);
             });
         });

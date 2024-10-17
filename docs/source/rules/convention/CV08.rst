@@ -1,0 +1,70 @@
+=================================================
+Rule: Use ``left join`` Instead of ``right join``
+=================================================
+
+**Rule Code:** ``CV08``
+
+**Name:** ``left_join``
+
+Overview
+--------
+
+The SQL ``join`` operations allow combining records from two or more tables based on a related column. There are various types of joins, such as ``INNER join``, ``left join``, and ``right join``. While both ``left join`` and ``right join`` can achieve the same results by reversing the table order, the **best practice** is to favor the use of ``left join`` over ``right join``.
+
+Explanation
+-----------
+
+Anti-pattern: Using ``right join``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The use of ``right join`` in SQL is generally considered an anti-pattern for several reasons:
+
+- It reverses the typical left-to-right reading flow of SQL queries.
+- It can make queries less readable and harder to understand, especially in complex queries.
+- ``right join`` requires the reader to mentally reverse the order of tables to comprehend the results.
+
+**Example of ``right join`` usage (Anti-pattern):**
+
+.. code-block:: sql
+
+    select foo.col1,
+           bar.col2
+      from foo
+     right join bar
+        on foo.bar_id = bar.id;
+
+Best Practice: Use ``left join`` Instead
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+It is recommended to use ``left join`` because it:
+
+- Aligns with the natural left-to-right flow of reading and writing queries.
+- Enhances readability and consistency in SQL code.
+- Is more commonly used and understood in practice.
+
+**Refactored query using ``left join`` (Best practice):**
+
+.. code-block:: sql
+
+    selec foo.col1,
+          bar.col2
+     from bar
+     left join foo
+       on foo.bar_id = bar.id;
+
+Benefits of ``left join``
+-------------------------
+
+- The results and logic remain the same as ``right join`` but in a more intuitive manner.
+- Promotes better maintainability and reduces confusion for other developers reviewing the code.
+
+Conclusion
+----------
+
+While ``right join`` and ``left join`` are functionally equivalent when the table order is reversed, it is a best practice to use ``left join`` for better readability, consistency, and maintainability in SQL queries.
+
+Groups:
+-------
+
+- `all <../..>`_
+- `convention <../..#convention-rules>`_

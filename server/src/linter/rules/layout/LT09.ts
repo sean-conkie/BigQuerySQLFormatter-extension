@@ -16,10 +16,13 @@ import { ColumnAST } from '../../parser/ast';
  * @memberof Linter.Rules
  */
 export class SelectTargets extends Rule<FileMap> {
+  readonly is_fix_compatible: boolean = false;
   readonly name: string = "select_targets";
   readonly code: string = "LT09";
   readonly type: RuleType = RuleType.PARSER;
   readonly message: string = "Select targets should be on separate lines.";
+  readonly relatedInformation: string = "For better readability, each target in the `SELECT` clause should be written on a separate line.";
+  readonly ruleGroup: string = 'layout';
 
   /**
    * Creates an instance of SelectTargets.
@@ -49,6 +52,9 @@ export class SelectTargets extends Rule<FileMap> {
     for (const i in ast) {
 
       const columns = ast[i].columns;
+      if (!columns) {
+        continue;
+      }
 
       if (columns.length < 2) {
         continue;
@@ -86,14 +92,14 @@ export class SelectTargets extends Rule<FileMap> {
           continue;
         }
 
-        if (current.lineNumber === next.lineNumber) {
+        if (current.startLine === next.startLine) {
           errors.push(this.createDiagnostic({
             start: {
-              line: current.lineNumber??0,
+              line: current.startLine??0,
               character: current.startIndex??0
             },
             end: {
-              line: next.lineNumber??0,
+              line: next.startLine??0,
               character: next.endIndex??0
             }
           }, documentUri));

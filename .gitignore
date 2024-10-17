@@ -141,3 +141,7 @@ dist
 *.vsix
 
 .env
+
+docs/build
+
+.DS_Store

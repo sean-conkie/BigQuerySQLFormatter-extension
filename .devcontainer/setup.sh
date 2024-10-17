@@ -4,6 +4,8 @@
 source "$(dirname "$0")/colours.sh"
 # shellcheck source=.devcontainer/install_starship.sh
 source "$(dirname "$0")/install_starship.sh"
+# shellcheck source=.devcontainer/install_pyenv.sh
+source "$(dirname "$0")/install_pyenv.sh"
 
 
 echo -e "${PURPLE}#########################################${RESET}"
@@ -12,9 +14,13 @@ echo -e "${PURPLE}#########################################${RESET}"
 echo ""
 
 echo -e "${BLUE}Update apt...${RESET}"
-sudo apt update -q
+apt update -q
 echo -e "${GREEN}Apt updated.${RESET}"
 echo ""
+
+echo -e "${BLUE}Install acl...${RESET}"
+apt install acl -qqy
+echo -e "${GREEN}Acl installed.${RESET}"
 
 echo -e "${BLUE}Installing git autocomplete...${RESET}"
 GIT_AUTOCOMPLETE=/home/node/.git-completion.bash
@@ -38,6 +44,9 @@ echo ""
 
 # install starship prompt
 install_starship
+
+# install pyenv
+install_pyenv
 
 # add yeoman
 echo -e "${BLUE}Installing Yeoman...${RESET}"
@@ -77,6 +86,30 @@ then
     exit 1
 fi
 echo -e "${GREEN}shellcheck installed.${RESET}"
+echo ""
+
+# add Sphinx
+echo -e "${BLUE}Installing Sphinx...${RESET}"
+
+if [[ -d .venv ]]
+then
+    echo -e "${YELLOW}Virtual environment already exists. Removing...${RESET}"
+    rm -rf .venv
+fi
+
+if ! python -m venv .venv
+then
+    echo -e "${RED}Failed to create virtual environment.${RESET}"
+    exit 1
+fi
+
+source .venv/bin/activate
+if ! pip install -r ./docs/requirements.txt
+then
+    echo -e "${RED}Failed to install Sphinx.${RESET}"
+    exit 1
+fi
+echo -e "${GREEN}Sphinx installed.${RESET}"
 echo ""
 
 echo -e "${PURPLE}#########################################${RESET}"

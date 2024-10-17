@@ -25,28 +25,26 @@ describe('Linter', () => {
     });
 
     it('should verify source code and return diagnostics', async () => {
-        const source = {text:'select * from dataset.table', uri: 'test.sql', languageId: 'sql', version: 0};
-        const diagnostics: Diagnostic[] = [];
-        for (const rule of linter.regexRules) {
-            const result = rule.evaluate(source.text, null);
-            if (result != null) {
-                diagnostics.push(...result);
-            }
-        }
+        const source = {text:'\nselect col\nfrom dataset.table', uri: 'test.sql', languageId: 'sql', version: 0};
         const result = await linter.verify(source);
-        expect(result).to.deep.equal(diagnostics);
+        expect(result.length).to.be.greaterThan(0);
     });
 
     it('should increment problems for each diagnostic', async () => {
-        const source = {text:'\nselect *\nfrom dataset.table', uri: 'test.sql', languageId: 'sql', version: 0};
-        const diagnostics: Diagnostic[] = [];
-        for (const rule of linter.regexRules) {
-            const result = rule.evaluate(source.text, null);
-            if (result != null) {
-                diagnostics.push(...result);
-            }
-        }
+        const source = {text:'\nselect col\nfrom dataset.table', uri: 'test.sql', languageId: 'sql', version: 0};
         await linter.verify(source);
-        expect(linter.problems).to.equal(diagnostics.length);
+        expect(linter.problems).to.be.greaterThan(0);
+    });
+
+    it('should ignore rules for lines with directives', async () => {
+        const source = {text:'select case when cc.enddate is null then 1 else null end as is_current, -- noqa\n  from dataset.table cc;\n', uri: 'test.sql', languageId: 'sql', version: 0};
+        const result = await linter.verify(source);
+        expect(result.length).to.be.equal(0);
+    });
+
+    it('should ignore only rules mentioned for lines with directives', async () => {
+        const source = {text:'select case when cc.enddate is null then 1 else null end as  is_current -- noqa: ST01\n  from dataset.table cc;\n', uri: 'test.sql', languageId: 'sql', version: 0};
+        const result = await linter.verify(source);
+        expect(result.length).to.be.equal(1);
     });
 });

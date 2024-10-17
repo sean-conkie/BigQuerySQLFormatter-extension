@@ -1,11 +1,11 @@
 /**
- * @fileoverview Test suite for LT11 module
+ * @fileoverview Test suite for LT04 module
  */
 
 import { expect } from 'chai';
 import { defaultSettings } from '../../../../settings';
 import { TrailingSpaces } from '../../../../linter/rules/layout/LT01';
-import { runInThisContext } from 'vm';
+import { Parser } from '../../../../linter/parser';
 
 describe('TrailingSpaces', () => {
     let instance: TrailingSpaces;
@@ -14,98 +14,83 @@ describe('TrailingSpaces', () => {
         instance = new TrailingSpaces(defaultSettings, 0);
     });
 
-    it('Case 1: should return null when rule is disabled', () => {
+    it('should return null when rule is disabled', () => {
         instance.enabled = false;
-        const result = instance.evaluate('test');
+        const result = instance.evaluate('', 'test.sql');
         expect(result).to.be.null;
     });
 
-    const listSql: string[][] = [
-        ['Case 2: trailing spaces',
-        `select * \n
-        from tablename`,'0','8',
-    '0','9'],
- 
-    ];
+    it('should return diagnostic when rule is enabled and triggered - EOL', async () => {
+        instance.enabled = true;
 
-    listSql.forEach((element: string[]) => {
-        it(`${element[0]}\nshould return diagnostic when rule is enabled and pattern matches`, () => {
-            instance.enabled = true;
-            const result = instance.evaluate(element[1]);
-            expect(result).to.deep.equal([{
-                code: instance.code,
-                message: instance.message,
-                severity: instance.severity,
-                range: {
-                    start: { line: parseInt(element[2]), character: parseInt(element[3]) },
-                    end: { line: parseInt(element[4]), character: parseInt(element[5]) }
+
+        const result = instance.evaluate('SELECT t.col1  \n FROM dataset.TrailingSpaces as t', 'test.sql');
+        expect(result).to.deep.equal([{
+            code: instance.diagnosticCode,
+            codeDescription: {href: instance.diagnosticCodeDescription},
+            message: instance.message,
+            severity: instance.severity,
+            range: {
+                start: { line: 0, character: 13 },
+                end: { line: 0, character: 15 }
+            },
+            source: instance.source,
+        }]);
+    });
+
+    it('should return diagnostic when rule is enabled and triggered - parenthesis', async () => {
+        instance.enabled = true;
+
+
+        const result = instance.evaluate('SELECT t.col1\n cast(t.col2 as string  ) FROM dataset.TrailingSpaces as t', 'test.sql');
+        expect(result).to.deep.equal([{
+            code: instance.diagnosticCode,
+            codeDescription: {href: instance.diagnosticCodeDescription},
+            message: instance.message,
+            severity: instance.severity,
+            range: {
+                start: { line: 1, character: 22 },
+                end: { line: 1, character: 24 }
+            },
+            source: instance.source,
+        }]);
+    });
+
+    it('should return codeaction when rule is enabled and as used', async () => {
+        instance.enabled = true;
+
+
+        const parser = new Parser();
+        await parser.parse({text:'SELECT t.col1  \n FROM dataset.TrailingSpaces as t', uri: 'test.sql', languageId: 'sql', version: 0});
+        const diagnostics = instance.evaluate('SELECT t.col1  \n FROM dataset.TrailingSpaces as t');
+        const actions = instance.createCodeAction({uri: 'test.sql'}, diagnostics![0]);
+        expect(actions).to.deep.equal(instance.codeActionKind.map(kind => {
+            return {
+                title: instance.codeActionTitle, edit:{
+                changes: {
+                        ['test.sql']: [
+                            {
+                                newText: '',
+                                range: {
+                                    start: { line: 0, character: 13 },
+                                    end: { line: 0, character: 15 }
+                                }
+                            }
+                        ]
+                    }
                 },
-                source: 'LT01 (trailing_sapces)'
-            }]);
-        });
+                kind: kind,
+                diagnostics: diagnostics
+            };
+        }));
     });
 
-    const listSQLMultipleErrors: string[][] = [
+    it('should return null when rule is enabled but pattern does not match', async () => {
+        instance.enabled = true;
 
+        const parser = new Parser();
 
-        ['Case 3: multiple errors',
-        `select * \n
-         from tablename\nselect
-         * \nfrom tablename`,'0','8','0','9','4','10','4','11'],];
-
-
-
-          listSQLMultipleErrors.forEach((element: string[]) => {
-            it(`${element[0]}\nshould return diagnostic when rule is enabled and pattern matches`, () => {
-                instance.enabled = true;
-                const result = instance.evaluate(element[1]);
-                expect(result).to.deep.equal([{
-                    code: instance.code,
-                    message: instance.message,
-                    severity: instance.severity,
-                    range: {
-                        start: { line: parseInt(element[2]), character: parseInt(element[3]) },
-                        end: { line: parseInt(element[4]), character: parseInt(element[5]) }
-                    },
-                    source: 'LT01 (trailing_sapces)'
-                },{
-                    code: instance.code,
-                    message: instance.message,
-                    severity: instance.severity,
-                    range: {
-                        start: { line: parseInt(element[6]), character: parseInt(element[7]) },
-                        end: { line: parseInt(element[8]), character: parseInt(element[9]) }
-                    },
-                    source: 'LT01 (trailing_sapces)'
-                }]);
-            });
-        });
-
-    const listSqlMultiples: string[][] = [
-        ['Case 4: multiple errors',
-        `select * \n
-        from tablename\nselect
-        * \nfrom tablename`],
-    ];
-
-    listSqlMultiples.forEach((element: string[]) => {
-        it(`${element[0]}\nshould return number of matches greater than 1 when rule is enabled and pattern matches more than once`, () => {
-            instance.enabled = true;
-            const noOfMatches = instance.matches(element[1]);
-            expect(noOfMatches).to.be.greaterThan(1);
-        });
-    });
-
-    const listSqlNoMatch: string[][] = [
-        ['Case 5: pattern does not match (union all)',
-        `select *\nfrom table`],
-    ];
-
-    listSqlNoMatch.forEach((element: string[]) => {
-        it(`${element[0]}\nshould return null when rule is enabled but pattern does not match`, () => {
-            instance.enabled = true;
-            const result = instance.evaluate(element[1]);
-            expect(result).to.be.null;
-        });
+        const result = instance.evaluate('SELECT t.col1\n FROM dataset.TrailingSpaces t');
+        expect(result).to.be.null;
     });
 });

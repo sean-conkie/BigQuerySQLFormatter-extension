@@ -10,12 +10,19 @@
 import { ServerSettings } from "../../../settings";
 import { RuleType } from '../enums';
 import {
-  Diagnostic, Range
+  CodeAction,
+  CodeActionKind,
+  Diagnostic, DocumentUri, Range,
+  TextDocumentIdentifier,
+  TextEdit
 } from 'vscode-languageserver/node';
 import { Rule } from '../base';
 import { FileMap } from '../../parser';
 import { ComparisonAST, ComparisonGroupAST } from '../../parser/ast';
+import { Token } from '../../parser/token';
 
+type RangeCache = Map<string, number>
+const documentCache: Map<DocumentUri, RangeCache> = new Map<DocumentUri, RangeCache>();
 
 /**
  * The ComparisonOperators rule
@@ -27,8 +34,11 @@ export class ComparisonOperators extends Rule<FileMap> {
   readonly name: string = "comparison_operators";
   readonly code: string = "LT15";
   readonly type: RuleType = RuleType.PARSER;
-  readonly message: string = "Comparisons should be formatted.";
-  readonly relatedInformation: string = "Comparison operators should be on the same column for blocks with multiple conditions.";
+  readonly message: string = "Align equal sign in comparison blocks.";
+  readonly relatedInformation: string = "When the equal (`=`) signs in a `WHERE` clause or join conditions are misaligned across multiple rows, it reduces the readability and consistency of the query.";
+  readonly ruleGroup: string = 'layout';
+  readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
+  readonly codeActionTitle = 'Format comparison operators';
 
   /**
    * Creates an instance of ComparisonOperators.
@@ -60,14 +70,17 @@ export class ComparisonOperators extends Rule<FileMap> {
       const where = ast[i].where;
 
       if (where instanceof ComparisonGroupAST && where.comparisons.length > 1) {
-        errors.push(...this.processComparisonGroup(where));
+        errors.push(...this.processComparisonGroup(where, documentUri));
       }
 
       const joins = ast[i].joins;
+      if (!joins) {
+        continue;
+      }
 
       joins.map((join) => {
         if (join.on instanceof ComparisonGroupAST) {
-          errors.push(...this.processComparisonGroup(join.on));
+          errors.push(...this.processComparisonGroup(join.on, documentUri));
         }
       });
 
@@ -78,48 +91,104 @@ export class ComparisonOperators extends Rule<FileMap> {
 
   private processComparisonGroup(comparison: ComparisonGroupAST, documentUri: string | null = null): Diagnostic[] {
     const errors: Diagnostic[] = [];
-
-    const operators: Range[] = [];
-    let operatorIndex: number | null = null;
-    let indexError = false;
+    const operators: Token[] = [];
+    const operatorIndexes: number[] = [];
     
     for (const comp of comparison.comparisons) {
       if (comp instanceof ComparisonGroupAST && comp.comparisons.length > 1) {
-        errors.push(...this.processComparisonGroup(comp));
+        errors.push(...this.processComparisonGroup(comp, documentUri));
       } else if (comp instanceof ComparisonAST) {
 
-        if (comp.operator == null) {
+        const operator = comp.operator;
+        if (operator == null) {
           continue;
         }
         // find all the operators
-        const operator = comp.operator!;
-        const offset = operator.indexOf('=');
-        if (offset > -1) {
-          const operatorToken = comp.tokens.filter((token) => token.value === operator)[0];
-          if (operatorIndex == null) {
-            operatorIndex = operatorToken.startIndex + offset;
-          } else if (operatorIndex !== operatorToken.startIndex + offset) {
-            indexError = true;
-          }
-          operators.push({
-            start: {
-              line: operatorToken.lineNumber!,
-              character: operatorToken.startIndex + offset
-            },
-            end: {
-              line: operatorToken.lineNumber!,
-              character: operatorToken.endIndex
-            }
-          });
+        const operatorToken = comp.tokens.filter((token) => token.value === operator)[0];
+        if (comp.left != null) {
+          operatorIndexes.push(comp.left.endIndex??0);
         }
+        operators.push(operatorToken);
       }
     }
 
-    if (indexError) {
-      operators.map((operator) => errors.push(this.createDiagnostic(operator, documentUri)));
+    let cache = documentCache.get(documentUri!);
+    if (!cache) {
+      cache = new Map<string, number>();
     }
 
-    return errors;
+    const requiredIndex = Math.max(...operatorIndexes) + 2;
+    operators.map((operator) => {
+      // adjust the startIndex to account for gte & lte & neq
+      // we want the '=' to line up so add 1 to the index
+      let operatorStartIndex = operator.startIndex;
+      if (operator.value.trim().length > 1 || operator.value.indexOf('=') === -1) {
+        operatorStartIndex++;
+      }
+      if (operatorStartIndex !== requiredIndex) {
+        const errorOffset = requiredIndex - operatorStartIndex;
+        const errorRange = {
+          start: {
+            line: operator.lineNumber!,
+            character: operator.startIndex
+          },
+          end: {
+            line: operator.lineNumber!,
+            character: operator.startIndex
+          }
+        }
+        const [additionalIdentNumber, newRange] = this.createIndentErrorOutputs(errorOffset, errorRange);
+        errors.push(this.createDiagnostic(newRange, documentUri));
+        cache!.set(this.createCacheKey(newRange), additionalIdentNumber);
+      }
 
+    });
+
+    documentCache.set(documentUri!, cache);
+
+    return errors;
+  }
+  
+  /**
+   * Creates a set of code actions to fix diagnostics.
+   *
+   * @param textDocument - The identifier of the text document where the diagnostic was reported.
+   * @param diagnostic - The diagnostic information about the issue to be fixed.
+   * @returns An array of code actions that can be applied to fix the issue.
+   */
+  createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): CodeAction[] {
+    const cachedDocument = documentCache.get(textDocument.uri);
+    let text = '';
+    if (!cachedDocument) {
+      return [];
+    }
+
+    const additionalIdentNumber = cachedDocument.get(this.createCacheKey(diagnostic.range));
+    if (additionalIdentNumber == null) {
+      return [];
+    }
+
+    text = ' '.repeat(additionalIdentNumber) + text;
+  
+    const edit = {
+        changes: {
+            [textDocument.uri]: [
+                TextEdit.replace(diagnostic.range, text)
+            ]
+        }
+    };
+    const actions: CodeAction[] = [];
+    
+    this.codeActionKind.map((kind) => {
+      const fix = CodeAction.create(
+        this.codeActionTitle,
+        edit,
+        kind
+      );
+      fix.diagnostics = [diagnostic];
+      actions.push(fix);
+    });
+
+    return actions;
   }
 }

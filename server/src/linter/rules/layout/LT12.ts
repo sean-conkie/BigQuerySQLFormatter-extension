@@ -7,14 +7,18 @@
  */
 
 
-import { Diagnostic } from 'vscode-languageserver';
+import { CodeAction, CodeActionKind, Diagnostic, TextDocumentIdentifier, TextEdit } from 'vscode-languageserver';
 import { Rule } from '../base';
 
-export class EndofFile extends Rule<string> {
+export class EndOfFile extends Rule<string> {
 	readonly name: string = "end_of_file";
 	readonly code: string = "LT12";
 	readonly message: string = "Files must end with a single trailing newline.";
-	readonly pattern: RegExp = /\S\n$/;
+	readonly relatedInformation: string = "Ensuring a single trailing newline at the end of files promotes clean and predictable code formatting.";
+	readonly pattern: RegExp = /(?:\S(\n{2,}|\n* +\n?)$|\S($))/g;
+  readonly ruleGroup: string = 'layout';
+  readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
+  readonly codeActionTitle = 'Fix trailing newline';
 
 
 	constructor(settings: any, problems: number) {
@@ -34,20 +38,40 @@ export class EndofFile extends Rule<string> {
 			return null;
 		}
 
-		if (this.pattern.test(test) === false) {
-
-			const sourceLines: string[] = test.split(/\n|\r\n|\r/);
-
-			return [
-				this.createDiagnostic(
-					{
-						start: { line: sourceLines.length, character: sourceLines[sourceLines.length - 1].length },
-						end: { line: sourceLines.length, character: sourceLines[sourceLines.length - 1].length },
-					},
-					documentUri)
-			];
-		}
+    if (this.pattern.test(test)) {
+      return this.evaluateRegexPatterns(test, documentUri);
+    }
 
 		return null;
 	}
+  
+  /**
+   * Creates a set of code actions to fix diagnostics.
+   *
+   * @param textDocument - The identifier of the text document where the diagnostic was reported.
+   * @param diagnostic - The diagnostic information about the issue to be fixed.
+   * @returns An array of code actions that can be applied to fix the issue.
+   */
+  createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): CodeAction[] {
+    const edit = {
+        changes: {
+            [textDocument.uri]: [
+                TextEdit.replace(diagnostic.range, '\n')
+            ]
+        }
+    };
+    const actions: CodeAction[] = [];
+    
+    this.codeActionKind.map((kind) => {
+      const fix = CodeAction.create(
+        this.codeActionTitle,
+        edit,
+        kind
+      );
+      fix.diagnostics = [diagnostic];
+      actions.push(fix);
+    });
+
+    return actions;
+  }
 }

@@ -11,6 +11,7 @@ import { ServerSettings } from "../../../settings";
 import { RuleType } from '../enums';
 import {
   Diagnostic,
+  TextDocumentIdentifier,
 } from 'vscode-languageserver/node';
 import { Rule } from '../base';
 import { FileMap } from '../../parser';
@@ -23,10 +24,13 @@ import { FileMap } from '../../parser';
  * @memberof Linter.Rules
  */
 export class TrailingComma extends Rule<FileMap> {
+  readonly is_fix_compatible: boolean = false;
   readonly name: string = "trailing_commas";
   readonly code: string = "LT04";
   readonly type: RuleType = RuleType.PARSER;
   readonly message: string = "Commas should be at the end of the line.";
+  readonly relatedInformation: string = "The best practice is to place commas at the end of each line when listing columns or items.";
+  readonly ruleGroup: string = 'layout';
 
   /**
    * Creates an instance of TrailingComma.
@@ -56,6 +60,9 @@ export class TrailingComma extends Rule<FileMap> {
     for (const i in ast) {
 
       const columns = ast[i].columns;
+      if (!columns) {
+        continue;
+      }
 
       for (const column of columns) {
         const filteredTokens = column.tokens.filter((token) => !token.scopes.includes("punctuation.whitespace.leading.sql"));
@@ -87,4 +94,5 @@ export class TrailingComma extends Rule<FileMap> {
 
     return errors.length > 0 ? errors : null;
   }
+  createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): null { return null; }
 }

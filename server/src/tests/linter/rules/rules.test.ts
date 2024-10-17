@@ -4,8 +4,12 @@
 
 import { expect } from 'chai';
 import { initialiseRules } from '../../../linter/rules/rules';
-import * as layoutRules from '../../../linter/rules/layout/rules';
 import { aliasRules } from '../../../linter/rules/aliasing/rules';
+import { ambiguousRules } from '../../../linter/rules/ambiguous/rules';
+import { capitalisationRules } from '../../../linter/rules/capitalisation/rules';
+import { conventionRules } from '../../../linter/rules/convention/rules';
+import { layoutRules } from '../../../linter/rules/layout/rules';
+import { structureRules } from '../../../linter/rules/structure/rules';
 import { defaultSettings, ServerSettings } from '../../../settings'; // replace with your actual import
 
 describe('initialiseRules', () => {
@@ -18,7 +22,12 @@ describe('initialiseRules', () => {
     });
 
     it('should return an array with the same content as the result of the rules', () => {
-        const layoutRulesResult = [...layoutRules.layoutRules(settings, problems), ...aliasRules(settings, problems)];
+        const layoutRulesResult = [...aliasRules(settings, problems),
+            ...ambiguousRules(settings, problems),
+            ...capitalisationRules(settings, problems),
+            ...conventionRules(settings, problems),
+            ...layoutRules(settings, problems),
+            ...structureRules(settings, problems)];
         const result = initialiseRules(settings, problems);
         expect(result).to.deep.equal(layoutRulesResult);
     });

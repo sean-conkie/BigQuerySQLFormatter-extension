@@ -7,6 +7,40 @@ on:
       - main
 
 jobs:
+  test:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [20.x, 22.x]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4.0.2
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      
+      - name: Install Dependencies
+        run: npm ci
+      
+      - name: Build
+        run: npm run compile
+      
+      - name: Test
+        run: npx nyc --reporter=lcov npm test
+      
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4.0.1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: .nyc_output/**/*.json
+
   build:
     strategy:
       matrix:
@@ -15,13 +49,22 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18.x
-      - run: npm ci
-      - run: npm run compile
-      - run: xvfb-run -a npm test
+      
+      - name: Install Dependencies
+        run: npm ci
+    
+      - name: Build
+        run: npm run compile
+    
+      - name: Platform Test (Linux)
+        run: xvfb-run -a npm test
         if: runner.os == 'Linux'
-      - run: npm test
+
+      - name: Platform Test (!Linux)
+        run: npm test
         if: runner.os != 'Linux'

@@ -1,13 +1,13 @@
 import syntaxJson from '../syntaxes/syntax.json';
 import { GrammarLoader, Grammar, GrammarTokenizeLineResult, RuleStack } from '../grammarLoader';
-import { Token, LineToken } from './token';
+import { Token, LineToken, includeTokensWithMatchingScopes } from './token';
 import { Rule } from './matches';
 import { StatementAST } from './ast';
 import { MatchObj, MatchedRule } from './matches';
 import { globalTokenCache, DocumentCache } from './tokenCache';
 import { DidChangeTextDocumentParams, TextDocumentItem, TextDocumentContentChangeEvent, VersionedTextDocumentIdentifier } from 'vscode-languageserver';
 import { range } from '../../utils';
-import { start } from 'repl';
+import { findToken  } from './utils';
 
 const punctuation: string[] = syntaxJson.punctuation;
 const skipTokens: string[] = syntaxJson.skipTokens;
@@ -150,7 +150,7 @@ export class Parser {
 
 			s.statement = statement.statement;
 			fileMap[i] = s;
-			startLine = statement.line;
+			startLine = statement.line + 1;
 
 		}
 
@@ -178,7 +178,6 @@ export class Parser {
 		
 			const newLines = change.text.split('\n');
 			const lineDelta = (newLines.length - 1) - linesBeingReplaced;
-			const documentLength = Math.max(cache.size, cache.size + lineDelta);
 		
 			const changedRange: ChangedRange = {
 				startLine: startLine,
@@ -186,13 +185,34 @@ export class Parser {
 				startIndex: change.range.start.character,
 				endIndex: change.range.end.character,
 			};
+
+			// if all checks pass then we are removing line(s)
+			if (lineDelta < 0) {
+				// alter the changedRange so that the starting line if the previous line and
+				// starting index is the end of that line.
+				// end line should now be the endLine - 1
+				changedRange.startLine = startLine - 1;
+				changedRange.endLine = endLine;
+				changedRange.startIndex = cache.get(startLine - 1)?.value.length ?? 0;
+				changedRange.endIndex = changedRange.startIndex;
+			}
+
+
 			// Create new cache incorporating changes
 			const newCache = new DocumentCache();
 			for (const [lineNumber, lineToken] of cache.entries()) {
 			// for (const lineNumber of range(changedRange.start, documentLength)) {
 				// const lineToken = cache.get(lineNumber);
 				if (lineNumber >= changedRange.endLine) {
-					newCache.set(lineNumber + lineDelta, lineToken!); // Shift lines up
+
+					// alter line numbers
+					lineToken!.lineNumber = lineNumber + lineDelta;
+					lineToken!.tokens = lineToken!.tokens.map((token) => {
+						token.lineNumber = lineNumber + lineDelta;
+						return token;
+					});
+
+					newCache.set(lineNumber + lineDelta, lineToken); // Shift lines up
 				} else if (lineNumber >= changedRange.startLine) {
 					// line is changed...
 					if (linesBeingReplaced === 0) {
@@ -231,20 +251,43 @@ export class Parser {
 		}
 	}
 
+	/**
+	 * Processes a line replacement by updating the line with the new content.
+	 *
+	 * @param index - The index of the line to be replaced.
+	 * @param newLine - The new content for the line.
+	 * @param newLinesCount - The number of new lines to be added.
+	 * @param lineNumber - The current line number.
+	 * @param lineToken - The token representing the line.
+	 * @param change - The range of changes to be applied.
+	 * @returns A tuple containing the updated line number and the updated line token.
+	 */
 	private processLineReplace(index: number, newLine: string, newLinesCount: number, lineNumber: number, lineToken: LineToken, change: ChangedRange): [number, LineToken] {
 		return this.processLineUpdate(index, newLine, newLinesCount, lineNumber-index, lineToken, change);
 	}
+
+	/**
+	 * Processes an update to a line of text, adjusting the line number and token as necessary.
+	 *
+	 * @param index - The index of the line being updated relative to the change.
+	 * @param newLine - The new content of the line.
+	 * @param newLinesCount - The total number of new lines introduced by the change.
+	 * @param lineNumber - The original line number before the update.
+	 * @param lineToken - The token associated with the original line.
+	 * @param change - The range of the change within the line.
+	 * @returns A tuple containing the new line number and the updated line token.
+	 */
 	private processLineUpdate(index: number, newLine: string, newLinesCount: number, lineNumber: number, lineToken: LineToken, change: ChangedRange): [number, LineToken] {
 		const newLineNumber = lineNumber + index;
 		const retainedLinePrefix = index === 0 ? lineToken!.value.substring(0, change.startIndex) : '';
 		const retainedLineSuffix = index === (newLinesCount - 1) ? lineToken!.value.substring(change.endIndex) : '';
 		const value = retainedLinePrefix + newLine + retainedLineSuffix;
-		if (value !== lineToken?.value) {
+		if (value === lineToken?.value && lineToken?.lineNumber === newLineNumber) {
+			return [newLineNumber, lineToken!];
+		} else {
 			const ruleStack = lineToken === undefined ? null : lineToken.ruleStack;
 			const tokens = Parser.tokenize(this.grammar!, new Map([[newLineNumber, value]]), ruleStack);
 			return [newLineNumber, tokens[0]];
-		} else {
-			return [newLineNumber, lineToken!];
 		}
 	}
 
@@ -257,6 +300,11 @@ export class Parser {
 		document.contentChanges.map((change) => this.handleContentChange(change, document.textDocument));
 	}
 
+	/**
+	 * Tokenizes the initial document.
+	 *
+	 * @param document - The text document item to tokenize.
+	 */
 	private tokenizeInitialDocument(document: TextDocumentItem) {
 		
 		const lineMap = new Map<number, string>();
@@ -292,7 +340,7 @@ export class Parser {
 	 */
 	private parseStatement(tokens: Token[]): StatementAST {
 
-		const statement = new StatementAST();
+		const statement = new StatementAST(tokens);
 
 		if (tokens.length === 0) {
 			return statement;
@@ -303,7 +351,7 @@ export class Parser {
 		let tokenCounter: number = 0;
 		let reCheck: boolean = true; // used to stop infinite loops
 		statement.tokens = tokens;
-		statement.lineNumber = tokens[0].lineNumber;
+		statement.startLine = tokens[0].lineNumber;
 
 		const reset = () => {
 			rules = syntaxJson.rules;
@@ -344,18 +392,66 @@ export class Parser {
 			expressionTokens.push(token);
 
 			if (rules.length === 1) {
-				const matchedRule = { "rule": rules.find((rule) => rule.scopes.join('|') === this.getMatchedTokens(expressionTokens)) ?? null, "tokens": expressionTokens, "matches": [] as MatchedRule[] };
+				const matchedRule = new MatchedRule(rules.find((rule) => rule.scopes.join('|') === this.getMatchedTokens(expressionTokens)) ?? null, expressionTokens);
+
+				if (matchedRule.rule && matchedRule.rule.type === 'subquery') {
+					// process subquery
+					// subqueries need to be processed separately as they are not part of the main statement
+					// create a subset of tokens, using parentheses as the start and end tokens
+					const subqueryTokens: Token[] = [];
+
+					let parenCounter = 0;
+
+					for (let j = i; j < tokens.length; j++) {
+						const subqueryToken = tokens[j];
+						subqueryTokens.push(subqueryToken);
+						if (subqueryToken.scopes.filter((scope) => recursiveGroupBegin.includes(scope)).length > 0) {
+							parenCounter++;
+						} else if (subqueryToken.scopes.filter((scope) => recursiveGroupEnd.includes(scope)).length > 0) {
+							parenCounter--;
+						}
+						if (parenCounter === 0) {
+							i = j + 1;
+							break;
+						}
+					}
+
+					const subqueryStatement = this.parseStatement(subqueryTokens.slice(1, subqueryTokens.length - 1));
+
+					if (matchedRule.rule.alias === true) {
+						const [matchedRules, y] = this.recursiveLookahead(tokens.slice(i + 1), syntaxRules.filter((rule) => ["implicit.alias", "explicit.alias"].includes(rule.name)));
+						if (matchedRules.length > 0) {
+							const alias = includeTokensWithMatchingScopes(matchedRules[0].tokens, ["entity.name.alias.sql", "entity.name.tag"]);
+							if (alias.length > 0) {
+								subqueryStatement.alias = alias[0].value;
+							}
+						}
+						i += y;
+					}
+
+					if (matchedRule.rule.name === "from.subquery") {
+						statement.from = subqueryStatement;
+					}
+					reset();
+					continue;
+
+				}
 
 				if (matchedRule.rule && matchedRule.rule.recursive) {
 					const [matchedRules, y] = this.recursiveLookahead(tokens.slice(i + 1), null, matchedRule.rule.end);
-					matchedRule.matches.push(...matchedRules);
+					matchedRule.matches!.push(...matchedRules);
 					i += y;
 				}
 
 				if (matchedRule.rule) {
 					if (matchedRule.rule.children != null) {
 						const [matchedRules, y] = this.recursiveLookahead(tokens.slice(i + 1), syntaxRules.filter((rule) => matchedRule.rule?.children?.includes(rule.name)));
-						matchedRule.matches.push(...matchedRules);
+						matchedRule.matches!.push(...matchedRules);
+						i += y;
+					}
+					if (matchedRule.rule.alias === true) {
+						const [matchedRules, y] = this.recursiveLookahead(tokens.slice(i + 1), syntaxRules.filter((rule) => ["implicit.alias", "explicit.alias"].includes(rule.name)));
+						matchedRule.matches!.push(...matchedRules);
 						i += y;
 					}
 					statement.processRule(matchedRule);
@@ -416,13 +512,26 @@ export class Parser {
 		let tokenCounter: number = currentMatchCount - 1;
 
 		// if we have already matched all the tokens in the rule return the rule
-		if (checkIndex === rule.scopes.length && rule.negativeLookahead === null) {
+		if (checkIndex === rule.scopes.length && rule.negativeLookahead == null) {
 			return rule;
 		}
 
 		// filter tokens to exclude skips and punctuation
 		const filteredTokens = tokens.filter((token) => token.scopes.map((t) => skipTokens.includes(t)).includes(true) || token.scopes.filter((scope) => !skipTokens.includes(scope.split('.')[0])).length > 0)
 			.filter((token) => !token.scopes.map((t) => punctuation.includes(t)).includes(true));
+
+
+		const lengthCheck = filteredTokens.length + tokenCounter;
+		// if we've matched all the tokens but we have a negativeLookahead, then if filtered length is less
+		// than the number of tokens we need to check return the rule
+		if (checkIndex === rule.scopes.length && lengthCheck < rule.lookahead) {
+			return rule;
+		}
+
+		// if filtered length is less than the number of tokens we need to check return null
+		if (lengthCheck < rule.lookahead) {
+			return null;
+		}
 
 		// loop through the tokens by index
 		for (let i = 0; i < filteredTokens.length; i++) {
@@ -469,7 +578,11 @@ export class Parser {
 		let tokenCounter: number = 0;
 		let reCheck: boolean = true; // used to stop infinite loops
 		const setRules = () => {
-			rules == null ? workingRules = syntaxRules : workingRules = rules;
+			if (rules == null) {
+					workingRules = syntaxRules;
+			} else {
+					workingRules = rules;
+			}
 		};
 		const reset = () => {
 			setRules();
@@ -517,6 +630,11 @@ export class Parser {
 				if (reCheck) {
 					i--; // restart checking from the last token
 					reCheck = false;
+				} else if (reCheck === false && rules != null && exitOnMatch) {
+					// in this scenario we are searching for a sepcific rule subset
+					// the token has been checked and no rules have matched so exit.
+					loopCounter = 0; // reset loop counter because we never matched anything
+					break;
 				} else {
 					reCheck = true;
 				}
@@ -530,21 +648,17 @@ export class Parser {
 
 			expressionTokens.push(token);
 
-			const matchedRule = { "rule": workingRules.find((rule) => rule.scopes.join('|') === this.getMatchedTokens(expressionTokens)) ?? null, "tokens": expressionTokens, "matches": [] as MatchedRule[] };
+			const matchedRule = new MatchedRule( workingRules.find((rule) => rule.scopes.join('|') === this.getMatchedTokens(expressionTokens)) ?? null, expressionTokens);
 
 			if (matchedRule.rule && matchedRule.rule.recursive) {
 				const [matchedRules, y] = this.recursiveLookahead(tokens.slice(i + 1), null, matchedRule.rule.end);
-				matchedRule.matches.push(...matchedRules);
-				matches.push(matchedRule);
+				matchedRule.matches!.push(...matchedRules);
 				i += y;
-				loopCounter = i;
-				reset();
-				if (exitOnMatch) {
-					break;
-				}
-				continue;
-			} else if (matchedRule.rule) {
+			}
+
+			if (matchedRule.rule) {
 				matches.push(matchedRule);
+				loopCounter = i;
 				reset();
 				if (exitOnMatch) {
 					break;
@@ -652,12 +766,12 @@ export class Parser {
 		let start = 0;
 		while ((match = pattern.exec(source))) {
 			const m = {
-				"end": match.index,
+				"end": match.index + 1,
 				"start": start,
 				"line": lines.indexOf(lines.find((line) => (match?.index ?? -1) >= line.start && (match?.index ?? -1) < line.end) ?? lines[0]),
-				"statement": source.substring(start, match.index)
+				"statement": source.substring(start, match.index + 1)
 			};
-			start = match.index + 1;
+			start = m.end + 1;
 			statements.push(m);
 		}
 
@@ -666,6 +780,15 @@ export class Parser {
 				"start": 0,
 				"end": source.length,
 				"statement": source,
+				"line": lines.indexOf(lines.find((line) => source.length >= line.start && source.length < line.end) ?? lines[0]),
+			});
+		}
+
+		if (statements[statements.length - 1].end < source.length) {
+			statements.push({
+				"start": statements[statements.length - 1].end,
+				"end": source.length,
+				"statement": source.substring(statements[statements.length - 1].end, source.length),
 				"line": lines.indexOf(lines.find((line) => source.length >= line.start && source.length < line.end) ?? lines[0]),
 			});
 		}

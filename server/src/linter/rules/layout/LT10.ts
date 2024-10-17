@@ -20,10 +20,12 @@ import { Rule } from '../base';
  * @memberof Linter.Rules
  */
 export class SelectModifiers extends Rule<string> {
+  readonly is_fix_compatible: boolean = false;
   readonly name: string = "select_modifiers_check";
   readonly code: string = "LT10";
   readonly message: string = "SELECT modifiers (e.g. DISTINCT) must be on the same line as SELECT";
   readonly pattern: RegExp = /\bselect(?:\s*\n\s*(distinct|all|with|as)\b)/gi;
+  readonly ruleGroup: string = 'layout';
 
   /**
    * Creates an instance of SelectModifiers.
@@ -49,7 +51,7 @@ export class SelectModifiers extends Rule<string> {
     }
 
     if (this.pattern.test(test)) {
-      return this.evaluateMultiRegexTest(test, documentUri);
+      return this.evaluateRegexPatterns(test, documentUri);
     }
 
     return null;

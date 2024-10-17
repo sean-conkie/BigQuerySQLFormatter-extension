@@ -30,12 +30,11 @@ export function joinTokenValues(tokens: Token[], char: string = ''): string {
  * @param scopes - The array of scopes to filter out from the tokens.
  * @returns An array of tokens that do not include any of the specified scopes.
  */
-export function filterTokens(tokens: Token[], scopes: string[]): Token[] {
-	let filteredTokens: Token[] = [];
+export function includeTokensWithMatchingScopes(tokens: Token[], scopes: string[]): Token[] {
+	let filteredTokens: Token[] = tokens;
 
-	scopes.map((scope) => {
-		filteredTokens = tokens.filter((token) => token.scopes.includes(scope));
-	});
+	// find all tokens in filteredTokens that have one or more of the scopes in the scopes array
+	filteredTokens = filteredTokens.filter(token => scopes.some(scope => token.scopes.includes(scope)));
 
 	return filteredTokens;
 }
@@ -47,11 +46,11 @@ export function filterTokens(tokens: Token[], scopes: string[]): Token[] {
  * @param scopes - The array of scopes to filter out from the tokens.
  * @returns An array of tokens that do not include any of the specified scopes.
  */
-export function filterOutTokens(tokens: Token[], scopes: string[]): Token[] {
-	let filteredTokens: Token[] = [];
+export function excludeTokensWithMatchingScopes(tokens: Token[], scopes: string[]): Token[] {
+	let filteredTokens: Token[] = tokens;
 
 	scopes.map((scope) => {
-		filteredTokens = tokens.filter((token) => !token.scopes.includes(scope));
+		filteredTokens = filteredTokens.filter((token) => !token.scopes.includes(scope));
 	});
 
 	return filteredTokens;

@@ -1,7 +1,7 @@
 // server/src/utils.test.ts
 
 import { expect } from 'chai';
-import { mergeArrayToUnique, range } from '../utils';
+import { getWordAt, mergeArrayToUnique, range } from '../utils';
 
 describe('Utility Functions', () => {
   describe('mergeArrayToUnique', () => {
@@ -48,6 +48,45 @@ describe('Utility Functions', () => {
 
     it('should throw an error when start is greater than end', () => {
       expect(() => range(5, 1)).to.throw("Start value must be less than or equal to end value.");
+    });
+  });
+
+  describe('getWordAt', () => {
+    it('should return null when position is out of bounds', () => {
+      expect(getWordAt('hello world', -1)).to.be.null;
+      expect(getWordAt('hello world', 11)).to.be.null;
+    });
+
+    it('should return the word at the start position', () => {
+      expect(getWordAt('hello world', 0)).to.equal('hello');
+    });
+
+    it('should return the word at the middle position', () => {
+      expect(getWordAt('hello world', 3)).to.equal('hello');
+    });
+
+    it('should return the word at the end position', () => {
+      expect(getWordAt('hello world', 4)).to.equal('hello');
+    });
+
+    it('should return the word at the start of the second word', () => {
+      expect(getWordAt('hello world', 6)).to.equal('world');
+    });
+
+    it('should return the word at the middle of the second word', () => {
+      expect(getWordAt('hello world', 8)).to.equal('world');
+    });
+
+    it('should return the word at the end of the second word', () => {
+      expect(getWordAt('hello world', 10)).to.equal('world');
+    });
+
+    it('should return null when position is at a non-word character', () => {
+      expect(getWordAt('hello world', 5)).to.be.null;
+    });
+
+    it('should return null for an empty string', () => {
+      expect(getWordAt('', 0)).to.be.null;
     });
   });
 });

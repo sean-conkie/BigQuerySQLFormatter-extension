@@ -2,8 +2,12 @@
 import { ServerSettings } from "../../../settings";
 import { RuleType } from '../enums';
 import {
+  CodeAction,
+  CodeActionKind,
   Diagnostic,
   DiagnosticSeverity,
+  TextDocumentIdentifier,
+  TextEdit,
 } from 'vscode-languageserver/node';
 import { Rule } from '../base';
 import { FileMap } from '../../parser';
@@ -21,8 +25,11 @@ export class Functions extends Rule<FileMap> {
   readonly code: string = "LT06";
   readonly type: RuleType = RuleType.PARSER;
   readonly message: string = "Function name not immediately followed by parenthesis.";
-  readonly relatedInformation: string = "Function name not immediately followed by parenthesis.";
+  readonly relatedInformation: string = "Function names should always be immediately followed by parentheses without any space.";
   readonly severity: DiagnosticSeverity = DiagnosticSeverity.Warning;
+  readonly ruleGroup: string = 'layout';
+  readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
+  readonly codeActionTitle = 'Remove redundant whitespace';
 
   /**
    * Creates an instance of Functions.
@@ -51,18 +58,23 @@ export class Functions extends Rule<FileMap> {
     const errors: Diagnostic[] = [];
     for (const i in ast) {
       // check the columns for functions
-      for (const column of ast[i].columns) {
-        if (column instanceof ColumnFunctionAST) {
-          errors.push(...this.validateFunctionSyntax(column, documentUri));
-        }
+      if (ast[i].columns) {
+        ast[i].columns.map((column) => {
+          if (column instanceof ColumnFunctionAST) {
+            errors.push(...this.validateFunctionSyntax(column, documentUri));
+          }
+        });
       }
 
-      errors.push(...this.validateComparisonGroupFunctions(ast[i].where, documentUri));
+      if (ast[i].where) {
+        errors.push(...this.validateComparisonGroupFunctions(ast[i].where, documentUri));
+      }
 
-      ast[i].joins.forEach((join) => {
-        errors.push(...this.validateComparisonGroupFunctions(join.on, documentUri));
-      });
-
+      if (ast[i].joins) {
+        ast[i].joins.forEach((join) => {
+          errors.push(...this.validateComparisonGroupFunctions(join.on, documentUri));
+        });
+      }
     }
 
     return errors.length > 0 ? errors : null;
@@ -133,5 +145,35 @@ export class Functions extends Rule<FileMap> {
 
     return errors;
 
+  }
+  
+  /**
+   * Creates a set of code actions to fix diagnostics.
+   *
+   * @param textDocument - The identifier of the text document where the diagnostic was reported.
+   * @param diagnostic - The diagnostic information about the issue to be fixed.
+   * @returns An array of code actions that can be applied to fix the issue.
+   */
+  createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): CodeAction[] {
+    const edit = {
+        changes: {
+            [textDocument.uri]: [
+                TextEdit.replace(diagnostic.range, '')
+            ]
+        }
+    };
+    const actions: CodeAction[] = [];
+    
+    this.codeActionKind.map((kind) => {
+      const fix = CodeAction.create(
+        this.codeActionTitle,
+        edit,
+        kind
+      );
+      fix.diagnostics = [diagnostic];
+      actions.push(fix);
+    });
+
+    return actions;
   }
 }

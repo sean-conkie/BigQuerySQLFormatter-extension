@@ -1,0 +1,60 @@
+============================================================
+Rule: Use Lowercase for Literal `null`/`true`/`false` Values
+============================================================
+
+**Rule Code:** ``CP04``
+
+**Name:** ``literals``
+
+Overview
+--------
+
+In SQL, the literals `null`, `true`, and `false` should always be written in lowercase. This rule enforces consistency in the capitalization of these literals, ensuring that queries are easier to read, maintain, and conform to common SQL standards. Writing these literals in uppercase can cause inconsistencies and make code harder to understand and maintain.
+
+Explanation
+-----------
+
+Anti-pattern: Using Uppercase `NULL`, `TRUE`, `FALSE`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Using uppercase literals like `NULL`, `TRUE`, or `FALSE` is considered an anti-pattern because it breaks consistency with standard SQL conventions, where lowercase is preferred for literals. Mixing capitalization styles can confuse developers and lead to less readable code, especially in collaborative environments.
+
+**Example of Uppercase Literals (Anti-pattern):**
+
+.. code-block:: sql
+
+    select foo.id,
+           foo.name,
+           NULL      missing_value,
+           TRUE      is_active
+      from foo;
+
+In this example, the literals `NULL` and `TRUE` are written in uppercase, which deviates from best practices.
+
+Best Practice: Use Lowercase `null`, `true`, `false`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To maintain consistency and readability, always write the literals `null`, `true`, and `false` in lowercase. This adheres to common SQL style conventions and improves code clarity.
+
+**Refactored Example with Lowercase Literals (Best Practice):**
+
+.. code-block:: sql
+
+    select foo.id,
+           foo.name,
+           null      missing_value,
+           true      is_active
+      from foo;
+
+In this refactored query, the literals `null` and `true` are written in lowercase, making the query more consistent and easier to read.
+
+Conclusion
+----------
+
+Using lowercase for `null`, `true`, and `false` literals ensures consistency, readability, and maintainability in SQL queries. Following this rule helps developers adhere to common SQL conventions, avoiding confusion and enhancing collaboration.
+
+Groups:
+-------
+
+- `all <../..>`_
+- `capitalisation <../..#capitalisation-rules>`_

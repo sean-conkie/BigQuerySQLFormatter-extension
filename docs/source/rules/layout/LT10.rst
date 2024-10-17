@@ -1,0 +1,58 @@
+=========================================================
+Rule: select Modifiers Must Be on the Same Line as select
+=========================================================
+
+**Rule Code:** ``LT10``
+
+**Name:** ``select_modifiers_check``
+
+Overview
+--------
+
+In SQL queries, modifiers such as `DISTINCT`, `ALL`, or `TOP` should be placed on the same line as the `select` keyword. This best practice improves the readability and consistency of the query, ensuring that the modifier's relationship to the `select` statement is clear. Placing modifiers on a separate line can make the query harder to read and may lead to confusion.
+
+Explanation
+-----------
+
+Anti-pattern: select Modifiers on a Separate Line
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When modifiers like `DISTINCT` are placed on a separate line from the `select` keyword, it can break the flow of the query and make it harder to understand. This layout may cause unnecessary confusion for developers when reading or modifying the query.
+
+**Example of select Modifiers on a Separate Line (Anti-pattern):**
+
+.. code-block:: sql
+
+    select distinct
+           foo.id,
+           foo.name
+      from foo;
+
+In this example, `DISTINCT` is placed on a separate line, which breaks the connection between the `select` keyword and its modifier, making the query less readable.
+
+Best Practice: select Modifiers on the Same Line
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For clarity and readability, any modifiers such as `DISTINCT` should be placed on the same line as the `select` keyword. This keeps the query concise and ensures that the intent of the modifier is immediately clear to anyone reading the code.
+
+**Refactored Example with select Modifiers on the Same Line (Best Practice):**
+
+.. code-block:: sql
+
+    select distinct
+           foo.id,
+           foo.name
+      from foo;
+
+In this refactored example, the `DISTINCT` modifier is placed directly after the `select` keyword on the same line, making the query clearer and more readable.
+
+Conclusion
+----------
+
+Keeping `select` modifiers on the same line as the `select` keyword ensures that SQL queries are more readable and consistent. Following this rule helps developers understand the structure and intent of the query more easily, leading to better maintainability.
+
+Groups:
+-------
+
+- `all <../..>`_
+- `layout <../..#layout-rules>`_

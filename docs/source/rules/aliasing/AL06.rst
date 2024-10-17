@@ -1,0 +1,58 @@
+=================================
+Rule: Tables Must Use an Alias
+=================================
+
+**Rule Code:** ``AL06``
+
+**Name:** ``table_alias``
+
+Overview
+--------
+
+In SQL queries, it is a best practice to always use table aliases, even if the query only involves a single table. Table aliases improve readability, especially in complex queries that involve multiple tables or self-joins. Aliasing tables simplifies the query and makes it easier to refer to the table columns, leading to better-maintained and more scalable code.
+
+Explanation
+-----------
+
+Anti-pattern: Not Using Aliases for Tables
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When a query does not use table aliases, it forces the query to reference the full table name for each column. This can lead to cluttered and hard-to-read queries, especially when multiple tables or joins are involved. The lack of table aliases can also cause confusion when reading or maintaining the query, as it becomes harder to track which columns belong to which tables.
+
+**Example of a Query Without Table Aliases (Anti-pattern):**
+
+.. code-block:: sql
+
+    select orders.id, orders.date, customers.name
+      from orders
+      join customers
+        on orders.customer_id = customers.id;
+
+In this example, the full table names `orders` and `customers` are repeatedly referenced, making the query verbose and less readable.
+
+Best Practice: Always Use Table Aliases
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Using aliases for tables simplifies the query, improves readability, and makes it easier to reference table columns. Even if a query involves only one table, using an alias helps maintain consistency and scalability, especially when the query is extended to include additional tables.
+
+**Refactored Example with Table Aliases (Best Practice):**
+
+.. code-block:: sql
+
+    select o.id, o.date, c.name
+      from orders o
+      join customers c
+        on o.customer_id = c.id;
+
+In this refactored example, the tables `orders` and `customers` are given the aliases `o` and `c`, respectively. This makes the query more concise and easier to read, especially when the query becomes more complex.
+
+Conclusion
+----------
+
+Using table aliases in SQL queries is essential for improving readability, reducing verbosity, and maintaining clear and maintainable code. By following this rule and always using aliases for tables, developers can write cleaner, more efficient queries that are easier to scale and maintain.
+
+Groups:
+-------
+
+- `all <../..>`_
+- `aliasing <../..#aliasing-rules>`_

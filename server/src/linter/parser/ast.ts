@@ -1,4 +1,4 @@
-import { Token, LineToken, joinTokenValues, filterOutTokens } from './token';
+import { Token, LineToken, joinTokenValues, excludeTokensWithMatchingScopes } from './token';
 import { MatchedRule } from './matches';
 import { findToken, sortTokens } from './utils';
 import { StatementType, JoinType, LogicalOperator, ComparisonOperator } from './enums';
@@ -14,28 +14,34 @@ import { StatementType, JoinType, LogicalOperator, ComparisonOperator } from './
  * @abstract
  * @property {Token[]} tokens - An array of tokens associated with this AST node.
  * @property {string | null} alias - An optional alias for the AST node.
- * @property {number | null} lineNumber - The line number where this AST node starts.
+ * @property {number | null} startLine - The line number where this AST node starts.
  * @property {number | null} startIndex - The start index of this AST node in the source code.
  * @property {number | null} endIndex - The end index of this AST node in the source code.
  */
 abstract class AST {
   tokens: Token[] = [];
   alias: string | null = null;
-  lineNumber: number | null = null;
+  startLine: number | null = null;
   startIndex: number | null = null;
   endIndex: number | null = null;
+  endLine: number | null = null;
 
   constructor(tokens: Token[] = []) {
     this.tokens = sortTokens(tokens);
+    const filteredTokens = excludeTokensWithMatchingScopes(this.tokens, [
+      'punctuation.whitespace.leading.sql',
+      'punctuation.whitespace.trailing.sql',
+      'punctuation.whitespace.sql',
+      'punctuation.separator.comma.sql',
+      'comment.line.double-dash.sql'
+    ]);
 
-    if (tokens.length > 0) {
+    if (filteredTokens.length > 0) {
       this.alias = findToken(tokens, "entity.name.tag")?.value ?? null;
-      this.lineNumber = filterOutTokens(tokens, ['punctuation.whitespace.leading.sql',
-        'punctuation.whitespace.trailing.sql',
-        'punctuation.whitespace.sql',
-        'punctuation.separator.comma.sql'])[0].lineNumber;
-      this.startIndex = tokens[0].startIndex;
-      this.endIndex = tokens[tokens.length - 1].endIndex;
+      this.startLine = filteredTokens[0].lineNumber;
+      this.startIndex = filteredTokens[0].startIndex;
+      this.endIndex = this.tokens[this.tokens.length - 1].endIndex;
+      this.endLine = this.tokens[this.tokens.length - 1].lineNumber;
     }    
   }
 }
@@ -258,6 +264,23 @@ export class KeywordAST extends ASTWithValue<string> {
 export class OrderAST extends AST {
   column: Column | null = null;
   direction: string | null = null;
+
+  constructor(matchedRule: MatchedRule) {
+    super(matchedRule.tokens);
+
+    const column = createColumn(matchedRule);
+    const directionMatch = matchedRule.matches?.find((match) => match.rule?.type === 'direction') ?? null;
+
+    this.column = column;
+    this.tokens.push(...column.tokens);
+
+    if (directionMatch) {
+      this.direction = findToken(directionMatch.tokens, "keyword.order.direction.sql")?.value ?? null;
+      this.tokens.push(...directionMatch.tokens);
+    }
+
+  }
+
 }
 
 /**
@@ -284,7 +307,7 @@ export class WindowAST extends AST {
    */
   constructor(match: MatchedRule) {
     super();
-    const emptyMatch = { rule: null, tokens: [], matches: [] };
+    const emptyMatch = new MatchedRule(null, []);
     const partitionByIndex = match.matches?.indexOf(match.matches?.find((match) => match.rule?.name === "keyword.partition") ?? emptyMatch) ?? 0;
     const orderByIndex = match.matches?.indexOf(match.matches?.find((match) => match.rule?.name === "keyword.order") ?? emptyMatch) ?? match.matches?.length;
 
@@ -292,7 +315,7 @@ export class WindowAST extends AST {
     const orderMatches = match.matches?.slice((orderByIndex ?? 0) + 1);
 
     this.partition = partitionMatches?.map((match) => createColumn(match) ?? null).filter((column) => column != null) as Column[];
-    this.order = orderMatches?.map((match) => new OrderAST()) ?? [];
+    this.order = orderMatches?.map((match) => new OrderAST(match)) ?? [];
   }
 }
 
@@ -334,34 +357,31 @@ export class ColumnFunctionAST extends AST {
 
       const keywordTokens = match.tokens.slice(slicePoint);
       const columnTokens = match.tokens.slice(0, slicePoint);
-      matchedRule.matches?.splice(indexOfMatch, 1, {
-        "rule": {
-          "type": "column",
-          "name": "special.column",
-          "scopes": [],
-          "lookahead": 0,
-          "negativeLookahead": null,
-          "recursive": false,
-          "children": null,
-          "end": null
-        }, "tokens": columnTokens
-      });
+      matchedRule.matches?.splice(indexOfMatch, 1, new MatchedRule(
+        {
+          type: "column",
+          name: "special.column",
+          scopes: [],
+          lookahead: 0,
+          negativeLookahead: null,
+          recursive: false,
+          children: null,
+          end: null,
+          alias: false
+        },columnTokens));
 
-      matchedRule.matches?.splice(indexOfMatch + 1, 0, {
-        "rule": {
-          "type": "keyword",
-          "name": "special.keyword",
-          "scopes": [],
-          "lookahead": 0,
-          "negativeLookahead": null,
-          "recursive": false,
-          "children": null,
-          "end": null
-        }, "tokens": keywordTokens
-      });
-
+      matchedRule.matches?.splice(indexOfMatch + 1, 0, new MatchedRule({
+        type: "keyword",
+        name: "special.keyword",
+        scopes: [],
+        lookahead: 0,
+        negativeLookahead: null,
+        recursive: false,
+        children: null,
+        end: null,
+        alias: false
+      }, keywordTokens));
     });
-
     // window functions may contain an alias - pop it to the
     // function level matches
     const window: MatchedRule | null = matchedRule.matches?.find((match) => match.rule?.type === 'over') ?? null;
@@ -415,7 +435,16 @@ export class CaseStatementWhenAST extends AST {
    */
   constructor(when: MatchedRule, then: MatchedRule) {
 
-    const tokens = [...when.tokens, ...then.tokens];
+    const tokens = [];
+    
+    if (when.tokens != null && when.tokens.length > 0) {
+      tokens.push(...when.tokens);
+    }
+    
+    if (then.tokens != null && then.tokens.length > 0) {
+      tokens.push(...then.tokens);
+    }
+
     super(tokens);
 
     this.when = new ComparisonGroupAST(when.matches ?? []);
@@ -442,7 +471,7 @@ export class CaseStatementAST extends AST {
    * - Extracts the alias from the alias match, if present.
    */
   constructor(matchedRule: MatchedRule) {
-    super(matchedRule.tokens);
+    super(matchedRule.allTokens);
 
     const whenMatches = matchedRule.matches?.filter((match) => match.rule?.type === "when") ?? [];
     const thenMatches = matchedRule.matches?.filter((match) => match.rule?.type === "then") ?? [];
@@ -454,12 +483,13 @@ export class CaseStatementAST extends AST {
     }
 
     if (elseMatch) {
-      this.else = createColumn((elseMatch.matches ?? [{ rule: null, tokens: [] }])[0]);
+      this.else = createColumn((elseMatch.matches ?? [new MatchedRule(null, [])])[0]);
     }
 
     if (aliasMatch) {
       this.alias = findToken(aliasMatch.tokens, "entity.name.tag")?.value ?? null;
     }
+
   }
 }
 // endregion columns
@@ -524,8 +554,8 @@ export class ComparisonGroupAST extends AST {
    * - `startIndex`: The start index of the first token.
    * - `endIndex`: The end index of the last token.
    */
-  constructor(matches: MatchedRule[], logicalOperator: LogicalOperator | null = null) {
-    super();
+  constructor(matches: MatchedRule[], logicalOperator: LogicalOperator | null = null, tokens: Token[] = []) {
+    super(tokens);
     if (matches.length === 0) {
       return;
     }
@@ -637,6 +667,19 @@ export class ComparisonGroupAST extends AST {
     }
 
     this.tokens = sortTokens(this.tokens);
+    const filteredTokens = excludeTokensWithMatchingScopes(this.tokens, [
+      'punctuation.whitespace.leading.sql',
+      'punctuation.whitespace.trailing.sql',
+      'punctuation.whitespace.sql',
+      'punctuation.separator.comma.sql',
+      'comment.line.double-dash.sql'
+    ]);
+    if (filteredTokens.length > 0) {
+      this.startLine = filteredTokens[0].lineNumber;
+      this.startIndex = filteredTokens[0].startIndex;
+      this.endIndex = filteredTokens[filteredTokens.length - 1].endIndex;
+      this.endLine = filteredTokens[filteredTokens.length - 1].lineNumber;
+    }
   }
 }
 
@@ -683,7 +726,7 @@ export class ArrayAST extends AST {
    */
   constructor(matchedRules: MatchedRule[]) {
     super();
-    this.lineNumber = matchedRules[0].tokens[0].lineNumber;
+    this.startLine = matchedRules[0].tokens[0].lineNumber;
     this.startIndex = matchedRules[0].tokens[0].startIndex;
     this.endIndex = matchedRules[matchedRules.length - 1].tokens[matchedRules[matchedRules.length - 1].tokens.length - 1].endIndex;
     this.tokens = matchedRules.map((match) => match.tokens).flat();
@@ -728,8 +771,9 @@ export class JoinAST extends AST {
 
     this.on = new ComparisonGroupAST(matchedRule.matches ?? []);
     this.tokens.push(...this.on.tokens);
-
+    this.tokens = sortTokens(this.tokens);
     this.endIndex = this.tokens[this.tokens.length - 1].endIndex;
+    this.endLine = this.tokens[this.tokens.length - 1].lineNumber;
   }
 }
 
@@ -759,25 +803,16 @@ export class ObjectAST extends AST {
    * 
    */
   constructor(tokens: LineToken[] | Token[]) {
-    super();
+    super(tokens);
     const project = findToken(tokens, "entity.name.project.sql");
     const dataset = findToken(tokens, "entity.name.dataset.sql");
     const object = findToken(tokens, "entity.name.object.sql");
     const alias = findToken(tokens, "entity.name.alias.sql");
 
-    const statementTokens = [project, dataset, object, alias].filter((token) => token != null);
-    if (statementTokens.length === 0) {
-      return;
-    }
-
     this.project = project?.value ?? null;
     this.dataset = dataset?.value ?? null;
     this.object = object?.value ?? null;
     this.alias = alias?.value ?? null;
-    this.lineNumber = Math.min(...statementTokens.map((token) => token?.lineNumber ?? 0));
-    this.startIndex = Math.min(...statementTokens.map((token) => token?.startIndex ?? 0));
-    this.endIndex = Math.min(...statementTokens.map((token) => token?.endIndex ?? 0));
-    this.tokens = statementTokens.filter(token => token != null) as Token[];
   }
 }
 // endregion objects
@@ -795,9 +830,9 @@ export class StatementAST extends AST {
   from: ObjectAST | StatementAST | null = null;
   joins: JoinAST[] = [];
   where: ComparisonGroupAST | null = null;
-  groupby: ColumnAST[] = [];
+  groupby: Column[] = [];
   having: string | null = null;
-  orderby: ColumnAST[] = [];
+  orderby: Column[] = [];
   limit: number | null = null;
   statement: string | null = null;
 
@@ -833,7 +868,11 @@ export class StatementAST extends AST {
       } else if (rule.type === 'join') {
         this.joins.push(new JoinAST(matchedRule));
       } else if (rule.type === 'where') {
-        this.where = new ComparisonGroupAST(matchedRule.matches ?? []);
+        this.where = new ComparisonGroupAST(matchedRule.matches ?? [], null, matchedRule.tokens);
+      } else if (rule.type === 'groupby') {
+        matchedRule.matches?.map(match => this.groupby.push(createColumn(match)));
+      } else if (rule.type === 'orderby') {
+        matchedRule.matches?.map(match => this.orderby.push(createColumn(match)));
       } else {
         this.columns.push(createColumn(matchedRule));
       }

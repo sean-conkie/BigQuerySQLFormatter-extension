@@ -1,18 +1,15 @@
-/**
- * @fileoverview Base class for a rule
- * @module linter/rules/base
- * @requires vscode-languageserver
- * @requires settings
- * @requires RuleType
- */
-
-import { Diagnostic, DiagnosticSeverity, Range } from 'vscode-languageserver/node';
+import { CodeAction, Diagnostic, DiagnosticSeverity, DiagnosticTag, Range, TextDocumentIdentifier, URI } from 'vscode-languageserver/node';
 import { RuleType } from './enums';
 import { ServerSettings } from '../../settings';
 import { FileMap } from '../parser';
+import packageJson from '../../../package.json';
+import { getRegexMatchRanges } from './regex';
 
 
-export type MatchPosition = { line: number, character: number }
+/**
+ * The version of the extension.
+ */
+const version: string = packageJson.version;
 
 /**
  * Abstract class for a rule
@@ -27,6 +24,10 @@ export abstract class Rule<T extends string | FileMap>{
 	readonly message: string = "";
 	readonly relatedInformation: string = "";
 	readonly pattern: RegExp = /./;
+	readonly diagnosticTags: DiagnosticTag[] = [];
+	readonly source: string = 'BigQuery SQL Formatter';
+	readonly docsUrl: string = 'https://bigquerysqlformatter.readthedocs.io/en/';
+	ruleGroup: string = '';
 	severity: DiagnosticSeverity = DiagnosticSeverity.Error;
 	enabled: boolean = true;
 	settings: ServerSettings;
@@ -47,49 +48,26 @@ export abstract class Rule<T extends string | FileMap>{
 
 	abstract evaluate(test: T, documentUri: string | null): Diagnostic[] | null;
 
-	evaluateMultiRegexTest(test: string, documentUri: string | null = null): Diagnostic[] | null {
-
-		// Reset the regex, regexes are stateful
-		this.pattern.lastIndex = 0;
-
-		const diagnostics: Diagnostic[] = [];
-      
-		let match;
-		while ((match = this.pattern.exec(test)) != null) {
-
-			const start: MatchPosition = this.getLineAndCharacter(test, match.index);
-			const end: MatchPosition = this.getLineAndCharacter(test, this.pattern.lastIndex);
-			const range = {
-				start: { line: start.line, character: start.character },
-				end: { line: end.line, character: end.character }
-			};
-
-			diagnostics.push(this.createDiagnostic(range, documentUri));
-		}
-
-		return diagnostics;
-		
-	}
+  createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): CodeAction[] | null { return null; }
 
 	/**
-	 * Calculates the line and character position of a given index within a string.
+	 * Evaluates the given test string against a predefined regex pattern and returns an array of diagnostics.
+	 * Each diagnostic represents a match found in the test string.
 	 *
-	 * @param content - The string content to search within.
-	 * @param matchIndex - The index within the string for which to find the line and character position.
-	 * @returns An object containing the line and character position corresponding to the given index.
-	 * @throws Will throw an error if the match index is out of range of the content.
+	 * @param test - The string to be tested against the regex pattern.
+	 * @param documentUri - An optional URI of the document being evaluated. Defaults to null.
+	 * @returns An array of `Diagnostic` objects representing the matches found, or null if no matches are found.
 	 */
-	getLineAndCharacter(content: string, matchIndex: number):  MatchPosition{
-			const lines = content.split('\n');
-			let runningTotal = 0;
-			for (let i = 0; i < lines.length; i++) {
-					if (runningTotal + lines[i].length + 1 > matchIndex) {
-							return { line: i, character: matchIndex - runningTotal };
-					}
-					runningTotal += lines[i].length + 1;
-			}
-			throw new Error('Match index out of range');
+	evaluateRegexPatterns(test: string, documentUri: string | null = null): Diagnostic[] | null {
+		const diagnostics: Diagnostic[] = [];
+
+		getRegexMatchRanges(this.pattern, test)?.map((range) => {
+			diagnostics.push(this.createDiagnostic(range, documentUri));
+		});
+
+		return diagnostics;
 	}
+
 
 	/**
 	 * Creates a diagnostic object for reporting issues in the code.
@@ -100,11 +78,12 @@ export abstract class Rule<T extends string | FileMap>{
 	 */
 	createDiagnostic(range: Range, documentUri: string | null = null): Diagnostic {
 		const diagnostic: Diagnostic = {
-			code: this.code,
+			code: this.diagnosticCode,
+			codeDescription: { href: this.diagnosticCodeDescription },
 			severity: this.severity,
 			range: range,
 			message: this.message,
-			source: this.source()
+			source: this.source
 		};
 		if (this.relatedInformation !== "" && documentUri != null) {
 			diagnostic.relatedInformation = [{
@@ -115,11 +94,81 @@ export abstract class Rule<T extends string | FileMap>{
 				message: this.relatedInformation
 			}];
 		}
+		if (this.diagnosticTags.length > 0) {
+			diagnostic.tags = this.diagnosticTags;
+		}
 		return diagnostic;
 	}
 
-	source(): string {
-		return `${this.code} (${this.name})`;
+	/**
+	 * Gets the diagnostic code for the rule.
+	 * The diagnostic code is a string that combines the rule's code and name.
+	 * 
+	 * @returns {string} The diagnostic code in the format `${code}: ${name}`.
+	 */
+	public get diagnosticCode(): string {
+		return `${this.code}: ${this.name}`;
 	}
+
+	/**
+	 * Constructs the URL for the rule documentation based on the version, rule group, and code.
+	 *
+	 * @returns {string} The URL pointing to the rule documentation.
+	 */
+	public get ruleUrl(): string {
+		return `${version}/rules/${this.ruleGroup}/${this.code}.html`;
+	}
+
+	/**
+	 * Retrieves the diagnostic code description as a URI.
+	 *
+	 * @returns {URI} The full URL constructed from the rule URL and documentation URL.
+	 */
+	public get diagnosticCodeDescription(): URI {
+		const url = new URL(this.ruleUrl, this.docsUrl);
+		return url.href;
+	}
+
+
+  /**
+   * Generates a unique cache key based on the provided range.
+   *
+   * @param range - The range object containing start and end positions.
+   * @returns A string that uniquely identifies the range.
+   */
+  createCacheKey(range: Range): string {
+    return `${range.start.line}|${range.start.character}|${range.end.line}|${range.end.character}`;
+  }
+
+
+
+  /**
+   * Creates error outputs for indentation issues.
+   *
+   * @param errorOffset - The offset indicating how much the indentation is off by.
+   * @param errorRange - The range object representing the start and end positions of the error.
+   * @returns A tuple containing the additional indent number and the updated error range.
+   */
+  createIndentErrorOutputs(errorOffset: number, errorRange: Range): [number, Range] {
+    let additionalIdentNumber = 0;
+
+    if (errorOffset > 0) {
+      // if error offset is greater than 0 then
+      // the column is indented too far to the left
+      // and needs to be moved to the right
+      additionalIdentNumber = errorOffset;
+
+    } else if (errorOffset < 0) {
+      // if error offset is less than 0 then
+      // the column is indented too far to the right
+      // and needs to be moved to the left
+
+      // errorRange.start.character = offset;
+			errorRange.start.character = errorRange.start.character + errorOffset;
+
+    }
+
+    return [additionalIdentNumber, errorRange];
+  }
 
 }

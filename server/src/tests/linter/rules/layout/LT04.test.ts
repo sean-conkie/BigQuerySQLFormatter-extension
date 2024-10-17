@@ -29,14 +29,15 @@ describe('TrailingComma', () => {
 
         const result = instance.evaluate(await parser.parse({text:'SELECT col1\n ,col2\n FROM table', uri: 'test.sql', languageId: 'sql', version: 0}));
         expect(result).to.deep.equal([{
-            code: instance.code,
+            code: instance.diagnosticCode,
+            codeDescription: {href: instance.diagnosticCodeDescription},
             message: instance.message,
             severity: instance.severity,
             range: {
                 start: { line: 1, character: 1 },
                 end: { line: 1, character: 2 }
             },
-            source: instance.source()
+            source: instance.source
         }]);
     });
 
