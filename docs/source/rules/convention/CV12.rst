@@ -1,58 +1,72 @@
-==========================================
-Rule: Use Spaces for Indentation, Not Tabs
-==========================================
+==================================================================
+Rule: `UNION` and `EXCEPT` Must Be Followed by `ALL` or `DISTINCT`
+==================================================================
 
 **Rule Code:** ``CV12``
 
-**Name:** ``spaces_not_tabs``
+**Name:** ``all_distinct``
 
 Overview
 --------
 
-In SQL and programming in general, it is a best practice to use spaces for indentation instead of tabs. While both spaces and tabs can be used to indent code, spaces provide more consistent formatting across different environments, editors, and systems. Using spaces for indentation ensures that the code appears the same regardless of the viewer’s settings and avoids issues with misaligned or uneven code that can result from the use of tabs.
+In BigQuery SQL, when using set operators such as `UNION` and `EXCEPT`, the query must explicitly specify whether `ALL` or `DISTINCT` should be applied. This ensures that the intent of the operation is clear, defining whether all rows are retained (`ALL`) or if duplicates are removed (`DISTINCT`). Failing to specify either `ALL` or `DISTINCT` results in invalid syntax. The requirement to use `ALL` or `DISTINCT` for `UNION` and `EXCEPT` helps clarify the behavior of the set operation and ensures that the query behaves consistently across different environments.
 
 Explanation
 -----------
 
-Anti-pattern: Using Tabs for Indentation
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Anti-pattern: Omitting `ALL` or `DISTINCT` in Set Operators
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Using tabs for indentation can lead to inconsistent formatting because different editors and environments interpret tabs differently. A tab might be displayed as two, four, or even eight spaces depending on the configuration of the user's editor, making it difficult to maintain a consistent look and feel for the code. This can lead to confusion, especially when multiple developers work on the same codebase.
+When using `UNION` or `EXCEPT` without explicitly specifying `ALL` or `DISTINCT`, the query is invalid in BigQuery SQL. This ambiguity in the set operation can lead to confusion or unexpected behavior, as the result set will either retain all rows (`ALL`) or remove duplicates (`DISTINCT`) based on the set operator used. 
 
-**Example of Using Tabs for Indentation (Anti-pattern):**
-
-.. code-block:: sql
-
-    select *
-      from orders
-      join customers
-        on orders.customer_id = customers.id;
-
-In this example, tabs are used for indentation, which can result in inconsistent alignment depending on the viewer's editor settings.
-
-Best Practice: Use Spaces for Indentation
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-To ensure consistent formatting and readability across different environments, spaces should be used for indentation. Most coding standards recommend using spaces because they provide a uniform way of displaying indents, regardless of the editor settings.
-
-**Refactored Example Using Spaces for Indentation (Best Practice):**
+**Example of Invalid `UNION` or `EXCEPT` Without `ALL` or `DISTINCT` (Anti-pattern):**
 
 .. code-block:: sql
 
-    select *
-      from orders
-      join customers
-        on orders.customer_id = customers.id;
+    select col1
+      from table1
+    union
+    select col1
+      from table2;
 
-In this refactored example, spaces are used for indentation, ensuring that the code appears consistent across different editors and systems.
+In this example, the `UNION` operation is missing the required `ALL` or `DISTINCT` keyword, making the query invalid.
+
+Best Practice: Always Specify `ALL` or `DISTINCT` After Set Operators
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To ensure that the query is valid and behaves as expected, it is essential to explicitly specify `ALL` or `DISTINCT` after `UNION` and `EXCEPT`. This makes the intent of the query clear, defining whether the operation should retain all rows or remove duplicates.
+
+**Refactored Example with `ALL` Specified (Best Practice):**
+
+.. code-block:: sql
+
+    select col1
+      from table1
+    union all
+    select col1
+      from table2;
+
+In this refactored example, the `UNION ALL` operation is used to specify that all rows should be retained in the result set, ensuring the query is valid and the behavior is clear.
+
+**Refactored Example with `DISTINCT` Specified (Best Practice):**
+
+.. code-block:: sql
+
+    select col1
+      from table1
+    except distinct
+    select col1
+      from table2;
+
+In this example, `EXCEPT DISTINCT` is used to ensure that duplicates are removed from the result set, which clarifies the intent of the query.
 
 Conclusion
 ----------
 
-Using spaces for indentation instead of tabs ensures that SQL queries are consistently formatted, readable, and maintainable. This practice reduces the likelihood of formatting issues caused by different tab width settings in various editors and environments, leading to cleaner and more professional code.
+In BigQuery SQL, the `UNION` and `EXCEPT` set operators must be followed by `ALL` or `DISTINCT` to ensure clarity and correctness. Specifying `ALL` retains all rows, while `DISTINCT` removes duplicates. By following this rule, developers ensure that their queries are valid and behave consistently across different SQL environments.
 
 Groups:
 -------
 
-- ``all``
-- ``convention``
+- `all <../..>`_
+- `convention <../..#convention-rules>`_

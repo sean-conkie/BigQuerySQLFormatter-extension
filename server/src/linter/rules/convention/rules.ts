@@ -14,7 +14,8 @@ import { SelectTrailingComma } from './CV03';
 import { Count } from './CV04';
 import { IsNull } from './CV05';
 import { LeftJoin } from './CV08';
-import { SpacesNotTabs } from './CV12';
+import { AllDistinct } from './CV12';
+import { SpacesNotTabs } from './CV13';
 import { FileMap } from '../../parser';
 
 export const classes = [NotEqual,
@@ -23,6 +24,7 @@ export const classes = [NotEqual,
 												Count,
 												IsNull,
 												LeftJoin,
+												AllDistinct,
 												SpacesNotTabs
 											];
 
