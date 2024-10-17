@@ -27,7 +27,7 @@ describe('IndentSelect', () => {
 
         const parser = new Parser();
 
-        const result = instance.evaluate(await parser.parse({text:'select t.col1,\nt.col2,\n  from dataset.table t\n;\n', uri: 'test.sql', languageId: 'sql', version: 0}));
+        const result = instance.evaluate(await parser.parse({text:'select t.col1,\nt.col2,\n  from dataset.table t\nleft join dataset.table r\n on t.col = r.col\nwhere 1 = 1\nand 2 = 2;\n', uri: 'test.sql', languageId: 'sql', version: 0}));
         expect(result).to.deep.equal([{
             code: instance.diagnosticCode,
             codeDescription: {href: instance.diagnosticCodeDescription},
@@ -36,6 +36,72 @@ describe('IndentSelect', () => {
             range: {
                 start: { line: 1, character: 0 },
                 end: { line: 1, character: 0 }
+            },
+            source: instance.source
+        },
+        {
+            code: instance.diagnosticCode,
+            codeDescription: {href: instance.diagnosticCodeDescription},
+            message: instance.message,
+            severity: instance.severity,
+            range: {
+                start: { line: 3, character: 0 },
+                end: { line: 3, character: 0 }
+            },
+            source: instance.source
+        },
+        {
+            code: instance.diagnosticCode,
+            codeDescription: {href: instance.diagnosticCodeDescription},
+            message: instance.message,
+            severity: instance.severity,
+            range: {
+                start: { line: 4, character: 1 },
+                end: { line: 4, character: 1 }
+            },
+            source: instance.source
+        },
+        {
+            code: instance.diagnosticCode,
+            codeDescription: {href: instance.diagnosticCodeDescription},
+            message: instance.message,
+            severity: instance.severity,
+            range: {
+                start: { line: 4, character: 4 },
+                end: { line: 4, character: 4 }
+            },
+            source: instance.source
+        },
+        {
+            code: instance.diagnosticCode,
+            codeDescription: {href: instance.diagnosticCodeDescription},
+            message: instance.message,
+            severity: instance.severity,
+            range: {
+                start: { line: 5, character: 0 },
+                end: { line: 5, character: 0 }
+            },
+            source: instance.source
+        },
+        {
+            code: instance.diagnosticCode,
+            codeDescription: {href: instance.diagnosticCodeDescription},
+            message: instance.message,
+            severity: instance.severity,
+            range: {
+                start: { line: 5, character: 6 },
+                end: { line: 5, character: 6 }
+            },
+            source: instance.source
+        },
+        {
+            code: instance.diagnosticCode,
+            codeDescription: {href: instance.diagnosticCodeDescription},
+            message: instance.message,
+            severity: instance.severity,
+            range: {
+                start: { line: 6, character: 0 },
+                end: { line: 6, character: 0 }
             },
             source: instance.source
         }]);

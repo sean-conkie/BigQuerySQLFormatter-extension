@@ -39,7 +39,7 @@ export class Indent extends Rule<FileMap> {
   readonly code: string = "LT02";
   readonly type: RuleType = RuleType.PARSER;
   readonly message: string = "Incorrect Indentation.";
-  readonly relatedInformation: string = "";
+  readonly relatedInformation: string = "For improved readability and maintainability, all SQL statements should be indented consistently.";
   readonly ruleGroup: string = 'layout';
   readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
   readonly codeActionTitle = 'Update Indentation';
