@@ -140,4 +140,36 @@ export abstract class Rule<T extends string | FileMap>{
     return `${range.start.line}|${range.start.character}|${range.end.line}|${range.end.character}`;
   }
 
+
+
+  /**
+   * Creates error outputs for indentation issues.
+   *
+   * @param offset - The current offset of the indentation.
+   * @param errorOffset - The offset indicating how much the indentation is off by.
+   * @param errorRange - The range object representing the start and end positions of the error.
+   * @returns A tuple containing the additional indent number and the updated error range.
+   */
+  createIndentErrorOutputs(errorOffset: number, errorRange: Range): [number, Range] {
+    let additionalIdentNumber = 0;
+
+    if (errorOffset > 0) {
+      // if error offset is greater than 0 then
+      // the column is indented too far to the left
+      // and needs to be moved to the right
+      additionalIdentNumber = errorOffset;
+
+    } else if (errorOffset < 0) {
+      // if error offset is less than 0 then
+      // the column is indented too far to the right
+      // and needs to be moved to the left
+
+      // errorRange.start.character = offset;
+			errorRange.start.character = errorRange.start.character + errorOffset;
+
+    }
+
+    return [additionalIdentNumber, errorRange];
+  }
+
 }

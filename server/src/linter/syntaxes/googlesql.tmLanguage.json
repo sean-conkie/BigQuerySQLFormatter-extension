@@ -722,7 +722,7 @@
           "captures": {
             "1": { "name": "keyword.operator.comparison.sql" }
           },
-          "match": "([!<>]?=|<>|<|>)",
+          "match": "((?:[!<>] *)?=|<>|<|>)",
           "name": "meta.comparison.sql"
         },
         {
