@@ -5,11 +5,13 @@ The language server is implemented in the server folder.
 */
 
 import * as path from 'path';
-import { commands, Diagnostic,  DiagnosticCollection, workspace, ExtensionContext, window, StatusBarAlignment, languages, TextDocument, Range, StatusBarItem, LogOutputChannel } from 'vscode';
+import { commands, Diagnostic,  DiagnosticCollection, workspace, ExtensionContext, window, StatusBarAlignment, languages, TextDocument, Range, StatusBarItem, LogOutputChannel, ViewColumn, Uri } from 'vscode';
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient/node';
 import { listProjects } from './google/resourceManager';
 import { RunProvider } from './codeLens/runProvider';
 import { DryRunProvider } from './codeLens/dryRunProvider';
+import { QueryRowsResponse } from '@google-cloud/bigquery';
+import { showResultsInWebview } from './webView';
 
 
 let client: LanguageClient;
@@ -64,7 +66,7 @@ export function activate(context: ExtensionContext) {
 	 * @param document - The text document on which the action is to be performed.
 	 * @returns A promise that resolves when the action is completed or if no project is selected.
 	 */
-	const codeLensActionWrapper = async (action: (range: Range, document: TextDocument, projectId: string) => Diagnostic[], range: Range, document: TextDocument) => {
+	const codeLensActionWrapper = async (action: (range: Range, document: TextDocument, projectId: string) => [Diagnostic[], QueryRowsResponse | null], range: Range, document: TextDocument) => {
 		const selectedProject: string = context.workspaceState.get(document.uri.toString());
 
 		if (!selectedProject) {
@@ -92,17 +94,22 @@ export function activate(context: ExtensionContext) {
 		outputChannel.show();
 
 		outputChannel.info(`Running action on ${document.uri.toString()}:${range.start.line + 1}:${range.start.character} with project ${selectedProject}`);
+		
+		const [errors, result] = await action(range, document, selectedProject);
 
-		const errors: Diagnostic[] = await action(range, document, selectedProject);
-
+		// Show the results in the Output Channel
 		if (errors.length > 0) {
 			outputChannel.error(`Errors found in ${document.uri.toString()}:${range.start.line + 1}:${range.start.character}`);
 			errors.map((error) => outputChannel.error(`${error.message} at ${document.uri.toString()}:${error.range.start.line + 1}:${error.range.start.character}`));
 		} else {
-			outputChannel.info(`No errors found in ${document.uri.toString()}:${range.start.line + 1}:${range.start.character}`);
+			outputChannel.info(`Successfully executed ${document.uri.toString()}:${range.start.line + 1}:${range.start.character}`);
 		}
 
+		// Update the diagnostics collection
 		diagnosticCollection.set(document.uri, errors);
+
+		// display the results in a webview if any exist.
+		showResultsInWebview(context, result);
 
 	}
 
