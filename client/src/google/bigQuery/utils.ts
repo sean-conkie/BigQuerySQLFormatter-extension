@@ -1,4 +1,3 @@
-import { QueryRowsResponse } from '@google-cloud/bigquery';
 import bigquery from '@google-cloud/bigquery/build/src/types';
 
 type Row = {
@@ -11,7 +10,7 @@ export function castRows(rows: any[], schema: bigquery.ITableFieldSchema[]): Row
 
 		if (field.mode === 'REPEATED') {
 
-		} else if (['TIMESTAMP'].includes(field.type)) {
+		} else if (['TIMESTAMP', 'TIME'].includes(field.type)) {
 			rows.map((row) => {
 				row[field.name] = row[field.name] != null ? row[field.name].value : null;
 			})
