@@ -46,7 +46,7 @@
     }
   },
   "mounts": [
-    // "source=${localEnv:HOME}/.config/gcloud,target=/home/node/.config/gcloud/,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.config/gcloud,target=/home/node/.config/gcloud/,type=bind,consistency=cached",
     "source=${localWorkspaceFolder}/.devcontainer/starship.toml,target=/home/node/.config/starship.toml,type=bind,consistency=cached",
     "source=${localWorkspaceFolder}/.devcontainer/.bashrc,target=/home/node/.bashrc,type=bind,consistency=cached",
     "source=profile,target=/root,type=volume",

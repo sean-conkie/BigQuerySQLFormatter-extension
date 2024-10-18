@@ -1,24 +1,14 @@
-import { Range } from 'vscode-languageserver/node';
-
-
-/**
- * Represents a position in a text document with a specific line and character.
- * 
- * @typedef {Object} MatchPosition
- * @property {number} line - The line number in the document (0-based).
- * @property {number} character - The character position within the line (0-based).
- */
-export type MatchPosition = { line: number, character: number }
+import { Range, Position } from 'vscode-languageserver/node';
 
 
 /**
  * Finds and returns the ranges of all matches of a given regular expression pattern in a test string.
  *
  * @param pattern - The regular expression pattern to search for.
- * @param test - The string to test against the regular expression pattern.
+ * @param text - The string to test against the regular expression pattern.
  * @returns An array of `Range` objects representing the start and end positions of each match, or `null` if no matches are found.
  */
-export function getRegexMatchRanges(pattern: RegExp, test: string): Range[] | null {
+export function getRegexMatchRanges(pattern: RegExp, text: string): Range[] | null {
 
 	// Reset the regex, regexes are stateful
 	pattern.lastIndex = 0;
@@ -26,7 +16,7 @@ export function getRegexMatchRanges(pattern: RegExp, test: string): Range[] | nu
 	const matches: Range[] = [];
 	
 	let match;
-	while ((match = pattern.exec(test)) != null) {
+	while ((match = pattern.exec(text)) != null) {
 			let groupStartIndex: number;
 			let groupEndIndex: number;
 			if (match.length > 1) {
@@ -35,8 +25,8 @@ export function getRegexMatchRanges(pattern: RegExp, test: string): Range[] | nu
 				groupStartIndex = match.index;
 				groupEndIndex = pattern.lastIndex;
 			}
-			const start: MatchPosition = getLineAndCharacter(test, groupStartIndex);
-			const end: MatchPosition = getLineAndCharacter(test, groupEndIndex);
+			const start: Position = getPosition(text, groupStartIndex);
+			const end: Position = getPosition(text, groupEndIndex);
 			const range = {
 					start: start,
 					end: end
@@ -91,7 +81,7 @@ export function getCaptureGroupIndices(match: RegExpExecArray, groupNumber: numb
  * @returns An object containing the line and character position of the match.
  * @throws Will throw an error if the match index is out of range.
  */
-export function getLineAndCharacter(content: string, matchIndex: number): MatchPosition {
+export function getPosition(content: string, matchIndex: number): Position {
 		const lines = content.split('\n');
 		let runningTotal = 0;
 		for (let i = 0; i < lines.length; i++) {
