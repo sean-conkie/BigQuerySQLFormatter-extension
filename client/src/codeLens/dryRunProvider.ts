@@ -38,8 +38,7 @@ export class DryRunProvider implements vscode.CodeLensProvider {
 	}
 
 
-	public static async dryRunStatementAction(range: vscode.Range, document: vscode.TextDocument, projectId: string): Promise<vscode.Diagnostic[]> {
-		vscode.workspace.getConfiguration("bigquerysqlformatter").update("dryRunStatement", false, true);
+	public static async dryRunStatementAction(range: vscode.Range, document: vscode.TextDocument, projectId: string): Promise<[vscode.Diagnostic[], null]> {
 		const errors: vscode.Diagnostic[] = [];
 		let statement = getTextAtRange(document.getText(), range)
 
@@ -73,8 +72,6 @@ export class DryRunProvider implements vscode.CodeLensProvider {
 				// Handle the dry run case
 			vscode.window.showInformationMessage(`Dry run successful.`);
 		}
-
-		vscode.workspace.getConfiguration("bigquerysqlformatter").update("dryRunStatement", true, true);
-		return errors;
+		return [errors, null];
 	}
 }

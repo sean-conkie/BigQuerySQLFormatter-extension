@@ -1,9 +1,8 @@
 import * as vscode from 'vscode';
-import { createCodeLenses, errorToDiagnostic, extractTarget, getPosition, getTextAtRange } from './utils';
-import { Diagnostic, Position } from 'vscode-languageclient';
+import { createCodeLenses, errorToDiagnostic, extractTarget, getTextAtRange } from './utils';
 import { createQueryObject, execute, getDestination } from '../google/bigQuery';
 import { ApiError } from '@google-cloud/common';
-import { Table } from '@google-cloud/bigquery';
+import { QueryRowsResponse, Table } from '@google-cloud/bigquery';
 
 /**
  * RunProvider
@@ -41,8 +40,7 @@ export class RunProvider implements vscode.CodeLensProvider {
 		return null;
 	}
 
-	public static async runStatementAction(range: vscode.Range, document: vscode.TextDocument, projectId: string): Promise<vscode.Diagnostic[]> {
-		vscode.workspace.getConfiguration("bigquerysqlformatter").update("dryRunStatement", false, true);
+	public static async runStatementAction(range: vscode.Range, document: vscode.TextDocument, projectId: string): Promise<[vscode.Diagnostic[], QueryRowsResponse | null]> {
 		const errors: vscode.Diagnostic[] = [];
 		let statement = getTextAtRange(document.getText(), range)
 
@@ -64,12 +62,10 @@ export class RunProvider implements vscode.CodeLensProvider {
 		if (result instanceof ApiError) {
 			// Convert the error to a VS Code Diagnostic
 			result.errors.map((error) => errors.push(errorToDiagnostic(result, document, range)));
+			return [errors, null];
 		} else if (result === null) {
-				// Handle the dry run case
-			vscode.window.showInformationMessage(`Dry run successful.`);
+			vscode.window.showInformationMessage(`No results returned.`);
 		}
-
-		vscode.workspace.getConfiguration("bigquerysqlformatter").update("dryRunStatement", true, true);
-		return errors;
+		return [errors, result];
 	}
 }

@@ -123,7 +123,7 @@ export function errorToDiagnostic(error: Error, document: vscode.TextDocument, d
 	return diagnostic;
 }
 
-export function createCodeLenses(document: vscode.TextDocument, callable: (range: vscode.Range, document: vscode.TextDocument, projectId: string) => Promise<vscode.Diagnostic[]>, commandTitle: string, commandTooltip: string, commandName: string): vscode.CodeLens[] {
+export function createCodeLenses(document: vscode.TextDocument, callable: (range: vscode.Range, document: vscode.TextDocument, projectId: string) => Promise<any>, commandTitle: string, commandTooltip: string, commandName: string): vscode.CodeLens[] {
 	const codeLenses: vscode.CodeLens[] = [];
 	const statementRegex = /\w(?:.|\n)+?;/g;
 	const text = document.getText();
