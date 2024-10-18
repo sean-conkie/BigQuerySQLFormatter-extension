@@ -1,6 +1,8 @@
 import { BigQuery, Query, Job, Table, Dataset, QueryRowsResponse, JobResponse } from '@google-cloud/bigquery';
 import { ApiError } from '@google-cloud/common';
 
+
+
 export async function execute(query: Query | string, projectId: string): Promise<QueryRowsResponse | null | ApiError> {
 	const bigquery = new BigQuery({ projectId });
 
@@ -22,9 +24,9 @@ export async function execute(query: Query | string, projectId: string): Promise
 	// destructuring assignment
 	const [job, _] = jobResponse;
 
-	const [rows] = await job.getQueryResults();
+	const rows: QueryRowsResponse = await job.getQueryResults();
 
-	console.log('Rows:', rows);
+	return rows;
 
 }
 
