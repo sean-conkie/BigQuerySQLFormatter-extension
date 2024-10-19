@@ -57,8 +57,8 @@ export class DataGridPanel {
           enableScripts: true,
           // Restrict the webview to only load resources from the `out` directory
           localResourceRoots: [
+            Uri.joinPath(extensionUri, "client", "out"),
             Uri.joinPath(extensionUri, "out"),
-            Uri.joinPath(extensionUri, "node_modules", "@vscode", "webview-ui-toolkit", "dist")
           ],
         }
       );
@@ -97,15 +97,7 @@ export class DataGridPanel {
    * rendered within the webview panel
    */
   private _getWebviewContent(webview: Webview, extensionUri: Uri, data: any[] | null = null) {
-    const webviewUri = getUri(webview, extensionUri, ["out", "webView", "webview.js"]);
-    // Get the URI to the webview UI toolkit JavaScript bundle
-    const toolkitUri = getUri(webview, extensionUri, [
-      'node_modules',
-      '@vscode',
-      'webview-ui-toolkit',
-      'dist',
-      'toolkit.js',
-    ]);
+    const webviewUri = getUri(webview, extensionUri, ["client", "out", "webView", "webview.js"]);
     const nonce = getNonce();
 
     // Tip: Install the es6-string-html VS Code extension to enable code highlighting below
@@ -117,16 +109,20 @@ export class DataGridPanel {
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
 					<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-${nonce}'; style-src 'unsafe-inline';">
           <title>Query Results</title>
-          <script type="module" nonce="${nonce}" src="${toolkitUri}"></script>
         </head>
         <body>
           <h1>Query Results</h1>
+          <vscode-button id="add-resource-button">
+            Add New Resource
+            <span slot="start" class="codicon codicon-add"></span>
+          </vscode-button>
           <vscode-data-grid role="grid" grid-template-columns="repeat(auto-fit, minmax(100px, 1fr))" aria-label="Basic" generate-header="default">
             <vscode-data-grid-row role="row" class="header" row-type="header" grid-template-columns="1fr 1fr 1fr 1fr" style="grid-template-columns: 1fr 1fr 1fr 1fr;">
               ${data ? this._createDataGridHeader(data) : ""}
             </vscode-data-grid-row>
             ${data ? this._createDataGridRow(data) : ""}
           </vscode-data-grid>
+          <script type="module" nonce="${nonce}" src="${webviewUri}"></script>
         </body>
       </html>
     `;
