@@ -97,7 +97,7 @@
     "deploy": "vsce publish --no-yarn"
   },
   "devDependencies": {
-    "@types/chai": "^4.3.12",
+    "@types/chai": "^5.2.2",
     "@types/mocha": "^10.0.9",
     "@types/node": "^22.10.5",
     "@types/sinon": "^17.0.3",
@@ -107,7 +107,7 @@
     "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.4.0",
     "@vscode/vsce": "^3.2.1",
-    "chai": "^4.4.1",
+    "chai": "^5.2.0",
     "eslint": "^9.27.0",
     "mocha": "^11.5.0",
     "nyc": "^17.0.0",
