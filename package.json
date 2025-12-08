@@ -107,7 +107,7 @@
     "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.4.0",
     "@vscode/vsce": "^3.6.0",
-    "chai": "^4.4.1",
+    "chai": "^6.2.1",
     "eslint": "^9.27.0",
     "mocha": "^11.5.0",
     "nyc": "^17.0.0",
