@@ -24,13 +24,6 @@ const comparisonGroupRules: string[] = syntaxJson.comparisonGroupRules;
 type LineMap = Map<number, string>;
 
 
-type ChangedRange = {
-	startLine: number;
-	endLine: number;
-	startIndex: number;
-	endIndex: number;
-}
-
 // #region Functions
 
 /**
@@ -174,66 +167,24 @@ export class Parser {
 		if ('range' in change) {
 			const startLine = change.range.start.line;
 			const endLine = change.range.end.line;
-			const linesBeingReplaced = endLine - startLine;
-		
+			const lines = Array.from(cache.tokens, line => line.value);
 			const newLines = change.text.split('\n');
-			const lineDelta = (newLines.length - 1) - linesBeingReplaced;
-		
-			const changedRange: ChangedRange = {
-				startLine: startLine,
-				endLine: endLine + 1,
-				startIndex: change.range.start.character,
-				endIndex: change.range.end.character,
-			};
+			newLines[0] = lines[startLine].substring(0, change.range.start.character) + newLines[0];
+			newLines[newLines.length - 1] += lines[endLine].substring(change.range.end.character);
+			lines.splice(startLine, endLine - startLine + 1, ...newLines);
 
-			// if all checks pass then we are removing line(s)
-			if (lineDelta < 0) {
-				// alter the changedRange so that the starting line if the previous line and
-				// starting index is the end of that line.
-				// end line should now be the endLine - 1
-				changedRange.startLine = startLine - 1;
-				changedRange.endLine = endLine;
-				changedRange.startIndex = cache.get(startLine - 1)?.value.length ?? 0;
-				changedRange.endIndex = changedRange.startIndex;
-			}
-
-
-			// Create new cache incorporating changes
 			const newCache = new DocumentCache();
-			for (const [lineNumber, lineToken] of cache.entries()) {
-			// for (const lineNumber of range(changedRange.start, documentLength)) {
-				// const lineToken = cache.get(lineNumber);
-				if (lineNumber >= changedRange.endLine) {
-
-					// alter line numbers
-					lineToken!.lineNumber = lineNumber + lineDelta;
-					lineToken!.tokens = lineToken!.tokens.map((token) => {
-						token.lineNumber = lineNumber + lineDelta;
-						return token;
-					});
-
-					newCache.set(lineNumber + lineDelta, lineToken); // Shift lines up
-				} else if (lineNumber >= changedRange.startLine) {
-					// line is changed...
-					if (linesBeingReplaced === 0) {
-						newLines.map((line, index, array) => {
-							const[ newLineNumber, newLineToken] = this.processLineUpdate(index, line, array.length, lineNumber, lineToken!, changedRange);
-							newCache.set(newLineNumber, newLineToken);
-						});
-					} else {
-						// lines being replaced
-						const workingLineNumber = lineNumber - changedRange.startLine;
-						if (workingLineNumber < newLines.length) {
-							// line is being updated
-							const [newLineNumber, newLineToken] = this.processLineReplace(workingLineNumber, newLines[workingLineNumber], newLines.length, lineNumber, lineToken!, changedRange);
-							newCache.set(newLineNumber, newLineToken);
-						}
-						// else line is being deleted so do nothing
-					}
-				} else {
-					newCache.set(lineNumber, lineToken!);
-				}
+			for (let line = 0; line < startLine; line++) {
+				newCache.set(line, cache.get(line)!);
 			}
+
+			// The edited line starts in the previous line's end state, not its own.
+			const ruleStack = cache.get(startLine - 1)?.ruleStack ?? null;
+			const lineMap = new Map(lines.slice(startLine).map((line, index) => [startLine + index, line]));
+			for (const lineToken of Parser.tokenize(this.grammar!, lineMap, ruleStack)) {
+				newCache.set(lineToken.lineNumber!, lineToken);
+			}
+
 			globalTokenCache.set(document.uri, newCache);
 		} else {
 			const textDocument = {
@@ -248,46 +199,6 @@ export class Parser {
 			}
 
 			this.tokenizeInitialDocument(textDocument);
-		}
-	}
-
-	/**
-	 * Processes a line replacement by updating the line with the new content.
-	 *
-	 * @param index - The index of the line to be replaced.
-	 * @param newLine - The new content for the line.
-	 * @param newLinesCount - The number of new lines to be added.
-	 * @param lineNumber - The current line number.
-	 * @param lineToken - The token representing the line.
-	 * @param change - The range of changes to be applied.
-	 * @returns A tuple containing the updated line number and the updated line token.
-	 */
-	private processLineReplace(index: number, newLine: string, newLinesCount: number, lineNumber: number, lineToken: LineToken, change: ChangedRange): [number, LineToken] {
-		return this.processLineUpdate(index, newLine, newLinesCount, lineNumber-index, lineToken, change);
-	}
-
-	/**
-	 * Processes an update to a line of text, adjusting the line number and token as necessary.
-	 *
-	 * @param index - The index of the line being updated relative to the change.
-	 * @param newLine - The new content of the line.
-	 * @param newLinesCount - The total number of new lines introduced by the change.
-	 * @param lineNumber - The original line number before the update.
-	 * @param lineToken - The token associated with the original line.
-	 * @param change - The range of the change within the line.
-	 * @returns A tuple containing the new line number and the updated line token.
-	 */
-	private processLineUpdate(index: number, newLine: string, newLinesCount: number, lineNumber: number, lineToken: LineToken, change: ChangedRange): [number, LineToken] {
-		const newLineNumber = lineNumber + index;
-		const retainedLinePrefix = index === 0 ? lineToken!.value.substring(0, change.startIndex) : '';
-		const retainedLineSuffix = index === (newLinesCount - 1) ? lineToken!.value.substring(change.endIndex) : '';
-		const value = retainedLinePrefix + newLine + retainedLineSuffix;
-		if (value === lineToken?.value && lineToken?.lineNumber === newLineNumber) {
-			return [newLineNumber, lineToken!];
-		} else {
-			const ruleStack = lineToken === undefined ? null : lineToken.ruleStack;
-			const tokens = Parser.tokenize(this.grammar!, new Map([[newLineNumber, value]]), ruleStack);
-			return [newLineNumber, tokens[0]];
 		}
 	}
 
@@ -689,6 +600,7 @@ export class Parser {
 			
 			// Initial tokenization
 			const result = grammar.tokenizeLine(line, ruleStack);
+			let endRuleStack = result.ruleStack;
 		
 			if (result.stoppedEarly) {
 				let startIndex = result.tokens[result.tokens.length - 1].endIndex;
@@ -719,10 +631,12 @@ export class Parser {
 						break;
 					}
 				}
+				endRuleStack = currentRuleStack;
 			}
 		
 			tokenizedLines.push(result);
-			lineTokens.push(LineToken.fromGrammarTokens(result.tokens, line, lineNumber, result.ruleStack));
+			lineTokens.push(LineToken.fromGrammarTokens(result.tokens, line, lineNumber, endRuleStack));
+			ruleStack = endRuleStack;
 		}
 
 		return lineTokens;

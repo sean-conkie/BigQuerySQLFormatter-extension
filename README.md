@@ -26,6 +26,11 @@ over RIGHT JOIN for better readability and maintainability.
 This extension is particularly useful for developers and data analysts who frequently write and maintain BigQuery SQL
 queries, providing them with tools to improve code quality and productivity.
 
+Multi-line comments and strings are tracked across lines during initial parsing
+and editing. Incremental edits re-tokenize from the first changed line through
+the end of the document using the preceding line's TextMate state, so subsequent
+diagnostics reflect the current document without reopening it.
+
 ## Configuration
 
 ### Fix on save
@@ -63,5 +68,4 @@ select case when cc.enddate is null then 1 else null end as is_current -- noqa: 
 ```
 
 <img width="757" alt="image" src="https://github.com/user-attachments/assets/0bd8c99a-a0ae-44de-9c56-f0d9623d3dcc">
-
 
