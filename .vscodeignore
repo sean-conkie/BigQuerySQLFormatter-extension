@@ -1,4 +1,9 @@
 .vscode/**
+.nyc_output/**
+coverage/**
+eslint.config.mjs
+client/out/test/**
+client/testFixture/**
 **/*.ts
 **/*.map
 .gitignore

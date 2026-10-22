@@ -6,6 +6,7 @@ import {
 } from 'vscode-languageserver/node';
 import { defaultSettings, ServerSettings } from '../../settings';
 import { initialiseRules } from '../../linter/rules/rules';
+import { globalTokenCache } from '../../linter/parser/tokenCache';
 
 describe('Linter', () => {
     let settings: ServerSettings;
@@ -37,14 +38,41 @@ describe('Linter', () => {
     });
 
     it('should ignore rules for lines with directives', async () => {
-        const source = {text:'select case when cc.enddate is null then 1 else null end as is_current, -- noqa\nfrom dataset.table cc;\n', uri: 'test.sql', languageId: 'sql', version: 0};
+        const source = {text:'select case when cc.enddate is null then 1 else null end as is_current, -- noqa\n  from dataset.table cc;\n', uri: 'test.sql', languageId: 'sql', version: 0};
         const result = await linter.verify(source);
         expect(result.length).to.be.equal(0);
     });
 
     it('should ignore only rules mentioned for lines with directives', async () => {
-        const source = {text:'select case when cc.enddate is null then 1 else null end as is_current, -- noqa: ST01\nfrom dataset.table cc;\n', uri: 'test.sql', languageId: 'sql', version: 0};
+        const source = {text:'select case when cc.enddate is null then 1 else null end as  is_current -- noqa: ST01\n  from dataset.table cc;\n', uri: 'test.sql', languageId: 'sql', version: 0};
         const result = await linter.verify(source);
         expect(result.length).to.be.equal(1);
+    });
+
+    it('updates parser diagnostics when a block comment is opened and removed', async () => {
+        const uri = 'comment-diagnostics.sql';
+        try {
+            linter.regexRules = [];
+            const diagnostics = await linter.verify({
+                text: 'select t.col1\n  from dataset.table as t;\n', uri, languageId: 'googlesql', version: 0
+            });
+            expect(diagnostics.some(diagnostic => String(diagnostic.code).includes('AL01'))).to.equal(true);
+            const commented = await linter.verifyChanges({
+                textDocument: {uri, version: 1},
+                contentChanges: [{
+                    range: {start: {line: 0, character: 0}, end: {line: 0, character: 0}}, text: '/*'
+                }]
+            });
+            expect(commented).to.deep.equal([]);
+            const uncommented = await linter.verifyChanges({
+                textDocument: {uri, version: 2},
+                contentChanges: [{
+                    range: {start: {line: 0, character: 0}, end: {line: 0, character: 2}}, text: ''
+                }]
+            });
+            expect(uncommented).to.deep.equal(diagnostics);
+        } finally {
+            globalTokenCache.delete(uri);
+        }
     });
 });

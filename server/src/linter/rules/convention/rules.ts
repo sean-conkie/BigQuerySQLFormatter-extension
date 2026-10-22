@@ -10,17 +10,21 @@ import { Rule } from '../base';
 import { ServerSettings } from '../../../settings';
 import { NotEqual } from './CV01';
 import { Coalesce } from './CV02';
+import { SelectTrailingComma } from './CV03';
 import { Count } from './CV04';
 import { IsNull } from './CV05';
 import { LeftJoin } from './CV08';
-import { SpacesNotTabs } from './CV12';
+import { AllDistinct } from './CV12';
+import { SpacesNotTabs } from './CV13';
 import { FileMap } from '../../parser';
 
 export const classes = [NotEqual,
 												Coalesce,
+												SelectTrailingComma,
 												Count,
 												IsNull,
 												LeftJoin,
+												AllDistinct,
 												SpacesNotTabs
 											];
 

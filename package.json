@@ -5,7 +5,7 @@
   "icon": "images/BigQuerySQLFormatter_transparent_128.png",
   "author": "sean-conkie",
   "license": "MIT",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "repository": {
     "type": "git",
     "url": "https://github.com/sean-conkie/BigQuerySQLFormatter-extension.git"
@@ -91,29 +91,31 @@
     "compile": "tsc -b",
     "watch": "tsc -b -w",
     "lint": "eslint ./client/src ./server/src --ext .ts,.tsx",
-    "postinstall": "cd client && npm install && cd ../server && npm install && cd ..",
-    "test": "mocha ./server/out/tests/*.test.js ./server/out/tests/**/*.test.js ./server/out/tests/**/**/*.test.js ./server/out/tests/**/**/**/*.test.js --rescursive",
-    "citest": "mocha ./server/out/tests/**/*.test.js ./server/out/tests/**/**/*.test.js ./server/out/tests/**/**/**/*.test.js --rescursive && node ./client/out/test/runTest",
+    "postinstall": "npm ci --prefix client && npm ci --prefix server",
+    "test": "mocha \"server/out/tests/**/*.test.js\"",
+    "coverage": "nyc --reporter=lcov --reporter=text-summary npm test",
+    "citest": "npm test && node ./client/out/test/runTest",
     "deploy": "vsce publish --no-yarn"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.5",
     "@types/chai": "^4.3.12",
     "@types/mocha": "^10.0.9",
-    "@types/node": "^22.7.5",
+    "@types/node": "^22.20.5",
     "@types/sinon": "^17.0.3",
     "@types/sinon-chai": "^3.2.12",
-    "@typescript-eslint/eslint-plugin": "^8.8.0",
-    "@typescript-eslint/parser": "^8.8.0",
+    "@typescript-eslint/eslint-plugin": "^8.46.2",
+    "@typescript-eslint/parser": "^8.19.1",
     "@vscode/test-cli": "^0.0.10",
-    "@vscode/test-electron": "^2.4.0",
-    "@vscode/vsce": "^3.1.1",
+    "@vscode/test-electron": "^3.1.0",
+    "@vscode/vsce": "^3.6.0",
     "chai": "^4.4.1",
-    "eslint": "^9.12.0",
-    "mocha": "^10.7.3",
+    "eslint": "^9.27.0",
+    "mocha": "^11.5.0",
     "nyc": "^17.0.0",
-    "sinon": "^19.0.2",
+    "sinon": "^20.0.0",
     "sinon-chai": "^3.7.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.6.3"
+    "typescript": "^5.9.3"
   }
 }

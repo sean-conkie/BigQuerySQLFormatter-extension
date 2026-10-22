@@ -9,6 +9,8 @@ export type TokenCache = Map<DocumentUri, DocumentCache>;
 export class DocumentCache {
 	private readonly cache: Map<number, LineToken> = new Map();
 
+	constructor(public readonly eol: string = '\n') {}
+
 	public get(token: number): LineToken | undefined {
 		return this.cache.get(token);
 	}

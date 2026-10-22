@@ -92,14 +92,14 @@ export class SelectTargets extends Rule<FileMap> {
           continue;
         }
 
-        if (current.lineNumber === next.lineNumber) {
+        if (current.startLine === next.startLine) {
           errors.push(this.createDiagnostic({
             start: {
-              line: current.lineNumber??0,
+              line: current.startLine??0,
               character: current.startIndex??0
             },
             end: {
-              line: next.lineNumber??0,
+              line: next.startLine??0,
               character: next.endIndex??0
             }
           }, documentUri));

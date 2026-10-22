@@ -59,7 +59,7 @@ export class IsNull extends Rule<string> {
    * @returns An array of code actions that can be applied to fix the issue.
    */
   createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): CodeAction[] {
-    const text = diagnostic.range.end.character - diagnostic.range.start.character === 1? 'is' : 'is null';
+    const text = diagnostic.range.end.character - diagnostic.range.start.character === 1 ? 'is' : 'is not';
     const edit = {
         changes: {
             [textDocument.uri]: [

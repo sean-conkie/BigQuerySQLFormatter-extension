@@ -64,10 +64,12 @@ By applying convention rules, teams can create a more collaborative and coherent
 
 	Rule: Use `!=` Not `<>` <convention/CV01>
 	Rule: Use COALESCE Instead of IFNULL or NVL <convention/CV02>
+	Rule: Select Statements Should Not Include a Trailing Comma <convention/CV03>
 	Rule: Use `count(1)` to Express “Count Number of Rows” <convention/CV04>
 	Rule: Comparisons with `NULL` Should Use `IS` or `IS NOT` <convention/CV05>
 	Rule: Use LEFT join Instead of RIGHT join <convention/CV08>
-	Rule: Use Spaces for Indentation, Not Tabs <convention/CV12>
+	Rule: `UNION` and `EXCEPT` Must Be Followed by `ALL` or `DISTINCT` <convention/CV12>
+	Rule: Use Spaces for Indentation, Not Tabs <convention/CV13>
 
 .. _layout-rules:
 
@@ -81,6 +83,7 @@ Layout rules are guidelines that help developers maintain a consistent and reada
 	:maxdepth: 1
 
 	Rule: Delete Trailing Whitespace <layout/LT01>
+	Rule: Columns Should Be Indented Consistently <layout/LT02>
 	Rule: Place Commas at the End of the Line <layout/LT04>
 	Rule: Function Names Must Be Immediately Followed by Parentheses <layout/LT06>
 	Rule: Select Targets Should Be on Separate Lines <layout/LT09>

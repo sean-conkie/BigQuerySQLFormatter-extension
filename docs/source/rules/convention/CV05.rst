@@ -54,6 +54,13 @@ In this refactored example, the query correctly checks whether `order_status` is
 
 This example demonstrates how to check for non-`NULL` values using the `IS NOT NULL` operator, which is the correct approach when filtering out `NULL` values.
 
+Quick Fix
+---------
+
+The quick fix replaces only the comparison operator: ``=`` becomes ``is``,
+and ``!=`` becomes ``is not``. The existing ``NULL`` value is retained, so
+``order_status != null`` becomes ``order_status is not null``.
+
 Conclusion
 ----------
 
