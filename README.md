@@ -61,7 +61,8 @@ Release publishing uses Node.js 22 and the locked local `@vscode/vsce` dependenc
 with `VSCE_PAT` supplied by the repository secret.
 
 Code linting uses ESLint and formatting checks use Prettier; conflicting Biome
-defaults are disabled. Duplicate-code checks retain the 5% limit and ignore
+defaults are disabled. A separate JSCPD step checks changed pull request files
+against the 5% limit, matching the other changed-file lint checks, and ignores
 comments so repeated API documentation is not counted as duplicated logic.
 Actions are pinned to commit hashes, and lint results appear in the workflow
 summary without requiring permission to post pull request comments.

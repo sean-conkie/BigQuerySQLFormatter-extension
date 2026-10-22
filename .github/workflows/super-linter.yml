@@ -37,7 +37,29 @@ jobs:
           # Use the existing ESLint and Prettier rules instead of conflicting Biome defaults.
           VALIDATE_BIOME_FORMAT: false
           VALIDATE_BIOME_LINT: false
+          # JSCPD always scans the whole repository; check the PR files explicitly below.
+          VALIDATE_JSCPD: false
           ENABLE_GITHUB_PULL_REQUEST_SUMMARY_COMMENT: false
           DEFAULT_BRANCH: "main"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           LINTER_RULES_PATH: .github/linters
+
+      - name: Install Node.js for duplicate-code checking
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 22.x
+          package-manager-cache: false
+
+      - name: Check changed-file duplication
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          changed_files=$(mktemp)
+          trap 'rm -f "$changed_files"' EXIT
+          git diff --name-only -z --diff-filter=ACMR "$BASE_SHA" "$HEAD_SHA" > "$changed_files"
+          mapfile -d '' files < "$changed_files"
+          if (( ${#files[@]} )); then
+            npx --yes jscpd@5.3.0 --config .github/linters/.jscpd.json -- "${files[@]}"
+          fi
