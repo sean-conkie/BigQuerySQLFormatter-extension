@@ -9,13 +9,14 @@
 
 import { CodeAction, CodeActionKind, Diagnostic, TextDocumentIdentifier, TextEdit } from 'vscode-languageserver';
 import { Rule } from '../base';
+import { getLineAndCharacter } from '../regex';
 
 export class EndOfFile extends Rule<string> {
 	readonly name: string = "end_of_file";
 	readonly code: string = "LT12";
 	readonly message: string = "Files must end with a single trailing newline.";
 	readonly relatedInformation: string = "Ensuring a single trailing newline at the end of files promotes clean and predictable code formatting.";
-	readonly pattern: RegExp = /(?:\S(\n{2,}|\n* +\n?)$|\S($))/g;
+	readonly pattern: RegExp = /\S(\n{2,}|\n* +\n?)$/g;
   readonly ruleGroup: string = 'layout';
   readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
   readonly codeActionTitle = 'Fix trailing newline';
@@ -36,6 +37,11 @@ export class EndOfFile extends Rule<string> {
 
 		if (this.enabled === false) {
 			return null;
+		}
+
+		if (/\S$/.test(test)) {
+			const end = getLineAndCharacter(test, test.length);
+			return [this.createDiagnostic({start: end, end}, documentUri)];
 		}
 
     if (this.pattern.test(test)) {
