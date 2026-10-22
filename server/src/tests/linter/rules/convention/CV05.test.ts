@@ -125,7 +125,7 @@ describe('IsNull', () => {
                 for (const action of actions) {
                     const fixed = TextDocument.applyEdits(document, action.edit!.changes![document.uri]);
                     expect(fixed).to.equal(`select a.col from dataset.table a\n where a.col ${replacement} ${nullValue};`);
-                    expect(new IsNull(defaultSettings, 0).evaluate(fixed)).to.be.null;
+                    expect(new IsNull(defaultSettings, 0).evaluate(fixed)).to.equal(null);
                 }
             });
         }
