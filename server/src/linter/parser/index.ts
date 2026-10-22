@@ -80,7 +80,10 @@ export class Parser {
 
 		this.tokenizeInitialDocument(textDocument);
 		
-		return this.parseStatements(textDocument);
+		return this.parseStatements({
+			...textDocument,
+			text: globalTokenCache.get(textDocument.uri)!.getText()
+		});
 
 	}
 
@@ -168,12 +171,12 @@ export class Parser {
 			const startLine = change.range.start.line;
 			const endLine = change.range.end.line;
 			const lines = Array.from(cache.tokens, line => line.value);
-			const newLines = change.text.split('\n');
+			const newLines = change.text.split(/\r\n?|\n/);
 			newLines[0] = lines[startLine].substring(0, change.range.start.character) + newLines[0];
 			newLines[newLines.length - 1] += lines[endLine].substring(change.range.end.character);
 			lines.splice(startLine, endLine - startLine + 1, ...newLines);
 
-			const newCache = new DocumentCache();
+			const newCache = new DocumentCache(cache.eol);
 			for (let line = 0; line < startLine; line++) {
 				newCache.set(line, cache.get(line)!);
 			}
@@ -220,13 +223,13 @@ export class Parser {
 		
 		const lineMap = new Map<number, string>();
 
-		document.text.split('\n').map((line, index) => {
+		document.text.split(/\r\n?|\n/).map((line, index) => {
 			lineMap.set(index, line);
 		});
 
 		const tokens = Parser.tokenize(this.grammar!, lineMap);
 
-		const cache: DocumentCache = new DocumentCache();
+		const cache: DocumentCache = new DocumentCache(document.text.match(/\r\n?|\n/)?.[0]);
 
 		tokens.map((lineToken) => {
 			cache.set(lineToken.lineNumber!, lineToken);

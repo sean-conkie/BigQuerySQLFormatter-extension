@@ -70,7 +70,7 @@ export class Linter {
 			if (diagnostics.length >= this.settings.maxNumberOfProblems) {
 				break;
 			}
-			const result = rule.evaluate(textDocument.text, textDocument.uri);
+			const result = rule.evaluate(globalTokenCache.get(textDocument.uri)!.getText(), textDocument.uri);
 			if (result != null) {
 				diagnostics.push(...result);
 			}
@@ -214,6 +214,14 @@ export class Linter {
 			}});
 		});
 
+		const cache = globalTokenCache.get(params.textDocument.uri);
+		if (cache && cache.eol !== '\n') {
+			for (const action of codeActions) {
+				for (const edit of action.edit?.changes?.[params.textDocument.uri] ?? []) {
+					edit.newText = edit.newText.replace(/\r\n?|\n/g, cache.eol);
+				}
+			}
+		}
 
 		// split codeActions into two arrays `textEdits` where the code action is SourceFixAll and `quickFixes` where the code action is QuickFix
 		const textEdits: CodeAction[] = [];
