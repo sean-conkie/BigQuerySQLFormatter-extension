@@ -4,8 +4,11 @@
 #
 # You can adjust the behavior by modifying this file.
 # For more information, see:
-# https://github.com/github/super-linter
+# https://github.com/super-linter/super-linter
 name: Lint Code Base
+
+permissions:
+  contents: read
 
 on:
   pull_request:
@@ -18,17 +21,45 @@ jobs:
       statuses: write
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
+          persist-credentials: false
           # Full git history is needed to get a proper list of changed files within `super-linter`
           fetch-depth: 0
 
       - name: Lint Code Base
-        uses: github/super-linter@v4
+        uses: super-linter/super-linter@2da136927bd4a73596db63044b504547c62cb854 # v9
         env:
           VALIDATE_ALL_CODEBASE: false
-          VALIDATE_JAVASCRIPT_STANDARD: false
-          VALIDATE_TYPESCRIPT_STANDARD: false
+          # ESLint runs with the repository's dependencies in the Node.js workflow.
+          VALIDATE_JAVASCRIPT_ES: false
+          VALIDATE_TYPESCRIPT_ES: false
+          # Use the existing ESLint and Prettier rules instead of conflicting Biome defaults.
+          VALIDATE_BIOME_FORMAT: false
+          VALIDATE_BIOME_LINT: false
+          # JSCPD always scans the whole repository; check the PR files explicitly below.
+          VALIDATE_JSCPD: false
+          ENABLE_GITHUB_PULL_REQUEST_SUMMARY_COMMENT: false
           DEFAULT_BRANCH: "main"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           LINTER_RULES_PATH: .github/linters
+
+      - name: Install Node.js for duplicate-code checking
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 22.x
+          package-manager-cache: false
+
+      - name: Check changed-file duplication
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          changed_files=$(mktemp)
+          trap 'rm -f "$changed_files"' EXIT
+          git diff --name-only -z --diff-filter=ACMR "$BASE_SHA" "$HEAD_SHA" > "$changed_files"
+          mapfile -d '' files < "$changed_files"
+          if (( ${#files[@]} )); then
+            npx --yes jscpd@5.3.0 --config .github/linters/.jscpd.json -- "${files[@]}"
+          fi
