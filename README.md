@@ -68,4 +68,3 @@ select case when cc.enddate is null then 1 else null end as is_current -- noqa: 
 ```
 
 <img width="757" alt="image" src="https://github.com/user-attachments/assets/0bd8c99a-a0ae-44de-9c56-f0d9623d3dcc">
-
