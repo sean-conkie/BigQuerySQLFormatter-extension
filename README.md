@@ -6,22 +6,22 @@
 [![Node.js Test](https://github.com/sean-conkie/BigQuerySQLFormatter-extension/actions/workflows/node.js.yml/badge.svg)](https://github.com/sean-conkie/BigQuerySQLFormatter-extension/actions/workflows/node.js.yml)
 [![codecov](https://codecov.io/gh/sean-conkie/BigQuerySQLFormatter-extension/graph/badge.svg?token=ZOM3PNJ2SL)](https://codecov.io/gh/sean-conkie/BigQuerySQLFormatter-extension)
 
-## VS Code extension providing BigQuery SQL syntax checking
+## Visual Studio Code extension providing BigQuery SQL syntax checking
 
 The BigQuery SQL Formatter extension for Visual Studio Code provides syntax checking and formatting for BigQuery SQL
 queries. This extension aims to enhance the development experience for users working with BigQuery by offering features
 such as:
 
-* Syntax Checking: Automatically checks the syntax of BigQuery SQL queries to ensure they are correct and conform to
-best practices.
-* Formatting: Provides tools to format SQL queries according to predefined styles, making the code more readable and
-maintainable.
-* Language Server Integration: Utilizes a language server to offer real-time feedback and suggestions as users write SQL
-queries.
-* Support for Multiple SQL Dialects: While aimed at BigQuery use, the extension supports various SQL dialects, including
-standard SQL and GoogleSQL, ensuring compatibility with different BigQuery environments.
-* Best Practices Enforcement: Encourages the use of best practices in SQL query writing, such as preferring LEFT JOIN
-over RIGHT JOIN for better readability and maintainability.
+- Syntax Checking: Automatically checks the syntax of BigQuery SQL queries to ensure they are correct and conform to
+  best practices.
+- Formatting: Provides tools to format SQL queries according to predefined styles, making the code more readable and
+  maintainable.
+- Language Server Integration: Utilizes a language server to offer real-time feedback and suggestions as users write SQL
+  queries.
+- Support for Multiple SQL Dialects: While aimed at BigQuery use, the extension supports various SQL dialects, including
+  standard SQL and GoogleSQL, ensuring compatibility with different BigQuery environments.
+- Best Practices Enforcement: Encourages the use of best practices in SQL query writing, such as preferring LEFT JOIN
+  over RIGHT JOIN for better readability and maintainability.
 
 This extension is particularly useful for developers and data analysts who frequently write and maintain BigQuery SQL
 queries, providing them with tools to improve code quality and productivity.
@@ -54,11 +54,17 @@ Fork pull requests use Codecov's public-repository tokenless uploads; configure 
 token as a Dependabot secret as well to enable uploads from Dependabot PRs.
 
 Packaging compiles the extension through the VSCE prepublish hook. `npm run citest`
-runs server tests followed by client E2E tests, which download and launch VS Code
+runs server tests followed by client end-to-end tests, which download and launch Visual Studio Code
 and require a display; on headless Linux use
-`xvfb-run -a npm run citest`. Packaging and E2E tests run on Linux, macOS and Windows.
+`xvfb-run -a npm run citest`. Packaging and end-to-end tests run on Linux, macOS and Windows.
 Release publishing uses Node.js 22 and the locked local `@vscode/vsce` dependency,
 with `VSCE_PAT` supplied by the repository secret.
+
+Code linting uses ESLint and formatting checks use Prettier; conflicting Biome
+defaults are disabled. Duplicate-code checks retain the 5% limit and ignore
+comments so repeated API documentation is not counted as duplicated logic.
+Actions are pinned to commit hashes, and lint results appear in the workflow
+summary without requiring permission to post pull request comments.
 
 ## Configuration
 

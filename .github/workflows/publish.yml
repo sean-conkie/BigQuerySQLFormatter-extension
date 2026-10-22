@@ -1,9 +1,12 @@
 ---
 name: Publish
+permissions:
+  contents: read
+
 on:
   release:
     types:
-    - released # A release was published, or a pre-release was changed to a release.
+      - released # A release was published, or a pre-release was changed to a release.
 
 jobs:
   publish:
@@ -13,24 +16,26 @@ jobs:
       contents: read
       deployments: write
     steps:
-
-      - uses: chrnorm/deployment-action@v2
+      - uses: chrnorm/deployment-action@500aa6a23c81ffa1acf71072aee3cfa2cc2e556a # v2
         name: Create GitHub deployment
         id: deployment
         with:
-          token: '${{ github.token }}'
+          token: "${{ github.token }}"
           environment: Marketplace
-          ref: '${{ github.event.release.tag_name }}'
-          description: 'Publishing to the Visual Studio Code Marketplace'
-          initial-status: 'in_progress'
+          ref: "${{ github.event.release.tag_name }}"
+          description: "Publishing to the Visual Studio Code Marketplace"
+          initial-status: "in_progress"
 
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
 
       - name: Install Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 22.x
+          package-manager-cache: false
 
       - name: Install Dependencies
         run: npm ci
@@ -42,16 +47,16 @@ jobs:
 
       - name: Update deployment status (success)
         if: success()
-        uses: chrnorm/deployment-status@v2
+        uses: chrnorm/deployment-status@6df8d036fd2fee9eb82936733953da1f8382b41e # v2
         with:
-          token: '${{ github.token }}'
+          token: "${{ github.token }}"
           deployment-id: ${{ steps.deployment.outputs.deployment_id }}
-          state: 'success'
+          state: "success"
 
       - name: Update deployment status (failure)
         if: failure()
-        uses: chrnorm/deployment-status@v2
+        uses: chrnorm/deployment-status@6df8d036fd2fee9eb82936733953da1f8382b41e # v2
         with:
-          token: '${{ github.token }}'
+          token: "${{ github.token }}"
           deployment-id: ${{ steps.deployment.outputs.deployment_id }}
-          state: 'failure'
+          state: "failure"
