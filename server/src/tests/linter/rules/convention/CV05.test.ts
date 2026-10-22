@@ -6,6 +6,7 @@ import { expect } from 'chai';
 import { defaultSettings } from '../../../../settings';
 import { IsNull } from '../../../../linter/rules/convention/CV05';
 import { Parser } from '../../../../linter/parser';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 
 describe('IsNull', () => {
     let instance: IsNull;
@@ -87,11 +88,11 @@ describe('IsNull', () => {
         const actions = instance.createCodeAction({uri: 'test.sql'}, diagnostics![0]);
         expect(actions).to.deep.equal(instance.codeActionKind.map(kind => {
             return {
-                title: 'Replace with is null', edit:{
+                title: 'Replace with is not', edit:{
                 changes: {
                         ['test.sql']: [
                             {
-                                newText: 'is null',
+                                newText: 'is not',
                                 range: {
                                     start: { line: 0, character: 13 },
                                     end: { line: 0, character: 15 }
@@ -111,4 +112,22 @@ describe('IsNull', () => {
         const result = instance.evaluate('select a.col is null from dataset.table a left join dataset.table b on a.col = b.col');
         expect(result).to.be.null;
     });
+
+    for (const [operator, replacement] of [['=', 'is'], ['!=', 'is not']]) {
+        for (const nullValue of ['null', 'NULL']) {
+            it(`should apply both action kinds correctly for ${operator} ${nullValue}`, () => {
+                const source = `select a.col from dataset.table a\n where a.col ${operator} ${nullValue};`;
+                const document = TextDocument.create('test.sql', 'googlesql', 0, source);
+                const diagnostics = instance.evaluate(source)!;
+                expect(diagnostics).to.have.length(1);
+                const actions = instance.createCodeAction({uri: document.uri}, diagnostics[0]);
+                expect(actions).to.have.length(instance.codeActionKind.length);
+                for (const action of actions) {
+                    const fixed = TextDocument.applyEdits(document, action.edit!.changes![document.uri]);
+                    expect(fixed).to.equal(`select a.col from dataset.table a\n where a.col ${replacement} ${nullValue};`);
+                    expect(new IsNull(defaultSettings, 0).evaluate(fixed)).to.equal(null);
+                }
+            });
+        }
+    }
 });
