@@ -3,10 +3,10 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 import * as path from 'path';
+import { readdir } from 'fs/promises';
 import * as Mocha from 'mocha';
-import * as glob from 'glob';
 
-export function run(): Promise<void> {
+export async function run(): Promise<void> {
 	// Create the mocha test
 	const mocha = new Mocha({
 		ui: 'tdd',
@@ -15,28 +15,18 @@ export function run(): Promise<void> {
 	mocha.timeout(100000);
 
 	const testsRoot = __dirname;
+	const files = (await readdir(testsRoot)).filter(file => file.endsWith('.test.js'));
+	if (files.length === 0) {
+		throw new Error(`No integration tests found in ${testsRoot}`);
+	}
+	files.forEach(file => mocha.addFile(path.resolve(testsRoot, file)));
 
 	return new Promise((resolve, reject) => {
-		glob('**.test.js', { cwd: testsRoot }, (err, files) => {
-			if (err) {
-				return reject(err);
-			}
-
-			// Add files to the test suite
-			files.forEach(f => mocha.addFile(path.resolve(testsRoot, f)));
-
-			try {
-				// Run the mocha test
-				mocha.run(failures => {
-					if (failures > 0) {
-						reject(new Error(`${failures} tests failed.`));
-					} else {
-						resolve();
-					}
-				});
-			} catch (err) {
-				console.error(err);
-				reject(err);
+		mocha.run(failures => {
+			if (failures > 0) {
+				reject(new Error(`${failures} tests failed.`));
+			} else {
+				resolve();
 			}
 		});
 	});

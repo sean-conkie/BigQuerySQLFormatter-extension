@@ -4,7 +4,7 @@
 #
 # You can adjust the behavior by modifying this file.
 # For more information, see:
-# https://github.com/github/super-linter
+# https://github.com/super-linter/super-linter
 name: Lint Code Base
 
 on:
@@ -18,17 +18,18 @@ jobs:
       statuses: write
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           # Full git history is needed to get a proper list of changed files within `super-linter`
           fetch-depth: 0
 
       - name: Lint Code Base
-        uses: github/super-linter@v4
+        uses: super-linter/super-linter@v9
         env:
           VALIDATE_ALL_CODEBASE: false
-          VALIDATE_JAVASCRIPT_STANDARD: false
-          VALIDATE_TYPESCRIPT_STANDARD: false
+          # ESLint runs with the repository's dependencies in the Node.js workflow.
+          VALIDATE_JAVASCRIPT_ES: false
+          VALIDATE_TYPESCRIPT_ES: false
           DEFAULT_BRANCH: "main"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           LINTER_RULES_PATH: .github/linters

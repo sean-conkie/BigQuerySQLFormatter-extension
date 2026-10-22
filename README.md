@@ -35,6 +35,31 @@ LF, CRLF, and CR line endings are normalized internally for consistent diagnosti
 and edit ranges. Generated quick fixes use the document's original line-ending
 style; opening or linting a document does not rewrite its line endings.
 
+## Development and CI
+
+Use Node.js 22 and install the locked root, client and server dependencies with `npm ci`.
+The following checks run on pull requests and pushes to `main`:
+
+```sh
+npm run lint
+npm run compile
+npm run coverage
+npx --no-install vsce package --no-yarn
+npm run citest
+```
+
+`npm test` runs the server unit tests after compilation. `npm run coverage` also
+generates `coverage/lcov.info`, which CI uploads to Codecov using `CODECOV_TOKEN`.
+Fork pull requests use Codecov's public-repository tokenless uploads; configure the
+token as a Dependabot secret as well to enable uploads from Dependabot PRs.
+
+Packaging compiles the extension through the VSCE prepublish hook. `npm run citest`
+runs server tests followed by client E2E tests, which download and launch VS Code
+and require a display; on headless Linux use
+`xvfb-run -a npm run citest`. Packaging and E2E tests run on Linux, macOS and Windows.
+Release publishing uses Node.js 22 and the locked local `@vscode/vsce` dependency,
+with `VSCE_PAT` supplied by the repository secret.
+
 ## Configuration
 
 ### Fix on save

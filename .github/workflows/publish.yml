@@ -10,6 +10,7 @@ jobs:
     name: Publish to Marketplace
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       deployments: write
     steps:
 
@@ -24,21 +25,18 @@ jobs:
           initial-status: 'in_progress'
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: 18.x
+          node-version: 22.x
 
       - name: Install Dependencies
-        run: npm install
-
-      - name: Install VSCE
-        run: npm install -g @vscode/vsce
+        run: npm ci
 
       - name: Publish
-        run: vsce publish --no-yarn "${GITHUB_REF#refs/tags/}"
+        run: npx --no-install vsce publish --no-yarn "${GITHUB_REF#refs/tags/}"
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
 

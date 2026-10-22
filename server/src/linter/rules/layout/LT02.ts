@@ -276,7 +276,7 @@ export class Indent extends Rule<FileMap> {
               line: comparison.startLine??0,
               character: comparison.startIndex??0
             }
-          }
+          };
 
           const [additionalIdentNumber, newRange] = this.createIndentErrorOutputs(
             errorOffset,
