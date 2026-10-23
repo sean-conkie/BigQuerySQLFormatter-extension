@@ -22,21 +22,25 @@ describe('Parser partial tokenization', () => {
       const continuedStack = grammar.tokenizeLine('/*', INITIAL).ruleStack;
       const tokenize = sinon.stub(grammar, 'tokenizeLine');
       tokenize.onCall(0).returns({
+        fonts: [],
         tokens: [{ startIndex: 0, endIndex: 7, scopes: ['keyword'] }],
         ruleStack: INITIAL,
         stoppedEarly: true,
       });
       tokenize.onCall(1).returns({
+        fonts: [],
         tokens: [{ startIndex: 0, endIndex: 2, scopes: ['column'] }],
         ruleStack: continuedStack,
         stoppedEarly: true,
       });
       tokenize.onCall(2).returns({
+        fonts: [],
         tokens: [{ startIndex: 0, endIndex: 3, scopes: ['column'] }],
         ruleStack: continuedStack,
         stoppedEarly,
       });
       tokenize.onCall(3).returns({
+        fonts: [],
         tokens: [{ startIndex: 0, endIndex: 4, scopes: ['column'] }],
         ruleStack: INITIAL,
         stoppedEarly: false,

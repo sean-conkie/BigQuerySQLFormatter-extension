@@ -22,7 +22,7 @@ async function main() {
     'server/src/linter/syntaxes/googlesql.tmLanguage.json',
     'server/out/linter/syntaxes/googlesql.tmLanguage.json',
     'server/out/linter/syntaxes/syntax.json',
-    'server/node_modules/onigasm/lib/onigasm.wasm',
+    'server/node_modules/vscode-oniguruma/release/onig.wasm',
     'images/BigQuerySQLFormatter_transparent_128.png',
     'language-configuration.json',
   ]) {
