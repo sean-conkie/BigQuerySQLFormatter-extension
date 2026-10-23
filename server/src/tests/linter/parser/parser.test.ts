@@ -3,6 +3,74 @@ import type { TextDocumentContentChangeEvent } from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { Parser } from '../../../linter/parser';
 import { globalTokenCache } from '../../../linter/parser/tokenCache';
+import { ObjectAST, StatementAST } from '../../../linter/parser/ast';
+import { GrammarLoader } from '../../../linter/grammarLoader';
+import { INITIAL } from 'vscode-textmate';
+import * as sinon from 'sinon';
+
+describe('Parser partial tokenization', () => {
+  afterEach(() => {
+    sinon.restore();
+  });
+
+  for (const stoppedEarly of [false, true]) {
+    it(`reassembles partial tokens when the final chunk has stoppedEarly=${stoppedEarly}`, async () => {
+      const grammar = await new GrammarLoader().loadGrammar('source.googlesql');
+      if (!grammar) {
+        throw new Error('GoogleSQL grammar did not load');
+      }
+      const continuedStack = grammar.tokenizeLine('/*', INITIAL).ruleStack;
+      const tokenize = sinon.stub(grammar, 'tokenizeLine');
+      tokenize.onCall(0).returns({
+        tokens: [{ startIndex: 0, endIndex: 7, scopes: ['keyword'] }],
+        ruleStack: INITIAL,
+        stoppedEarly: true,
+      });
+      tokenize.onCall(1).returns({
+        tokens: [{ startIndex: 0, endIndex: 2, scopes: ['column'] }],
+        ruleStack: continuedStack,
+        stoppedEarly: true,
+      });
+      tokenize.onCall(2).returns({
+        tokens: [{ startIndex: 0, endIndex: 3, scopes: ['column'] }],
+        ruleStack: continuedStack,
+        stoppedEarly,
+      });
+      tokenize.onCall(3).returns({
+        tokens: [{ startIndex: 0, endIndex: 4, scopes: ['column'] }],
+        ruleStack: INITIAL,
+        stoppedEarly: false,
+      });
+
+      const lines = Parser.tokenize(
+        grammar,
+        new Map([
+          [0, 'select value'],
+          [1, 'next'],
+        ]),
+      );
+
+      expect(tokenize.getCalls().map((call) => call.args)).to.deep.equal([
+        ['select value', null],
+        ['value', INITIAL],
+        ['lue', continuedStack],
+        ['next', continuedStack],
+      ]);
+      expect(lines[0].tokens.map(({ startIndex, endIndex, value }) => ({ startIndex, endIndex, value }))).to.deep.equal(
+        [
+          { startIndex: 0, endIndex: 7, value: 'select ' },
+          { startIndex: 7, endIndex: 9, value: 'va' },
+          { startIndex: 9, endIndex: 12, value: 'lue' },
+        ],
+      );
+      expect(lines[0].value).to.equal('select value');
+      expect(lines[0].ruleStack).to.equal(continuedStack);
+      expect(lines[1].value).to.equal('next');
+      expect(lines[1].lineNumber).to.equal(1);
+      expect(lines[1].ruleStack).to.equal(INITIAL);
+    });
+  }
+});
 
 describe('Parser document changes', () => {
   const uri = 'parser-changes.sql';
@@ -21,6 +89,31 @@ describe('Parser document changes', () => {
     document = TextDocument.create(uri, 'googlesql', 0, text);
     await parser.parse({ uri, languageId: document.languageId, version: document.version, text });
   }
+
+  it('preserves nested FROM subqueries and their source columns', async () => {
+    const statements = await parser.parse({
+      uri,
+      languageId: 'googlesql',
+      version: 0,
+      text: 'select col from (select col from (select col from dataset.table));',
+    });
+    const outer = statements[0].from;
+    expect(outer).to.be.instanceOf(StatementAST);
+    if (!(outer instanceof StatementAST)) {
+      throw new Error('Expected the outer FROM source to be a subquery');
+    }
+    expect(outer.columns).to.have.length(1);
+    expect(outer.columns[0]).to.include({ column: 'col' });
+    const inner = outer.from;
+    expect(inner).to.be.instanceOf(StatementAST);
+    if (!(inner instanceof StatementAST)) {
+      throw new Error('Expected the inner FROM source to be a subquery');
+    }
+    expect(inner.columns).to.have.length(1);
+    expect(inner.columns[0]).to.include({ column: 'col' });
+    expect(inner.from).to.be.instanceOf(ObjectAST);
+    expect(inner.from).to.include({ dataset: 'dataset', object: 'table' });
+  });
 
   async function change(changes: TextDocumentContentChangeEvent[]) {
     document = TextDocument.update(document, changes, document.version + 1);
