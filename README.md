@@ -89,6 +89,9 @@ Add the following to your `settings.json`.
 #### In-line directive
 
 To disable all rules for a line add comment `-- noqa`.
+Directives are case-insensitive and accept zero or more spaces after `--`
+(for example `--NOQA` or `--  noqa`). Only actual line comments are directives,
+not text inside strings or block comments.
 
 ```sql
 select case when cc.enddate is null then 1 else null end as is_current -- noqa
@@ -99,6 +102,8 @@ select case when cc.enddate is null then 1 else null end as is_current -- noqa
 <img width="523" alt="image" src="https://github.com/user-attachments/assets/536963df-f8f5-42b8-8554-205dfaaf6c9a">
 
 To disable specific rules for a line add comment `-- noqa` followed by a comma separated list of rules.
+Rule codes are matched exactly, ignoring case: `-- noqa: LT01, CV05` disables
+only those rules, while `-- noqa: LT0` does not disable `LT01`.
 
 ```sql
 select case when cc.enddate is null then 1 else null end as is_current -- noqa: ST01
