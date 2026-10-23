@@ -34,6 +34,14 @@ diagnostics reflect the current document without reopening it.
 Closing a document clears its diagnostics and evicts its token and settings caches.
 Reopening it parses the current contents afresh.
 
+Edits update the server's document snapshot immediately and debounce validation
+until 250 ms after the most recent change. Superseded or closed-document work is
+cancelled, and diagnostics are published only for the current version. Parsing
+yields between tokenization batches and during statement processing so incoming
+edits and LSP request cancellations can be handled. Loaded grammars are shared,
+and each open document reuses its parser and rule instances until it is closed.
+Opening a document and changing configuration trigger immediate validation.
+
 Regex-based diagnostics use TextMate token scopes to exclude matches inside
 strings, quoted identifiers, and comments, on both open and edit. Matching uses
 the original source text so diagnostic and quick-fix offsets stay unchanged.

@@ -12,13 +12,13 @@ import {
   type CodeAction,
   type HoverParams,
   type Hover,
-  type PublishDiagnosticsParams,
 } from 'vscode-languageserver/node';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 import { defaultSettings, documentSettings, getDocumentSettings, type ServerSettings } from './settings';
-import { Linter } from './linter/linter';
-import { closeTextDocument, validateTextDocument, validateTextDocumentChanges } from './validate';
+import { closeTextDocument, getDocumentLinter, validateTextDocument } from './validate';
 import { CompletionBuilder } from './completions';
-import { globalTokenCache } from './linter/parser/tokenCache';
+import { ValidationScheduler } from './validationScheduler';
+import { awaitWithCancellation, checkCancellation } from './cancellation';
 
 const connection = createConnection(ProposedFeatures.all);
 
@@ -26,32 +26,33 @@ let hasConfigurationCapability = false;
 let hasWorkspaceFolderCapability = false;
 let hasDiagnosticRelatedInformationCapability = false;
 let globalSettings: ServerSettings = defaultSettings;
-const documentSessions = new Map<string, symbol>();
-const pendingValidations = new Map<string, Promise<void>>();
+const documents = new Map<string, TextDocument>();
+const validations = new ValidationScheduler(
+  (diagnostics) => {
+    connection.sendDiagnostics(diagnostics);
+  },
+  (message) => connection.console.error(message),
+);
 
-function validateDocument(uri: string, validate: () => Promise<PublishDiagnosticsParams>): void {
-  const session = documentSessions.get(uri);
-  const pending = (pendingValidations.get(uri) ?? Promise.resolve())
-    .then(async () => {
-      if (documentSessions.get(uri) !== session) {
-        return;
-      }
-      const diagnostics = await validate();
-      if (documentSessions.get(uri) === session) {
-        connection.sendDiagnostics(diagnostics);
-      } else {
-        closeTextDocument(uri);
-      }
-    })
-    .catch((error) => {
-      connection.console.error(`Validation failed for ${uri}: ${String(error)}`);
-    })
-    .finally(() => {
-      if (pendingValidations.get(uri) === pending) {
-        pendingValidations.delete(uri);
-      }
-    });
-  pendingValidations.set(uri, pending);
+function validateDocument(document: TextDocument, delay = 0): void {
+  const snapshot = {
+    uri: document.uri,
+    languageId: document.languageId,
+    version: document.version,
+    text: document.getText(),
+  };
+  validations.schedule(
+    document.uri,
+    async (token) => {
+      const settings = await awaitWithCancellation(
+        getDocumentSettings(document.uri, connection, globalSettings, hasConfigurationCapability),
+        token,
+      );
+      checkCancellation(token);
+      return validateTextDocument(snapshot, settings, token);
+    },
+    delay,
+  );
 }
 
 // region event handlers
@@ -102,50 +103,47 @@ connection.onDidChangeConfiguration((change) => {
   } else {
     globalSettings = { ...defaultSettings, ...change.settings.bigquerySQLFormatter };
   }
-  for (const uri of documentSessions.keys()) {
-    validateDocument(uri, async () => {
-      const settings = await getDocumentSettings(uri, connection, globalSettings, hasConfigurationCapability);
-      return validateTextDocument(
-        {
-          uri,
-          languageId: 'googlesql',
-          version: 0,
-          text: globalTokenCache.get(uri)!.getText(),
-        },
-        settings,
-      );
-    });
+  for (const document of documents.values()) {
+    validateDocument(document);
   }
 });
 
 connection.onDidOpenTextDocument((params) => {
-  documentSessions.set(params.textDocument.uri, Symbol());
-  validateDocument(params.textDocument.uri, async () =>
-    validateTextDocument(
-      params.textDocument,
-      await getDocumentSettings(params.textDocument.uri, connection, globalSettings, hasConfigurationCapability),
-    ),
+  const document = TextDocument.create(
+    params.textDocument.uri,
+    params.textDocument.languageId,
+    params.textDocument.version,
+    params.textDocument.text,
   );
+  documents.set(document.uri, document);
+  validateDocument(document);
 });
 
 connection.onDidChangeTextDocument((params) => {
-  validateDocument(params.textDocument.uri, async () =>
-    validateTextDocumentChanges(
-      params,
-      await getDocumentSettings(params.textDocument.uri, connection, globalSettings, hasConfigurationCapability),
-    ),
-  );
+  const document = documents.get(params.textDocument.uri);
+  if (!document || params.textDocument.version <= document.version) {
+    connection.console.warn(`Ignoring change for closed document or stale version: ${params.textDocument.uri}`);
+    return;
+  }
+  TextDocument.update(document, params.contentChanges, params.textDocument.version);
+  validateDocument(document, 250);
 });
 
 connection.onDidCloseTextDocument((params) => {
-  documentSessions.delete(params.textDocument.uri);
+  validations.cancel(params.textDocument.uri);
+  documents.delete(params.textDocument.uri);
   connection.sendDiagnostics(closeTextDocument(params.textDocument.uri));
 });
 
-connection.onCodeAction(async (params: CodeActionParams): Promise<CodeAction[]> => {
-  const linter = new Linter(
-    await getDocumentSettings(params.textDocument.uri, connection, globalSettings, hasConfigurationCapability),
+connection.onCodeAction(async (params: CodeActionParams, token): Promise<CodeAction[]> => {
+  checkCancellation(token);
+  const settings = await awaitWithCancellation(
+    getDocumentSettings(params.textDocument.uri, connection, globalSettings, hasConfigurationCapability),
+    token,
   );
+  checkCancellation(token);
+  if (!documents.has(params.textDocument.uri)) return [];
+  const linter = getDocumentLinter(params.textDocument.uri, settings);
   return linter.createCodeActions(params);
 });
 

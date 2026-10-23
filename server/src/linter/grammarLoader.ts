@@ -33,11 +33,11 @@ export class GrammarToken implements IToken {
 }
 
 export class GrammarLoader {
-  private registry: Registry;
+  private static registry: Registry | undefined;
   private static wasmLoading: Promise<void> | undefined;
 
   constructor() {
-    this.registry = new Registry({
+    GrammarLoader.registry ??= new Registry({
       onigLib: Promise.resolve({
         createOnigScanner,
         createOnigString,
@@ -67,7 +67,7 @@ export class GrammarLoader {
     await GrammarLoader.wasmLoading;
 
     // Load the grammar by scope name
-    return this.registry.loadGrammar(scopeName);
+    return GrammarLoader.registry!.loadGrammar(scopeName);
   }
 
   /**

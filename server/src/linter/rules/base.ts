@@ -51,6 +51,8 @@ export abstract class Rule<T extends string | FileMap> {
 
   abstract evaluate(test: T, documentUri: string | null): Diagnostic[] | null;
 
+  closeDocument(_uri: string): void {}
+
   createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): CodeAction[] | null {
     return null;
   }

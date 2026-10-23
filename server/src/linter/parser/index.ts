@@ -11,6 +11,8 @@ import type {
   TextDocumentContentChangeEvent,
   VersionedTextDocumentIdentifier,
 } from 'vscode-languageserver';
+import { CancellationToken } from 'vscode-languageserver';
+import { checkCancellation, yieldToEventLoop } from '../../cancellation';
 import { range } from '../../utils';
 import { findToken } from './utils';
 
@@ -71,22 +73,22 @@ export class Parser {
    * - If the document exists in the token cache, it will be removed from the cache.
    * - The document will be tokenized before parsing statements.
    */
-  async parse(textDocument: TextDocumentItem): Promise<FileMap> {
+  async parse(textDocument: TextDocumentItem, token: CancellationToken = CancellationToken.None): Promise<FileMap> {
+    checkCancellation(token);
     if (this.grammar === null) {
       await this.initialize();
     }
+    checkCancellation(token);
 
-    // if the document exists in the cache, remove it
-    if (globalTokenCache.has(textDocument.uri)) {
-      globalTokenCache.delete(textDocument.uri);
-    }
+    await this.tokenizeInitialDocument(textDocument, token);
 
-    this.tokenizeInitialDocument(textDocument);
-
-    return this.parseStatements({
-      ...textDocument,
-      text: globalTokenCache.get(textDocument.uri)!.getText(),
-    });
+    return this.parseStatements(
+      {
+        ...textDocument,
+        text: globalTokenCache.get(textDocument.uri)!.getText(),
+      },
+      token,
+    );
   }
 
   /**
@@ -98,16 +100,21 @@ export class Parser {
    * @param textDocumentChangeParams - The parameters containing the text document change details.
    * @returns A promise that resolves to a FileMap containing the parsed statements.
    */
-  async parseChange(textDocumentChangeParams: DidChangeTextDocumentParams): Promise<FileMap> {
+  async parseChange(
+    textDocumentChangeParams: DidChangeTextDocumentParams,
+    token: CancellationToken = CancellationToken.None,
+  ): Promise<FileMap> {
+    checkCancellation(token);
     if (this.grammar === null) {
       await this.initialize();
     }
+    checkCancellation(token);
 
     if (!globalTokenCache.has(textDocumentChangeParams.textDocument.uri)) {
       return {};
     }
 
-    this.tokenizeChangeDocument(textDocumentChangeParams);
+    await this.tokenizeChangeDocument(textDocumentChangeParams, token);
     const fullText = globalTokenCache.get(textDocumentChangeParams.textDocument.uri)!.getText();
 
     const textDocument = {
@@ -117,7 +124,7 @@ export class Parser {
       languageId: 'googlesql',
     };
 
-    return this.parseStatements(textDocument);
+    return this.parseStatements(textDocument, token);
   }
 
   /**
@@ -126,15 +133,16 @@ export class Parser {
    * @param textDocument - The text document to parse.
    * @returns A file map where each key is the index of the statement and the value is the parsed statement object.
    */
-  private parseStatements(textDocument: TextDocumentItem): FileMap {
+  private async parseStatements(textDocument: TextDocumentItem, token: CancellationToken): Promise<FileMap> {
     const statements = this.splitSource(textDocument.text);
     let startLine: number = 0;
     const fileMap: FileMap = {};
 
     for (let i = 0; i < statements.length; i++) {
+      await yieldToEventLoop(token);
       const statement: MatchObj = statements[i];
 
-      const s = this.parseStatement(
+      const s = await this.parseStatement(
         range(startLine, statement.line + 1)
           .flatMap((line) => {
             if (globalTokenCache.get(textDocument.uri)?.has(line)) {
@@ -143,6 +151,7 @@ export class Parser {
             return [];
           })
           .filter((t) => t !== undefined),
+        token,
       );
 
       s.statement = statement.statement;
@@ -164,7 +173,12 @@ export class Parser {
    * within the range and adjusting the line numbers accordingly. If the change
    * does not include a range, it re-tokenizes the entire document and updates the cache.
    */
-  private handleContentChange(change: TextDocumentContentChangeEvent, document: VersionedTextDocumentIdentifier) {
+  private async handleContentChange(
+    change: TextDocumentContentChangeEvent,
+    document: VersionedTextDocumentIdentifier,
+    token: CancellationToken,
+  ) {
+    checkCancellation(token);
     const cache = globalTokenCache.get(document.uri)!;
 
     if ('range' in change) {
@@ -184,7 +198,7 @@ export class Parser {
       // The edited line starts in the previous line's end state, not its own.
       const ruleStack = cache.get(startLine - 1)?.ruleStack ?? null;
       const lineMap = new Map(lines.slice(startLine).map((line, index) => [startLine + index, line]));
-      for (const lineToken of Parser.tokenize(this.grammar!, lineMap, ruleStack)) {
+      for (const lineToken of await this.tokenizeLines(lineMap, ruleStack, token)) {
         newCache.set(lineToken.lineNumber!, lineToken);
       }
 
@@ -201,7 +215,7 @@ export class Parser {
         globalTokenCache.delete(textDocument.uri);
       }
 
-      this.tokenizeInitialDocument(textDocument);
+      await this.tokenizeInitialDocument(textDocument, token);
     }
   }
 
@@ -210,8 +224,10 @@ export class Parser {
    *
    * @param document - The parameters of the document that has changed, including the content changes and the text document.
    */
-  private tokenizeChangeDocument(document: DidChangeTextDocumentParams) {
-    document.contentChanges.map((change) => this.handleContentChange(change, document.textDocument));
+  private async tokenizeChangeDocument(document: DidChangeTextDocumentParams, token: CancellationToken) {
+    for (const change of document.contentChanges) {
+      await this.handleContentChange(change, document.textDocument, token);
+    }
   }
 
   /**
@@ -219,14 +235,14 @@ export class Parser {
    *
    * @param document - The text document item to tokenize.
    */
-  private tokenizeInitialDocument(document: TextDocumentItem) {
+  private async tokenizeInitialDocument(document: TextDocumentItem, token: CancellationToken) {
     const lineMap = new Map<number, string>();
 
     document.text.split(/\r\n?|\n/).forEach((line, index) => {
       lineMap.set(index, line);
     });
 
-    const tokens = Parser.tokenize(this.grammar!, lineMap);
+    const tokens = await this.tokenizeLines(lineMap, null, token);
 
     const cache: DocumentCache = new DocumentCache(document.text.match(/\r\n?|\n/)?.[0]);
 
@@ -235,6 +251,22 @@ export class Parser {
     });
 
     globalTokenCache.set(document.uri, cache);
+  }
+
+  private async tokenizeLines(
+    lines: LineMap,
+    ruleStack: RuleStack | null,
+    token: CancellationToken,
+  ): Promise<LineToken[]> {
+    const entries = [...lines.entries()];
+    const tokens: LineToken[] = [];
+    for (let i = 0; i < entries.length; i += 50) {
+      await yieldToEventLoop(token);
+      const batch = Parser.tokenize(this.grammar!, new Map(entries.slice(i, i + 50)), ruleStack);
+      tokens.push(...batch);
+      ruleStack = batch[batch.length - 1].ruleStack;
+    }
+    return tokens;
   }
 
   /**
@@ -250,7 +282,7 @@ export class Parser {
    * The method uses a recursive lookahead to handle nested structures and ensures that
    * infinite loops are avoided by using a reCheck flag.
    */
-  private parseStatement(tokens: Token[]): StatementAST {
+  private async parseStatement(tokens: Token[], cancellation: CancellationToken): Promise<StatementAST> {
     const statement = new StatementAST(tokens);
 
     if (tokens.length === 0) {
@@ -271,6 +303,9 @@ export class Parser {
     };
 
     for (let i = 0; i < tokens.length; i++) {
+      if (i % 256 === 0) {
+        await yieldToEventLoop(cancellation);
+      }
       const token = tokens[i];
 
       if (
@@ -333,7 +368,10 @@ export class Parser {
             }
           }
 
-          const subqueryStatement = this.parseStatement(subqueryTokens.slice(1, subqueryTokens.length - 1));
+          const subqueryStatement = await this.parseStatement(
+            subqueryTokens.slice(1, subqueryTokens.length - 1),
+            cancellation,
+          );
 
           if (matchedRule.rule.alias === true) {
             const [matchedRules, y] = this.recursiveLookahead(

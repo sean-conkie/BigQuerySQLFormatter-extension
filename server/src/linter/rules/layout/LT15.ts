@@ -52,6 +52,7 @@ export class ComparisonOperators extends ParserRule {
       return null;
     }
 
+    documentCache.delete(documentUri!);
     const errors: Diagnostic[] = [];
     for (const i in ast) {
       const where = ast[i].where;
@@ -140,6 +141,10 @@ export class ComparisonOperators extends ParserRule {
    * @param diagnostic - The diagnostic information about the issue to be fixed.
    * @returns An array of code actions that can be applied to fix the issue.
    */
+  closeDocument(uri: string): void {
+    documentCache.delete(uri);
+  }
+
   createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): CodeAction[] {
     return this.createIndentCodeActions(
       textDocument,

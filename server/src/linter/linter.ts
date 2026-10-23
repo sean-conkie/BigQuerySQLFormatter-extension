@@ -7,6 +7,7 @@ import {
   type CodeAction,
   CodeActionKind,
   type Range,
+  CancellationToken,
 } from 'vscode-languageserver/node';
 import type { Rule } from './rules/base';
 import { initialiseRules } from './rules/rules';
@@ -14,6 +15,7 @@ import { RuleType } from './rules/enums';
 import { type FileMap, Parser } from './parser';
 import type { StatementAST } from './parser/ast';
 import { globalTokenCache } from './parser/tokenCache';
+import { checkCancellation, yieldToEventLoop } from '../cancellation';
 
 interface Directive extends Range {
   code: string;
@@ -28,6 +30,7 @@ export class Linter {
   regexRules: Rule<string | FileMap>[] = [];
   parserRules: Rule<string | FileMap>[] = [];
   problems: number = 0;
+  private readonly parser = new Parser();
 
   constructor(settings: ServerSettings) {
     this.settings = settings;
@@ -52,31 +55,12 @@ export class Linter {
    * @param source - The source code to be verified.
    * @returns A promise that resolves to an array of `Diagnostic` objects representing the issues found in the source code.
    */
-  async verify(textDocument: TextDocumentItem): Promise<Diagnostic[]> {
-    // Parse the source code
-    const parser = new Parser();
-
-    const diagnostics: Diagnostic[] = [];
-
-    const abstractSyntaxTree: { [key: number]: StatementAST } = await parser.parse(textDocument);
-
-    for (const rule of this.parserRules) {
-      const result = rule.evaluate(abstractSyntaxTree, textDocument.uri);
-      if (result != null) {
-        diagnostics.push(...result);
-      }
-    }
-
-    for (const rule of this.regexRules) {
-      const result = rule.evaluate(globalTokenCache.get(textDocument.uri)!.getText(), textDocument.uri);
-      if (result != null) {
-        diagnostics.push(
-          ...result.filter((diagnostic) => globalTokenCache.get(textDocument.uri)!.isCodeRange(diagnostic.range)),
-        );
-      }
-    }
-
-    return this.limitDiagnostics(diagnostics, textDocument.uri);
+  async verify(
+    textDocument: TextDocumentItem,
+    token: CancellationToken = CancellationToken.None,
+  ): Promise<Diagnostic[]> {
+    const ast = await this.parser.parse(textDocument, token);
+    return this.evaluateRules(ast, textDocument.uri, token);
   }
 
   /**
@@ -91,34 +75,35 @@ export class Linter {
    * 3. Retrieves the text of the document and evaluates it against a set of regex rules, collecting additional diagnostics.
    * 4. Filters out diagnostics that are on lines with `-- noqa` directives.
    */
-  async verifyChanges(textDocumentChangeParams: DidChangeTextDocumentParams): Promise<Diagnostic[]> {
-    const parser = new Parser();
+  async verifyChanges(
+    textDocumentChangeParams: DidChangeTextDocumentParams,
+    token: CancellationToken = CancellationToken.None,
+  ): Promise<Diagnostic[]> {
+    const ast = await this.parser.parseChange(textDocumentChangeParams, token);
+    return this.evaluateRules(ast, textDocumentChangeParams.textDocument.uri, token);
+  }
 
+  private async evaluateRules(ast: FileMap, uri: string, token: CancellationToken): Promise<Diagnostic[]> {
     const diagnostics: Diagnostic[] = [];
-
-    const abstractSyntaxTree: { [key: number]: StatementAST } = await parser.parseChange(textDocumentChangeParams);
-
-    for (const rule of this.parserRules) {
-      const result = rule.evaluate(abstractSyntaxTree, textDocumentChangeParams.textDocument.uri);
-      if (result != null) {
-        diagnostics.push(...result);
-      }
-    }
-    for (const rule of this.regexRules) {
-      const result = rule.evaluate(
-        globalTokenCache.get(textDocumentChangeParams.textDocument.uri)!.getText(),
-        textDocumentChangeParams.textDocument.uri,
-      );
-      if (result != null) {
+    const cache = globalTokenCache.get(uri)!;
+    const text = cache.getText();
+    for (const rule of [...this.parserRules, ...this.regexRules]) {
+      await yieldToEventLoop(token);
+      const result = rule.evaluate(rule.type === RuleType.PARSER ? ast : text, uri);
+      if (result) {
         diagnostics.push(
-          ...result.filter((diagnostic) =>
-            globalTokenCache.get(textDocumentChangeParams.textDocument.uri)!.isCodeRange(diagnostic.range),
-          ),
+          ...result.filter((diagnostic) => rule.type === RuleType.PARSER || cache.isCodeRange(diagnostic.range)),
         );
       }
     }
+    checkCancellation(token);
+    return this.limitDiagnostics(diagnostics, uri);
+  }
 
-    return this.limitDiagnostics(diagnostics, textDocumentChangeParams.textDocument.uri);
+  closeDocument(uri: string): void {
+    for (const rule of [...this.parserRules, ...this.regexRules]) {
+      rule.closeDocument(uri);
+    }
   }
 
   private limitDiagnostics(diagnostics: Diagnostic[], uri: string): Diagnostic[] {
