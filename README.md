@@ -74,7 +74,7 @@ three operating systems.
 The VSIX excludes documentation, tests, CI files, development configuration,
 local virtual environments, and root SQL scratch files. `npm run package:check`
 checks the package file list for regressions and verifies that grammar JSON,
-Onigasm WASM, extension entry points, and the Marketplace icon are preserved.
+Onigasm Wasm, extension entry points, and the Marketplace icon are preserved.
 Bundling the remaining runtime dependencies is a separate task.
 
 Release publishing uses Node.js 22 and the locked local `@vscode/vsce` dependency,
