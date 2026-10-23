@@ -48,40 +48,6 @@ export function getRegexMatchRanges(
 }
 
 /**
- * Retrieves the start and end indices of a specific capture group within a regular expression match.
- *
- * @param match - The result of a regular expression execution, containing the matched text and capture groups.
- * @param groupNumber - The index of the capture group to locate.
- * @returns A tuple containing the start and end indices of the specified capture group.
- *          If the capture group is not matched, returns the indices of the overall match.
- */
-export function getCaptureGroupIndices(match: RegExpExecArray, groupNumber: number): [number, number] {
-  if (match[groupNumber] == null) {
-    return [match.index, match.index + match[0].length];
-  }
-
-  const overallMatchStartIndex = match.index;
-  let searchStart = 0;
-  for (let i = 1; i <= groupNumber; i++) {
-    const groupText = match[i];
-    if (groupText == null) {
-      continue; // Skip unmatched groups
-    }
-    const idxInMatch0 = match[0].indexOf(groupText, searchStart);
-    if (idxInMatch0 === -1) {
-      return [match.index, match.index + match[0].length];
-    }
-    if (i === groupNumber) {
-      const groupStartIndex = overallMatchStartIndex + idxInMatch0;
-      const groupEndIndex = groupStartIndex + groupText.length;
-      return [groupStartIndex, groupEndIndex];
-    }
-    searchStart = idxInMatch0 + groupText.length;
-  }
-  return [match.index, match.index + match[0].length];
-}
-
-/**
  * Gets the line and character position of a match index within a given content string.
  *
  * @param content - The content string to search within.
