@@ -52,11 +52,23 @@ suite("Language server diagnostics", () => {
 
   test("Clears diagnostics when a document leaves the language and recomputes them on return", async () => {
     const editor = await activate(docUri);
-    const closed = waitForDiagnostics(docUri, (diagnostics) => diagnostics.length === 0);
-    await vscode.languages.setTextDocumentLanguage(editor.document, "plaintext");
+    const closed = waitForDiagnostics(
+      docUri,
+      (diagnostics) => diagnostics.length === 0,
+    );
+    await vscode.languages.setTextDocumentLanguage(
+      editor.document,
+      "plaintext",
+    );
     await closed;
-    const reopened = waitForDiagnostics(docUri, (diagnostics) => diagnostics.length > 0);
-    await vscode.languages.setTextDocumentLanguage(editor.document, "googlesql");
+    const reopened = waitForDiagnostics(
+      docUri,
+      (diagnostics) => diagnostics.length > 0,
+    );
+    await vscode.languages.setTextDocumentLanguage(
+      editor.document,
+      "googlesql",
+    );
     await reopened;
   });
 });
