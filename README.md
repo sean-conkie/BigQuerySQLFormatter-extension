@@ -73,9 +73,11 @@ safe lint fixes and formatting, and `npm run format` only formats. CI uses `biom
 to reject lint and formatting violations. Super-linter's overlapping formatters
 are disabled. Formatting-only commits are listed in `.git-blame-ignore-revs`;
 use `git config blame.ignoreRevsFile .git-blame-ignore-revs` to skip them in blame.
-A separate JSCPD step checks changed pull request files
-against the 5% limit, matching the other changed-file lint checks, and ignores
-comments so repeated API documentation is not counted as duplicated logic.
+A separate JSCPD step compares changed pull request files with the same files at
+the PR base. It retains the 5% duplication target and rejects increases above an
+existing higher baseline. Both snapshots are normalized with the same pinned
+formatter before comparing token percentages, so quote styles and line wrapping
+do not manufacture regressions. Comments and tests are excluded.
 Actions are pinned to commit hashes, and lint results appear in the workflow
 summary without requiring permission to post pull request comments.
 

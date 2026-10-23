@@ -8,6 +8,7 @@ import {
   type TextDocumentIdentifier,
   TextEdit,
   type URI,
+  type WorkspaceEdit,
 } from 'vscode-languageserver/node';
 import { RuleType } from './enums';
 import type { ServerSettings } from '../../settings';
@@ -68,6 +69,15 @@ export abstract class Rule<T extends string | FileMap> {
         [textDocument.uri]: [TextEdit.replace(diagnostic.range, ' '.repeat(indentation))],
       },
     };
+    return this.createFixActions(edit, diagnostic, kinds, title);
+  }
+
+  protected createFixActions(
+    edit: WorkspaceEdit,
+    diagnostic: Diagnostic,
+    kinds: CodeActionKind[],
+    title: string,
+  ): CodeAction[] {
     return kinds.map((kind) => {
       const action = CodeAction.create(title, edit, kind);
       action.diagnostics = [diagnostic];

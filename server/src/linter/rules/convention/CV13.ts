@@ -70,14 +70,6 @@ export class SpacesNotTabs extends Rule<string> {
         [textDocument.uri]: [TextEdit.replace(diagnostic.range, ' '.repeat(count * 2))],
       },
     };
-    const actions: CodeAction[] = [];
-
-    this.codeActionKind.forEach((kind) => {
-      const fix = CodeAction.create(this.codeActionTitle, edit, kind);
-      fix.diagnostics = [diagnostic];
-      actions.push(fix);
-    });
-
-    return actions;
+    return this.createFixActions(edit, diagnostic, this.codeActionKind, this.codeActionTitle);
   }
 }
