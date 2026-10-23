@@ -7,13 +7,13 @@
 - Clear diagnostics and document caches on close.
 - Parse `noqa` directives from actual line comments and match rule codes exactly.
 - Respect resource-scoped settings and the configured diagnostic limit.
-- Exclude strings, quoted identifiers, and comments from regex diagnostics.
-- Replace Onigasm with the maintained VS Code Oniguruma engine.
+- Exclude strings, quoted identifiers, and comments from regular expression diagnostics.
+- Replace Onigasm with the maintained Visual Studio Code Oniguruma engine.
 - Correct diagnostic rule names and structure-rule documentation links.
 - Limit default language registration to BigQuery-specific file extensions.
   Generic SQL files can opt in through explicit GoogleSQL file associations.
 - Document the AL04 unique-table-alias rule.
-- Modernize dependency checks, linting, packaging, and cross-platform VS Code tests.
+- Modernize dependency checks, linting, packaging, and cross-platform Visual Studio Code tests.
 
 ## 0.2.3 - 2026-10-22
 
