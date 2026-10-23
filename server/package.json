@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "vscode-oniguruma": "^2.0.1",
-    "vscode-languageserver": "^9.0.1",
+    "vscode-languageserver": "^10.1.2",
     "vscode-languageserver-textdocument": "^1.0.16",
     "vscode-textmate": "^9.3.2"
   },
