@@ -13,7 +13,7 @@ import { readFileSync } from 'node:fs';
 // Load the oniguruma library for vscode-textmate
 import { loadWASM, createOnigScanner, createOnigString } from 'vscode-oniguruma';
 
-const wasmPath = require.resolve('vscode-oniguruma/release/onig.wasm');
+const wasmPath = path.join(__dirname, 'onig.wasm');
 
 // re-export
 

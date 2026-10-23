@@ -13,6 +13,7 @@
 - Limit default language registration to BigQuery-specific file extensions.
   Generic SQL files can opt in through explicit GoogleSQL file associations.
 - Document the AL04 unique-table-alias rule.
+- Bundle the client and server with esbuild and ship no `node_modules`.
 - Modernize dependency checks, linting, packaging, and cross-platform Visual Studio Code tests.
 
 ## 0.2.3 - 2026-10-22
