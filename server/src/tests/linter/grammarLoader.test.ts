@@ -12,6 +12,19 @@ describe('GrammarLoader', () => {
     expect(grammarLoader).to.be.instanceOf(GrammarLoader);
   });
 
+  it('loads grammars concurrently across loader instances', async () => {
+    const grammars = await Promise.all(
+      Array.from({ length: 3 }, () => new GrammarLoader().loadGrammar('source.googlesql')),
+    );
+    for (const grammar of grammars) {
+      expect(grammar).not.to.equal(null);
+      if (!grammar) throw new Error('GoogleSQL grammar was not loaded');
+      const { tokens } = grammarLoader.tokenizeLine(grammar, "SELECT 'hello' -- comment");
+      expect(tokens.some((token) => token.scopes.some((scope) => scope.startsWith('string.')))).to.equal(true);
+      expect(tokens.some((token) => token.scopes.some((scope) => scope.startsWith('comment.')))).to.equal(true);
+    }
+  });
+
   it('should tokenize line correctly', async () => {
     const grammar = await grammarLoader.loadGrammar('source.googlesql');
     const line = 'SELECT * FROM table';

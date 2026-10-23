@@ -11,10 +11,9 @@ import {
 import { readFileSync } from 'node:fs';
 
 // Load the oniguruma library for vscode-textmate
-import { loadWASM } from 'onigasm';
-import { OnigScanner, OnigString } from 'onigasm';
+import { loadWASM, createOnigScanner, createOnigString } from 'vscode-oniguruma';
 
-const wasmPath = require.resolve('onigasm/lib/onigasm.wasm');
+const wasmPath = require.resolve('vscode-oniguruma/release/onig.wasm');
 
 // re-export
 
@@ -35,13 +34,13 @@ export class GrammarToken implements IToken {
 
 export class GrammarLoader {
   private registry: Registry;
-  private static wasmLoaded: boolean = false; // Static flag to check if wasm is loaded
+  private static wasmLoading: Promise<void> | undefined;
 
   constructor() {
     this.registry = new Registry({
       onigLib: Promise.resolve({
-        createOnigScanner: (patterns: string[]) => new OnigScanner(patterns),
-        createOnigString: (s: string) => new OnigString(s),
+        createOnigScanner,
+        createOnigString,
       }),
       loadGrammar: async (scopeName: string) => {
         // Adjust the condition to match the scopeName for your grammar
@@ -64,12 +63,8 @@ export class GrammarLoader {
    * @returns A promise that resolves to the loaded Grammar object, or null if the grammar could not be loaded.
    */
   async loadGrammar(scopeName: string): Promise<Grammar | null> {
-    // Check if wasm is already loaded
-    if (!GrammarLoader.wasmLoaded) {
-      // Load WASM only if it hasn't been loaded yet
-      await loadWASM(fs.readFileSync(wasmPath).buffer);
-      GrammarLoader.wasmLoaded = true; // Set the flag to true after loading
-    }
+    GrammarLoader.wasmLoading ??= loadWASM(fs.readFileSync(wasmPath));
+    await GrammarLoader.wasmLoading;
 
     // Load the grammar by scope name
     return this.registry.loadGrammar(scopeName);
