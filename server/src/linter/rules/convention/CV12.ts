@@ -1,6 +1,6 @@
 import type { ServerSettings } from '../../../settings';
 import { type Diagnostic, DiagnosticSeverity, type TextDocumentIdentifier } from 'vscode-languageserver/node';
-import { Rule } from '../base';
+import { RegexRule } from '../base';
 
 /**
  * The AllDistinct rule
@@ -8,7 +8,7 @@ import { Rule } from '../base';
  * @extends Rule
  * @memberof Linter.Rules
  */
-export class AllDistinct extends Rule<string> {
+export class AllDistinct extends RegexRule {
   readonly is_fix_compatible: boolean = false;
   readonly name: string = 'all_distinct';
   readonly code: string = 'CV12';
@@ -18,35 +18,6 @@ export class AllDistinct extends Rule<string> {
   readonly pattern: RegExp = /union\s+(?!all|distinct)|(?:except|intersect)\s+(?!distinct)/gim;
   readonly severity: DiagnosticSeverity = DiagnosticSeverity.Warning;
   readonly ruleGroup: string = 'convention';
-
-  /**
-   * Creates an instance of AllDistinct.
-   * @param {ServerSettings} settings The server settings
-   * @param {number} problems The number of problems identified in the source code
-   * @memberof AllDistinct
-   */
-  constructor(settings: ServerSettings, problems: number) {
-    super(settings, problems);
-  }
-
-  /**
-   * Evaluates the given test string against a pattern and returns diagnostics if the pattern matches.
-   *
-   * @param test - The string to be tested against the pattern.
-   * @param documentUri - The URI of the document being evaluated, optional.
-   * @returns An array of diagnostics if the pattern matches, otherwise null.
-   */
-  evaluate(test: string, documentUri: string | null = null): Diagnostic[] | null {
-    if (this.enabled === false) {
-      return null;
-    }
-
-    if (this.pattern.test(test)) {
-      return this.evaluateRegexPatterns(test, documentUri);
-    }
-
-    return null;
-  }
 
   /**
    * Creates a set of code actions to fix diagnostics.

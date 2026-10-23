@@ -1,7 +1,6 @@
 import type { ServerSettings } from '../../../settings';
-import { RuleType } from '../enums';
 import type { Diagnostic } from 'vscode-languageserver/node';
-import { Rule } from '../base';
+import { ParserRule } from '../base';
 import type { FileMap } from '../../parser';
 import { ColumnAST } from '../../parser/ast';
 
@@ -11,25 +10,14 @@ import { ColumnAST } from '../../parser/ast';
  * @extends Rule
  * @memberof Linter.Rules
  */
-export class SelectTargets extends Rule<FileMap> {
+export class SelectTargets extends ParserRule {
   readonly is_fix_compatible: boolean = false;
   readonly name: string = 'select_targets';
   readonly code: string = 'LT09';
-  readonly type: RuleType = RuleType.PARSER;
   readonly message: string = 'Select targets should be on separate lines.';
   readonly relatedInformation: string =
     'For better readability, each target in the `SELECT` clause should be written on a separate line.';
   readonly ruleGroup: string = 'layout';
-
-  /**
-   * Creates an instance of SelectTargets.
-   * @param {ServerSettings} settings The server settings
-   * @param {number} problems The number of problems identified in the source code
-   * @memberof SelectTargets
-   */
-  constructor(settings: ServerSettings, problems: number) {
-    super(settings, problems);
-  }
 
   /**
    * Evaluates the provided Abstract Syntax Tree (AST) to identify and return diagnostics for layout issues.

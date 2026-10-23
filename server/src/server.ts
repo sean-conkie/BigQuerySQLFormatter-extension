@@ -70,7 +70,7 @@ connection.onInitialize((params: InitializeParams) => {
       textDocumentSync: TextDocumentSyncKind.Incremental,
       // Tell the client that this server supports code completion.
       completionProvider: {
-        resolveProvider: true,
+        resolveProvider: false,
       },
       codeActionProvider: {
         codeActionKinds: [CodeActionKind.QuickFix, CodeActionKind.SourceFixAll],
@@ -92,9 +92,6 @@ connection.onInitialized(() => {
   if (hasConfigurationCapability) {
     // Register for all configuration changes.
     connection.client.register(DidChangeConfigurationNotification.type, undefined);
-  }
-  if (hasWorkspaceFolderCapability) {
-    connection.workspace.onDidChangeWorkspaceFolders((_event) => {});
   }
 });
 
@@ -119,24 +116,6 @@ connection.onDidChangeConfiguration((change) => {
       );
     });
   }
-});
-
-connection.onDidChangeWatchedFiles((_change) => {
-  // Monitored files have change in VSCode
-  connection.console.log('We received a file change event');
-});
-
-// This handler resolves additional information for the item selected in
-// the completion list.
-connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
-  if (item.data === 1) {
-    item.detail = 'TypeScript details';
-    item.documentation = 'TypeScript documentation';
-  } else if (item.data === 2) {
-    item.detail = 'JavaScript details';
-    item.documentation = 'JavaScript documentation';
-  }
-  return item;
 });
 
 connection.onDidOpenTextDocument((params) => {

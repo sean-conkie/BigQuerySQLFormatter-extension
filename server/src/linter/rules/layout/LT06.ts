@@ -1,5 +1,4 @@
 import type { ServerSettings } from '../../../settings';
-import { RuleType } from '../enums';
 import {
   CodeAction,
   CodeActionKind,
@@ -8,7 +7,7 @@ import {
   type TextDocumentIdentifier,
   TextEdit,
 } from 'vscode-languageserver/node';
-import { Rule } from '../base';
+import { ParserRule } from '../base';
 import type { FileMap } from '../../parser';
 import { ColumnFunctionAST, ComparisonAST, ComparisonGroupAST } from '../../parser/ast';
 
@@ -18,10 +17,9 @@ import { ColumnFunctionAST, ComparisonAST, ComparisonGroupAST } from '../../pars
  * @extends Rule
  * @memberof Linter.Rules
  */
-export class Functions extends Rule<FileMap> {
+export class Functions extends ParserRule {
   readonly name: string = 'functions';
   readonly code: string = 'LT06';
-  readonly type: RuleType = RuleType.PARSER;
   readonly message: string = 'Function name not immediately followed by parenthesis.';
   readonly relatedInformation: string =
     'Function names should always be immediately followed by parentheses without any space.';
@@ -29,16 +27,6 @@ export class Functions extends Rule<FileMap> {
   readonly ruleGroup: string = 'layout';
   readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
   readonly codeActionTitle = 'Remove redundant whitespace';
-
-  /**
-   * Creates an instance of Functions.
-   * @param {ServerSettings} settings The server settings
-   * @param {number} problems The number of problems identified in the source code
-   * @memberof Functions
-   */
-  constructor(settings: ServerSettings, problems: number) {
-    super(settings, problems);
-  }
 
   /**
    * Evaluates the given Abstract Syntax Tree (AST) and returns an array of diagnostics if any issues are found.

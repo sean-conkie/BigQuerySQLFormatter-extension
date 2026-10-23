@@ -1,7 +1,6 @@
 import type { ServerSettings } from '../../../settings';
 import type { Diagnostic } from 'vscode-languageserver/node';
-import { RuleType } from '../enums';
-import { Rule } from '../base';
+import { ParserRule } from '../base';
 import type { FileMap } from '../../parser';
 import {
   ArrayAST,
@@ -15,25 +14,14 @@ import {
   StatementAST,
 } from '../../parser/ast';
 
-export class UnusedAlias extends Rule<FileMap> {
+export class UnusedAlias extends ParserRule {
   readonly is_fix_compatible: boolean = false;
   readonly name: string = 'unused_alias';
   readonly code: string = 'AL05';
   readonly message: string = 'Columns must use table alias.';
   readonly relatedInformation: string =
     'All columns should be referenced using the table alias when an alias is defined.';
-  readonly type: RuleType = RuleType.PARSER;
   readonly ruleGroup: string = 'aliasing';
-
-  /**
-   * Creates an instance of UnusedAlias.
-   * @param {ServerSettings} settings The server settings
-   * @param {number} problems The number of problems identified in the source code
-   * @memberof UnusedAlias
-   */
-  constructor(settings: ServerSettings, problems: number) {
-    super(settings, problems);
-  }
 
   /**
    * Evaluates the given Abstract Syntax Tree (AST) to identify redundant aliases in column definitions.

@@ -1,29 +1,17 @@
 import type { ServerSettings } from '../../../settings';
 import type { Diagnostic, Range } from 'vscode-languageserver/node';
-import { RuleType } from '../enums';
-import { Rule } from '../base';
+import { ParserRule } from '../base';
 import type { FileMap } from '../../parser';
 import { excludeTokensWithMatchingScopes, includeTokensWithMatchingScopes } from '../../parser/token';
 import { ObjectAST, StatementAST } from '../../parser/ast';
 
-export class UniqueTable extends Rule<FileMap> {
+export class UniqueTable extends ParserRule {
   readonly is_fix_compatible: boolean = false;
   readonly name: string = 'unique_table';
   readonly code: string = 'AL04';
   readonly message: string = 'Table aliases should be unique within each clause.';
   readonly relatedInformation: string = '';
-  readonly type: RuleType = RuleType.PARSER;
   readonly ruleGroup: string = 'aliasing';
-
-  /**
-   * Creates an instance of UniqueTable.
-   * @param {ServerSettings} settings The server settings
-   * @param {number} problems The number of problems identified in the source code
-   * @memberof UniqueTable
-   */
-  constructor(settings: ServerSettings, problems: number) {
-    super(settings, problems);
-  }
 
   /**
    * Evaluates the given Abstract Syntax Tree (AST) to identify redundant aliases in column definitions.
