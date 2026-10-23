@@ -12,7 +12,6 @@ permissions:
 
 on:
   pull_request:
-    branches: ["main"]
 jobs:
   run-lint:
     runs-on: ubuntu-latest
@@ -40,7 +39,7 @@ jobs:
           # JSCPD always scans the whole repository; check the PR files explicitly below.
           VALIDATE_JSCPD: false
           ENABLE_GITHUB_PULL_REQUEST_SUMMARY_COMMENT: false
-          DEFAULT_BRANCH: "main"
+          DEFAULT_BRANCH: ${{ github.base_ref }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           LINTER_RULES_PATH: .github/linters
 

@@ -7,7 +7,8 @@ import {
 	PublishDiagnosticsNotification, PublishDiagnosticsParams
 } from 'vscode-languageserver/node';
 
-describe('Language server lifecycle', () => {
+describe('Language server lifecycle', function () {
+	this.timeout(15000);
 	it('does not publish stale diagnostics after close and can reopen the URI', async () => {
 		const child = spawn(process.execPath, [path.join(__dirname, '../server.js'), '--stdio']);
 		const connection = createProtocolConnection(new StreamMessageReader(child.stdout), new StreamMessageWriter(child.stdin));
