@@ -36,10 +36,16 @@ suite('Language server diagnostics', () => {
   test('Clears diagnostics when a document leaves the language and recomputes them on return', async () => {
     const editor = await activate(docUri);
     const closed = waitForDiagnostics(docUri, (diagnostics) => diagnostics.length === 0);
-    await vscode.languages.setTextDocumentLanguage(editor.document, 'plaintext');
+    await vscode.languages.setTextDocumentLanguage(editor.document, 'sql');
     await closed;
     const reopened = waitForDiagnostics(docUri, (diagnostics) => diagnostics.length > 0);
     await vscode.languages.setTextDocumentLanguage(editor.document, 'googlesql');
     await reopened;
+  });
+
+  test('Leaves generic SQL files in SQL language mode', async () => {
+    const document = await vscode.workspace.openTextDocument(getDocUri('diagnostics.sql'));
+    await vscode.window.showTextDocument(document);
+    assert.equal(document.languageId, 'sql');
   });
 });

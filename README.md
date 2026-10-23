@@ -108,6 +108,26 @@ summary without requiring permission to post pull request comments.
 
 ## Configuration
 
+### File associations
+
+GoogleSQL activates automatically for `.bqsql`, `.bqddl`, and `.bqdml` files.
+Generic `.sql`, `.ddl`, and `.dml` files are left to your other SQL extensions.
+To enable BigQuery linting for them, select **GoogleSQL** from the language mode
+picker or add explicit associations to your workspace's `.vscode/settings.json`:
+
+```json
+{
+  "files.associations": {
+    "*.sql": "googlesql",
+    "*.ddl": "googlesql",
+    "*.dml": "googlesql"
+  }
+}
+```
+
+Only documents in GoogleSQL language mode are linted. Existing associations to
+the legacy `sql-bigquery` ID should be changed to `googlesql`.
+
 `bigquerySQLFormatter.maxNumberOfProblems` defaults to 100 and limits published
 diagnostics on both opening and editing a document, after `noqa` suppression.
 Set it to 0 to hide diagnostics. Settings are resolved per document, including
