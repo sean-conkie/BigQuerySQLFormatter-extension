@@ -57,30 +57,6 @@ describe('Linter', () => {
                 text: 'select t.col1\n  from dataset.table as t;\n', uri, languageId: 'googlesql', version: 0
             });
 
-            for (const directive of ['-- NOQA', '--noqa', '--  noqa', '--\tNoQa']) {
-                it(`suppresses all diagnostics with ${directive}`, async () => {
-                    const result = await linter.verify({
-                        text: `select a = null ${directive}\n`, uri: 'directives.sql', languageId: 'googlesql', version: 1
-                    });
-                    expect(result).to.deep.equal([]);
-                });
-            }
-
-            it('compares comma-separated rule codes exactly and case-insensitively', async () => {
-                const source = { text: 'select a = null -- noqa: LT01, cv05\n', uri: 'directives.sql', languageId: 'googlesql', version: 1 };
-                const filtered = await linter.verify(source);
-                expect(filtered.some(d => String(d.code).startsWith('CV05:'))).to.equal(false);
-                const partial = await linter.verify({ ...source, text: 'select a = null -- noqa: CV0\n' });
-                expect(partial.some(d => String(d.code).startsWith('CV05:'))).to.equal(true);
-            });
-
-            it('does not treat strings or preceding lines as directives', async () => {
-                const result = await linter.verify({
-                    text: "select '-- noqa' as txt, a = null\n-- noqa:\nselect b = null\n",
-                    uri: 'directives.sql', languageId: 'googlesql', version: 1
-                });
-                expect(result.filter(d => String(d.code).startsWith('CV05:')).map(d => d.range.start.line)).to.deep.equal([0, 2]);
-            });
             expect(diagnostics.some(diagnostic => String(diagnostic.code).includes('AL01'))).to.equal(true);
             const commented = await linter.verifyChanges({
                 textDocument: {uri, version: 1},
@@ -99,5 +75,30 @@ describe('Linter', () => {
         } finally {
             globalTokenCache.delete(uri);
         }
+    });
+
+    for (const directive of ['-- NOQA', '--noqa', '--  noqa', '--\tNoQa']) {
+        it(`suppresses all diagnostics with ${directive}`, async () => {
+            const result = await linter.verify({
+                text: `select a = null ${directive}\n`, uri: 'directives.sql', languageId: 'googlesql', version: 1
+            });
+            expect(result).to.deep.equal([]);
+        });
+    }
+
+    it('compares comma-separated rule codes exactly and case-insensitively', async () => {
+        const source = { text: 'select a = null -- noqa: LT01, cv05\n', uri: 'directives.sql', languageId: 'googlesql', version: 1 };
+        const filtered = await linter.verify(source);
+        expect(filtered.some(d => String(d.code).startsWith('CV05:'))).to.equal(false);
+        const partial = await linter.verify({ ...source, text: 'select a = null -- noqa: CV0\n' });
+        expect(partial.some(d => String(d.code).startsWith('CV05:'))).to.equal(true);
+    });
+
+    it('does not treat strings or preceding lines as directives', async () => {
+        const result = await linter.verify({
+            text: "select '-- noqa' as txt, a = null\n-- noqa:\nselect b = null\n",
+            uri: 'directives.sql', languageId: 'googlesql', version: 1
+        });
+        expect(result.filter(d => String(d.code).startsWith('CV05:')).map(d => d.range.start.line)).to.deep.equal([0, 2]);
     });
 });
