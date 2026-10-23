@@ -52,7 +52,8 @@ The following checks run on all pull requests (including stacked branches) and p
 npm run lint
 npm run compile
 npm run coverage
-npx --no-install vsce package --no-yarn
+npx --no-install vsce package --no-yarn --out extension.vsix
+npm run package:check
 npm run citest
 ```
 
@@ -65,6 +66,17 @@ Packaging compiles the extension through the VSCE prepublish hook. `npm run cite
 runs server tests followed by client end-to-end tests, which download and launch Visual Studio Code
 and require a display; on headless Linux use
 `xvfb-run -a npm run citest`. Packaging and end-to-end tests run on Linux, macOS and Windows.
+Set `BQSQL_TEST_VSIX` to the absolute path of a VSIX when running `npm run citest`
+to install it into the isolated test profile and run diagnostics tests against
+its packaged contents instead of the source checkout. CI uses this mode on all
+three operating systems.
+
+The VSIX excludes documentation, tests, CI files, development configuration,
+local virtual environments, and root SQL scratch files. `npm run package:check`
+checks the package file list for regressions and verifies that grammar JSON,
+Onigasm Wasm, extension entry points, and the Marketplace icon are preserved.
+Bundling the remaining runtime dependencies is a separate task.
+
 Release publishing uses Node.js 22 and the locked local `@vscode/vsce` dependency,
 with `VSCE_PAT` supplied by the repository secret.
 
