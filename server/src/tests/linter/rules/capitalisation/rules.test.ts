@@ -1,5 +1,5 @@
 /**
- * @fileoverview Test suite for layoutRules module
+ * @fileoverview Test suite for capitalisationRules module
  */
 
 import { expect } from 'chai';
@@ -7,7 +7,7 @@ import { capitalisationRules } from '../../../../linter/rules/capitalisation/rul
 import { classes } from '../../../../linter/rules/capitalisation/rules';
 import { defaultSettings } from '../../../../settings';
 
-describe('layoutRules', () => {
+describe('capitalisationRules', () => {
   it('should return an array with a single instance of each rule', () => {
     const problems = 0;
     const result = capitalisationRules(defaultSettings, problems);

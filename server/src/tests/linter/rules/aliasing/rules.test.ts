@@ -1,5 +1,5 @@
 /**
- * @fileoverview Test suite for layoutRules module
+ * @fileoverview Test suite for aliasRules module
  */
 
 import { expect } from 'chai';
@@ -7,7 +7,7 @@ import { aliasRules } from '../../../../linter/rules/aliasing/rules';
 import { classes } from '../../../../linter/rules/aliasing/rules';
 import { defaultSettings } from '../../../../settings';
 
-describe('layoutRules', () => {
+describe('aliasRules', () => {
   it('should return an array with a single instance of each rule', () => {
     const problems = 0;
     const result = aliasRules(defaultSettings, problems);

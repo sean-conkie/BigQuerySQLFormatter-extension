@@ -59,6 +59,9 @@ npm run citest
 
 `npm test` runs the server unit tests after compilation. `npm run coverage` also
 generates `coverage/lcov.info`, which CI uploads to Codecov using `CODECOV_TOKEN`.
+It fails if overall branch coverage falls below 80%. Regression tests cover
+multiline incremental edits and CRLF, directive edge cases, diagnostic limits,
+and overlapping fix-all edits while preserving individual quick fixes.
 Fork pull requests use Codecov's public-repository tokenless uploads; configure the
 token as a Dependabot secret as well to enable uploads from Dependabot PRs.
 

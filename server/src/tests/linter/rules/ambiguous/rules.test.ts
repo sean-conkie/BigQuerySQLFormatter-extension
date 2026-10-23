@@ -1,16 +1,15 @@
 /**
- * @fileoverview Test suite for layoutRules module
+ * @fileoverview Test suite for ambiguousRules module
  */
 
 import { expect } from 'chai';
-import { structureRules } from '../../../../linter/rules/structure/rules';
-import { classes } from '../../../../linter/rules/structure/rules';
+import { ambiguousRules, classes } from '../../../../linter/rules/ambiguous/rules';
 import { defaultSettings } from '../../../../settings';
 
-describe('layoutRules', () => {
+describe('ambiguousRules', () => {
   it('should return an array with a single instance of each rule', () => {
     const problems = 0;
-    const result = structureRules(defaultSettings, problems);
+    const result = ambiguousRules(defaultSettings, problems);
     const classes_length = classes.length;
     expect(result).to.be.an('array').that.has.lengthOf(classes_length);
     for (const [index, val] of classes.entries()) {
@@ -20,7 +19,7 @@ describe('layoutRules', () => {
 
   it('should pass the settings and problems to the each constructor', () => {
     const problems = 5;
-    const result = structureRules(defaultSettings, problems);
+    const result = ambiguousRules(defaultSettings, problems);
     const length = result.length;
     for (let i = 0; i < length; i++) {
       expect(result[i].settings).to.equal(defaultSettings);
