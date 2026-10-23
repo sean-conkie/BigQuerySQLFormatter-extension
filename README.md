@@ -79,6 +79,7 @@ checks the package file list for regressions and verifies that grammar JSON,
 Oniguruma Wasm, extension entry points, and the Marketplace icon are preserved.
 The client and server are bundled with esbuild into `dist/`; grammar JSON and
 `onig.wasm` are copied alongside them. No `node_modules` directories are shipped.
+Bundled dependency licenses and notices are retained in `dist/ThirdPartyNotices.txt`.
 
 Release publishing uses Node.js 22 and the locked local `@vscode/vsce` dependency,
 with `VSCE_PAT` supplied by the repository secret.

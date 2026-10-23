@@ -22,6 +22,7 @@ async function main() {
     'dist/server.js',
     'dist/syntaxes/googlesql.tmLanguage.json',
     'dist/onig.wasm',
+    'dist/ThirdPartyNotices.txt',
     'images/BigQuerySQLFormatter_transparent_128.png',
     'language-configuration.json',
   ]) {
