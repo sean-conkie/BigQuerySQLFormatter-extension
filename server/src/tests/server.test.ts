@@ -14,6 +14,50 @@ import {
 
 describe("Language server lifecycle", function () {
   this.timeout(15000);
+  it("revalidates open documents using the correct fallback configuration section", async () => {
+    const child = spawn(process.execPath, [
+      path.join(__dirname, "../server.js"),
+      "--stdio",
+    ]);
+    const connection = createProtocolConnection(
+      new StreamMessageReader(child.stdout),
+      new StreamMessageWriter(child.stdin),
+    );
+    connection.listen();
+    const nextDiagnostics = () =>
+      new Promise<PublishDiagnosticsParams>((resolve) => {
+        connection.onNotification(PublishDiagnosticsNotification.type, resolve);
+      });
+    try {
+      await connection.sendRequest(InitializeRequest.type, {
+        processId: process.pid,
+        capabilities: {},
+        rootUri: null,
+      });
+      await connection.sendNotification("workspace/didChangeConfiguration", {
+        settings: { bigquerySQLFormatter: { maxNumberOfProblems: 1 } },
+      });
+      const opened = nextDiagnostics();
+      await connection.sendNotification(DidOpenTextDocumentNotification.type, {
+        textDocument: {
+          uri: "file:///settings.sql",
+          languageId: "googlesql",
+          version: 1,
+          text: "select a = null, b = null\n",
+        },
+      });
+      expect((await opened).diagnostics).to.have.length(1);
+      const changed = nextDiagnostics();
+      await connection.sendNotification("workspace/didChangeConfiguration", {
+        settings: { bigquerySQLFormatter: { maxNumberOfProblems: 0 } },
+      });
+      expect((await changed).diagnostics).to.deep.equal([]);
+    } finally {
+      connection.dispose();
+      child.kill();
+    }
+  });
+
   it("does not publish stale diagnostics after close and can reopen the URI", async () => {
     const child = spawn(process.execPath, [
       path.join(__dirname, "../server.js"),

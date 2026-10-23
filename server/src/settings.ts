@@ -14,7 +14,7 @@ export interface ServerSettings {
  * @type {ServerSettings}
  * @property {number} maxNumberOfProblems - The maximum number of problems allowed.
  */
-export const defaultSettings: ServerSettings = { maxNumberOfProblems: 1000 };
+export const defaultSettings: ServerSettings = { maxNumberOfProblems: 100 };
 
 /**
  * A map that holds document settings for the server.
@@ -42,7 +42,7 @@ export function getDocumentSettings(resource: string, connection: _Connection, g
 		result = connection.workspace.getConfiguration({
 			scopeUri: resource,
 			section: 'bigquerySQLFormatter'
-		});
+		}).then((settings: Partial<ServerSettings> | null) => ({ ...defaultSettings, ...settings }));
 		documentSettings.set(resource, result);
 	}
 	return result;

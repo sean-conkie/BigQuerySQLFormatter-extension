@@ -45,11 +45,6 @@ export abstract class Rule<T extends string | FileMap> {
   constructor(settings: ServerSettings, problems: number) {
     this.settings = settings;
     this.problems = problems;
-
-    if (this.problems >= this.settings.maxNumberOfProblems) {
-      console.log(`${this.name}: Too many problems, disabling.`);
-      this.enabled = false;
-    }
   }
 
   abstract evaluate(test: T, documentUri: string | null): Diagnostic[] | null;

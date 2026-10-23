@@ -27,6 +27,7 @@ import {
   validateTextDocumentChanges,
 } from "./validate";
 import { CompletionBuilder } from "./completions";
+import { globalTokenCache } from "./linter/parser/tokenCache";
 
 const connection = createConnection(ProposedFeatures.all);
 
@@ -127,9 +128,29 @@ connection.onDidChangeConfiguration((change) => {
     // Reset all cached document settings
     documentSettings.clear();
   } else {
-    globalSettings = <ServerSettings>(
-      (change.settings.bigqueryLanguageServer || defaultSettings)
-    );
+    globalSettings = {
+      ...defaultSettings,
+      ...change.settings.bigquerySQLFormatter,
+    };
+  }
+  for (const uri of documentSessions.keys()) {
+    validateDocument(uri, async () => {
+      const settings = await getDocumentSettings(
+        uri,
+        connection,
+        globalSettings,
+        hasConfigurationCapability,
+      );
+      return validateTextDocument(
+        {
+          uri,
+          languageId: "googlesql",
+          version: 0,
+          text: globalTokenCache.get(uri)!.getText(),
+        },
+        settings,
+      );
+    });
   }
 });
 
@@ -187,7 +208,14 @@ connection.onDidCloseTextDocument((params) => {
 
 connection.onCodeAction(
   async (params: CodeActionParams): Promise<CodeAction[]> => {
-    const linter = new Linter(globalSettings);
+    const linter = new Linter(
+      await getDocumentSettings(
+        params.textDocument.uri,
+        connection,
+        globalSettings,
+        hasConfigurationCapability,
+      ),
+    );
     return linter.createCodeActions(params);
   },
 );
