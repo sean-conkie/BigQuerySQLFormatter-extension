@@ -16,7 +16,7 @@ export class Using extends Rule<string> {
   readonly relatedInformation: string = 'Specify the keys directly.';
   readonly pattern: RegExp = /join(?:\s+`?(?:[\w_]+\.)?(?:[\w_]+\.[\w_]+)`?(?:\s+(?:as\s+)?[\w_]+)?)\s+(using)/gim;
   readonly severity: DiagnosticSeverity = DiagnosticSeverity.Warning;
-  readonly ruleGroup: string = 'layout';
+  readonly ruleGroup: string = 'structure';
 
   /**
    * Creates an instance of Using.

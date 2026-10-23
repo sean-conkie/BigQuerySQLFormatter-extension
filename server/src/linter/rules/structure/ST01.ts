@@ -23,7 +23,7 @@ export class ElseNull extends Rule<string> {
     'Do not specify redundant `else null` in a case when statement. Including `ELSE NULL` at the end of a `CASE WHEN` statement adds unnecessary complexity to the query.';
   readonly pattern: RegExp = /(?<=\S)\s*else\s+null(?: *?$)?/gim;
   readonly diagnosticTags: DiagnosticTag[] = [DiagnosticTag.Unnecessary];
-  readonly ruleGroup: string = 'layout';
+  readonly ruleGroup: string = 'structure';
   readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
   readonly codeActionTitle = 'Remove redundant `else null`';
 
