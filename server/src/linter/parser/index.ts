@@ -565,7 +565,7 @@ export class Parser {
           i--; // restart checking from the last token
           reCheck = false;
         } else if (reCheck === false && rules != null && exitOnMatch) {
-          // in this scenario we are searching for a sepcific rule subset
+          // in this scenario we are searching for a specific rule subset
           // the token has been checked and no rules have matched so exit.
           loopCounter = 0; // reset loop counter because we never matched anything
           break;

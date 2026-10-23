@@ -36,7 +36,7 @@ function scanSnapshot(ref, files, directory, config) {
   }
   fs.copyFileSync(path.resolve('biome.json'), path.join(directory, 'biome.json'));
   execFileSync('npx', [
-    '--yes', '@biomejs/biome@2.6.2', 'format', '--write', '--vcs-enabled=false',
+    '--yes', '@biomejs/biome@2.6.2', 'format', '--write', '--vcs-enabled=false', '--no-errors-on-unmatched',
   ], { cwd: directory, stdio: 'inherit' });
   const output = `${directory}-report`;
   execFileSync('npx', [
