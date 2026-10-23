@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 import * as path from 'node:path';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, readdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 
-import { runTests } from '@vscode/test-electron';
+import { runTests, runVSCodeCommand } from '@vscode/test-electron';
 
 async function main() {
   // Keep the profile path short enough for macOS IPC sockets and isolate test settings.
@@ -14,7 +14,26 @@ async function main() {
   try {
     // The folder containing the Extension Manifest package.json
     // Passed to `--extensionDevelopmentPath`
-    const extensionDevelopmentPath = path.resolve(__dirname, '../../../');
+    let extensionDevelopmentPath = path.resolve(__dirname, '../../../');
+    const vsix = process.env.BQSQL_TEST_VSIX;
+    if (vsix) {
+      const result = await runVSCodeCommand([
+        '--install-extension',
+        path.resolve(vsix),
+        '--user-data-dir',
+        path.join(testProfile, 'user'),
+        '--extensions-dir',
+        path.join(testProfile, 'extensions'),
+      ]);
+      console.log(result.stdout);
+      const installed = (await readdir(path.join(testProfile, 'extensions'))).filter((name) =>
+        name.startsWith('sean-conkie.bigquerysqlformatter-'),
+      );
+      if (installed.length !== 1) {
+        throw new Error(`Expected one installed BigQuery SQL Formatter extension, found ${installed.length}`);
+      }
+      extensionDevelopmentPath = path.join(testProfile, 'extensions', installed[0]);
+    }
 
     // The path to test runner
     // Passed to --extensionTestsPath

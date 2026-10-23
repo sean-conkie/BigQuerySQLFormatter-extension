@@ -94,6 +94,7 @@
     "lint": "biome check",
     "lint:fix": "biome check --write",
     "format": "biome format --write",
+    "package:check": "node scripts/check-package.cjs",
     "postinstall": "npm ci --prefix client && npm ci --prefix server",
     "test": "mocha \"server/out/tests/**/*.test.js\"",
     "coverage": "nyc --reporter=lcov --reporter=text-summary npm test",

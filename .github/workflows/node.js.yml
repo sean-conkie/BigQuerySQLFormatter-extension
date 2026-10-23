@@ -87,12 +87,19 @@ jobs:
         run: npm ci
 
       - name: Package extension
-        run: npx --no-install vsce package --no-yarn
+        run: npx --no-install vsce package --no-yarn --out extension.vsix
+
+      - name: Verify packaged file list
+        run: npm run package:check
 
       - name: E2E tests (Linux)
         if: runner.os == 'Linux'
+        env:
+          BQSQL_TEST_VSIX: ${{ github.workspace }}/extension.vsix
         run: xvfb-run -a npm run citest
 
       - name: E2E tests (macOS and Windows)
         if: runner.os != 'Linux'
+        env:
+          BQSQL_TEST_VSIX: ${{ github.workspace }}/extension.vsix
         run: npm run citest
