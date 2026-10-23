@@ -1,4 +1,4 @@
-import type { ServerSettings } from "../../../settings";
+import type { ServerSettings } from '../../../settings';
 import {
   CodeAction,
   CodeActionKind,
@@ -9,7 +9,6 @@ import {
 } from 'vscode-languageserver/node';
 import { Rule } from '../base';
 
-
 /**
  * The ElseNull rule
  * @class ElseNull
@@ -17,11 +16,12 @@ import { Rule } from '../base';
  * @memberof Linter.Rules
  */
 export class ElseNull extends Rule<string> {
-  readonly name: string = "else_null";
-  readonly code: string = "ST01";
-  readonly message: string = "Omit `else null`.";
-	readonly relatedInformation: string = "Do not specify redundant `else null` in a case when statement. Including `ELSE NULL` at the end of a `CASE WHEN` statement adds unnecessary complexity to the query.";
-  readonly pattern: RegExp = /(?<=\S)\s*else\s+null(?: *?$)?/gmi;
+  readonly name: string = 'else_null';
+  readonly code: string = 'ST01';
+  readonly message: string = 'Omit `else null`.';
+  readonly relatedInformation: string =
+    'Do not specify redundant `else null` in a case when statement. Including `ELSE NULL` at the end of a `CASE WHEN` statement adds unnecessary complexity to the query.';
+  readonly pattern: RegExp = /(?<=\S)\s*else\s+null(?: *?$)?/gim;
   readonly diagnosticTags: DiagnosticTag[] = [DiagnosticTag.Unnecessary];
   readonly ruleGroup: string = 'layout';
   readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
@@ -45,7 +45,6 @@ export class ElseNull extends Rule<string> {
    * @returns An array of diagnostics if the pattern matches, otherwise null.
    */
   evaluate(test: string, documentUri: string | null = null): Diagnostic[] | null {
-
     if (this.enabled === false) {
       return null;
     }
@@ -55,9 +54,8 @@ export class ElseNull extends Rule<string> {
     }
 
     return null;
-
   }
-  
+
   /**
    * Creates a set of code actions to fix diagnostics.
    *
@@ -67,20 +65,14 @@ export class ElseNull extends Rule<string> {
    */
   createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): CodeAction[] {
     const edit = {
-        changes: {
-            [textDocument.uri]: [
-                TextEdit.replace(diagnostic.range, '')
-            ]
-        }
+      changes: {
+        [textDocument.uri]: [TextEdit.replace(diagnostic.range, '')],
+      },
     };
     const actions: CodeAction[] = [];
-    
+
     this.codeActionKind.forEach((kind) => {
-      const fix = CodeAction.create(
-        this.codeActionTitle,
-        edit,
-        kind
-      );
+      const fix = CodeAction.create(this.codeActionTitle, edit, kind);
       fix.diagnostics = [diagnostic];
       actions.push(fix);
     });

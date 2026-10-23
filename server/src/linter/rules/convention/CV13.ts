@@ -1,7 +1,13 @@
-import type { ServerSettings } from "../../../settings";
-import { CodeAction, CodeActionKind, type Diagnostic, DiagnosticSeverity, type TextDocumentIdentifier, TextEdit } from 'vscode-languageserver/node';
+import type { ServerSettings } from '../../../settings';
+import {
+  CodeAction,
+  CodeActionKind,
+  type Diagnostic,
+  DiagnosticSeverity,
+  type TextDocumentIdentifier,
+  TextEdit,
+} from 'vscode-languageserver/node';
 import { Rule } from '../base';
-
 
 /**
  * The SpacesNotTabs rule
@@ -10,11 +16,12 @@ import { Rule } from '../base';
  * @memberof Linter.Rules
  */
 export class SpacesNotTabs extends Rule<string> {
-  readonly name: string = "spaces_not_tabs";
-  readonly code: string = "CV13";
-  readonly message: string = "Use spaces for indentation instead of tabs.";
-	readonly relatedInformation: string = "To ensure consistent formatting and readability across different environments, spaces should be used for indentation.";
-  readonly pattern: RegExp = /\t+/gmi;
+  readonly name: string = 'spaces_not_tabs';
+  readonly code: string = 'CV13';
+  readonly message: string = 'Use spaces for indentation instead of tabs.';
+  readonly relatedInformation: string =
+    'To ensure consistent formatting and readability across different environments, spaces should be used for indentation.';
+  readonly pattern: RegExp = /\t+/gim;
   readonly severity: DiagnosticSeverity = DiagnosticSeverity.Warning;
   readonly ruleGroup: string = 'convention';
   readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
@@ -38,7 +45,6 @@ export class SpacesNotTabs extends Rule<string> {
    * @returns An array of diagnostics if the pattern matches, otherwise null.
    */
   evaluate(test: string, documentUri: string | null = null): Diagnostic[] | null {
-
     if (this.enabled === false) {
       return null;
     }
@@ -48,9 +54,8 @@ export class SpacesNotTabs extends Rule<string> {
     }
 
     return null;
-
   }
-  
+
   /**
    * Creates a set of code actions to fix diagnostics.
    *
@@ -61,20 +66,14 @@ export class SpacesNotTabs extends Rule<string> {
   createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): CodeAction[] {
     const count = diagnostic.range.end.character - diagnostic.range.start.character;
     const edit = {
-        changes: {
-            [textDocument.uri]: [
-                TextEdit.replace(diagnostic.range, ' '.repeat(count * 2))
-            ]
-        }
+      changes: {
+        [textDocument.uri]: [TextEdit.replace(diagnostic.range, ' '.repeat(count * 2))],
+      },
     };
     const actions: CodeAction[] = [];
-    
+
     this.codeActionKind.forEach((kind) => {
-      const fix = CodeAction.create(
-        this.codeActionTitle,
-        edit,
-        kind
-      );
+      const fix = CodeAction.create(this.codeActionTitle, edit, kind);
       fix.diagnostics = [diagnostic];
       actions.push(fix);
     });

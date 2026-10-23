@@ -1,4 +1,3 @@
-
 import type { Rule } from '../base';
 import type { ServerSettings } from '../../../settings';
 import { Table } from './AL01';
@@ -20,13 +19,12 @@ export const classes = [Table, ColumnAlias, UniqueTable, UnusedAlias, TableAlias
  * @returns An array of aliasing rules.
  */
 export function aliasRules(settings: ServerSettings, problems: number): Rule<string | FileMap>[] {
+  const length: number = classes.length;
+  const rules: Rule<string | FileMap>[] = [];
 
-	const length: number = classes.length;
-	const rules: Rule<string | FileMap>[] = [];
+  for (let i = 0; i < length; i++) {
+    rules.push(new classes[i](settings, problems));
+  }
 
-	for (let i = 0; i < length; i++) {
-		rules.push(new classes[i](settings, problems));
-	}
-
-	return rules;
+  return rules;
 }

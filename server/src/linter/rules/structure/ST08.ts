@@ -1,9 +1,6 @@
-import type { ServerSettings } from "../../../settings";
-import type {
-  Diagnostic,
-} from 'vscode-languageserver/node';
+import type { ServerSettings } from '../../../settings';
+import type { Diagnostic } from 'vscode-languageserver/node';
 import { Rule } from '../base';
-
 
 /**
  * The Distinct rule
@@ -13,11 +10,11 @@ import { Rule } from '../base';
  */
 export class Distinct extends Rule<string> {
   readonly is_fix_compatible: boolean = false;
-  readonly name: string = "distinct";
-  readonly code: string = "ST08";
-  readonly message: string = "DISTINCT used with parentheses.";
-	readonly relatedInformation: string = "Remove parentheses to be clear that the DISTINCT applies to all columns.";
-  readonly pattern: RegExp = /select\s+(distinct\s*\((?:\w+\.)?\w+\))/gmi;
+  readonly name: string = 'distinct';
+  readonly code: string = 'ST08';
+  readonly message: string = 'DISTINCT used with parentheses.';
+  readonly relatedInformation: string = 'Remove parentheses to be clear that the DISTINCT applies to all columns.';
+  readonly pattern: RegExp = /select\s+(distinct\s*\((?:\w+\.)?\w+\))/gim;
   readonly ruleGroup: string = 'layout';
 
   /**
@@ -38,7 +35,6 @@ export class Distinct extends Rule<string> {
    * @returns An array of diagnostics if the pattern matches, otherwise null.
    */
   evaluate(test: string, documentUri: string | null = null): Diagnostic[] | null {
-
     if (this.enabled === false) {
       return null;
     }
@@ -48,6 +44,5 @@ export class Distinct extends Rule<string> {
     }
 
     return null;
-
   }
 }

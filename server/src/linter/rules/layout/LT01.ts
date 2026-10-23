@@ -6,18 +6,16 @@
  * @requires Rule
  */
 
-
-import type { ServerSettings } from "../../../settings";
+import type { ServerSettings } from '../../../settings';
 import {
   CodeAction,
   CodeActionKind,
   type Diagnostic,
   DiagnosticSeverity,
   type TextDocumentIdentifier,
-  TextEdit
+  TextEdit,
 } from 'vscode-languageserver/node';
 import { Rule } from '../base';
-
 
 /**
  * The TrailingSpaces rule
@@ -26,9 +24,9 @@ import { Rule } from '../base';
  * @memberof Linter.Rules
  */
 export class TrailingSpaces extends Rule<string> {
-  readonly name: string = "trailing_sapces";
-  readonly code: string = "LT01";
-  readonly message: string = "Trailing whitespace.";
+  readonly name: string = 'trailing_sapces';
+  readonly code: string = 'LT01';
+  readonly message: string = 'Trailing whitespace.';
   readonly pattern: RegExp = /(?<=\S)( +)(?:,|$|\))|^ +$/gm;
   readonly severity: DiagnosticSeverity = DiagnosticSeverity.Warning;
   readonly ruleGroup: string = 'layout';
@@ -53,7 +51,6 @@ export class TrailingSpaces extends Rule<string> {
    * @returns An array of diagnostics if the pattern matches, otherwise null.
    */
   evaluate(test: string, documentUri: string | null = null): Diagnostic[] | null {
-
     if (this.enabled === false) {
       return null;
     }
@@ -63,9 +60,8 @@ export class TrailingSpaces extends Rule<string> {
     }
 
     return null;
-
   }
-  
+
   /**
    * Creates a set of code actions to fix diagnostics.
    *
@@ -75,20 +71,14 @@ export class TrailingSpaces extends Rule<string> {
    */
   createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): CodeAction[] {
     const edit = {
-        changes: {
-            [textDocument.uri]: [
-                TextEdit.replace(diagnostic.range, '')
-            ]
-        }
+      changes: {
+        [textDocument.uri]: [TextEdit.replace(diagnostic.range, '')],
+      },
     };
     const actions: CodeAction[] = [];
-    
+
     this.codeActionKind.forEach((kind) => {
-      const fix = CodeAction.create(
-        this.codeActionTitle,
-        edit,
-        kind
-      );
+      const fix = CodeAction.create(this.codeActionTitle, edit, kind);
       fix.diagnostics = [diagnostic];
       actions.push(fix);
     });

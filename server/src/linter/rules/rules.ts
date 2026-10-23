@@ -8,7 +8,6 @@ import { structureRules } from './structure/rules';
 import type { Rule } from './base';
 import type { FileMap } from '../parser';
 
-
 /**
  * Initialise the rules
  * @param {ServerSettings} settings The server settings
@@ -18,12 +17,12 @@ import type { FileMap } from '../parser';
  * @name initialiseRuls
  */
 export function initialiseRules(settings: ServerSettings, problems: number): Rule<string | FileMap>[] {
-	return [
-		...aliasRules(settings, problems),
-		...ambiguousRules(settings, problems),
-		...capitalisationRules(settings, problems),
-		...conventionRules(settings, problems),
-		...layoutRules(settings, problems),
-		...structureRules(settings, problems)
-	];
+  return [
+    ...aliasRules(settings, problems),
+    ...ambiguousRules(settings, problems),
+    ...capitalisationRules(settings, problems),
+    ...conventionRules(settings, problems),
+    ...layoutRules(settings, problems),
+    ...structureRules(settings, problems),
+  ];
 }

@@ -18,24 +18,15 @@ import { AllDistinct } from './CV12';
 import { SpacesNotTabs } from './CV13';
 import type { FileMap } from '../../parser';
 
-export const classes = [NotEqual,
-												Coalesce,
-												SelectTrailingComma,
-												Count,
-												IsNull,
-												LeftJoin,
-												AllDistinct,
-												SpacesNotTabs
-											];
+export const classes = [NotEqual, Coalesce, SelectTrailingComma, Count, IsNull, LeftJoin, AllDistinct, SpacesNotTabs];
 
 export function conventionRules(settings: ServerSettings, problems: number): Rule<string | FileMap>[] {
+  const length: number = classes.length;
+  const rules: Rule<string | FileMap>[] = [];
 
-	const length: number = classes.length;
-	const rules: Rule<string | FileMap>[] = [];
+  for (let i = 0; i < length; i++) {
+    rules.push(new classes[i](settings, problems));
+  }
 
-	for (let i = 0; i < length; i++) {
-		rules.push(new classes[i](settings, problems));
-	}
-
-	return rules;
+  return rules;
 }

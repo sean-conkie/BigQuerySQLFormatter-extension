@@ -7,10 +7,10 @@ import { StatementType, JoinType, type LogicalOperator, type ComparisonOperator 
 
 /**
  * Abstract Syntax Tree (AST) base class.
- * 
+ *
  * This class serves as a base for all AST nodes in the BigQuery SQL Formatter.
  * It contains common properties that are shared across different types of AST nodes.
- * 
+ *
  * @abstract
  * @property {Token[]} tokens - An array of tokens associated with this AST node.
  * @property {string | null} alias - An optional alias for the AST node.
@@ -33,35 +33,35 @@ abstract class AST {
       'punctuation.whitespace.trailing.sql',
       'punctuation.whitespace.sql',
       'punctuation.separator.comma.sql',
-      'comment.line.double-dash.sql'
+      'comment.line.double-dash.sql',
     ]);
 
     if (filteredTokens.length > 0) {
-      this.alias = findToken(tokens, "entity.name.tag")?.value ?? null;
+      this.alias = findToken(tokens, 'entity.name.tag')?.value ?? null;
       this.startLine = filteredTokens[0].lineNumber;
       this.startIndex = filteredTokens[0].startIndex;
       this.endIndex = this.tokens[this.tokens.length - 1].endIndex;
       this.endLine = this.tokens[this.tokens.length - 1].lineNumber;
-    }    
+    }
   }
 }
 
 /**
  * Represents an abstract syntax tree (AST) node with an associated value.
- * 
+ *
  * @template T - The type of the value associated with this AST node.
- * 
+ *
  * @extends AST
- * 
+ *
  * @property {T | null} value - The value associated with this AST node, initialized to null.
- * 
+ *
  * @remarks
  * This class extends the base AST class and adds a value property. It also provides a constructor
  * that initializes various properties based on the provided tokens.
- * 
+ *
  * @constructor
  * @param {Token[]} tokens - An array of Token objects that represent the tokens to be parsed.
- * 
+ *
  * @example
  * ```typescript
  * const tokens: Token[] = [...];
@@ -78,7 +78,7 @@ abstract class ASTWithValue<T> extends AST {
 /**
  * Extract the statement type and object from the tokens, return an
  * object representing a column.
- * @param matchedRule 
+ * @param matchedRule
  * @returns Column
  */
 function createColumn(matchedRule: MatchedRule): Column {
@@ -96,8 +96,6 @@ function createColumn(matchedRule: MatchedRule): Column {
   return new ColumnAST(matchedRule);
 }
 
-
-
 /**
  * Extract the type of the statement from the tokenized source code
  * @param {LineToken[]} tokenizedLines The tokenized source code
@@ -109,10 +107,10 @@ function extractStatementType(tokens: Token[]): [StatementType | undefined, Obje
   let type: StatementType = StatementType.SELECT;
   let objectAST = null;
 
-  for (const searchString of ["meta.dml.sql", "meta.ddl.sql"]) {
+  for (const searchString of ['meta.dml.sql', 'meta.ddl.sql']) {
     const targetTokens: Token[] = tokens.filter((token) => token.scopes.some((scope) => scope.includes(searchString)));
     if (targetTokens.length > 0) {
-      const typeToken = findToken(targetTokens, "keyword.dml.sql");
+      const typeToken = findToken(targetTokens, 'keyword.dml.sql');
       type = StatementType[typeToken?.value?.split(' ')[0].toUpperCase() as keyof typeof StatementType];
       objectAST = new ObjectAST(targetTokens);
       break;
@@ -125,7 +123,7 @@ function extractStatementType(tokens: Token[]): [StatementType | undefined, Obje
 // region columns
 /**
  * Represents a column in the SQL statement.
- * 
+ *
  * A column can be one of the following types:
  * - `ColumnAST`: Abstract Syntax Tree representation of a column.
  * - `ColumnFunctionAST`: Abstract Syntax Tree representation of a column function.
@@ -135,7 +133,14 @@ function extractStatementType(tokens: Token[]): [StatementType | undefined, Obje
  * - `KeywordAST`: Abstract Syntax Tree representation of a keyword.
  * - `CaseStatementAST`: Abstract Syntax Tree representation of a case statement.
  */
-export type Column = ColumnAST | ColumnFunctionAST | StatementAST | StringAST | NumberAST | KeywordAST | CaseStatementAST;
+export type Column =
+  | ColumnAST
+  | ColumnFunctionAST
+  | StatementAST
+  | StringAST
+  | NumberAST
+  | KeywordAST
+  | CaseStatementAST;
 
 /**
  * Represents a parameter that can be either a Column or a KeywordAST.
@@ -143,18 +148,17 @@ export type Column = ColumnAST | ColumnFunctionAST | StatementAST | StringAST | 
  */
 export type FunctionParameter = Column | KeywordAST;
 
-
 /**
  * Represents a column in the Abstract Syntax Tree (AST).
- * 
+ *
  * This class is used to parse and store information about a column, including its source, name, alias, and token positions.
- * 
+ *
  * @implements {AST}
  */
 export class ColumnAST extends AST {
   source: string | null = null;
   column: string | null = null;
-  
+
   constructor(matchedRule: MatchedRule) {
     super(matchedRule.tokens);
 
@@ -162,15 +166,15 @@ export class ColumnAST extends AST {
       this.tokens.push(...matchedRule.matches[0].tokens);
     }
 
-    this.source = findToken(matchedRule.tokens, "entity.name.alias.sql")?.value ?? null;
-    this.column = findToken(matchedRule.tokens, "entity.other.column.sql")?.value ?? null;
+    this.source = findToken(matchedRule.tokens, 'entity.name.alias.sql')?.value ?? null;
+    this.column = findToken(matchedRule.tokens, 'entity.other.column.sql')?.value ?? null;
   }
 
   /**
    * Checks if the alias is redundant.
-   * 
+   *
    * An alias is considered redundant if it is not null and is the same as the column name.
-   * 
+   *
    * @returns {boolean} - Returns `true` if the alias is redundant, otherwise `false`.
    */
   redundantAlias(): boolean {
@@ -184,19 +188,17 @@ export class ColumnAST extends AST {
 
     return this.column === this.alias;
   }
-
 }
 
 /**
  * Represents a column function in the Abstract Syntax Tree (AST).
  */
 export class StringAST extends ASTWithValue<string> {
-
   /**
    * Constructs a new instance of the Column class.
-   * 
+   *
    * @param tokens - An array of Token objects representing the tokens to be parsed.
-   * 
+   *
    * @property tokens - Stores the provided tokens.
    * @property value - A string value derived from concatenating the token values.
    * @property alias - The alias of the column, if any, extracted from the tokens.
@@ -206,9 +208,9 @@ export class StringAST extends ASTWithValue<string> {
    */
   constructor(tokens: Token[]) {
     super(tokens);
-		if (tokens.length > 0) {
+    if (tokens.length > 0) {
       this.value = joinTokenValues(tokens);
-		}
+    }
   }
 }
 
@@ -216,12 +218,11 @@ export class StringAST extends ASTWithValue<string> {
  * Represents a number in the Abstract Syntax Tree (AST).
  */
 export class NumberAST extends ASTWithValue<number> {
-
   /**
    * Constructs a new instance of the Column class.
-   * 
+   *
    * @param tokens - An array of Token objects representing the tokens to be parsed.
-   * 
+   *
    * @property tokens - Stores the provided tokens.
    * @property value - A numeric value derived from concatenating the token values.
    * @property alias - The alias of the column, if any, extracted from the tokens.
@@ -239,12 +240,11 @@ export class NumberAST extends ASTWithValue<number> {
  * Represents a keyword in the Abstract Syntax Tree (AST).
  */
 export class KeywordAST extends ASTWithValue<string> {
-
   /**
    * Constructs a new instance of the Column class.
-   * 
-   * @param tokens 
-   * 
+   *
+   * @param tokens
+   *
    * @property tokens - Stores the provided tokens.
    * @property value - A string value derived from concatenating the token values.
    * @property alias - The alias of the column, if any, extracted from the tokens.
@@ -275,12 +275,10 @@ export class OrderAST extends AST {
     this.tokens.push(...column.tokens);
 
     if (directionMatch) {
-      this.direction = findToken(directionMatch.tokens, "keyword.order.direction.sql")?.value ?? null;
+      this.direction = findToken(directionMatch.tokens, 'keyword.order.direction.sql')?.value ?? null;
       this.tokens.push(...directionMatch.tokens);
     }
-
   }
-
 }
 
 /**
@@ -289,17 +287,17 @@ export class OrderAST extends AST {
 export class WindowAST extends AST {
   partition: Column[] = [];
   order: OrderAST[] = [];
-  
+
   /**
    * Constructs an instance of the class.
-   * 
+   *
    * @param match - The matched rule object containing parsing information.
-   * 
+   *
    * The constructor processes the matched rule to extract and initialize
    * partition and order columns. It identifies the indices for "partition"
    * and "order" keywords within the matches, slices the matches accordingly,
    * and maps them to create column and order objects.
-   * 
+   *
    * - `partition`: An array of columns derived from the matches between
    *   the "partition" and "order" keywords.
    * - `order`: An array of order objects derived from the matches after
@@ -308,17 +306,22 @@ export class WindowAST extends AST {
   constructor(match: MatchedRule) {
     super();
     const emptyMatch = new MatchedRule(null, []);
-    const partitionByIndex = match.matches?.indexOf(match.matches?.find((match) => match.rule?.name === "keyword.partition") ?? emptyMatch) ?? 0;
-    const orderByIndex = match.matches?.indexOf(match.matches?.find((match) => match.rule?.name === "keyword.order") ?? emptyMatch) ?? match.matches?.length;
+    const partitionByIndex =
+      match.matches?.indexOf(match.matches?.find((match) => match.rule?.name === 'keyword.partition') ?? emptyMatch) ??
+      0;
+    const orderByIndex =
+      match.matches?.indexOf(match.matches?.find((match) => match.rule?.name === 'keyword.order') ?? emptyMatch) ??
+      match.matches?.length;
 
     const partitionMatches = match.matches?.slice(partitionByIndex + 1, orderByIndex);
     const orderMatches = match.matches?.slice((orderByIndex ?? 0) + 1);
 
-    this.partition = partitionMatches?.map((match) => createColumn(match) ?? null).filter((column) => column != null) as Column[];
+    this.partition = partitionMatches
+      ?.map((match) => createColumn(match) ?? null)
+      .filter((column) => column != null) as Column[];
     this.order = orderMatches?.map((match) => new OrderAST(match)) ?? [];
   }
 }
-
 
 /**
  * Represents a statement in the Abstract Syntax Tree (AST).
@@ -327,12 +330,12 @@ export class ColumnFunctionAST extends AST {
   function: string | null = null;
   parameters: FunctionParameter[] = [];
   over: WindowAST | null = null;
-  
+
   /**
    * Constructs an instance of the class with the provided matched rule.
-   * 
+   *
    * @param matchedRule - The matched rule containing tokens and matches to be processed.
-   * 
+   *
    * The constructor performs the following operations:
    * - Extracts the function name from the matched rule tokens.
    * - Pushes all tokens from the matched rule to the instance's tokens array.
@@ -345,7 +348,7 @@ export class ColumnFunctionAST extends AST {
    */
   constructor(matchedRule: MatchedRule) {
     super(matchedRule.tokens);
-    this.function = matchedRule.tokens.filter((token) => token.scopes.includes("meta.function.sql"))[0].value;
+    this.function = matchedRule.tokens.filter((token) => token.scopes.includes('meta.function.sql'))[0].value;
 
     // Special rules have been created for columns being cast as a type - these need split into column
     // and keyword and inserted into the matches array.
@@ -353,34 +356,47 @@ export class ColumnFunctionAST extends AST {
 
     specialMatches.forEach((match) => {
       const indexOfMatch = matchedRule.matches?.indexOf(match) ?? 0;
-      const slicePoint = match.tokens.findIndex((token) => token.scopes.includes("keyword.as.sql"));
+      const slicePoint = match.tokens.findIndex((token) => token.scopes.includes('keyword.as.sql'));
 
       const keywordTokens = match.tokens.slice(slicePoint);
       const columnTokens = match.tokens.slice(0, slicePoint);
-      matchedRule.matches?.splice(indexOfMatch, 1, new MatchedRule(
-        {
-          type: "column",
-          name: "special.column",
-          scopes: [],
-          lookahead: 0,
-          negativeLookahead: null,
-          recursive: false,
-          children: null,
-          end: null,
-          alias: false
-        },columnTokens));
+      matchedRule.matches?.splice(
+        indexOfMatch,
+        1,
+        new MatchedRule(
+          {
+            type: 'column',
+            name: 'special.column',
+            scopes: [],
+            lookahead: 0,
+            negativeLookahead: null,
+            recursive: false,
+            children: null,
+            end: null,
+            alias: false,
+          },
+          columnTokens,
+        ),
+      );
 
-      matchedRule.matches?.splice(indexOfMatch + 1, 0, new MatchedRule({
-        type: "keyword",
-        name: "special.keyword",
-        scopes: [],
-        lookahead: 0,
-        negativeLookahead: null,
-        recursive: false,
-        children: null,
-        end: null,
-        alias: false
-      }, keywordTokens));
+      matchedRule.matches?.splice(
+        indexOfMatch + 1,
+        0,
+        new MatchedRule(
+          {
+            type: 'keyword',
+            name: 'special.keyword',
+            scopes: [],
+            lookahead: 0,
+            negativeLookahead: null,
+            recursive: false,
+            children: null,
+            end: null,
+            alias: false,
+          },
+          keywordTokens,
+        ),
+      );
     });
     // window functions may contain an alias - pop it to the
     // function level matches
@@ -391,7 +407,6 @@ export class ColumnFunctionAST extends AST {
         matchedRule.matches?.push(alias);
       }
     }
-
 
     for (const match of matchedRule.matches ?? []) {
       let parameter: FunctionParameter | null = null;
@@ -408,7 +423,7 @@ export class ColumnFunctionAST extends AST {
       } else if (match.rule?.type === 'over') {
         this.over = new WindowAST(match);
       } else if (match.rule?.type === 'alias') {
-        this.alias = findToken(match.tokens, "entity.name.tag")?.value ?? null;
+        this.alias = findToken(match.tokens, 'entity.name.tag')?.value ?? null;
         this.tokens.push(...match.tokens);
       }
       if (parameter) {
@@ -418,7 +433,6 @@ export class ColumnFunctionAST extends AST {
     }
   }
 }
-
 
 /**
  * Represents a statement in the Abstract Syntax Tree (AST).
@@ -435,13 +449,12 @@ export class CaseStatementWhenAST extends AST {
    * @param then - The matched rule representing the consequence.
    */
   constructor(when: MatchedRule, then: MatchedRule) {
-
     const tokens = [];
-    
+
     if (when.tokens != null && when.tokens.length > 0) {
       tokens.push(...when.tokens);
     }
-    
+
     if (then.tokens != null && then.tokens.length > 0) {
       tokens.push(...then.tokens);
     }
@@ -460,12 +473,12 @@ export class CaseStatementWhenAST extends AST {
 export class CaseStatementAST extends AST {
   when: CaseStatementWhenAST[] = [];
   else: Column | null = null;
-  
+
   /**
    * Constructs an instance of the class with the provided matched rule.
-   * 
+   *
    * @param matchedRule - The matched rule containing tokens and matches to be processed.
-   * 
+   *
    * The constructor performs the following operations:
    * - Extracts the when and then matches from the matched rule.
    * - Iterates over the when matches to create CaseStatementWhenAST objects.
@@ -475,10 +488,10 @@ export class CaseStatementAST extends AST {
   constructor(matchedRule: MatchedRule) {
     super(matchedRule.allTokens);
 
-    const whenMatches = matchedRule.matches?.filter((match) => match.rule?.type === "when") ?? [];
-    const thenMatches = matchedRule.matches?.filter((match) => match.rule?.type === "then") ?? [];
-    const elseMatch = matchedRule.matches?.find((match) => match.rule?.type === "else") ?? null;
-    const aliasMatch = matchedRule.matches?.find((match) => match.rule?.type === "alias") ?? null;
+    const whenMatches = matchedRule.matches?.filter((match) => match.rule?.type === 'when') ?? [];
+    const thenMatches = matchedRule.matches?.filter((match) => match.rule?.type === 'then') ?? [];
+    const elseMatch = matchedRule.matches?.find((match) => match.rule?.type === 'else') ?? null;
+    const aliasMatch = matchedRule.matches?.find((match) => match.rule?.type === 'alias') ?? null;
 
     for (let i = 0; i < whenMatches.length; i++) {
       this.when.push(new CaseStatementWhenAST(whenMatches[i], thenMatches[i]));
@@ -489,9 +502,8 @@ export class CaseStatementAST extends AST {
     }
 
     if (aliasMatch) {
-      this.alias = findToken(aliasMatch.tokens, "entity.name.tag")?.value ?? null;
+      this.alias = findToken(aliasMatch.tokens, 'entity.name.tag')?.value ?? null;
     }
-
   }
 }
 // endregion columns
@@ -505,14 +517,14 @@ export class ComparisonAST extends AST {
   left: Column | ArrayAST | null = null;
   operator: ComparisonOperator | null = null;
   right: Column | ArrayAST | null = null;
-  
+
   /**
-   * 
+   *
    * Constructs a new instance of the class.
-   * 
-   * @param comparison 
-   * @param tokens 
-   * 
+   *
+   * @param comparison
+   * @param tokens
+   *
    * This constructor initializes the following properties:
    * - `tokens`: Stores the provided tokens.
    * - `left`: The left side of the comparison.
@@ -532,7 +544,6 @@ export class ComparisonAST extends AST {
   }
 }
 
-
 /**
  * Represents a comparison group in the Abstract Syntax Tree (AST).
  */
@@ -540,14 +551,13 @@ export class ComparisonGroupAST extends AST {
   logicalOperator: LogicalOperator | null = null;
   comparisons: (ComparisonGroupAST | ComparisonAST)[] = [];
 
-
   /**
-   * 
+   *
    * Constructs a new instance of the class.
-   * 
-   * @param matches 
+   *
+   * @param matches
    * @param logicalOperator
-   * 
+   *
    * This constructor initializes the following properties:
    * - `logicalOperator`: The logical operator that connects this group to the next.
    * - `comparisons`: An array of comparisons or comparison groups.
@@ -562,10 +572,10 @@ export class ComparisonGroupAST extends AST {
       return;
     }
 
-    const pop = (array: MatchedRule[], scope: string): [MatchedRule[], (LogicalOperator | ComparisonOperator)] => {
+    const pop = (array: MatchedRule[], scope: string): [MatchedRule[], LogicalOperator | ComparisonOperator] => {
       const match: MatchedRule | undefined = array.find((match) => match.rule?.type === scope);
       const result = match?.tokens
-        .map((token) => token.scopes.includes(`meta.${scope}.sql`) ? token.value : '')
+        .map((token) => (token.scopes.includes(`meta.${scope}.sql`) ? token.value : ''))
         .join('') as LogicalOperator;
 
       if (match !== undefined) {
@@ -586,13 +596,13 @@ export class ComparisonGroupAST extends AST {
     for (let i = 0; i < matches.length; i++) {
       const match = matches[i];
       // check for comparison group or logical operator
-      if (match.rule?.type === "group") {
+      if (match.rule?.type === 'group') {
         comparisonsParts.push([lastIndex, i + 1]);
         lastIndex = i + 1;
         continue;
       }
 
-      if (match.rule?.type === "operator" && i > 0) {
+      if (match.rule?.type === 'operator' && i > 0) {
         comparisonsParts.push([lastIndex, i]);
         lastIndex = i;
       }
@@ -605,13 +615,15 @@ export class ComparisonGroupAST extends AST {
     for (const part of comparisonsParts) {
       let partMatches = matches.slice(part[0], part[1]);
       const tokens = partMatches.flatMap((match) => match.tokens);
-      let result: (LogicalOperator | ComparisonOperator | null);
+      let result: LogicalOperator | ComparisonOperator | null;
       let operator: LogicalOperator | null = null;
       let comparison: ComparisonOperator | null = null;
       // is there a comparison group?
-      if (partMatches.length === 1 && partMatches[0].rule?.type === "group") {
-        if (!(partMatches[0].rule?.name === "comparison.group")) {
-          operator = partMatches[0].tokens.map((token) => token.scopes.includes("meta.operator.sql") ? token.value : '').join('') as LogicalOperator;
+      if (partMatches.length === 1 && partMatches[0].rule?.type === 'group') {
+        if (!(partMatches[0].rule?.name === 'comparison.group')) {
+          operator = partMatches[0].tokens
+            .map((token) => (token.scopes.includes('meta.operator.sql') ? token.value : ''))
+            .join('') as LogicalOperator;
         }
         this.tokens.push(...partMatches[0].tokens);
         const group = new ComparisonGroupAST(partMatches[0].matches ?? [], operator);
@@ -621,7 +633,7 @@ export class ComparisonGroupAST extends AST {
       }
 
       if (partMatches.length > 1) {
-        [partMatches, result] = pop(partMatches, "operator");
+        [partMatches, result] = pop(partMatches, 'operator');
 
         if (result != null) {
           operator = result as LogicalOperator;
@@ -629,14 +641,14 @@ export class ComparisonGroupAST extends AST {
       }
 
       if (partMatches.length === 3) {
-        [partMatches, result] = pop(partMatches, "comparison");
+        [partMatches, result] = pop(partMatches, 'comparison');
 
         if (result != null) {
           comparison = result as ComparisonOperator;
         }
       }
 
-      const comparisonObj: Comparison = { "logicalOperator": operator, "operator": comparison } as Comparison;
+      const comparisonObj: Comparison = { logicalOperator: operator, operator: comparison } as Comparison;
 
       for (const match of partMatches ?? []) {
         let parameter: Column | ArrayAST | null = null;
@@ -673,7 +685,7 @@ export class ComparisonGroupAST extends AST {
       'punctuation.whitespace.trailing.sql',
       'punctuation.whitespace.sql',
       'punctuation.separator.comma.sql',
-      'comment.line.double-dash.sql'
+      'comment.line.double-dash.sql',
     ]);
     if (filteredTokens.length > 0) {
       this.startLine = filteredTokens[0].lineNumber;
@@ -684,24 +696,22 @@ export class ComparisonGroupAST extends AST {
   }
 }
 
-
-
 /**
  * Represents a comparison operation in the AST (Abstract Syntax Tree).
- * 
+ *
  * @typedef {Object} Comparison
- * 
+ *
  * @property {Column | ArrayAST | null} left - The left-hand side of the comparison, which can be a column, an array, or null.
  * @property {ComparisonOperator | null} operator - The operator used in the comparison, which can be a comparison operator or null.
  * @property {Column | ArrayAST | null} right - The right-hand side of the comparison, which can be a column, an array, or null.
  * @property {LogicalOperator | null} logicalOperator - The logical operator used to combine this comparison with others, which can be a logical operator or null.
  */
 type Comparison = {
-  left: Column | ArrayAST | null,
-  operator: ComparisonOperator | null,
-  right: Column | ArrayAST | null,
-  logicalOperator: LogicalOperator | null
-}
+  left: Column | ArrayAST | null;
+  operator: ComparisonOperator | null;
+  right: Column | ArrayAST | null;
+  logicalOperator: LogicalOperator | null;
+};
 // endregion comparison
 
 // region objects
@@ -711,13 +721,12 @@ type Comparison = {
  */
 export class ArrayAST extends AST {
   values: (StringAST | NumberAST)[] = [];
-  
 
   /**
    * Constructs a new instance of the ArrayAST class.
-   * 
+   *
    * @param matchedRules - An array of matched rules containing the tokens to be parsed.
-   * 
+   *
    * This constructor initializes the following properties:
    * - `lineNumber`: The line number of the first non-whitespace token.
    * - `startIndex`: The start index of the first token.
@@ -729,7 +738,8 @@ export class ArrayAST extends AST {
     super();
     this.startLine = matchedRules[0].tokens[0].lineNumber;
     this.startIndex = matchedRules[0].tokens[0].startIndex;
-    this.endIndex = matchedRules[matchedRules.length - 1].tokens[matchedRules[matchedRules.length - 1].tokens.length - 1].endIndex;
+    this.endIndex =
+      matchedRules[matchedRules.length - 1].tokens[matchedRules[matchedRules.length - 1].tokens.length - 1].endIndex;
     this.tokens = matchedRules.flatMap((match) => match.tokens);
 
     for (const match of matchedRules) {
@@ -749,12 +759,12 @@ export class JoinAST extends AST {
   join: JoinType | null = JoinType.INNER;
   source: ObjectAST | StatementAST | null = null;
   on: ComparisonGroupAST | null = null;
-  
+
   /**
    * Constructs a new instance of the class.
-   * 
+   *
    * @param matchedRule - The matched rule containing the tokens to be parsed.
-   * 
+   *
    * This constructor initializes the following properties:
    * - `join`: The type of join, which can be an inner, left, right, or full join.
    * - `source`: The source object of the join, which can be an ObjectAST or StatementAST.
@@ -767,7 +777,7 @@ export class JoinAST extends AST {
   constructor(matchedRule: MatchedRule) {
     super(matchedRule.tokens);
 
-    this.join = findToken(matchedRule.tokens, "keyword.join.sql")?.value as JoinType;
+    this.join = findToken(matchedRule.tokens, 'keyword.join.sql')?.value as JoinType;
     this.source = new ObjectAST(matchedRule.tokens);
 
     this.on = new ComparisonGroupAST(matchedRule.matches ?? []);
@@ -785,13 +795,13 @@ export class ObjectAST extends AST {
   project: string | null = null;
   dataset: string | null = null;
   object: string | null = null;
-  
+
   /**
-   * 
+   *
    * Constructs a new instance of the class.
-   * 
-   * @param tokens 
-   * 
+   *
+   * @param tokens
+   *
    * This constructor initializes the following properties:
    * - `project`: The project name extracted from the tokens.
    * - `dataset`: The dataset name extracted from the tokens.
@@ -801,14 +811,14 @@ export class ObjectAST extends AST {
    * - `startIndex`: The start index of the first token.
    * - `endIndex`: The end index of the last token.
    * - `tokens`: An array of tokens representing the object.
-   * 
+   *
    */
   constructor(tokens: LineToken[] | Token[]) {
     super(tokens);
-    const project = findToken(tokens, "entity.name.project.sql");
-    const dataset = findToken(tokens, "entity.name.dataset.sql");
-    const object = findToken(tokens, "entity.name.object.sql");
-    const alias = findToken(tokens, "entity.name.alias.sql");
+    const project = findToken(tokens, 'entity.name.project.sql');
+    const dataset = findToken(tokens, 'entity.name.dataset.sql');
+    const object = findToken(tokens, 'entity.name.object.sql');
+    const alias = findToken(tokens, 'entity.name.alias.sql');
 
     this.project = project?.value ?? null;
     this.dataset = dataset?.value ?? null;
@@ -841,7 +851,7 @@ export class StatementAST extends AST {
    * Processes a matched rule and updates the internal state based on the rule type.
    *
    * @param matchedRule - The matched rule object containing the rule and tokens to process.
-   * 
+   *
    * The function performs the following actions based on the rule type:
    * - 'dml': Extracts the statement type and object AST from the tokens and updates the type and object properties.
    * - 'select': Checks if the tokens contain a "keyword.select.distinct.sql" scope and sets the distinct property to true if found.
@@ -861,7 +871,7 @@ export class StatementAST extends AST {
         }
         this.object = objectAST;
       } else if (rule.type === 'select') {
-        if (tokens.find((token) => token.scopes.includes("keyword.select.distinct.sql"))) {
+        if (tokens.find((token) => token.scopes.includes('keyword.select.distinct.sql'))) {
           this.distinct = true;
         }
       } else if (rule.type === 'from') {
@@ -871,14 +881,13 @@ export class StatementAST extends AST {
       } else if (rule.type === 'where') {
         this.where = new ComparisonGroupAST(matchedRule.matches ?? [], null, matchedRule.tokens);
       } else if (rule.type === 'groupby') {
-        matchedRule.matches?.map(match => this.groupby.push(createColumn(match)));
+        matchedRule.matches?.map((match) => this.groupby.push(createColumn(match)));
       } else if (rule.type === 'orderby') {
-        matchedRule.matches?.map(match => this.orderby.push(createColumn(match)));
+        matchedRule.matches?.map((match) => this.orderby.push(createColumn(match)));
       } else {
         this.columns.push(createColumn(matchedRule));
       }
     }
   }
-
 }
 // endregion statement

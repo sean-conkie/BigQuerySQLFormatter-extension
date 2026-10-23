@@ -1,10 +1,6 @@
-import type { ServerSettings } from "../../../settings";
-import {
-  type Diagnostic,
-  DiagnosticSeverity,
-} from 'vscode-languageserver/node';
+import type { ServerSettings } from '../../../settings';
+import { type Diagnostic, DiagnosticSeverity } from 'vscode-languageserver/node';
 import { Rule } from '../base';
-
 
 /**
  * The Using rule
@@ -14,11 +10,11 @@ import { Rule } from '../base';
  */
 export class Using extends Rule<string> {
   readonly is_fix_compatible: boolean = false;
-  readonly name: string = "using";
-  readonly code: string = "ST07";
-  readonly message: string = "Specify join keys instead of using USING.";
-	readonly relatedInformation: string = "Specify the keys directly.";
-  readonly pattern: RegExp = /join(?:\s+`?(?:[\w_]+\.)?(?:[\w_]+\.[\w_]+)`?(?:\s+(?:as\s+)?[\w_]+)?)\s+(using)/gmi;
+  readonly name: string = 'using';
+  readonly code: string = 'ST07';
+  readonly message: string = 'Specify join keys instead of using USING.';
+  readonly relatedInformation: string = 'Specify the keys directly.';
+  readonly pattern: RegExp = /join(?:\s+`?(?:[\w_]+\.)?(?:[\w_]+\.[\w_]+)`?(?:\s+(?:as\s+)?[\w_]+)?)\s+(using)/gim;
   readonly severity: DiagnosticSeverity = DiagnosticSeverity.Warning;
   readonly ruleGroup: string = 'layout';
 
@@ -40,7 +36,6 @@ export class Using extends Rule<string> {
    * @returns An array of diagnostics if the pattern matches, otherwise null.
    */
   evaluate(test: string, documentUri: string | null = null): Diagnostic[] | null {
-
     if (this.enabled === false) {
       return null;
     }
@@ -50,6 +45,5 @@ export class Using extends Rule<string> {
     }
 
     return null;
-
   }
 }

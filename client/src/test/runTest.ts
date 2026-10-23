@@ -2,32 +2,32 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import * as path from "node:path";
-import { mkdtemp, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import * as path from 'node:path';
+import { mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 
-import { runTests } from "@vscode/test-electron";
+import { runTests } from '@vscode/test-electron';
 
 async function main() {
   // Keep the profile path short enough for macOS IPC sockets and isolate test settings.
-  const testProfile = await mkdtemp(path.join(tmpdir(), "bqsql-"));
+  const testProfile = await mkdtemp(path.join(tmpdir(), 'bqsql-'));
   try {
     // The folder containing the Extension Manifest package.json
     // Passed to `--extensionDevelopmentPath`
-    const extensionDevelopmentPath = path.resolve(__dirname, "../../../");
+    const extensionDevelopmentPath = path.resolve(__dirname, '../../../');
 
     // The path to test runner
     // Passed to --extensionTestsPath
-    const extensionTestsPath = path.resolve(__dirname, "./index");
+    const extensionTestsPath = path.resolve(__dirname, './index');
 
     // Download VS Code, unzip it and run the integration test
     await runTests({
       extensionDevelopmentPath,
       extensionTestsPath,
       launchArgs: [
-        "--disable-extensions",
-        `--user-data-dir=${path.join(testProfile, "user")}`,
-        `--extensions-dir=${path.join(testProfile, "extensions")}`,
+        '--disable-extensions',
+        `--user-data-dir=${path.join(testProfile, 'user')}`,
+        `--extensions-dir=${path.join(testProfile, 'extensions')}`,
       ],
     });
   } finally {
@@ -41,6 +41,6 @@ async function main() {
 }
 
 main().catch((err) => {
-  console.error("Failed to run tests", err);
+  console.error('Failed to run tests', err);
   process.exitCode = 1;
 });

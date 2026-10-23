@@ -9,125 +9,158 @@ import { Parser } from '../../../../linter/parser';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
 describe('IsNull', () => {
-    let instance: IsNull;
+  let instance: IsNull;
 
-    beforeEach(() => {
-        instance = new IsNull(defaultSettings, 0);
+  beforeEach(() => {
+    instance = new IsNull(defaultSettings, 0);
+  });
+
+  it('should return null when rule is disabled', () => {
+    instance.enabled = false;
+    const result = instance.evaluate('test');
+    expect(result).to.be.null;
+  });
+
+  it('should return diagnostic when rule is enabled and pattern matches', () => {
+    instance.enabled = true;
+    const result = instance.evaluate(
+      'select a.col = null from dataset.table a left join dataset.table b on a.col = b.col',
+    );
+    expect(result).to.deep.equal([
+      {
+        code: instance.diagnosticCode,
+        codeDescription: { href: instance.diagnosticCodeDescription },
+        message: instance.message,
+        severity: instance.severity,
+        range: {
+          start: { line: 0, character: 13 },
+          end: { line: 0, character: 14 },
+        },
+        source: instance.source,
+      },
+    ]);
+  });
+
+  it('should return codeaction when rule is enabled and as used', async () => {
+    instance.enabled = true;
+    const parser = new Parser();
+    await parser.parse({
+      text: 'select a.col = null from dataset.table a left join dataset.table b on a.col = b.col',
+      uri: 'test.sql',
+      languageId: 'sql',
+      version: 0,
     });
-
-    it('should return null when rule is disabled', () => {
-        instance.enabled = false;
-        const result = instance.evaluate('test');
-        expect(result).to.be.null;
-    });
-
-    it('should return diagnostic when rule is enabled and pattern matches', () => {
-        instance.enabled = true;
-        const result = instance.evaluate('select a.col = null from dataset.table a left join dataset.table b on a.col = b.col');
-        expect(result).to.deep.equal([{
-            code: instance.diagnosticCode,
-            codeDescription: {href: instance.diagnosticCodeDescription},
-            message: instance.message,
-            severity: instance.severity,
-            range: {
-                start: { line: 0, character: 13 },
-                end: { line: 0, character: 14 }
-            },
-            source: instance.source
-        }]);
-    });
-
-    it('should return codeaction when rule is enabled and as used', async () => {
-        instance.enabled = true;
-        const parser = new Parser();
-        await parser.parse({text:'select a.col = null from dataset.table a left join dataset.table b on a.col = b.col', uri: 'test.sql', languageId: 'sql', version: 0});
-        const diagnostics = instance.evaluate('select a.col = null from dataset.table a left join dataset.table b on a.col = b.col');
-        const actions = instance.createCodeAction({uri: 'test.sql'}, diagnostics![0]);
-        expect(actions).to.deep.equal(instance.codeActionKind.map(kind => {
-            return {
-                title: 'Replace with is', edit:{
-                changes: {
-                        'test.sql': [
-                            {
-                                newText: 'is',
-                                range: {
-                                    start: { line: 0, character: 13 },
-                                    end: { line: 0, character: 14 }
-                                }
-                            }
-                        ]
-                    }
+    const diagnostics = instance.evaluate(
+      'select a.col = null from dataset.table a left join dataset.table b on a.col = b.col',
+    );
+    const actions = instance.createCodeAction({ uri: 'test.sql' }, diagnostics![0]);
+    expect(actions).to.deep.equal(
+      instance.codeActionKind.map((kind) => {
+        return {
+          title: 'Replace with is',
+          edit: {
+            changes: {
+              'test.sql': [
+                {
+                  newText: 'is',
+                  range: {
+                    start: { line: 0, character: 13 },
+                    end: { line: 0, character: 14 },
+                  },
                 },
-                kind: kind,
-                diagnostics: diagnostics
-            };
-        }));
-    });
-
-    it('should return diagnostic when rule is enabled and pattern matches', () => {
-        instance.enabled = true;
-        const result = instance.evaluate('select a.col != null from dataset.table a left join dataset.table b on a.col = b.col');
-        expect(result).to.deep.equal([{
-            code: instance.diagnosticCode,
-            codeDescription: {href: instance.diagnosticCodeDescription},
-            message: instance.message,
-            severity: instance.severity,
-            range: {
-                start: { line: 0, character: 13 },
-                end: { line: 0, character: 15 }
+              ],
             },
-            source: instance.source
-        }]);
-    });
+          },
+          kind: kind,
+          diagnostics: diagnostics,
+        };
+      }),
+    );
+  });
 
-    it('should return codeaction when rule is enabled and as used', async () => {
-        instance.enabled = true;
-        const parser = new Parser();
-        await parser.parse({text:'select a.col != null from dataset.table a left join dataset.table b on a.col = b.col', uri: 'test.sql', languageId: 'sql', version: 0});
-        const diagnostics = instance.evaluate('select a.col != null from dataset.table a left join dataset.table b on a.col = b.col');
-        const actions = instance.createCodeAction({uri: 'test.sql'}, diagnostics![0]);
-        expect(actions).to.deep.equal(instance.codeActionKind.map(kind => {
-            return {
-                title: 'Replace with is not', edit:{
-                changes: {
-                        'test.sql': [
-                            {
-                                newText: 'is not',
-                                range: {
-                                    start: { line: 0, character: 13 },
-                                    end: { line: 0, character: 15 }
-                                }
-                            }
-                        ]
-                    }
+  it('should return diagnostic when rule is enabled and pattern matches', () => {
+    instance.enabled = true;
+    const result = instance.evaluate(
+      'select a.col != null from dataset.table a left join dataset.table b on a.col = b.col',
+    );
+    expect(result).to.deep.equal([
+      {
+        code: instance.diagnosticCode,
+        codeDescription: { href: instance.diagnosticCodeDescription },
+        message: instance.message,
+        severity: instance.severity,
+        range: {
+          start: { line: 0, character: 13 },
+          end: { line: 0, character: 15 },
+        },
+        source: instance.source,
+      },
+    ]);
+  });
+
+  it('should return codeaction when rule is enabled and as used', async () => {
+    instance.enabled = true;
+    const parser = new Parser();
+    await parser.parse({
+      text: 'select a.col != null from dataset.table a left join dataset.table b on a.col = b.col',
+      uri: 'test.sql',
+      languageId: 'sql',
+      version: 0,
+    });
+    const diagnostics = instance.evaluate(
+      'select a.col != null from dataset.table a left join dataset.table b on a.col = b.col',
+    );
+    const actions = instance.createCodeAction({ uri: 'test.sql' }, diagnostics![0]);
+    expect(actions).to.deep.equal(
+      instance.codeActionKind.map((kind) => {
+        return {
+          title: 'Replace with is not',
+          edit: {
+            changes: {
+              'test.sql': [
+                {
+                  newText: 'is not',
+                  range: {
+                    start: { line: 0, character: 13 },
+                    end: { line: 0, character: 15 },
+                  },
                 },
-                kind: kind,
-                diagnostics: diagnostics
-            };
-        }));
-    });
+              ],
+            },
+          },
+          kind: kind,
+          diagnostics: diagnostics,
+        };
+      }),
+    );
+  });
 
-    it('should return null when rule is enabled but pattern does not match', () => {
-        instance.enabled = true;
-        const result = instance.evaluate('select a.col is null from dataset.table a left join dataset.table b on a.col = b.col');
-        expect(result).to.be.null;
-    });
+  it('should return null when rule is enabled but pattern does not match', () => {
+    instance.enabled = true;
+    const result = instance.evaluate(
+      'select a.col is null from dataset.table a left join dataset.table b on a.col = b.col',
+    );
+    expect(result).to.be.null;
+  });
 
-    for (const [operator, replacement] of [['=', 'is'], ['!=', 'is not']]) {
-        for (const nullValue of ['null', 'NULL']) {
-            it(`should apply both action kinds correctly for ${operator} ${nullValue}`, () => {
-                const source = `select a.col from dataset.table a\n where a.col ${operator} ${nullValue};`;
-                const document = TextDocument.create('test.sql', 'googlesql', 0, source);
-                const diagnostics = instance.evaluate(source)!;
-                expect(diagnostics).to.have.length(1);
-                const actions = instance.createCodeAction({uri: document.uri}, diagnostics[0]);
-                expect(actions).to.have.length(instance.codeActionKind.length);
-                for (const action of actions) {
-                    const fixed = TextDocument.applyEdits(document, action.edit!.changes![document.uri]);
-                    expect(fixed).to.equal(`select a.col from dataset.table a\n where a.col ${replacement} ${nullValue};`);
-                    expect(new IsNull(defaultSettings, 0).evaluate(fixed)).to.equal(null);
-                }
-            });
+  for (const [operator, replacement] of [
+    ['=', 'is'],
+    ['!=', 'is not'],
+  ]) {
+    for (const nullValue of ['null', 'NULL']) {
+      it(`should apply both action kinds correctly for ${operator} ${nullValue}`, () => {
+        const source = `select a.col from dataset.table a\n where a.col ${operator} ${nullValue};`;
+        const document = TextDocument.create('test.sql', 'googlesql', 0, source);
+        const diagnostics = instance.evaluate(source)!;
+        expect(diagnostics).to.have.length(1);
+        const actions = instance.createCodeAction({ uri: document.uri }, diagnostics[0]);
+        expect(actions).to.have.length(instance.codeActionKind.length);
+        for (const action of actions) {
+          const fixed = TextDocument.applyEdits(document, action.edit!.changes![document.uri]);
+          expect(fixed).to.equal(`select a.col from dataset.table a\n where a.col ${replacement} ${nullValue};`);
+          expect(new IsNull(defaultSettings, 0).evaluate(fixed)).to.equal(null);
         }
+      });
     }
+  }
 });

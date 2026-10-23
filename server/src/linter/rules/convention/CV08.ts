@@ -1,7 +1,13 @@
-import type { ServerSettings } from "../../../settings";
-import { CodeAction, CodeActionKind, type Diagnostic, DiagnosticSeverity, type TextDocumentIdentifier, TextEdit } from 'vscode-languageserver/node';
+import type { ServerSettings } from '../../../settings';
+import {
+  CodeAction,
+  CodeActionKind,
+  type Diagnostic,
+  DiagnosticSeverity,
+  type TextDocumentIdentifier,
+  TextEdit,
+} from 'vscode-languageserver/node';
 import { Rule } from '../base';
-
 
 /**
  * The LeftJoin rule
@@ -10,11 +16,12 @@ import { Rule } from '../base';
  * @memberof Linter.Rules
  */
 export class LeftJoin extends Rule<string> {
-  readonly name: string = "else_null";
-  readonly code: string = "CV08";
-  readonly message: string = "Use LEFT JOIN instead of RIGHT JOIN.";
-	readonly relatedInformation: string = "It is recommended to avoid using RIGHT JOIN and instead use LEFT JOIN for consistency and readability, as it aligns with the natural left-to-right flow of reading SQL queries, making them easier to understand and maintain.";
-  readonly pattern: RegExp = /right\s+join/gmi;
+  readonly name: string = 'else_null';
+  readonly code: string = 'CV08';
+  readonly message: string = 'Use LEFT JOIN instead of RIGHT JOIN.';
+  readonly relatedInformation: string =
+    'It is recommended to avoid using RIGHT JOIN and instead use LEFT JOIN for consistency and readability, as it aligns with the natural left-to-right flow of reading SQL queries, making them easier to understand and maintain.';
+  readonly pattern: RegExp = /right\s+join/gim;
   readonly severity: DiagnosticSeverity = DiagnosticSeverity.Warning;
   readonly ruleGroup: string = 'convention';
   readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
@@ -38,7 +45,6 @@ export class LeftJoin extends Rule<string> {
    * @returns An array of diagnostics if the pattern matches, otherwise null.
    */
   evaluate(test: string, documentUri: string | null = null): Diagnostic[] | null {
-
     if (this.enabled === false) {
       return null;
     }
@@ -48,9 +54,8 @@ export class LeftJoin extends Rule<string> {
     }
 
     return null;
-
   }
-  
+
   /**
    * Creates a set of code actions to fix diagnostics.
    *
@@ -60,20 +65,14 @@ export class LeftJoin extends Rule<string> {
    */
   createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): CodeAction[] {
     const edit = {
-        changes: {
-            [textDocument.uri]: [
-                TextEdit.replace(diagnostic.range, 'left join')
-            ]
-        }
+      changes: {
+        [textDocument.uri]: [TextEdit.replace(diagnostic.range, 'left join')],
+      },
     };
     const actions: CodeAction[] = [];
-    
+
     this.codeActionKind.forEach((kind) => {
-      const fix = CodeAction.create(
-        this.codeActionTitle,
-        edit,
-        kind
-      );
+      const fix = CodeAction.create(this.codeActionTitle, edit, kind);
       fix.diagnostics = [diagnostic];
       actions.push(fix);
     });

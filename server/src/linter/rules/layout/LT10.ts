@@ -6,11 +6,8 @@
  * @requires Rule
  */
 
-
-import type { ServerSettings } from "../../../settings";
-import type {
-  Diagnostic,
-} from 'vscode-languageserver/node';
+import type { ServerSettings } from '../../../settings';
+import type { Diagnostic } from 'vscode-languageserver/node';
 import { Rule } from '../base';
 
 /**
@@ -21,9 +18,9 @@ import { Rule } from '../base';
  */
 export class SelectModifiers extends Rule<string> {
   readonly is_fix_compatible: boolean = false;
-  readonly name: string = "select_modifiers_check";
-  readonly code: string = "LT10";
-  readonly message: string = "SELECT modifiers (e.g. DISTINCT) must be on the same line as SELECT";
+  readonly name: string = 'select_modifiers_check';
+  readonly code: string = 'LT10';
+  readonly message: string = 'SELECT modifiers (e.g. DISTINCT) must be on the same line as SELECT';
   readonly pattern: RegExp = /\bselect(?:\s*\n\s*(distinct|all|with|as)\b)/gi;
   readonly ruleGroup: string = 'layout';
 
@@ -45,7 +42,6 @@ export class SelectModifiers extends Rule<string> {
    * @returns An array of `Diagnostic` objects if the pattern matches the test string, otherwise null.
    */
   evaluate(test: string, documentUri: string | null = null): Diagnostic[] | null {
-
     if (this.enabled === false) {
       return null;
     }
@@ -55,17 +51,14 @@ export class SelectModifiers extends Rule<string> {
     }
 
     return null;
-
   }
 
   matches(test: string): number {
-
     let noOfMatches: number = 0;
     const matches = test.matchAll(this.pattern);
     for (const match of matches) {
       noOfMatches++;
     }
     return noOfMatches;
-
   }
 }

@@ -3,15 +3,13 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
-import * as vscode from "vscode";
-import * as path from "node:path";
+import * as vscode from 'vscode';
+import * as path from 'node:path';
 
 export async function activate(docUri: vscode.Uri) {
-  const ext = vscode.extensions.getExtension(
-    "sean-conkie.bigquerysqlformatter",
-  );
+  const ext = vscode.extensions.getExtension('sean-conkie.bigquerysqlformatter');
   if (!ext) {
-    throw new Error("BigQuery SQL Formatter extension was not found");
+    throw new Error('BigQuery SQL Formatter extension was not found');
   }
   await ext.activate();
   const doc = await vscode.workspace.openTextDocument(docUri);
@@ -48,7 +46,7 @@ export function waitForDiagnostics(
 }
 
 export const getDocPath = (p: string) => {
-  return path.resolve(__dirname, "../../testFixture", p);
+  return path.resolve(__dirname, '../../testFixture', p);
 };
 export const getDocUri = (p: string) => {
   return vscode.Uri.file(getDocPath(p));

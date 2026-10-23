@@ -20,25 +20,26 @@ import { StartOfFile } from './LT13';
 import { ComparisonOperators } from './LT15';
 import type { FileMap } from '../../parser';
 
-export const classes = [TrailingSpaces,
-												Indent,
-												TrailingComma,
-												Functions,
-												SelectTargets,
-												SelectModifiers,
-												UnionCheck,
-												EndOfFile,
-												StartOfFile,
-												ComparisonOperators];
+export const classes = [
+  TrailingSpaces,
+  Indent,
+  TrailingComma,
+  Functions,
+  SelectTargets,
+  SelectModifiers,
+  UnionCheck,
+  EndOfFile,
+  StartOfFile,
+  ComparisonOperators,
+];
 
 export function layoutRules(settings: ServerSettings, problems: number): Rule<string | FileMap>[] {
+  const length: number = classes.length;
+  const rules: Rule<string | FileMap>[] = [];
 
-	const length: number = classes.length;
-	const rules: Rule<string | FileMap>[] = [];
+  for (let i = 0; i < length; i++) {
+    rules.push(new classes[i](settings, problems));
+  }
 
-	for (let i = 0; i < length; i++) {
-		rules.push(new classes[i](settings, problems));
-	}
-
-	return rules;
+  return rules;
 }
