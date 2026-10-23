@@ -6,7 +6,6 @@ import { RuleType } from './rules/enums';
 import { FileMap, Parser } from './parser';
 import { StatementAST } from './parser/ast';
 import { globalTokenCache } from './parser/tokenCache';
-import { getRegexMatchRanges } from './rules/regex';
 
 interface Directive extends Range {
 	code: string
@@ -137,7 +136,7 @@ export class Linter {
 				if (directive.code !== 'noqa') {
 
 					const lineMatch = diagnostic.range.start.line === directive.start.line;
-					const codeMatch = `${diagnostic.code}`.includes(directive.code);
+					const codeMatch = String(diagnostic.code).split(':', 1)[0].toUpperCase() === directive.code;
 
 					return lineMatch && codeMatch ? false : true;
 				}
@@ -159,27 +158,24 @@ export class Linter {
 	 * @returns An array of `Directive` objects, each containing the start and end positions of the directive and the associated code.
 	 */
 	private createDirectives(documentUri: string): Directive[] {
-		// find all the directive strings and their ranges
-		const baseRe = /-- +noqa(?:: +(?:(?:\w+)[ ,]*)+)?/gmi;
 		const directives: Directive[] = [];
-		const ranges: Range[] | null = getRegexMatchRanges(baseRe, globalTokenCache.get(documentUri)!.getText());
-
-		if (ranges != null) {
-			ranges.map((range) => {
-				const text = globalTokenCache.get(documentUri)!.getText(range).replace('-- noqa', '');
-				const subRanges = getRegexMatchRanges(/\w+/gmi, text);
-
-				if (subRanges == null || subRanges.length === 0) {
-					// no codes so just add the range
-					directives.push({start: range.start, end: range.end, code: 'noqa'});
-				} else {
-					// add each code
-					subRanges.map((subRange) => {
-						const code = text.substring(subRange.start.character, subRange.end.character);
-						directives.push({start: range.start, end: range.end, code: code});
-					});
-				}
-			});
+		for (const [lineNumber, line] of globalTokenCache.get(documentUri)!.entries()) {
+			const comment = line.tokens.find(token => token.scopes.some(scope => scope.startsWith('comment.line')));
+			if (!comment) {
+				continue;
+			}
+			const match = /^--[ \t]*noqa\b(?:[ \t]*:[ \t]*(.*))?/i.exec(line.value.substring(comment.startIndex));
+			if (!match) {
+				continue;
+			}
+			const codes = match[1] === undefined ? ['noqa'] : match[1].split(',').map(code => code.trim().toUpperCase()).filter(Boolean);
+			for (const code of codes) {
+				directives.push({
+					start: { line: lineNumber, character: comment.startIndex },
+					end: { line: lineNumber, character: line.value.length },
+					code
+				});
+			}
 		}
 
 		return directives;
