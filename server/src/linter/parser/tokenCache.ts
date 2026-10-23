@@ -43,6 +43,20 @@ export class DocumentCache {
 		this.cache.set(token, value);
 	}
 
+	public isCodeRange(range: Range): boolean {
+		for (let line = range.start.line; line <= range.end.line; line++) {
+			const start = line === range.start.line ? range.start.character : 0;
+			const end = line === range.end.line ? range.end.character : Infinity;
+			if (this.cache.get(line)?.tokens.some(token =>
+				token.startIndex < end && token.endIndex > start &&
+				token.scopes.some(scope => scope.startsWith('string.') || scope.startsWith('comment.') || scope === 'meta.identifier.quoted.sql')
+			)) {
+				return false;
+			}
+		}
+		return true;
+	}
+
 	public delete(token: number): void {
 		this.cache.delete(token);
 	}

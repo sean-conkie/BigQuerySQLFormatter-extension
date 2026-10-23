@@ -77,7 +77,13 @@ export class Linter {
         textDocument.uri,
       );
       if (result != null) {
-        diagnostics.push(...result);
+        diagnostics.push(
+          ...result.filter((diagnostic) =>
+            globalTokenCache
+              .get(textDocument.uri)!
+              .isCodeRange(diagnostic.range),
+          ),
+        );
       }
     }
 
@@ -123,7 +129,13 @@ export class Linter {
         textDocumentChangeParams.textDocument.uri,
       );
       if (result != null) {
-        diagnostics.push(...result);
+        diagnostics.push(
+          ...result.filter((diagnostic) =>
+            globalTokenCache
+              .get(textDocumentChangeParams.textDocument.uri)!
+              .isCodeRange(diagnostic.range),
+          ),
+        );
       }
     }
 

@@ -34,6 +34,10 @@ diagnostics reflect the current document without reopening it.
 Closing a document clears its diagnostics and evicts its token and settings caches.
 Reopening it parses the current contents afresh.
 
+Regex-based diagnostics use TextMate token scopes to exclude matches inside
+strings, quoted identifiers, and comments, on both open and edit. Matching uses
+the original source text so diagnostic and quick-fix offsets stay unchanged.
+
 LF, CRLF, and CR line endings are normalized internally for consistent diagnostics
 and edit ranges. Generated quick fixes use the document's original line-ending
 style; opening or linting a document does not rewrite its line endings.
