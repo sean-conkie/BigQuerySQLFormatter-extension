@@ -4,7 +4,7 @@
  * ------------------------------------------------------------------------------------------ */
 import * as path from 'node:path';
 import { readdir } from 'node:fs/promises';
-import * as Mocha from 'mocha';
+import Mocha from 'mocha';
 
 export async function run(): Promise<void> {
   // Create the mocha test

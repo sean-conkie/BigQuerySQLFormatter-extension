@@ -36,6 +36,12 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
+      - name: Audit dependencies
+        run: |
+          npm audit --audit-level=high
+          npm audit --prefix client --audit-level=high
+          npm audit --prefix server --audit-level=high
+
       - name: Lint and format check
         run: npx --no-install biome ci
 

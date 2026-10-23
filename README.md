@@ -44,7 +44,8 @@ style; opening or linting a document does not rewrite its line endings.
 
 ## Development and CI
 
-Use Node.js 22 and install the locked root, client and server dependencies with `npm ci`.
+Use Node.js 22.12 or newer in the Node.js 22 release line and install the locked
+root, client and server dependencies with `npm ci`.
 The following checks run on all pull requests (including stacked branches) and pushes to `main`:
 
 ```sh
@@ -66,6 +67,18 @@ and require a display; on headless Linux use
 `xvfb-run -a npm run citest`. Packaging and end-to-end tests run on Linux, macOS and Windows.
 Release publishing uses Node.js 22 and the locked local `@vscode/vsce` dependency,
 with `VSCE_PAT` supplied by the repository secret.
+
+Run `npm audit --audit-level=high` in the root, `client`, and `server` directories
+to check tooling and runtime dependencies. Dependabot monitors all three npm
+manifests and GitHub Actions weekly, grouping minor and patch updates with a
+seven-day cooldown.
+Node types stay on 22.x; Chai and sinon-chai major upgrades are deferred until
+the assertion test harness migrates to ESM. The unused `@vscode/test-cli`
+dependency has been removed; end-to-end tests use `@vscode/test-electron` directly.
+Mocha 12 is loaded through its default export in the client test runner.
+
+Documentation uses Python 3.13 or newer and the stable Sphinx and theme versions
+pinned in `docs/requirements.txt`.
 
 TypeScript linting and formatting use pinned Biome 2.6.2 with two-space indentation,
 single quotes, and semicolons. `npm run lint` checks both; `npm run lint:fix` applies
