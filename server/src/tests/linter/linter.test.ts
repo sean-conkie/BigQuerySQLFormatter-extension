@@ -130,4 +130,54 @@ describe('Linter', () => {
       0, 2,
     ]);
   });
+
+  for (const comment of ['-- noquality', '-- noqa:', '-- noqa: , ,', '-- ordinary comment', '/* -- noqa */']) {
+    it(`does not suppress CV05 for ${comment}`, async () => {
+      const uri = 'noqa-edge.sql';
+      try {
+        linter.parserRules = [];
+        linter.regexRules = linter.regexRules.filter((rule) => rule.code === 'CV05');
+        const result = await linter.verify({
+          text: `select a = null ${comment}\n`,
+          uri,
+          languageId: 'googlesql',
+          version: 1,
+        });
+        expect(result.map((diagnostic) => diagnostic.code)).to.deep.equal(['CV05: is_null']);
+      } finally {
+        globalTokenCache.delete(uri);
+      }
+    });
+  }
+
+  it('recomputes exact directive suppression after incremental edits', async () => {
+    const uri = 'noqa-edit.sql';
+    try {
+      linter.parserRules = [];
+      linter.regexRules = linter.regexRules.filter((rule) => rule.code === 'CV05');
+      expect(
+        await linter.verify({
+          text: 'select a = null -- noqa: CV05\n',
+          uri,
+          languageId: 'googlesql',
+          version: 1,
+        }),
+      ).to.deep.equal([]);
+      const changed = await linter.verifyChanges({
+        textDocument: { uri, version: 2 },
+        contentChanges: [
+          {
+            range: {
+              start: { line: 0, character: 28 },
+              end: { line: 0, character: 29 },
+            },
+            text: '',
+          },
+        ],
+      });
+      expect(changed.map((diagnostic) => diagnostic.code)).to.deep.equal(['CV05: is_null']);
+    } finally {
+      globalTokenCache.delete(uri);
+    }
+  });
 });

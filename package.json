@@ -90,7 +90,7 @@
     "package:check": "node scripts/check-package.cjs",
     "postinstall": "npm ci --prefix client && npm ci --prefix server",
     "test": "mocha \"server/out/tests/**/*.test.js\"",
-    "coverage": "nyc --reporter=lcov --reporter=text-summary npm test",
+    "coverage": "nyc --check-coverage --branches 80 --reporter=lcov --reporter=text-summary npm test",
     "citest": "npm test && node ./client/out/test/runTest",
     "deploy": "vsce publish --no-yarn"
   },

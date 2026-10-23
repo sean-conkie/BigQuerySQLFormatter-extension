@@ -14,6 +14,7 @@
   Generic SQL files can opt in through explicit GoogleSQL file associations.
 - Document the AL04 unique-table-alias rule.
 - Bundle the client and server with esbuild and ship no `node_modules`.
+- Enforce at least 80% branch coverage and expand directive and code-action tests.
 - Modernize dependency checks, linting, packaging, and cross-platform Visual Studio Code tests.
 
 ## 0.2.3 - 2026-10-22

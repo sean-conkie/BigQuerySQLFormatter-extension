@@ -1,5 +1,5 @@
 /**
- * @fileoverview Test suite for layoutRules module
+ * @fileoverview Test suite for structureRules module
  */
 
 import { expect } from 'chai';
@@ -7,7 +7,7 @@ import { structureRules } from '../../../../linter/rules/structure/rules';
 import { classes } from '../../../../linter/rules/structure/rules';
 import { defaultSettings } from '../../../../settings';
 
-describe('layoutRules', () => {
+describe('structureRules', () => {
   it('should return an array with a single instance of each rule', () => {
     const problems = 0;
     const result = structureRules(defaultSettings, problems);
