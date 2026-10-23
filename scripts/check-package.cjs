@@ -16,6 +16,7 @@ async function main() {
   );
   assert.deepEqual(developmentFiles, [], 'Development files must not be shipped in the VSIX');
   for (const required of [
+    'CHANGELOG.md',
     'client/out/extension.js',
     'server/out/server.js',
     'server/package.json',
