@@ -27,11 +27,22 @@ describe("Language server lifecycle", function () {
     connection.onNotification(PublishDiagnosticsNotification.type, (params) =>
       published.push(params),
     );
+    let releaseSettings!: () => void;
+    const settingsReady = new Promise<void>((resolve) => {
+      releaseSettings = resolve;
+    });
+    const settingsRequested = new Promise<void>((resolve) => {
+      connection.onRequest("workspace/configuration", async () => {
+        resolve();
+        await settingsReady;
+        return [{ maxNumberOfProblems: 100 }];
+      });
+    });
     connection.listen();
     try {
       await connection.sendRequest(InitializeRequest.type, {
         processId: process.pid,
-        capabilities: {},
+        capabilities: { workspace: { configuration: true } },
         rootUri: null,
       });
       const document = {
@@ -43,6 +54,7 @@ describe("Language server lifecycle", function () {
       await connection.sendNotification(DidOpenTextDocumentNotification.type, {
         textDocument: document,
       });
+      await settingsRequested;
       await connection.sendNotification(DidCloseTextDocumentNotification.type, {
         textDocument: { uri: document.uri },
       });
@@ -51,6 +63,7 @@ describe("Language server lifecycle", function () {
         textDocument: { uri: document.uri },
         position: { line: 0, character: 0 },
       });
+      releaseSettings();
       await new Promise((resolve) => setTimeout(resolve, 200));
       expect(published).to.deep.equal([{ uri: document.uri, diagnostics: [] }]);
       const reopened = new Promise<PublishDiagnosticsParams>((resolve) => {
