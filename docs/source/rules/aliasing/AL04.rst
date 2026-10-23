@@ -1,0 +1,48 @@
+===================================
+Rule: Table Aliases Should Be Unique
+===================================
+
+**Rule Code:** ``AL04``
+
+**Name:** ``unique_table``
+
+Overview
+--------
+
+Use a distinct alias for each table in a query's ``from`` and ``join`` clauses.
+Reusing an alias makes column references ambiguous. Unaliased tables are checked
+using their table names, so repeated references also need distinct aliases.
+
+Anti-pattern
+------------
+
+Both tables use ``t``, making it unclear which table supplies ``t.id``:
+
+.. code-block:: sql
+
+    select t.id
+      from dataset.orders t
+      join dataset.customers t
+        on t.customer_id = t.id;
+
+Best Practice
+-------------
+
+Give each table a unique, meaningful alias and update its column references:
+
+.. code-block:: sql
+
+    select o.id
+      from dataset.orders o
+      join dataset.customers c
+        on o.customer_id = c.id;
+
+AL04 reports each table reference sharing a duplicate name within the statement.
+Aliases may be reused in separate statements. This rule does not offer an
+automatic fix because choosing aliases and updating references requires intent.
+
+Groups
+------
+
+- `all <../..>`_
+- `aliasing <../..#aliasing-rules>`_
