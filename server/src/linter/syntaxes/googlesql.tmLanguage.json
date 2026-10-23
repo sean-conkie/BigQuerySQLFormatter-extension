@@ -2,6 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
   "name": "GoogleSQL",
   "patterns": [
+    { "include": "#quotedIdentifiers" },
     { "include": "#storage" },
     { "include": "#constants" },
     { "include": "#custom" },
@@ -20,6 +21,11 @@
     { "include": "#whitespace" }
   ],
   "repository": {
+    "quotedIdentifiers": {
+      "begin": "`",
+      "end": "(?<!\\\\)`",
+      "name": "meta.identifier.quoted.sql"
+    },
     "storage": {
       "patterns": [
         {
@@ -266,17 +272,13 @@
           "begin": "'''",
           "end": "'''",
           "name": "string.quoted.single.sql",
-          "patterns": [
-            { "include": "#string_escape" }
-          ]
+          "patterns": [{ "include": "#string_escape" }]
         },
         {
           "begin": "\"\"\"",
           "end": "\"\"\"",
           "name": "string.quoted.double.sql",
-          "patterns": [
-            { "include": "#string_escape" }
-          ]
+          "patterns": [{ "include": "#string_escape" }]
         },
         {
           "captures": {
