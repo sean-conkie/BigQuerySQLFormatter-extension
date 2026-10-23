@@ -62,7 +62,9 @@ generates `coverage/lcov.info`, which CI uploads to Codecov using `CODECOV_TOKEN
 Fork pull requests use Codecov's public-repository tokenless uploads; configure the
 token as a Dependabot secret as well to enable uploads from Dependabot PRs.
 
-Packaging compiles the extension through the VSCE prepublish hook. `npm run citest`
+Packaging type-checks and bundles the extension through the VSCE prepublish hook.
+`npm run watch` watches both TypeScript types and the esbuild bundles.
+`npm run citest`
 runs server tests followed by client end-to-end tests, which download and launch Visual Studio Code
 and require a display; on headless Linux use
 `xvfb-run -a npm run citest`. Packaging and end-to-end tests run on Linux, macOS and Windows.
@@ -74,8 +76,9 @@ three operating systems.
 The VSIX excludes documentation, tests, CI files, development configuration,
 local virtual environments, and root SQL scratch files. `npm run package:check`
 checks the package file list for regressions and verifies that grammar JSON,
-Onigasm Wasm, extension entry points, and the Marketplace icon are preserved.
-Bundling the remaining runtime dependencies is a separate task.
+Oniguruma Wasm, extension entry points, and the Marketplace icon are preserved.
+The client and server are bundled with esbuild into `dist/`; grammar JSON and
+`onig.wasm` are copied alongside them. No `node_modules` directories are shipped.
 
 Release publishing uses Node.js 22 and the locked local `@vscode/vsce` dependency,
 with `VSCE_PAT` supplied by the repository secret.

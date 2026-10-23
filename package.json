@@ -25,7 +25,7 @@
   "engines": {
     "vscode": "^1.75.0"
   },
-  "main": "./client/out/extension",
+  "main": "./dist/extension.js",
   "contributes": {
     "configuration": {
       "type": "object",
@@ -70,7 +70,7 @@
       {
         "language": "googlesql",
         "scopeName": "source.googlesql",
-        "path": "./server/src/linter/syntaxes/googlesql.tmLanguage.json"
+        "path": "./dist/syntaxes/googlesql.tmLanguage.json"
       }
     ],
     "configurationDefaults": {
@@ -82,8 +82,8 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "compile": "tsc -b",
-    "watch": "tsc -b -w",
+    "compile": "tsc -b && node scripts/build.cjs",
+    "watch": "node scripts/build.cjs --watch",
     "lint": "biome check",
     "lint:fix": "biome check --write",
     "format": "biome format --write",
@@ -104,6 +104,7 @@
     "@vscode/test-electron": "^3.1.0",
     "@vscode/vsce": "^4.0.0",
     "chai": "^4.4.1",
+    "esbuild": "^0.25.12",
     "mocha": "^12.0.3",
     "nyc": "^18.0.0",
     "sinon": "^22.1.0",

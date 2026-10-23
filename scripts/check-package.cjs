@@ -5,11 +5,12 @@ const { listFiles, PackageManager } = require('@vscode/vsce');
 async function main() {
   const files = await listFiles({
     cwd: path.resolve(__dirname, '..'),
-    packageManager: PackageManager.Npm,
+    packageManager: PackageManager.None,
   });
   const forbidden = /^(?:docs|\.github|\.devcontainer|\.venv|\.vscode-test|scripts)\//;
   const developmentFiles = files.filter(file =>
     forbidden.test(file) ||
+    /(?:^|\/)node_modules\//.test(file) ||
     /(?:^|\/)out\/tests?\//.test(file) ||
     /^(?:Makefile|biome\.json|\.readthedocs\.yml|\.shellcheckrc|\.vscode-test\.js|\.markdownlintignore|\.git-blame-ignore-revs)$/.test(file) ||
     /\.(?:sql|ts|map|tsbuildinfo|code-workspace)$/.test(file)
@@ -17,13 +18,10 @@ async function main() {
   assert.deepEqual(developmentFiles, [], 'Development files must not be shipped in the VSIX');
   for (const required of [
     'CHANGELOG.md',
-    'client/out/extension.js',
-    'server/out/server.js',
-    'server/package.json',
-    'server/src/linter/syntaxes/googlesql.tmLanguage.json',
-    'server/out/linter/syntaxes/googlesql.tmLanguage.json',
-    'server/out/linter/syntaxes/syntax.json',
-    'server/node_modules/vscode-oniguruma/release/onig.wasm',
+    'dist/extension.js',
+    'dist/server.js',
+    'dist/syntaxes/googlesql.tmLanguage.json',
+    'dist/onig.wasm',
     'images/BigQuerySQLFormatter_transparent_128.png',
     'language-configuration.json',
   ]) {
