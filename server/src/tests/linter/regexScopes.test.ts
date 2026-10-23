@@ -7,6 +7,17 @@ describe('Regex rule token scopes', () => {
 	const uri = 'regex-scopes.sql';
 	afterEach(() => globalTokenCache.delete(uri));
 
+	it('ignores literals in quoted table references while preserving following USING diagnostics', async () => {
+		const linter = new Linter(defaultSettings);
+		linter.parserRules = [];
+		linter.regexRules = linter.regexRules.filter(rule => ['CP04', 'ST07'].includes(rule.code));
+		const diagnostics = await linter.verify({
+			uri, version: 1, languageId: 'googlesql',
+			text: 'select t.id from `TRUE.dataset.table` t join `dataset.NULL` u using (id);\n'
+		});
+		expect(diagnostics.map(diagnostic => String(diagnostic.code).split(':')[0])).to.deep.equal(['ST07']);
+	});
+
 	const cases = [
 		['CV01', 'a <> b'],
 		['CV02', 'ifnull(a, b)'],

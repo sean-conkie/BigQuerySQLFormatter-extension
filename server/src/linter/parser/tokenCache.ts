@@ -47,11 +47,18 @@ export class DocumentCache {
 		for (let line = range.start.line; line <= range.end.line; line++) {
 			const start = line === range.start.line ? range.start.character : 0;
 			const end = line === range.end.line ? range.end.character : Infinity;
-			if (this.cache.get(line)?.tokens.some(token =>
-				token.startIndex < end && token.endIndex > start &&
-				token.scopes.some(scope => scope.startsWith('string.') || scope.startsWith('comment.') || scope === 'meta.identifier.quoted.sql')
-			)) {
-				return false;
+			let quotedIdentifier = false;
+			for (const token of this.cache.get(line)?.tokens ?? []) {
+				if (token.value === '`' && token.scopes.includes('punctuation.definition.string.begin.sql')) {
+					quotedIdentifier = true;
+				}
+				if (token.startIndex < end && token.endIndex > start && (quotedIdentifier ||
+					token.scopes.some(scope => scope.startsWith('string.') || scope.startsWith('comment.') || scope === 'meta.identifier.quoted.sql'))) {
+					return false;
+				}
+				if (token.value === '`' && token.scopes.includes('punctuation.definition.string.end.sql')) {
+					quotedIdentifier = false;
+				}
 			}
 		}
 		return true;
