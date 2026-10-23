@@ -38,8 +38,9 @@ Regex-based diagnostics use TextMate token scopes to exclude matches inside
 strings, quoted identifiers, and comments, on both open and edit. Matching uses
 the original source text so diagnostic and quick-fix offsets stay unchanged.
 Style and best-practice diagnostics default to Warning rather than Error.
-Rules share a central registry and reusable regex/parser bases; regex ranges
-use explicit named target groups so contextual matches do not alter fix ranges.
+Rules share a central registry and reusable regular expression/parser bases.
+Regular expression ranges use explicit named target groups so contextual matches
+do not alter fix ranges.
 
 LF, CRLF, and CR line endings are normalized internally for consistent diagnostics
 and edit ranges. Generated quick fixes use the document's original line-ending
