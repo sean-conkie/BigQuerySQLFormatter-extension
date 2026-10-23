@@ -1,94 +1,111 @@
+import { DocumentUri, Range } from "vscode-languageserver";
+import { LineToken } from "./token";
 
-import { DocumentUri, Range } from 'vscode-languageserver';
-import { LineToken } from './token';
-
-export const globalTokenCache: TokenCache = new Map<DocumentUri, DocumentCache>();
+export const globalTokenCache: TokenCache = new Map<
+  DocumentUri,
+  DocumentCache
+>();
 
 export type TokenCache = Map<DocumentUri, DocumentCache>;
 
 export class DocumentCache {
-	private readonly cache: Map<number, LineToken> = new Map();
+  private readonly cache: Map<number, LineToken> = new Map();
 
-	constructor(public readonly eol: string = '\n') {}
+  constructor(public readonly eol: string = "\n") {}
 
-	public get(token: number): LineToken | undefined {
-		return this.cache.get(token);
-	}
+  public get(token: number): LineToken | undefined {
+    return this.cache.get(token);
+  }
 
-	public getText(range?: Range): string {
-		const lines: string[] = [];
+  public getText(range?: Range): string {
+    const lines: string[] = [];
 
-		if (range) {
-			const start = range.start.line;
-			const end = range.end.line;
+    if (range) {
+      const start = range.start.line;
+      const end = range.end.line;
 
-			for (let i = start; i <= end; i++) {
-				const lineToken = this.cache.get(i);
-				if (lineToken) {
+      for (let i = start; i <= end; i++) {
+        const lineToken = this.cache.get(i);
+        if (lineToken) {
+          const startIndex = range.start.line === i ? range.start.character : 0;
+          const endIndex =
+            range.end.line === i ? range.end.character : lineToken.value.length;
 
-					const startIndex = range.start.line === i ? range.start.character : 0;
-					const endIndex = range.end.line === i ? range.end.character : lineToken.value.length;
+          lines.push(lineToken.value.substring(startIndex, endIndex));
+        }
+      }
+      return lines.join("\n");
+    }
 
-					lines.push(lineToken.value.substring(startIndex, endIndex));
-				}
-			}
-			return lines.join('\n');
-		}
+    this.cache.forEach((lineToken: LineToken) => lines.push(lineToken.value));
+    return lines.join("\n");
+  }
 
-		this.cache.forEach((lineToken: LineToken) => lines.push(lineToken.value));
-		return lines.join('\n');
-	}
+  public set(token: number, value: LineToken): void {
+    this.cache.set(token, value);
+  }
 
-	public set(token: number, value: LineToken): void {
-		this.cache.set(token, value);
-	}
+  public isCodeRange(range: Range): boolean {
+    for (let line = range.start.line; line <= range.end.line; line++) {
+      const start = line === range.start.line ? range.start.character : 0;
+      const end = line === range.end.line ? range.end.character : Infinity;
+      let quotedIdentifier = false;
+      for (const token of this.cache.get(line)?.tokens ?? []) {
+        if (
+          token.value === "`" &&
+          token.scopes.includes("punctuation.definition.string.begin.sql")
+        ) {
+          quotedIdentifier = true;
+        }
+        if (
+          token.startIndex < end &&
+          token.endIndex > start &&
+          (quotedIdentifier ||
+            token.scopes.some(
+              (scope) =>
+                scope.startsWith("string.") ||
+                scope.startsWith("comment.") ||
+                scope === "meta.identifier.quoted.sql",
+            ))
+        ) {
+          return false;
+        }
+        if (
+          token.value === "`" &&
+          token.scopes.includes("punctuation.definition.string.end.sql")
+        ) {
+          quotedIdentifier = false;
+        }
+      }
+    }
+    return true;
+  }
 
-	public isCodeRange(range: Range): boolean {
-		for (let line = range.start.line; line <= range.end.line; line++) {
-			const start = line === range.start.line ? range.start.character : 0;
-			const end = line === range.end.line ? range.end.character : Infinity;
-			let quotedIdentifier = false;
-			for (const token of this.cache.get(line)?.tokens ?? []) {
-				if (token.value === '`' && token.scopes.includes('punctuation.definition.string.begin.sql')) {
-					quotedIdentifier = true;
-				}
-				if (token.startIndex < end && token.endIndex > start && (quotedIdentifier ||
-					token.scopes.some(scope => scope.startsWith('string.') || scope.startsWith('comment.') || scope === 'meta.identifier.quoted.sql'))) {
-					return false;
-				}
-				if (token.value === '`' && token.scopes.includes('punctuation.definition.string.end.sql')) {
-					quotedIdentifier = false;
-				}
-			}
-		}
-		return true;
-	}
+  public delete(token: number): void {
+    this.cache.delete(token);
+  }
 
-	public delete(token: number): void {
-		this.cache.delete(token);
-	}
+  public has(token: number): boolean {
+    return this.cache.has(token);
+  }
 
-	public has(token: number): boolean {
-		return this.cache.has(token);
-	}
+  public clear(): void {
+    this.cache.clear();
+  }
 
-	public clear(): void {
-		this.cache.clear();
-	}
+  public get size(): number {
+    return this.cache.size;
+  }
 
-	public get size(): number {
-		return this.cache.size;
-	}
+  public get tokens(): IterableIterator<LineToken> {
+    return this.cache.values();
+  }
 
-	public get tokens(): IterableIterator<LineToken> {
-		return this.cache.values();
-	}
+  public get keys(): IterableIterator<number> {
+    return this.cache.keys();
+  }
 
-	public get keys(): IterableIterator<number> {
-		return this.cache.keys();
-	}
-
-	public entries(): IterableIterator<[number, LineToken]> {
-		return this.cache.entries();
-	}
+  public entries(): IterableIterator<[number, LineToken]> {
+    return this.cache.entries();
+  }
 }

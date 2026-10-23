@@ -272,17 +272,13 @@
           "begin": "'''",
           "end": "'''",
           "name": "string.quoted.single.sql",
-          "patterns": [
-            { "include": "#string_escape" }
-          ]
+          "patterns": [{ "include": "#string_escape" }]
         },
         {
           "begin": "\"\"\"",
           "end": "\"\"\"",
           "name": "string.quoted.double.sql",
-          "patterns": [
-            { "include": "#string_escape" }
-          ]
+          "patterns": [{ "include": "#string_escape" }]
         },
         {
           "captures": {
