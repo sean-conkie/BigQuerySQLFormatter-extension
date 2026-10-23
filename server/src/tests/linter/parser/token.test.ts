@@ -10,6 +10,12 @@ import { GrammarToken, RuleStack } from '../../../linter/grammarLoader';
 import { INITIAL } from 'vscode-textmate';
 
 describe('Token Class', () => {
+  it('defaults converted grammar tokens to an unknown line', () => {
+    const token = Token.fromGrammarToken(new GrammarToken(['scope'], 0, 1), 'x');
+    expect(token.value).to.equal('x');
+    expect(token.lineNumber).to.equal(null);
+  });
+
   it('should create a Token instance correctly', () => {
     const token = new Token(['scope1'], 0, 5, 'value', 1);
     expect(token.scopes).to.deep.equal(['scope1']);
@@ -31,6 +37,17 @@ describe('Token Class', () => {
 });
 
 describe('LineToken Class', () => {
+  it('supports default line numbers and child tokens', () => {
+    const line = new LineToken(['scope'], 0, 1, 'x', undefined, undefined, INITIAL);
+    expect(line.lineNumber).to.equal(null);
+    expect(line.tokens).to.deep.equal([]);
+    const converted = LineToken.fromGrammarTokens([new GrammarToken(['scope'], 0, 1)], 'x', undefined, INITIAL);
+    expect(converted.lineNumber).to.equal(null);
+    expect(converted.tokens[0].lineNumber).to.equal(null);
+    expect(converted.value).to.equal('x');
+    expect(converted.ruleStack).to.equal(INITIAL);
+  });
+
   it('should create a LineToken instance correctly', () => {
     const ruleStack = INITIAL;
     const lineToken = new LineToken(['scope1'], 0, 5, 'value', 1, [], ruleStack);
@@ -58,6 +75,10 @@ describe('LineToken Class', () => {
 });
 
 describe('joinTokenValues Function', () => {
+  it('returns an empty string for no tokens', () => {
+    expect(joinTokenValues([])).to.equal('');
+  });
+
   it('should join token values with default separator', () => {
     const tokens = [new Token(['scope1'], 0, 5, 'value1'), new Token(['scope2'], 5, 10, 'value2')];
     const result = joinTokenValues(tokens);
