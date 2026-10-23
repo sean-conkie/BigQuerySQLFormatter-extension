@@ -8,13 +8,12 @@ import {
   type TextDocumentIdentifier,
   CodeActionKind,
 } from 'vscode-languageserver/node';
-import { RuleType } from '../enums';
-import { Rule } from '../base';
+import { ParserRule } from '../base';
 import type { FileMap } from '../../parser';
 import { ColumnAST } from '../../parser/ast';
 import { includeTokensWithMatchingScopes } from '../../parser/token';
 
-export class RedundantColumnAlias extends Rule<FileMap> {
+export class RedundantColumnAlias extends ParserRule {
   readonly name: string = 'redundant_column_alias';
   readonly code: string = 'AL09';
   readonly message: string = 'Redundant column alias.';
@@ -22,21 +21,10 @@ export class RedundantColumnAlias extends Rule<FileMap> {
     'Instead of self-aliasing, you should simply reference the columns directly. This keeps the query concise and easy to understand.';
   readonly pattern: RegExp = / +$/gm;
   readonly severity: DiagnosticSeverity = DiagnosticSeverity.Warning;
-  readonly type: RuleType = RuleType.PARSER;
   readonly diagnosticTags: DiagnosticTag[] = [DiagnosticTag.Unnecessary];
   readonly ruleGroup: string = 'aliasing';
   readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
   readonly codeActionTitle = 'Remove redundant column alias';
-
-  /**
-   * Creates an instance of RedundantColumnAlias.
-   * @param {ServerSettings} settings The server settings
-   * @param {number} problems The number of problems identified in the source code
-   * @memberof RedundantColumnAlias
-   */
-  constructor(settings: ServerSettings, problems: number) {
-    super(settings, problems);
-  }
 
   /**
    * Evaluates the given Abstract Syntax Tree (AST) to identify redundant aliases in column definitions.

@@ -16,26 +16,21 @@ export type MatchPosition = { line: number; character: number };
  * @param test - The string to test against the regular expression pattern.
  * @returns An array of `Range` objects representing the start and end positions of each match, or `null` if no matches are found.
  */
-export function getRegexMatchRanges(pattern: RegExp, test: string): Range[] | null {
-  // Reset the regex, regexes are stateful
-  pattern.lastIndex = 0;
+export function getRegexMatchRanges(
+  pattern: RegExp,
+  test: string,
+  rangeGroups: readonly string[] = ['target'],
+): Range[] | null {
+  const flags = new Set(`${pattern.flags}dg`);
+  const matcher = new RegExp(pattern.source, [...flags].join(''));
 
   const matches: Range[] = [];
 
   let match: RegExpExecArray | null;
   // biome-ignore lint/suspicious/noAssignInExpressions: Advance the stateful regex until it is exhausted.
-  while ((match = pattern.exec(test)) != null) {
-    let groupStartIndex: number;
-    let groupEndIndex: number;
-    if (match.length > 1) {
-      [groupStartIndex, groupEndIndex] = getCaptureGroupIndices(
-        match,
-        match.slice(1).findIndex((group) => group != null) + 1,
-      );
-    } else {
-      groupStartIndex = match.index;
-      groupEndIndex = pattern.lastIndex;
-    }
+  while ((match = matcher.exec(test)) != null) {
+    const indices = rangeGroups.map((group) => match!.indices?.groups?.[group]).find((group) => group !== undefined);
+    const [groupStartIndex, groupEndIndex] = indices ?? [match.index, match.index + match[0].length];
     const start: MatchPosition = getLineAndCharacter(test, groupStartIndex);
     const end: MatchPosition = getLineAndCharacter(test, groupEndIndex);
     const range = {
@@ -44,6 +39,9 @@ export function getRegexMatchRanges(pattern: RegExp, test: string): Range[] | nu
     };
 
     matches.push(range);
+    if (match[0].length === 0) {
+      matcher.lastIndex++;
+    }
   }
 
   return matches;

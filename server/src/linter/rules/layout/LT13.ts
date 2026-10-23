@@ -14,7 +14,7 @@ import {
   type TextDocumentIdentifier,
   TextEdit,
 } from 'vscode-languageserver/node';
-import { Rule } from '../base';
+import { RegexRule } from '../base';
 
 /**
  * The StartOfFile rule
@@ -22,7 +22,7 @@ import { Rule } from '../base';
  * @extends Rule
  * @memberof Linter.Rules
  */
-export class StartOfFile extends Rule<string> {
+export class StartOfFile extends RegexRule {
   readonly name: string = 'start_of_file';
   readonly code: string = 'LT13';
   readonly message: string = 'Files must not begin with newlines or whitespace.';
@@ -32,16 +32,6 @@ export class StartOfFile extends Rule<string> {
   readonly ruleGroup: string = 'layout';
   readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
   readonly codeActionTitle = 'Fix start of file';
-
-  /**
-   * Creates an instance of StartOfFile.
-   * @param {ServerSettings} settings The server settings
-   * @param {number} problems The number of problems identified in the source code
-   * @memberof StartOfFile
-   */
-  constructor(settings: ServerSettings, problems: number) {
-    super(settings, problems);
-  }
 
   /**
    * Evaluates the given test string against a specific pattern and returns diagnostics if the pattern matches.

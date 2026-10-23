@@ -7,7 +7,6 @@
  */
 
 import type { ServerSettings } from '../../../settings';
-import { RuleType } from '../enums';
 import {
   type CodeAction,
   CodeActionKind,
@@ -16,7 +15,7 @@ import {
   Range,
   type TextDocumentIdentifier,
 } from 'vscode-languageserver/node';
-import { Rule } from '../base';
+import { ParserRule } from '../base';
 import type { FileMap } from '../../parser';
 import { ComparisonAST, ComparisonGroupAST } from '../../parser/ast';
 import type { Token } from '../../parser/token';
@@ -30,26 +29,15 @@ const documentCache: Map<DocumentUri, RangeCache> = new Map<DocumentUri, RangeCa
  * @extends Rule
  * @memberof Linter.Rules
  */
-export class ComparisonOperators extends Rule<FileMap> {
+export class ComparisonOperators extends ParserRule {
   readonly name: string = 'comparison_operators';
   readonly code: string = 'LT15';
-  readonly type: RuleType = RuleType.PARSER;
   readonly message: string = 'Align equal sign in comparison blocks.';
   readonly relatedInformation: string =
     'When the equal (`=`) signs in a `WHERE` clause or join conditions are misaligned across multiple rows, it reduces the readability and consistency of the query.';
   readonly ruleGroup: string = 'layout';
   readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
   readonly codeActionTitle = 'Format comparison operators';
-
-  /**
-   * Creates an instance of ComparisonOperators.
-   * @param {ServerSettings} settings The server settings
-   * @param {number} problems The number of problems identified in the source code
-   * @memberof ComparisonOperators
-   */
-  constructor(settings: ServerSettings, problems: number) {
-    super(settings, problems);
-  }
 
   /**
    * Evaluates the provided Abstract Syntax Tree (AST) to identify and return diagnostics for layout issues.

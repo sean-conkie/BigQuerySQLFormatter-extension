@@ -33,9 +33,9 @@ export class DocumentCache {
       return lines.join('\n');
     }
 
-    this.cache.forEach((lineToken: LineToken) => {
-      lines.push(lineToken.value);
-    });
+    for (const lineNumber of [...this.cache.keys()].sort((a, b) => a - b)) {
+      lines.push(this.cache.get(lineNumber)!.value);
+    }
     return lines.join('\n');
   }
 

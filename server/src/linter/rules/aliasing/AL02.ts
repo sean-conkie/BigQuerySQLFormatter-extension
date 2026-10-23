@@ -7,34 +7,22 @@ import {
   type TextDocumentIdentifier,
   TextEdit,
 } from 'vscode-languageserver/node';
-import { RuleType } from '../enums';
-import { Rule } from '../base';
+import { ParserRule } from '../base';
 import type { FileMap } from '../../parser';
 import { excludeTokensWithMatchingScopes, includeTokensWithMatchingScopes } from '../../parser/token';
 import { globalTokenCache } from '../../parser/tokenCache';
 
-export class ColumnAlias extends Rule<FileMap> {
+export class ColumnAlias extends ParserRule {
   readonly name: string = 'column';
   readonly code: string = 'AL02';
   readonly message: string = 'Explicit aliasing of columns.';
   readonly relatedInformation: string =
     'For better readability and cleaner code, implicit aliases should be used when referencing columns.';
-  readonly type: RuleType = RuleType.PARSER;
   readonly diagnosticTags: DiagnosticTag[] = [DiagnosticTag.Unnecessary];
   readonly ruleGroup: string = 'aliasing';
   readonly scope = 'keyword.as.sql';
   readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
   readonly codeActionTitle = 'Remove explicit alias';
-
-  /**
-   * Creates an instance of ColumnAlias.
-   * @param {ServerSettings} settings The server settings
-   * @param {number} problems The number of problems identified in the source code
-   * @memberof ColumnAlias
-   */
-  constructor(settings: ServerSettings, problems: number) {
-    super(settings, problems);
-  }
 
   /**
    * Evaluates the given Abstract Syntax Tree (AST) to identify redundant aliases in column definitions.

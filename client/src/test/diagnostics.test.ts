@@ -25,7 +25,7 @@ suite('Language server diagnostics', () => {
     assert.equal(typeof code === 'object' ? code.value : code, 'LT13: start_of_file');
     assert.equal(diagnostics[0].message, 'Files must not begin with newlines or whitespace.');
     assert.deepEqual(diagnostics[0].range, new vscode.Range(0, 0, 0, 1));
-    assert.equal(diagnostics[0].severity, vscode.DiagnosticSeverity.Error);
+    assert.equal(diagnostics[0].severity, vscode.DiagnosticSeverity.Warning);
     assert.equal(diagnostics[0].source, 'BigQuery SQL Formatter');
 
     const clearedDiagnostics = waitForDiagnostics(docUri, (diagnostics) => diagnostics.length === 0);

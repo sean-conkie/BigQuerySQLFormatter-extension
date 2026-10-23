@@ -34,11 +34,12 @@ export abstract class Rule<T extends string | FileMap> {
   readonly message: string = '';
   readonly relatedInformation: string = '';
   readonly pattern: RegExp = /./;
+  readonly rangeGroups: readonly string[] = ['target'];
   readonly diagnosticTags: DiagnosticTag[] = [];
   readonly source: string = 'BigQuery SQL Formatter';
   readonly docsUrl: string = 'https://bigquerysqlformatter.readthedocs.io/en/';
   ruleGroup: string = '';
-  severity: DiagnosticSeverity = DiagnosticSeverity.Error;
+  severity: DiagnosticSeverity = DiagnosticSeverity.Warning;
   enabled: boolean = true;
   settings: ServerSettings;
   problems: number;
@@ -96,7 +97,7 @@ export abstract class Rule<T extends string | FileMap> {
   evaluateRegexPatterns(test: string, documentUri: string | null = null): Diagnostic[] | null {
     const diagnostics: Diagnostic[] = [];
 
-    getRegexMatchRanges(this.pattern, test)?.forEach((range) => {
+    getRegexMatchRanges(this.pattern, test, this.rangeGroups)?.forEach((range) => {
       diagnostics.push(this.createDiagnostic(range, documentUri));
     });
 
@@ -201,4 +202,43 @@ export abstract class Rule<T extends string | FileMap> {
 
     return [additionalIdentNumber, errorRange];
   }
+}
+
+export abstract class RegexRule extends Rule<string> {
+  evaluate(test: string, documentUri: string | null = null): Diagnostic[] | null {
+    if (!this.enabled) {
+      return null;
+    }
+    const diagnostics = this.evaluateRegexPatterns(test, documentUri);
+    return diagnostics?.length ? diagnostics : null;
+  }
+}
+
+export abstract class RegexReplaceRule extends RegexRule {
+  abstract readonly replacement: string;
+  abstract readonly codeActionKind: CodeActionKind[];
+  abstract readonly codeActionTitle: string;
+
+  createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): CodeAction[] {
+    return this.createFixActions(
+      { changes: { [textDocument.uri]: [TextEdit.replace(diagnostic.range, this.replacement)] } },
+      diagnostic,
+      this.codeActionKind,
+      this.codeActionTitle,
+    );
+  }
+}
+
+export abstract class ParserRule extends Rule<FileMap> {
+  readonly type: RuleType = RuleType.PARSER;
+}
+
+export type RuleConstructor = new (settings: ServerSettings, problems: number) => Rule<string | FileMap>;
+
+export function instantiateRules(
+  classes: readonly RuleConstructor[],
+  settings: ServerSettings,
+  problems: number,
+): Rule<string | FileMap>[] {
+  return classes.map((RuleClass) => new RuleClass(settings, problems));
 }

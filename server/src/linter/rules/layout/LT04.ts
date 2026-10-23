@@ -7,9 +7,8 @@
  */
 
 import type { ServerSettings } from '../../../settings';
-import { RuleType } from '../enums';
 import type { Diagnostic, TextDocumentIdentifier } from 'vscode-languageserver/node';
-import { Rule } from '../base';
+import { ParserRule } from '../base';
 import type { FileMap } from '../../parser';
 
 /**
@@ -18,25 +17,14 @@ import type { FileMap } from '../../parser';
  * @extends Rule
  * @memberof Linter.Rules
  */
-export class TrailingComma extends Rule<FileMap> {
+export class TrailingComma extends ParserRule {
   readonly is_fix_compatible: boolean = false;
   readonly name: string = 'trailing_commas';
   readonly code: string = 'LT04';
-  readonly type: RuleType = RuleType.PARSER;
   readonly message: string = 'Commas should be at the end of the line.';
   readonly relatedInformation: string =
     'The best practice is to place commas at the end of each line when listing columns or items.';
   readonly ruleGroup: string = 'layout';
-
-  /**
-   * Creates an instance of TrailingComma.
-   * @param {ServerSettings} settings The server settings
-   * @param {number} problems The number of problems identified in the source code
-   * @memberof TrailingComma
-   */
-  constructor(settings: ServerSettings, problems: number) {
-    super(settings, problems);
-  }
 
   /**
    * Evaluates the provided Abstract Syntax Tree (AST) to identify and return diagnostics for layout issues.

@@ -1,31 +1,19 @@
 import type { ServerSettings } from '../../../settings';
 import type { Diagnostic, Range } from 'vscode-languageserver/node';
-import { RuleType } from '../enums';
-import { Rule } from '../base';
+import { ParserRule } from '../base';
 import type { FileMap } from '../../parser';
 import { ColumnAST } from '../../parser/ast';
 import { excludeTokensWithMatchingScopes } from '../../parser/token';
 import { sortTokens } from '../../parser/utils';
 
-export class UniqueColumn extends Rule<FileMap> {
+export class UniqueColumn extends ParserRule {
   readonly is_fix_compatible: boolean = false;
   readonly name: string = 'unique_column';
   readonly code: string = 'AL08';
   readonly message: string = 'Column names should be unique.';
   readonly relatedInformation: string =
     'To avoid ambiguity, ensure that each column in the result set has a unique name.';
-  readonly type: RuleType = RuleType.PARSER;
   readonly ruleGroup: string = 'aliasing';
-
-  /**
-   * Creates an instance of UniqueColumn.
-   * @param {ServerSettings} settings The server settings
-   * @param {number} problems The number of problems identified in the source code
-   * @memberof UniqueColumn
-   */
-  constructor(settings: ServerSettings, problems: number) {
-    super(settings, problems);
-  }
 
   /**
    * Evaluates the given Abstract Syntax Tree (AST) to identify redundant aliases in column definitions.
