@@ -48,6 +48,11 @@ style; opening or linting a document does not rewrite its line endings.
 
 ## Development and CI
 
+The extension requires VS Code 1.91 or newer, matching the minimum supported by
+LSP client/server 10. The VS Code API types are pinned to 1.91.0 so compilation
+cannot silently use newer APIs. End-to-end CI covers both VS Code 1.91.0 and stable;
+set `BQSQL_TEST_VSCODE_VERSION=1.91.0` to run the minimum-version tests locally.
+
 Use Node.js 22.12 or newer in the Node.js 22 release line and install the locked
 root, client and server dependencies with `npm ci`.
 The following checks run on all pull requests (including stacked branches) and pushes to `main`:
@@ -98,7 +103,10 @@ seven-day cooldown.
 Node types stay on 22.x; Chai and sinon-chai major upgrades are deferred until
 the assertion test harness migrates to ESM. The unused `@vscode/test-cli`
 dependency has been removed; end-to-end tests use `@vscode/test-electron` directly.
-Mocha 12 is loaded through its default export in the client test runner.
+Server tests use Mocha 12; the client test runner uses Mocha 11 so it also works
+with the older embedded Node.js in the minimum supported VS Code version.
+Client-only Mocha overrides select patched `diff` and `serialize-javascript`
+versions until the compatible runner incorporates those updates upstream.
 
 Documentation uses Python 3.13 or newer and the stable Sphinx and theme versions
 pinned in `docs/requirements.txt`.

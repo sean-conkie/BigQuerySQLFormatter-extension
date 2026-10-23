@@ -60,11 +60,12 @@ jobs:
           fail_ci_if_error: true
 
   extension:
-    name: Package and E2E (${{ matrix.os }})
+    name: Package and E2E (${{ matrix.os }}, VS Code ${{ matrix.vscode-version }})
     strategy:
       fail-fast: false
       matrix:
         os: [macos-latest, ubuntu-latest, windows-latest]
+        vscode-version: [stable, 1.91.0]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     steps:
@@ -96,10 +97,12 @@ jobs:
         if: runner.os == 'Linux'
         env:
           BQSQL_TEST_VSIX: ${{ github.workspace }}/extension.vsix
+          BQSQL_TEST_VSCODE_VERSION: ${{ matrix.vscode-version }}
         run: xvfb-run -a npm run citest
 
       - name: E2E tests (macOS and Windows)
         if: runner.os != 'Linux'
         env:
           BQSQL_TEST_VSIX: ${{ github.workspace }}/extension.vsix
+          BQSQL_TEST_VSCODE_VERSION: ${{ matrix.vscode-version }}
         run: npm run citest

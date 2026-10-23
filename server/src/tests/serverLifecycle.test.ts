@@ -127,7 +127,7 @@ describe('Language server validation queue', function () {
     });
     let requests = 0;
     const settingsRequested = new Promise<void>((resolve) => {
-      connection.onRequest('workspace/configuration', () => {
+      connection.onRequest('workspace/configuration', async () => {
         requests++;
         if (requests === 1) {
           resolve();
