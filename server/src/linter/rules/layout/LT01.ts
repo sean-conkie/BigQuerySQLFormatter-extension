@@ -24,7 +24,7 @@ import { Rule } from '../base';
  * @memberof Linter.Rules
  */
 export class TrailingSpaces extends Rule<string> {
-  readonly name: string = 'trailing_sapces';
+  readonly name: string = 'trailing_spaces';
   readonly code: string = 'LT01';
   readonly message: string = 'Trailing whitespace.';
   readonly pattern: RegExp = /(?<=\S)( +)(?:,|$|\))|^ +$/gm;

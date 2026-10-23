@@ -3,6 +3,8 @@
  */
 
 import { expect } from 'chai';
+import { existsSync, readdirSync } from 'node:fs';
+import * as path from 'node:path';
 import { initialiseRules } from '../../../linter/rules/rules';
 import { aliasRules } from '../../../linter/rules/aliasing/rules';
 import { ambiguousRules } from '../../../linter/rules/ambiguous/rules';
@@ -32,5 +34,26 @@ describe('initialiseRules', () => {
     ];
     const result = initialiseRules(settings, problems);
     expect(result).to.deep.equal(layoutRulesResult);
+  });
+
+  it('keeps every registered rule in its implementation folder', () => {
+    const rulesDirectory = path.resolve(__dirname, '../../../linter/rules');
+    for (const rule of initialiseRules(settings, problems)) {
+      const folders = readdirSync(rulesDirectory, { withFileTypes: true })
+        .filter((entry) => entry.isDirectory())
+        .filter((entry) => existsSync(path.join(rulesDirectory, entry.name, `${rule.code}.js`)))
+        .map((entry) => entry.name);
+      expect(folders, rule.code).to.deep.equal([rule.ruleGroup]);
+      expect(new URL(rule.diagnosticCodeDescription).pathname, rule.code).to.match(
+        new RegExp(`/rules/${rule.ruleGroup}/${rule.code}\\.html$`),
+      );
+    }
+  });
+
+  it('uses the documented names and documentation groups', () => {
+    const rules = initialiseRules(settings, problems);
+    expect(rules.find((rule) => rule.code === 'CV08')?.diagnosticCode).to.equal('CV08: left_join');
+    expect(rules.find((rule) => rule.code === 'LT01')?.diagnosticCode).to.equal('LT01: trailing_spaces');
+    expect(rules.find((rule) => rule.code === 'ST07')?.ruleUrl).to.match(/\/rules\/structure\/ST07\.html$/);
   });
 });
