@@ -3,12 +3,12 @@ import { defaultSettings, documentSettings, getDocumentSettings } from '../setti
 import { createConnection } from 'vscode-languageserver/node';
 import { PassThrough } from 'stream';
 import { stub } from 'sinon';
+import manifest from '../../../package.json';
 
 describe('Document settings', () => {
 	afterEach(() => documentSettings.clear());
 
 	it('uses the same default as the extension manifest', () => {
-		const manifest = require('../../../package.json');
 		expect(defaultSettings.maxNumberOfProblems).to.equal(manifest.contributes.configuration.properties['bigquerySQLFormatter.maxNumberOfProblems'].default);
 	});
 
