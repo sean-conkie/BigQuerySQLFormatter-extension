@@ -1,7 +1,14 @@
 
 import { DidChangeTextDocumentParams, Diagnostic,	TextDocumentItem, PublishDiagnosticsParams } from 'vscode-languageserver/node';
 import { Linter } from './linter/linter';
-import { ServerSettings } from './settings';
+import { documentSettings, ServerSettings } from './settings';
+import { globalTokenCache } from './linter/parser/tokenCache';
+
+export function closeTextDocument(uri: string): PublishDiagnosticsParams {
+	globalTokenCache.delete(uri);
+	documentSettings.delete(uri);
+	return { uri, diagnostics: [] };
+}
 
 export async function validateTextDocument(textDocument: TextDocumentItem, settings: ServerSettings): Promise<PublishDiagnosticsParams> {
 	// Create the linter

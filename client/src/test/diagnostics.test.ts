@@ -49,4 +49,16 @@ suite("Language server diagnostics", () => {
     );
     await clearedDiagnostics;
   });
+
+  test("Clears diagnostics on close and reports them again on reopen", async () => {
+    const opened = waitForDiagnostics(docUri, (diagnostics) => diagnostics.length > 0);
+    await activate(docUri);
+    await opened;
+    const closed = waitForDiagnostics(docUri, (diagnostics) => diagnostics.length === 0);
+    await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
+    await closed;
+    const reopened = waitForDiagnostics(docUri, (diagnostics) => diagnostics.length > 0);
+    await activate(docUri);
+    await reopened;
+  });
 });

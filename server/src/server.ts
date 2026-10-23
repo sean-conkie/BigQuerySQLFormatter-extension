@@ -11,11 +11,12 @@ import {
 	CodeActionParams,
 	CodeAction,
 	HoverParams,
-	Hover
+	Hover,
+	PublishDiagnosticsParams
 } from 'vscode-languageserver/node';
 import { defaultSettings, documentSettings, getDocumentSettings, ServerSettings } from './settings';
 import { Linter } from './linter/linter';
-import { validateTextDocument, validateTextDocumentChanges } from './validate';
+import { closeTextDocument, validateTextDocument, validateTextDocumentChanges } from './validate';
 import { CompletionBuilder } from './completions';
 
 const connection = createConnection(ProposedFeatures.all);
@@ -24,6 +25,30 @@ let hasConfigurationCapability = false;
 let hasWorkspaceFolderCapability = false;
 let hasDiagnosticRelatedInformationCapability = false;
 let globalSettings: ServerSettings = defaultSettings;
+const documentSessions = new Map<string, symbol>();
+const pendingValidations = new Map<string, Promise<void>>();
+
+function validateDocument(uri: string, validate: () => Promise<PublishDiagnosticsParams>): void {
+	const session = documentSessions.get(uri);
+	const pending = (pendingValidations.get(uri) ?? Promise.resolve()).then(async () => {
+		if (documentSessions.get(uri) !== session) {
+			return;
+		}
+		const diagnostics = await validate();
+		if (documentSessions.get(uri) === session) {
+			connection.sendDiagnostics(diagnostics);
+		} else {
+			closeTextDocument(uri);
+		}
+	}).catch(error => {
+		connection.console.error(`Validation failed for ${uri}: ${String(error)}`);
+	}).finally(() => {
+		if (pendingValidations.get(uri) === pending) {
+			pendingValidations.delete(uri);
+		}
+	});
+	pendingValidations.set(uri, pending);
+}
 
 // region event handlers
 
@@ -109,12 +134,20 @@ connection.onCompletionResolve(
 	}
 );
 
-connection.onDidOpenTextDocument(async (params) => {
-	connection.sendDiagnostics(await validateTextDocument(params.textDocument, await getDocumentSettings(params.textDocument.uri, connection, globalSettings, hasConfigurationCapability)));
+connection.onDidOpenTextDocument(params => {
+	documentSessions.set(params.textDocument.uri, Symbol());
+	validateDocument(params.textDocument.uri, async () =>
+		validateTextDocument(params.textDocument, await getDocumentSettings(params.textDocument.uri, connection, globalSettings, hasConfigurationCapability)));
 });
 
-connection.onDidChangeTextDocument(async (params) => {
-	connection.sendDiagnostics(await validateTextDocumentChanges(params, await getDocumentSettings(params.textDocument.uri, connection, globalSettings, hasConfigurationCapability)));
+connection.onDidChangeTextDocument(params => {
+	validateDocument(params.textDocument.uri, async () =>
+		validateTextDocumentChanges(params, await getDocumentSettings(params.textDocument.uri, connection, globalSettings, hasConfigurationCapability)));
+});
+
+connection.onDidCloseTextDocument(params => {
+	documentSessions.delete(params.textDocument.uri);
+	connection.sendDiagnostics(closeTextDocument(params.textDocument.uri));
 });
 
 connection.onCodeAction(async (params: CodeActionParams): Promise<CodeAction[]> => {

@@ -31,6 +31,9 @@ and editing. Incremental edits re-tokenize from the first changed line through
 the end of the document using the preceding line's TextMate state, so subsequent
 diagnostics reflect the current document without reopening it.
 
+Closing a document clears its diagnostics and evicts its token and settings caches.
+Reopening it parses the current contents afresh.
+
 LF, CRLF, and CR line endings are normalized internally for consistent diagnostics
 and edit ranges. Generated quick fixes use the document's original line-ending
 style; opening or linting a document does not rewrite its line endings.
