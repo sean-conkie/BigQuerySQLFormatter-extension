@@ -1,6 +1,6 @@
-import { expect } from "chai";
-import { spawn } from "child_process";
-import * as path from "path";
+import { expect } from 'chai';
+import { spawn } from 'node:child_process';
+import * as path from 'node:path';
 import {
   createProtocolConnection,
   StreamMessageReader,
@@ -9,16 +9,13 @@ import {
   DidOpenTextDocumentNotification,
   DidCloseTextDocumentNotification,
   PublishDiagnosticsNotification,
-  PublishDiagnosticsParams,
-} from "vscode-languageserver/node";
+  type PublishDiagnosticsParams,
+} from 'vscode-languageserver/node';
 
-describe("Language server lifecycle", function () {
+describe('Language server lifecycle', function () {
   this.timeout(15000);
-  it("revalidates open documents using the correct fallback configuration section", async () => {
-    const child = spawn(process.execPath, [
-      path.join(__dirname, "../server.js"),
-      "--stdio",
-    ]);
+  it('revalidates open documents using the correct fallback configuration section', async () => {
+    const child = spawn(process.execPath, [path.join(__dirname, '../server.js'), '--stdio']);
     const connection = createProtocolConnection(
       new StreamMessageReader(child.stdout),
       new StreamMessageWriter(child.stdin),
@@ -29,26 +26,22 @@ describe("Language server lifecycle", function () {
         connection.onNotification(PublishDiagnosticsNotification.type, resolve);
       });
     try {
-      await connection.sendRequest(InitializeRequest.type, {
-        processId: process.pid,
-        capabilities: {},
-        rootUri: null,
-      });
-      await connection.sendNotification("workspace/didChangeConfiguration", {
+      await connection.sendRequest(InitializeRequest.type, { processId: process.pid, capabilities: {}, rootUri: null });
+      await connection.sendNotification('workspace/didChangeConfiguration', {
         settings: { bigquerySQLFormatter: { maxNumberOfProblems: 1 } },
       });
       const opened = nextDiagnostics();
       await connection.sendNotification(DidOpenTextDocumentNotification.type, {
         textDocument: {
-          uri: "file:///settings.sql",
-          languageId: "googlesql",
+          uri: 'file:///settings.sql',
+          languageId: 'googlesql',
           version: 1,
-          text: "select a = null, b = null\n",
+          text: 'select a = null, b = null\n',
         },
       });
       expect((await opened).diagnostics).to.have.length(1);
       const changed = nextDiagnostics();
-      await connection.sendNotification("workspace/didChangeConfiguration", {
+      await connection.sendNotification('workspace/didChangeConfiguration', {
         settings: { bigquerySQLFormatter: { maxNumberOfProblems: 0 } },
       });
       expect((await changed).diagnostics).to.deep.equal([]);
@@ -58,25 +51,20 @@ describe("Language server lifecycle", function () {
     }
   });
 
-  it("does not publish stale diagnostics after close and can reopen the URI", async () => {
-    const child = spawn(process.execPath, [
-      path.join(__dirname, "../server.js"),
-      "--stdio",
-    ]);
+  it('does not publish stale diagnostics after close and can reopen the URI', async () => {
+    const child = spawn(process.execPath, [path.join(__dirname, '../server.js'), '--stdio']);
     const connection = createProtocolConnection(
       new StreamMessageReader(child.stdout),
       new StreamMessageWriter(child.stdin),
     );
     const published: PublishDiagnosticsParams[] = [];
-    connection.onNotification(PublishDiagnosticsNotification.type, (params) =>
-      published.push(params),
-    );
+    connection.onNotification(PublishDiagnosticsNotification.type, (params) => published.push(params));
     let releaseSettings!: () => void;
     const settingsReady = new Promise<void>((resolve) => {
       releaseSettings = resolve;
     });
     const settingsRequested = new Promise<void>((resolve) => {
-      connection.onRequest("workspace/configuration", async () => {
+      connection.onRequest('workspace/configuration', async () => {
         resolve();
         await settingsReady;
         return [{ maxNumberOfProblems: 100 }];
@@ -90,20 +78,16 @@ describe("Language server lifecycle", function () {
         rootUri: null,
       });
       const document = {
-        uri: "file:///lifecycle.sql",
-        languageId: "googlesql",
+        uri: 'file:///lifecycle.sql',
+        languageId: 'googlesql',
         version: 1,
-        text: "\nselect col\nfrom dataset.table",
+        text: '\nselect col\nfrom dataset.table',
       };
-      await connection.sendNotification(DidOpenTextDocumentNotification.type, {
-        textDocument: document,
-      });
+      await connection.sendNotification(DidOpenTextDocumentNotification.type, { textDocument: document });
       await settingsRequested;
-      await connection.sendNotification(DidCloseTextDocumentNotification.type, {
-        textDocument: { uri: document.uri },
-      });
+      await connection.sendNotification(DidCloseTextDocumentNotification.type, { textDocument: { uri: document.uri } });
       // A request is processed after the preceding notifications, without waiting for async validation.
-      await connection.sendRequest("textDocument/hover", {
+      await connection.sendRequest('textDocument/hover', {
         textDocument: { uri: document.uri },
         position: { line: 0, character: 0 },
       });

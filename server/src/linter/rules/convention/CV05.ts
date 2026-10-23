@@ -1,7 +1,13 @@
-import { ServerSettings } from "../../../settings";
-import { CodeAction, CodeActionKind, Diagnostic, DiagnosticSeverity, TextDocumentIdentifier, TextEdit } from 'vscode-languageserver/node';
+import type { ServerSettings } from '../../../settings';
+import {
+  type CodeAction,
+  CodeActionKind,
+  type Diagnostic,
+  DiagnosticSeverity,
+  type TextDocumentIdentifier,
+  TextEdit,
+} from 'vscode-languageserver/node';
 import { Rule } from '../base';
-
 
 /**
  * The IsNull rule
@@ -10,11 +16,12 @@ import { Rule } from '../base';
  * @memberof Linter.Rules
  */
 export class IsNull extends Rule<string> {
-  readonly name: string = "is_null";
-  readonly code: string = "CV05";
-  readonly message: string = "Comparisons with NULL should use “IS” or “IS NOT”.";
-	readonly relatedInformation: string = "Using `=` or `!=` to compare a column with `NULL` is an anti-pattern because these operators do not behave as expected with `NULL` values.";
-  readonly pattern: RegExp = /(!?=)\s*?null/gmi;
+  readonly name: string = 'is_null';
+  readonly code: string = 'CV05';
+  readonly message: string = 'Comparisons with NULL should use “IS” or “IS NOT”.';
+  readonly relatedInformation: string =
+    'Using `=` or `!=` to compare a column with `NULL` is an anti-pattern because these operators do not behave as expected with `NULL` values.';
+  readonly pattern: RegExp = /(!?=)\s*?null/gim;
   readonly severity: DiagnosticSeverity = DiagnosticSeverity.Warning;
   readonly ruleGroup: string = 'convention';
   readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
@@ -38,7 +45,6 @@ export class IsNull extends Rule<string> {
    * @returns An array of diagnostics if the pattern matches, otherwise null.
    */
   evaluate(test: string, documentUri: string | null = null): Diagnostic[] | null {
-
     if (this.enabled === false) {
       return null;
     }
@@ -48,9 +54,8 @@ export class IsNull extends Rule<string> {
     }
 
     return null;
-
   }
-  
+
   /**
    * Creates a set of code actions to fix diagnostics.
    *
@@ -61,24 +66,10 @@ export class IsNull extends Rule<string> {
   createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): CodeAction[] {
     const text = diagnostic.range.end.character - diagnostic.range.start.character === 1 ? 'is' : 'is not';
     const edit = {
-        changes: {
-            [textDocument.uri]: [
-                TextEdit.replace(diagnostic.range, text)
-            ]
-        }
+      changes: {
+        [textDocument.uri]: [TextEdit.replace(diagnostic.range, text)],
+      },
     };
-    const actions: CodeAction[] = [];
-    
-    this.codeActionKind.map((kind) => {
-      const fix = CodeAction.create(
-        `${this.codeActionTitle}${text}`,
-        edit,
-        kind
-      );
-      fix.diagnostics = [diagnostic];
-      actions.push(fix);
-    });
-
-    return actions;
+    return this.createFixActions(edit, diagnostic, this.codeActionKind, `${this.codeActionTitle}${text}`);
   }
 }

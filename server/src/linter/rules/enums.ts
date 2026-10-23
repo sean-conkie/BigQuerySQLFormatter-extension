@@ -1,4 +1,3 @@
-
 /**
  * Enum for the type of rule
  * @enum {string}
@@ -9,6 +8,6 @@
  * @property {string} REGEX - The rule is a regex rule, can be executed on the source code
  */
 export enum RuleType {
-	PARSER = 'parser',
-	REGEX = 'regex'
+  PARSER = 'parser',
+  REGEX = 'regex',
 }

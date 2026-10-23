@@ -1,18 +1,16 @@
-
-import { ServerSettings } from "../../../settings";
+import type { ServerSettings } from '../../../settings';
 import { RuleType } from '../enums';
 import {
   CodeAction,
   CodeActionKind,
-  Diagnostic,
+  type Diagnostic,
   DiagnosticSeverity,
-  TextDocumentIdentifier,
+  type TextDocumentIdentifier,
   TextEdit,
 } from 'vscode-languageserver/node';
 import { Rule } from '../base';
-import { FileMap } from '../../parser';
+import type { FileMap } from '../../parser';
 import { ColumnFunctionAST, ComparisonAST, ComparisonGroupAST } from '../../parser/ast';
-
 
 /**
  * The Functions rule
@@ -21,11 +19,12 @@ import { ColumnFunctionAST, ComparisonAST, ComparisonGroupAST } from '../../pars
  * @memberof Linter.Rules
  */
 export class Functions extends Rule<FileMap> {
-  readonly name: string = "functions";
-  readonly code: string = "LT06";
+  readonly name: string = 'functions';
+  readonly code: string = 'LT06';
   readonly type: RuleType = RuleType.PARSER;
-  readonly message: string = "Function name not immediately followed by parenthesis.";
-  readonly relatedInformation: string = "Function names should always be immediately followed by parentheses without any space.";
+  readonly message: string = 'Function name not immediately followed by parenthesis.';
+  readonly relatedInformation: string =
+    'Function names should always be immediately followed by parentheses without any space.';
   readonly severity: DiagnosticSeverity = DiagnosticSeverity.Warning;
   readonly ruleGroup: string = 'layout';
   readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
@@ -50,7 +49,6 @@ export class Functions extends Rule<FileMap> {
    * @returns An array of `Diagnostic` objects if issues are found, otherwise null.
    */
   evaluate(ast: FileMap, documentUri: string | null = null): Diagnostic[] | null {
-
     if (this.enabled === false) {
       return null;
     }
@@ -59,7 +57,7 @@ export class Functions extends Rule<FileMap> {
     for (const i in ast) {
       // check the columns for functions
       if (ast[i].columns) {
-        ast[i].columns.map((column) => {
+        ast[i].columns.forEach((column) => {
           if (column instanceof ColumnFunctionAST) {
             errors.push(...this.validateFunctionSyntax(column, documentUri));
           }
@@ -87,20 +85,21 @@ export class Functions extends Rule<FileMap> {
    * @param documentUri - The URI of the document being validated.
    * @returns An array of diagnostics indicating any validation errors found.
    */
-  private validateComparisonGroupFunctions(comparisonGroup: ComparisonGroupAST | ComparisonAST | null, documentUri: string | null): Diagnostic[] {
+  private validateComparisonGroupFunctions(
+    comparisonGroup: ComparisonGroupAST | ComparisonAST | null,
+    documentUri: string | null,
+  ): Diagnostic[] {
     const errors: Diagnostic[] = [];
     if (comparisonGroup === null) {
       return errors;
-    }
-    else if (comparisonGroup instanceof ComparisonAST) {
+    } else if (comparisonGroup instanceof ComparisonAST) {
       if (comparisonGroup.left instanceof ColumnFunctionAST) {
         errors.push(...this.validateFunctionSyntax(comparisonGroup.left, documentUri));
       }
       if (comparisonGroup.right instanceof ColumnFunctionAST) {
         errors.push(...this.validateFunctionSyntax(comparisonGroup.right, documentUri));
       }
-    }
-    else if (comparisonGroup instanceof ComparisonGroupAST) {
+    } else if (comparisonGroup instanceof ComparisonGroupAST) {
       comparisonGroup.comparisons.forEach((comparison) => {
         errors.push(...this.validateComparisonGroupFunctions(comparison, documentUri));
       });
@@ -120,7 +119,6 @@ export class Functions extends Rule<FileMap> {
    * @returns An array of `Diagnostic` objects representing any syntax errors found.
    */
   private validateFunctionSyntax(column: ColumnFunctionAST, documentUri: string | null): Diagnostic[] {
-    
     // check the function syntax
     const errors: Diagnostic[] = [];
     for (let i = 0; i < column.tokens.length; i++) {
@@ -129,7 +127,7 @@ export class Functions extends Rule<FileMap> {
         if (column.tokens[i + 1].value !== '(') {
           const range = {
             start: { line: column.tokens[i + 1].lineNumber ?? 0, character: column.tokens[i + 1].startIndex ?? 0 },
-            end: { line: column.tokens[i + 1].lineNumber ?? 0, character: column.tokens[i + 1].endIndex ?? 0 }
+            end: { line: column.tokens[i + 1].lineNumber ?? 0, character: column.tokens[i + 1].endIndex ?? 0 },
           };
           errors.push(this.createDiagnostic(range, documentUri));
         }
@@ -144,9 +142,8 @@ export class Functions extends Rule<FileMap> {
     }
 
     return errors;
-
   }
-  
+
   /**
    * Creates a set of code actions to fix diagnostics.
    *
@@ -156,20 +153,14 @@ export class Functions extends Rule<FileMap> {
    */
   createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): CodeAction[] {
     const edit = {
-        changes: {
-            [textDocument.uri]: [
-                TextEdit.replace(diagnostic.range, '')
-            ]
-        }
+      changes: {
+        [textDocument.uri]: [TextEdit.replace(diagnostic.range, '')],
+      },
     };
     const actions: CodeAction[] = [];
-    
-    this.codeActionKind.map((kind) => {
-      const fix = CodeAction.create(
-        this.codeActionTitle,
-        edit,
-        kind
-      );
+
+    this.codeActionKind.forEach((kind) => {
+      const fix = CodeAction.create(this.codeActionTitle, edit, kind);
       fix.diagnostics = [diagnostic];
       actions.push(fix);
     });

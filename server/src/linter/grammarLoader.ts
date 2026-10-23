@@ -1,7 +1,14 @@
-import * as fs from 'fs';
-import * as path from 'path';
-import { Registry, INITIAL, IGrammar, ITokenizeLineResult, IToken, StateStack } from 'vscode-textmate';
-import { readFileSync } from 'fs';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import {
+  Registry,
+  INITIAL,
+  type IGrammar,
+  type ITokenizeLineResult,
+  type IToken,
+  type StateStack,
+} from 'vscode-textmate';
+import { readFileSync } from 'node:fs';
 
 // Load the oniguruma library for vscode-textmate
 import { loadWASM } from 'onigasm';
@@ -26,7 +33,6 @@ export class GrammarToken implements IToken {
   }
 }
 
-
 export class GrammarLoader {
   private registry: Registry;
   private static wasmLoaded: boolean = false; // Static flag to check if wasm is loaded
@@ -35,7 +41,7 @@ export class GrammarLoader {
     this.registry = new Registry({
       onigLib: Promise.resolve({
         createOnigScanner: (patterns: string[]) => new OnigScanner(patterns),
-        createOnigString: (s: string) => new OnigString(s)
+        createOnigString: (s: string) => new OnigString(s),
       }),
       loadGrammar: async (scopeName: string) => {
         // Adjust the condition to match the scopeName for your grammar
@@ -45,7 +51,7 @@ export class GrammarLoader {
           return grammarContent;
         }
         return null;
-      }
+      },
     });
   }
 

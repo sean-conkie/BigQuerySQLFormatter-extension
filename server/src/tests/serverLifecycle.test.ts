@@ -1,43 +1,37 @@
-import { expect } from "chai";
-import { spawn, ChildProcessWithoutNullStreams } from "child_process";
-import * as path from "path";
+import { expect } from 'chai';
+import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
+import * as path from 'node:path';
 import {
   createProtocolConnection,
   StreamMessageReader,
   StreamMessageWriter,
-  ProtocolConnection,
+  type ProtocolConnection,
   InitializeRequest,
   InitializedNotification,
   DidOpenTextDocumentNotification,
   DidChangeTextDocumentNotification,
   DidCloseTextDocumentNotification,
   PublishDiagnosticsNotification,
-  PublishDiagnosticsParams,
+  type PublishDiagnosticsParams,
   LogMessageNotification,
-  LogMessageParams,
+  type LogMessageParams,
   MessageType,
   CompletionRequest,
   HoverRequest,
   CodeActionRequest,
-} from "vscode-languageserver/node";
-import { ServerSettings } from "../settings";
+} from 'vscode-languageserver/node';
+import type { ServerSettings } from '../settings';
 
-describe("Language server validation queue", function () {
+describe('Language server validation queue', function () {
   this.timeout(15000);
-  const uri = "file:///queued-validation.sql";
+  const uri = 'file:///queued-validation.sql';
   let child: ChildProcessWithoutNullStreams;
   let connection: ProtocolConnection;
   let nextDiagnostics: () => Promise<PublishDiagnosticsParams>;
 
   beforeEach(() => {
-    child = spawn(process.execPath, [
-      path.join(__dirname, "../server.js"),
-      "--stdio",
-    ]);
-    connection = createProtocolConnection(
-      new StreamMessageReader(child.stdout),
-      new StreamMessageWriter(child.stdin),
-    );
+    child = spawn(process.execPath, [path.join(__dirname, '../server.js'), '--stdio']);
+    connection = createProtocolConnection(new StreamMessageReader(child.stdout), new StreamMessageWriter(child.stdin));
     const received: PublishDiagnosticsParams[] = [];
     const waiting: ((params: PublishDiagnosticsParams) => void)[] = [];
     connection.onNotification(PublishDiagnosticsNotification.type, (params) => {
@@ -57,7 +51,7 @@ describe("Language server validation queue", function () {
           waiting.push(resolve);
         }
       });
-    connection.onRequest("client/registerCapability", () => null);
+    connection.onRequest('client/registerCapability', () => null);
     connection.listen();
   });
 
@@ -66,7 +60,7 @@ describe("Language server validation queue", function () {
     child.kill();
   });
 
-  it("validates edits and clears diagnostics, completions, and hover on close", async () => {
+  it('validates edits and clears diagnostics, completions, and hover on close', async () => {
     const initialized = await connection.sendRequest(InitializeRequest.type, {
       processId: process.pid,
       capabilities: {
@@ -77,19 +71,17 @@ describe("Language server validation queue", function () {
       },
       rootUri: null,
     });
-    expect(
-      initialized.capabilities.workspace?.workspaceFolders?.supported,
-    ).to.equal(true);
+    expect(initialized.capabilities.workspace?.workspaceFolders?.supported).to.equal(true);
     await connection.sendNotification(InitializedNotification.type, {});
-    await connection.sendNotification("workspace/didChangeConfiguration", {
+    await connection.sendNotification('workspace/didChangeConfiguration', {
       settings: {},
     });
     await connection.sendNotification(DidOpenTextDocumentNotification.type, {
       textDocument: {
         uri,
-        languageId: "googlesql",
+        languageId: 'googlesql',
         version: 1,
-        text: "\nselect col\nfrom dataset.table",
+        text: '\nselect col\nfrom dataset.table',
       },
     });
     const opened = await nextDiagnostics();
@@ -100,11 +92,11 @@ describe("Language server validation queue", function () {
       range: opened.diagnostics[0].range,
       context: { diagnostics: opened.diagnostics },
     });
-    expect(actions).to.be.an("array").that.is.not.empty;
+    expect(actions).to.be.an('array').that.is.not.empty;
 
     await connection.sendNotification(DidChangeTextDocumentNotification.type, {
       textDocument: { uri, version: 2 },
-      contentChanges: [{ text: "select abs(-1);\n" }],
+      contentChanges: [{ text: 'select abs(-1);\n' }],
     });
     const edited = await nextDiagnostics();
     expect(edited.uri).to.equal(uri);
@@ -113,40 +105,29 @@ describe("Language server validation queue", function () {
       textDocument: { uri },
       position: { line: 0, character: 8 },
     };
-    const completions = await connection.sendRequest(
-      CompletionRequest.type,
-      position,
-    );
+    const completions = await connection.sendRequest(CompletionRequest.type, position);
     if (!Array.isArray(completions)) {
-      throw new Error("Expected an array of function completions");
+      throw new Error('Expected an array of function completions');
     }
-    expect(completions.map((item) => item.label)).to.include("abs");
-    expect(
-      await connection.sendRequest(HoverRequest.type, position),
-    ).not.to.equal(null);
+    expect(completions.map((item) => item.label)).to.include('abs');
+    expect(await connection.sendRequest(HoverRequest.type, position)).not.to.equal(null);
 
     await connection.sendNotification(DidCloseTextDocumentNotification.type, {
       textDocument: { uri },
     });
     expect(await nextDiagnostics()).to.deep.equal({ uri, diagnostics: [] });
-    expect(
-      await connection.sendRequest(CompletionRequest.type, position),
-    ).to.deep.equal([]);
-    expect(await connection.sendRequest(HoverRequest.type, position)).to.equal(
-      null,
-    );
+    expect(await connection.sendRequest(CompletionRequest.type, position)).to.deep.equal([]);
+    expect(await connection.sendRequest(HoverRequest.type, position)).to.equal(null);
   });
 
-  it("logs failed validation, skips queued changes from a closed session, and validates the reopened document", async () => {
+  it('logs failed validation, skips queued changes from a closed session, and validates the reopened document', async () => {
     let rejectSettings!: (reason: Error) => void;
-    const pendingSettings = new Promise<ServerSettings[]>(
-      (_resolve, reject) => {
-        rejectSettings = reject;
-      },
-    );
+    const pendingSettings = new Promise<ServerSettings[]>((_resolve, reject) => {
+      rejectSettings = reject;
+    });
     let requests = 0;
     const settingsRequested = new Promise<void>((resolve) => {
-      connection.onRequest("workspace/configuration", () => {
+      connection.onRequest('workspace/configuration', () => {
         requests++;
         if (requests === 1) {
           resolve();
@@ -168,21 +149,21 @@ describe("Language server validation queue", function () {
       rootUri: null,
     });
     await connection.sendNotification(InitializedNotification.type, {});
-    await connection.sendNotification("workspace/didChangeConfiguration", {
+    await connection.sendNotification('workspace/didChangeConfiguration', {
       settings: {},
     });
     await connection.sendNotification(DidOpenTextDocumentNotification.type, {
       textDocument: {
         uri,
-        languageId: "googlesql",
+        languageId: 'googlesql',
         version: 1,
-        text: "select stale;\n",
+        text: 'select stale;\n',
       },
     });
     await settingsRequested;
     await connection.sendNotification(DidChangeTextDocumentNotification.type, {
       textDocument: { uri, version: 2 },
-      contentChanges: [{ text: "select still_stale;\n" }],
+      contentChanges: [{ text: 'select still_stale;\n' }],
     });
     await connection.sendNotification(DidCloseTextDocumentNotification.type, {
       textDocument: { uri },
@@ -191,16 +172,14 @@ describe("Language server validation queue", function () {
     await connection.sendNotification(DidOpenTextDocumentNotification.type, {
       textDocument: {
         uri,
-        languageId: "googlesql",
+        languageId: 'googlesql',
         version: 3,
-        text: "select abs(-1);\n",
+        text: 'select abs(-1);\n',
       },
     });
-    rejectSettings(new Error("Intentional settings failure"));
+    rejectSettings(new Error('Intentional settings failure'));
     const error = await validationError;
-    expect(error.message)
-      .to.include(uri)
-      .and.include("Intentional settings failure");
+    expect(error.message).to.include(uri).and.include('Intentional settings failure');
     expect((await nextDiagnostics()).uri).to.equal(uri);
     expect(requests).to.equal(2);
     expect(

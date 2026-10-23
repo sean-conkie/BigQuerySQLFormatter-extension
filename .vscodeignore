@@ -1,7 +1,8 @@
 .vscode/**
 .nyc_output/**
 coverage/**
-eslint.config.mjs
+biome.json
+.git-blame-ignore-revs
 client/out/test/**
 client/testFixture/**
 **/*.ts

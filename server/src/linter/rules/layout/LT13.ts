@@ -6,13 +6,12 @@
  * @requires Rule
  */
 
-
-import { ServerSettings } from "../../../settings";
+import type { ServerSettings } from '../../../settings';
 import {
   CodeAction,
   CodeActionKind,
-  Diagnostic,
-  TextDocumentIdentifier,
+  type Diagnostic,
+  type TextDocumentIdentifier,
   TextEdit,
 } from 'vscode-languageserver/node';
 import { Rule } from '../base';
@@ -24,15 +23,15 @@ import { Rule } from '../base';
  * @memberof Linter.Rules
  */
 export class StartOfFile extends Rule<string> {
-  readonly name: string = "start_of_file";
-  readonly code: string = "LT13";
-  readonly message: string = "Files must not begin with newlines or whitespace.";
-  readonly relatedInformation: string = "Ensuring files do not begin with newlines or whitespace promotes clean and predictable code formatting.";
+  readonly name: string = 'start_of_file';
+  readonly code: string = 'LT13';
+  readonly message: string = 'Files must not begin with newlines or whitespace.';
+  readonly relatedInformation: string =
+    'Ensuring files do not begin with newlines or whitespace promotes clean and predictable code formatting.';
   readonly pattern: RegExp = /^[\s]/;
   readonly ruleGroup: string = 'layout';
   readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
   readonly codeActionTitle = 'Fix start of file';
-
 
   /**
    * Creates an instance of StartOfFile.
@@ -52,22 +51,25 @@ export class StartOfFile extends Rule<string> {
    * @returns An array of `Diagnostic` objects if the pattern matches, otherwise null.
    */
   evaluate(test: string, documentUri: string | null = null): Diagnostic[] | null {
-
     if (this.enabled === false) {
       return null;
     }
 
     if (this.pattern.test(test.substring(0, 1))) {
-      return [this.createDiagnostic({
-        start: { line: 0, character: 0 },
-        end: { line: 0, character: 1 }
-      }, documentUri)];
+      return [
+        this.createDiagnostic(
+          {
+            start: { line: 0, character: 0 },
+            end: { line: 0, character: 1 },
+          },
+          documentUri,
+        ),
+      ];
     }
 
     return null;
-
   }
-  
+
   /**
    * Creates a set of code actions to fix diagnostics.
    *
@@ -77,20 +79,14 @@ export class StartOfFile extends Rule<string> {
    */
   createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): CodeAction[] {
     const edit = {
-        changes: {
-            [textDocument.uri]: [
-                TextEdit.replace(diagnostic.range, '')
-            ]
-        }
+      changes: {
+        [textDocument.uri]: [TextEdit.replace(diagnostic.range, '')],
+      },
     };
     const actions: CodeAction[] = [];
-    
-    this.codeActionKind.map((kind) => {
-      const fix = CodeAction.create(
-        this.codeActionTitle,
-        edit,
-        kind
-      );
+
+    this.codeActionKind.forEach((kind) => {
+      const fix = CodeAction.create(this.codeActionTitle, edit, kind);
       fix.diagnostics = [diagnostic];
       actions.push(fix);
     });

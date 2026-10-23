@@ -1,19 +1,20 @@
 import {
   CodeAction,
-  CodeActionKind,
-  Diagnostic,
+  type CodeActionKind,
+  type Diagnostic,
   DiagnosticSeverity,
-  DiagnosticTag,
-  Range,
-  TextDocumentIdentifier,
+  type DiagnosticTag,
+  type Range,
+  type TextDocumentIdentifier,
   TextEdit,
-  URI,
-} from "vscode-languageserver/node";
-import { RuleType } from "./enums";
-import { ServerSettings } from "../../settings";
-import { FileMap } from "../parser";
-import packageJson from "../../../package.json";
-import { getRegexMatchRanges } from "./regex";
+  type URI,
+  type WorkspaceEdit,
+} from 'vscode-languageserver/node';
+import { RuleType } from './enums';
+import type { ServerSettings } from '../../settings';
+import type { FileMap } from '../parser';
+import packageJson from '../../../package.json';
+import { getRegexMatchRanges } from './regex';
 
 /**
  * The version of the extension.
@@ -27,16 +28,16 @@ const version: string = packageJson.version;
  */
 export abstract class Rule<T extends string | FileMap> {
   readonly is_fix_compatible: boolean = true;
-  readonly name: string = "";
-  readonly code: string = "";
+  readonly name: string = '';
+  readonly code: string = '';
   readonly type: RuleType = RuleType.REGEX;
-  readonly message: string = "";
-  readonly relatedInformation: string = "";
+  readonly message: string = '';
+  readonly relatedInformation: string = '';
   readonly pattern: RegExp = /./;
   readonly diagnosticTags: DiagnosticTag[] = [];
-  readonly source: string = "BigQuery SQL Formatter";
-  readonly docsUrl: string = "https://bigquerysqlformatter.readthedocs.io/en/";
-  ruleGroup: string = "";
+  readonly source: string = 'BigQuery SQL Formatter';
+  readonly docsUrl: string = 'https://bigquerysqlformatter.readthedocs.io/en/';
+  ruleGroup: string = '';
   severity: DiagnosticSeverity = DiagnosticSeverity.Error;
   enabled: boolean = true;
   settings: ServerSettings;
@@ -49,10 +50,7 @@ export abstract class Rule<T extends string | FileMap> {
 
   abstract evaluate(test: T, documentUri: string | null): Diagnostic[] | null;
 
-  createCodeAction(
-    textDocument: TextDocumentIdentifier,
-    diagnostic: Diagnostic,
-  ): CodeAction[] | null {
+  createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): CodeAction[] | null {
     return null;
   }
 
@@ -68,11 +66,18 @@ export abstract class Rule<T extends string | FileMap> {
     }
     const edit = {
       changes: {
-        [textDocument.uri]: [
-          TextEdit.replace(diagnostic.range, " ".repeat(indentation)),
-        ],
+        [textDocument.uri]: [TextEdit.replace(diagnostic.range, ' '.repeat(indentation))],
       },
     };
+    return this.createFixActions(edit, diagnostic, kinds, title);
+  }
+
+  protected createFixActions(
+    edit: WorkspaceEdit,
+    diagnostic: Diagnostic,
+    kinds: CodeActionKind[],
+    title: string,
+  ): CodeAction[] {
     return kinds.map((kind) => {
       const action = CodeAction.create(title, edit, kind);
       action.diagnostics = [diagnostic];
@@ -88,13 +93,10 @@ export abstract class Rule<T extends string | FileMap> {
    * @param documentUri - An optional URI of the document being evaluated. Defaults to null.
    * @returns An array of `Diagnostic` objects representing the matches found, or null if no matches are found.
    */
-  evaluateRegexPatterns(
-    test: string,
-    documentUri: string | null = null,
-  ): Diagnostic[] | null {
+  evaluateRegexPatterns(test: string, documentUri: string | null = null): Diagnostic[] | null {
     const diagnostics: Diagnostic[] = [];
 
-    getRegexMatchRanges(this.pattern, test)?.map((range) => {
+    getRegexMatchRanges(this.pattern, test)?.forEach((range) => {
       diagnostics.push(this.createDiagnostic(range, documentUri));
     });
 
@@ -108,10 +110,7 @@ export abstract class Rule<T extends string | FileMap> {
    * @param documentUri - The URI of the document where the issue is found. Defaults to null.
    * @returns A `Diagnostic` object containing details about the issue.
    */
-  createDiagnostic(
-    range: Range,
-    documentUri: string | null = null,
-  ): Diagnostic {
+  createDiagnostic(range: Range, documentUri: string | null = null): Diagnostic {
     const diagnostic: Diagnostic = {
       code: this.diagnosticCode,
       codeDescription: { href: this.diagnosticCodeDescription },
@@ -120,7 +119,7 @@ export abstract class Rule<T extends string | FileMap> {
       message: this.message,
       source: this.source,
     };
-    if (this.relatedInformation !== "" && documentUri != null) {
+    if (this.relatedInformation !== '' && documentUri != null) {
       diagnostic.relatedInformation = [
         {
           location: {
@@ -183,10 +182,7 @@ export abstract class Rule<T extends string | FileMap> {
    * @param errorRange - The range object representing the start and end positions of the error.
    * @returns A tuple containing the additional indent number and the updated error range.
    */
-  createIndentErrorOutputs(
-    errorOffset: number,
-    errorRange: Range,
-  ): [number, Range] {
+  createIndentErrorOutputs(errorOffset: number, errorRange: Range): [number, Range] {
     let additionalIdentNumber = 0;
 
     if (errorOffset > 0) {

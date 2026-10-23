@@ -1,7 +1,14 @@
-import { ServerSettings } from "../../../settings";
-import { CodeAction, CodeActionKind, CodeActionParams, Diagnostic, DiagnosticSeverity, TextDocumentIdentifier, TextEdit } from 'vscode-languageserver/node';
+import type { ServerSettings } from '../../../settings';
+import {
+  type CodeAction,
+  CodeActionKind,
+  CodeActionParams,
+  type Diagnostic,
+  DiagnosticSeverity,
+  type TextDocumentIdentifier,
+  TextEdit,
+} from 'vscode-languageserver/node';
 import { Rule } from '../base';
-
 
 /**
  * The Coalesce rule
@@ -10,11 +17,12 @@ import { Rule } from '../base';
  * @memberof Linter.Rules
  */
 export class Coalesce extends Rule<string> {
-  readonly name: string = "coalesce";
-  readonly code: string = "CV02";
-  readonly message: string = "Use COALESCE instead of IFNULL or NVL.";
-	readonly relatedInformation: string = "Using `COALESCE` instead of `IFNULL` or `NVL` ensures that SQL queries are portable, consistent, and easier to maintain across different databases.";
-  readonly pattern: RegExp = /(ifnull|nvl)\s*\(/gmi;
+  readonly name: string = 'coalesce';
+  readonly code: string = 'CV02';
+  readonly message: string = 'Use COALESCE instead of IFNULL or NVL.';
+  readonly relatedInformation: string =
+    'Using `COALESCE` instead of `IFNULL` or `NVL` ensures that SQL queries are portable, consistent, and easier to maintain across different databases.';
+  readonly pattern: RegExp = /(ifnull|nvl)\s*\(/gim;
   readonly severity: DiagnosticSeverity = DiagnosticSeverity.Warning;
   readonly ruleGroup: string = 'convention';
   readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
@@ -38,7 +46,6 @@ export class Coalesce extends Rule<string> {
    * @returns An array of diagnostics if the pattern matches, otherwise null.
    */
   evaluate(test: string, documentUri: string | null = null): Diagnostic[] | null {
-
     if (this.enabled === false) {
       return null;
     }
@@ -48,9 +55,8 @@ export class Coalesce extends Rule<string> {
     }
 
     return null;
-
   }
-  
+
   /**
    * Creates a set of code actions to fix diagnostics.
    *
@@ -60,24 +66,10 @@ export class Coalesce extends Rule<string> {
    */
   createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): CodeAction[] {
     const edit = {
-        changes: {
-            [textDocument.uri]: [
-                TextEdit.replace(diagnostic.range, 'coalesce')
-            ]
-        }
+      changes: {
+        [textDocument.uri]: [TextEdit.replace(diagnostic.range, 'coalesce')],
+      },
     };
-    const actions: CodeAction[] = [];
-    
-    this.codeActionKind.map((kind) => {
-      const fix = CodeAction.create(
-        this.codeActionTitle,
-        edit,
-        kind
-      );
-      fix.diagnostics = [diagnostic];
-      actions.push(fix);
-    });
-
-    return actions;
+    return this.createFixActions(edit, diagnostic, this.codeActionKind, this.codeActionTitle);
   }
 }

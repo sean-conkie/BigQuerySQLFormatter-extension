@@ -1,7 +1,13 @@
-import { ServerSettings } from "../../../settings";
-import { CodeAction, CodeActionKind, Diagnostic, DiagnosticSeverity, TextDocumentIdentifier, TextEdit } from 'vscode-languageserver/node';
+import type { ServerSettings } from '../../../settings';
+import {
+  type CodeAction,
+  CodeActionKind,
+  type Diagnostic,
+  DiagnosticSeverity,
+  type TextDocumentIdentifier,
+  TextEdit,
+} from 'vscode-languageserver/node';
 import { Rule } from '../base';
-
 
 /**
  * The Count rule
@@ -10,11 +16,12 @@ import { Rule } from '../base';
  * @memberof Linter.Rules
  */
 export class Count extends Rule<string> {
-  readonly name: string = "count_rows";
-  readonly code: string = "CV04";
-  readonly message: string = "Use COUNT(1) to express “count number of rows”.";
-	readonly relatedInformation: string = "For clarity and to follow best practices, it is recommended to use `COUNT(1)` when counting rows.";
-  readonly pattern: RegExp = /count\s*?\(\s*?(?:distinct\s*?)?(\*)\s*?\)/gmi;
+  readonly name: string = 'count_rows';
+  readonly code: string = 'CV04';
+  readonly message: string = 'Use COUNT(1) to express “count number of rows”.';
+  readonly relatedInformation: string =
+    'For clarity and to follow best practices, it is recommended to use `COUNT(1)` when counting rows.';
+  readonly pattern: RegExp = /count\s*?\(\s*?(?:distinct\s*?)?(\*)\s*?\)/gim;
   readonly severity: DiagnosticSeverity = DiagnosticSeverity.Warning;
   readonly ruleGroup: string = 'convention';
   readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
@@ -38,7 +45,6 @@ export class Count extends Rule<string> {
    * @returns An array of diagnostics if the pattern matches, otherwise null.
    */
   evaluate(test: string, documentUri: string | null = null): Diagnostic[] | null {
-
     if (this.enabled === false) {
       return null;
     }
@@ -48,9 +54,8 @@ export class Count extends Rule<string> {
     }
 
     return null;
-
   }
-  
+
   /**
    * Creates a set of code actions to fix diagnostics.
    *
@@ -60,24 +65,10 @@ export class Count extends Rule<string> {
    */
   createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): CodeAction[] {
     const edit = {
-        changes: {
-            [textDocument.uri]: [
-                TextEdit.replace(diagnostic.range, '1')
-            ]
-        }
+      changes: {
+        [textDocument.uri]: [TextEdit.replace(diagnostic.range, '1')],
+      },
     };
-    const actions: CodeAction[] = [];
-    
-    this.codeActionKind.map((kind) => {
-      const fix = CodeAction.create(
-        this.codeActionTitle,
-        edit,
-        kind
-      );
-      fix.diagnostics = [diagnostic];
-      actions.push(fix);
-    });
-
-    return actions;
+    return this.createFixActions(edit, diagnostic, this.codeActionKind, this.codeActionTitle);
   }
 }

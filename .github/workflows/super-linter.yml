@@ -30,10 +30,14 @@ jobs:
         uses: super-linter/super-linter@2da136927bd4a73596db63044b504547c62cb854 # v9
         env:
           VALIDATE_ALL_CODEBASE: false
-          # ESLint runs with the repository's dependencies in the Node.js workflow.
+          # Biome runs with the pinned repository dependency in the Node.js workflow.
           VALIDATE_JAVASCRIPT_ES: false
           VALIDATE_TYPESCRIPT_ES: false
-          # Use the existing ESLint and Prettier rules instead of conflicting Biome defaults.
+          # Avoid conflicting formatters for Biome-managed TypeScript and JSON sources.
+          VALIDATE_JAVASCRIPT_PRETTIER: false
+          VALIDATE_TYPESCRIPT_PRETTIER: false
+          VALIDATE_JSON_PRETTIER: false
+          VALIDATE_JSON: false
           VALIDATE_BIOME_FORMAT: false
           VALIDATE_BIOME_LINT: false
           # JSCPD always scans the whole repository; check the PR files explicitly below.
@@ -55,10 +59,5 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          changed_files=$(mktemp)
-          trap 'rm -f "$changed_files"' EXIT
-          git diff --name-only -z --diff-filter=ACMR "$BASE_SHA" "$HEAD_SHA" > "$changed_files"
-          mapfile -d '' files < "$changed_files"
-          if (( ${#files[@]} )); then
-            npx --yes jscpd@5.3.0 --config .github/linters/.jscpd.json -- "${files[@]}"
-          fi
+          node --test scripts/check-duplication.test.cjs
+          node scripts/check-duplication.cjs "$BASE_SHA" "$HEAD_SHA"

@@ -6,11 +6,8 @@
  * @requires Rule
  */
 
-
-import { ServerSettings } from "../../../settings";
-import {
-  Diagnostic,
-} from 'vscode-languageserver/node';
+import type { ServerSettings } from '../../../settings';
+import type { Diagnostic } from 'vscode-languageserver/node';
 import { Rule } from '../base';
 
 /**
@@ -21,11 +18,12 @@ import { Rule } from '../base';
  */
 export class UnionCheck extends Rule<string> {
   readonly is_fix_compatible: boolean = false;
-  readonly name: string = "union_checks";
-  readonly code: string = "LT11";
-  readonly message: string = "Union operators should be surrounded by newlines.";
-  readonly pattern: RegExp = /\S( *union +(?:all|distinct)) *|\n( *union (?:all|distinct) +)\S/gmi;
-  readonly relatedInformation: string = "The `UNION` operator should be placed on a separate line, surrounded by newlines before and after.";
+  readonly name: string = 'union_checks';
+  readonly code: string = 'LT11';
+  readonly message: string = 'Union operators should be surrounded by newlines.';
+  readonly pattern: RegExp = /\S( *union +(?:all|distinct)) *|\n( *union (?:all|distinct) +)\S/gim;
+  readonly relatedInformation: string =
+    'The `UNION` operator should be placed on a separate line, surrounded by newlines before and after.';
   readonly ruleGroup: string = 'layout';
 
   /**
@@ -46,7 +44,6 @@ export class UnionCheck extends Rule<string> {
    * @returns An array of `Diagnostic` objects if the pattern matches, or null otherwise.
    */
   evaluate(test: string, documentUri: string | null = null): Diagnostic[] | null {
-
     if (this.enabled === false) {
       return null;
     }
@@ -56,17 +53,14 @@ export class UnionCheck extends Rule<string> {
     }
 
     return null;
-
   }
 
   matches(test: string): number {
-
     let noOfMatches: number = 0;
     const matches = test.matchAll(this.pattern);
     for (const match of matches) {
       noOfMatches++;
     }
     return noOfMatches;
-
   }
 }

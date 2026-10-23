@@ -1,4 +1,4 @@
-import { _Connection } from "vscode-languageserver/node";
+import type { _Connection } from 'vscode-languageserver/node';
 
 /**
  * Interface representing the settings for the server.
@@ -21,10 +21,7 @@ export const defaultSettings: ServerSettings = { maxNumberOfProblems: 100 };
  * The key is a string representing the document URI.
  * The value is a Thenable that resolves to the server settings for the document.
  */
-export const documentSettings: Map<
-  string,
-  Thenable<ServerSettings>
-> = new Map();
+export const documentSettings: Map<string, Thenable<ServerSettings>> = new Map();
 
 /**
  * Retrieves the document-specific settings for the given resource.
@@ -49,12 +46,9 @@ export function getDocumentSettings(
     result = connection.workspace
       .getConfiguration({
         scopeUri: resource,
-        section: "bigquerySQLFormatter",
+        section: 'bigquerySQLFormatter',
       })
-      .then((settings: Partial<ServerSettings> | null) => ({
-        ...defaultSettings,
-        ...settings,
-      }));
+      .then((settings: Partial<ServerSettings> | null) => ({ ...defaultSettings, ...settings }));
     documentSettings.set(resource, result);
   }
   return result;

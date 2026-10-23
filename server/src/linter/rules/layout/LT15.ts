@@ -6,26 +6,23 @@
  * @requires Rule
  */
 
-import { ServerSettings } from "../../../settings";
-import { RuleType } from "../enums";
+import type { ServerSettings } from '../../../settings';
+import { RuleType } from '../enums';
 import {
-  CodeAction,
+  type CodeAction,
   CodeActionKind,
-  Diagnostic,
-  DocumentUri,
+  type Diagnostic,
+  type DocumentUri,
   Range,
-  TextDocumentIdentifier,
-} from "vscode-languageserver/node";
-import { Rule } from "../base";
-import { FileMap } from "../../parser";
-import { ComparisonAST, ComparisonGroupAST } from "../../parser/ast";
-import { Token } from "../../parser/token";
+  type TextDocumentIdentifier,
+} from 'vscode-languageserver/node';
+import { Rule } from '../base';
+import type { FileMap } from '../../parser';
+import { ComparisonAST, ComparisonGroupAST } from '../../parser/ast';
+import type { Token } from '../../parser/token';
 
 type RangeCache = Map<string, number>;
-const documentCache: Map<DocumentUri, RangeCache> = new Map<
-  DocumentUri,
-  RangeCache
->();
+const documentCache: Map<DocumentUri, RangeCache> = new Map<DocumentUri, RangeCache>();
 
 /**
  * The ComparisonOperators rule
@@ -34,18 +31,15 @@ const documentCache: Map<DocumentUri, RangeCache> = new Map<
  * @memberof Linter.Rules
  */
 export class ComparisonOperators extends Rule<FileMap> {
-  readonly name: string = "comparison_operators";
-  readonly code: string = "LT15";
+  readonly name: string = 'comparison_operators';
+  readonly code: string = 'LT15';
   readonly type: RuleType = RuleType.PARSER;
-  readonly message: string = "Align equal sign in comparison blocks.";
+  readonly message: string = 'Align equal sign in comparison blocks.';
   readonly relatedInformation: string =
-    "When the equal (`=`) signs in a `WHERE` clause or join conditions are misaligned across multiple rows, it reduces the readability and consistency of the query.";
-  readonly ruleGroup: string = "layout";
-  readonly codeActionKind: CodeActionKind[] = [
-    CodeActionKind.SourceFixAll,
-    CodeActionKind.QuickFix,
-  ];
-  readonly codeActionTitle = "Format comparison operators";
+    'When the equal (`=`) signs in a `WHERE` clause or join conditions are misaligned across multiple rows, it reduces the readability and consistency of the query.';
+  readonly ruleGroup: string = 'layout';
+  readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
+  readonly codeActionTitle = 'Format comparison operators';
 
   /**
    * Creates an instance of ComparisonOperators.
@@ -65,10 +59,7 @@ export class ComparisonOperators extends Rule<FileMap> {
    * @param documentUri - The URI of the document being evaluated. This parameter is optional and defaults to null.
    * @returns An array of `Diagnostic` objects representing the layout issues found, or null if no issues are found or the rule is disabled.
    */
-  evaluate(
-    ast: FileMap,
-    documentUri: string | null = null,
-  ): Diagnostic[] | null {
+  evaluate(ast: FileMap, documentUri: string | null = null): Diagnostic[] | null {
     if (this.enabled === false) {
       return null;
     }
@@ -86,7 +77,7 @@ export class ComparisonOperators extends Rule<FileMap> {
         continue;
       }
 
-      joins.map((join) => {
+      joins.forEach((join) => {
         if (join.on instanceof ComparisonGroupAST) {
           errors.push(...this.processComparisonGroup(join.on, documentUri));
         }
@@ -96,10 +87,7 @@ export class ComparisonOperators extends Rule<FileMap> {
     return errors.length > 0 ? errors : null;
   }
 
-  private processComparisonGroup(
-    comparison: ComparisonGroupAST,
-    documentUri: string | null = null,
-  ): Diagnostic[] {
+  private processComparisonGroup(comparison: ComparisonGroupAST, documentUri: string | null = null): Diagnostic[] {
     const errors: Diagnostic[] = [];
     const operators: Token[] = [];
     const operatorIndexes: number[] = [];
@@ -113,9 +101,7 @@ export class ComparisonOperators extends Rule<FileMap> {
           continue;
         }
         // find all the operators
-        const operatorToken = comp.tokens.filter(
-          (token) => token.value === operator,
-        )[0];
+        const operatorToken = comp.tokens.filter((token) => token.value === operator)[0];
         if (comp.left != null) {
           operatorIndexes.push(comp.left.endIndex ?? 0);
         }
@@ -129,14 +115,11 @@ export class ComparisonOperators extends Rule<FileMap> {
     }
 
     const requiredIndex = Math.max(...operatorIndexes) + 2;
-    operators.map((operator) => {
+    operators.forEach((operator) => {
       // adjust the startIndex to account for gte & lte & neq
       // we want the '=' to line up so add 1 to the index
       let operatorStartIndex = operator.startIndex;
-      if (
-        operator.value.trim().length > 1 ||
-        operator.value.indexOf("=") === -1
-      ) {
+      if (operator.value.trim().length > 1 || operator.value.indexOf('=') === -1) {
         operatorStartIndex++;
       }
       if (operatorStartIndex !== requiredIndex) {
@@ -151,10 +134,7 @@ export class ComparisonOperators extends Rule<FileMap> {
             character: operator.startIndex,
           },
         };
-        const [additionalIdentNumber, newRange] = this.createIndentErrorOutputs(
-          errorOffset,
-          errorRange,
-        );
+        const [additionalIdentNumber, newRange] = this.createIndentErrorOutputs(errorOffset, errorRange);
         errors.push(this.createDiagnostic(newRange, documentUri));
         cache!.set(this.createCacheKey(newRange), additionalIdentNumber);
       }
@@ -172,16 +152,11 @@ export class ComparisonOperators extends Rule<FileMap> {
    * @param diagnostic - The diagnostic information about the issue to be fixed.
    * @returns An array of code actions that can be applied to fix the issue.
    */
-  createCodeAction(
-    textDocument: TextDocumentIdentifier,
-    diagnostic: Diagnostic,
-  ): CodeAction[] {
+  createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): CodeAction[] {
     return this.createIndentCodeActions(
       textDocument,
       diagnostic,
-      documentCache
-        .get(textDocument.uri)
-        ?.get(this.createCacheKey(diagnostic.range)),
+      documentCache.get(textDocument.uri)?.get(this.createCacheKey(diagnostic.range)),
       this.codeActionKind,
       this.codeActionTitle,
     );

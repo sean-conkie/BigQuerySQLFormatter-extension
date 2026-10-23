@@ -1,7 +1,6 @@
-import { ServerSettings } from "../../../settings";
-import { Diagnostic } from 'vscode-languageserver/node';
+import type { ServerSettings } from '../../../settings';
+import type { Diagnostic } from 'vscode-languageserver/node';
 import { Rule } from '../base';
-
 
 /**
  * The ColumnCount rule
@@ -11,11 +10,12 @@ import { Rule } from '../base';
  */
 export class ColumnCount extends Rule<string> {
   readonly is_fix_compatible: boolean = false;
-  readonly name: string = "column_count";
-  readonly code: string = "AM04";
-  readonly message: string = "Query produces an unknown number of result columns.";
-	readonly relatedInformation: string = "Querying all columns using * produces a query result where the number or ordering of columns changes if the upstream table’s schema changes. This should be avoided because it can cause slow performance, cause important schema changes to go undetected, or break production code.";
-  readonly pattern: RegExp = /((?:[\w_]+\.)?\*)/gmi;
+  readonly name: string = 'column_count';
+  readonly code: string = 'AM04';
+  readonly message: string = 'Query produces an unknown number of result columns.';
+  readonly relatedInformation: string =
+    'Querying all columns using * produces a query result where the number or ordering of columns changes if the upstream table’s schema changes. This should be avoided because it can cause slow performance, cause important schema changes to go undetected, or break production code.';
+  readonly pattern: RegExp = /((?:[\w_]+\.)?\*)/gim;
   readonly ruleGroup: string = 'ambiguous';
 
   /**
@@ -36,7 +36,6 @@ export class ColumnCount extends Rule<string> {
    * @returns An array of diagnostics if the pattern matches, otherwise null.
    */
   evaluate(test: string, documentUri: string | null = null): Diagnostic[] | null {
-
     if (this.enabled === false) {
       return null;
     }
@@ -46,6 +45,5 @@ export class ColumnCount extends Rule<string> {
     }
 
     return null;
-
   }
 }

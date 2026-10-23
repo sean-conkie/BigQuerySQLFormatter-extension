@@ -1,17 +1,14 @@
-import { DocumentUri, Range } from "vscode-languageserver";
-import { LineToken } from "./token";
+import type { DocumentUri, Range } from 'vscode-languageserver';
+import type { LineToken } from './token';
 
-export const globalTokenCache: TokenCache = new Map<
-  DocumentUri,
-  DocumentCache
->();
+export const globalTokenCache: TokenCache = new Map<DocumentUri, DocumentCache>();
 
 export type TokenCache = Map<DocumentUri, DocumentCache>;
 
 export class DocumentCache {
   private readonly cache: Map<number, LineToken> = new Map();
 
-  constructor(public readonly eol: string = "\n") {}
+  constructor(public readonly eol: string = '\n') {}
 
   public get(token: number): LineToken | undefined {
     return this.cache.get(token);
@@ -28,17 +25,18 @@ export class DocumentCache {
         const lineToken = this.cache.get(i);
         if (lineToken) {
           const startIndex = range.start.line === i ? range.start.character : 0;
-          const endIndex =
-            range.end.line === i ? range.end.character : lineToken.value.length;
+          const endIndex = range.end.line === i ? range.end.character : lineToken.value.length;
 
           lines.push(lineToken.value.substring(startIndex, endIndex));
         }
       }
-      return lines.join("\n");
+      return lines.join('\n');
     }
 
-    this.cache.forEach((lineToken: LineToken) => lines.push(lineToken.value));
-    return lines.join("\n");
+    this.cache.forEach((lineToken: LineToken) => {
+      lines.push(lineToken.value);
+    });
+    return lines.join('\n');
   }
 
   public set(token: number, value: LineToken): void {
@@ -51,10 +49,7 @@ export class DocumentCache {
       const end = line === range.end.line ? range.end.character : Infinity;
       let quotedIdentifier = false;
       for (const token of this.cache.get(line)?.tokens ?? []) {
-        if (
-          token.value === "`" &&
-          token.scopes.includes("punctuation.definition.string.begin.sql")
-        ) {
+        if (token.value === '`' && token.scopes.includes('punctuation.definition.string.begin.sql')) {
           quotedIdentifier = true;
         }
         if (
@@ -63,17 +58,12 @@ export class DocumentCache {
           (quotedIdentifier ||
             token.scopes.some(
               (scope) =>
-                scope.startsWith("string.") ||
-                scope.startsWith("comment.") ||
-                scope === "meta.identifier.quoted.sql",
+                scope.startsWith('string.') || scope.startsWith('comment.') || scope === 'meta.identifier.quoted.sql',
             ))
         ) {
           return false;
         }
-        if (
-          token.value === "`" &&
-          token.scopes.includes("punctuation.definition.string.end.sql")
-        ) {
+        if (token.value === '`' && token.scopes.includes('punctuation.definition.string.end.sql')) {
           quotedIdentifier = false;
         }
       }

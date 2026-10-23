@@ -1,7 +1,13 @@
-import { ServerSettings } from "../../../settings";
-import { CodeAction, CodeActionKind, Diagnostic, DiagnosticSeverity, TextDocumentIdentifier, TextEdit } from 'vscode-languageserver/node';
+import type { ServerSettings } from '../../../settings';
+import {
+  type CodeAction,
+  CodeActionKind,
+  type Diagnostic,
+  DiagnosticSeverity,
+  type TextDocumentIdentifier,
+  TextEdit,
+} from 'vscode-languageserver/node';
 import { Rule } from '../base';
-
 
 /**
  * The SelectTrailingComma rule
@@ -10,11 +16,12 @@ import { Rule } from '../base';
  * @memberof Linter.Rules
  */
 export class SelectTrailingComma extends Rule<string> {
-  readonly name: string = "select_trailing_comma";
-  readonly code: string = "CV03";
-  readonly message: string = "Trailing comma within select clause.";
-	readonly relatedInformation: string = "To ensure better readability and prevent errors, the trailing comma should be omitted in `SELECT` statements.";
-  readonly pattern: RegExp = /(,)\s*from/gmi;
+  readonly name: string = 'select_trailing_comma';
+  readonly code: string = 'CV03';
+  readonly message: string = 'Trailing comma within select clause.';
+  readonly relatedInformation: string =
+    'To ensure better readability and prevent errors, the trailing comma should be omitted in `SELECT` statements.';
+  readonly pattern: RegExp = /(,)\s*from/gim;
   readonly severity: DiagnosticSeverity = DiagnosticSeverity.Warning;
   readonly ruleGroup: string = 'convention';
   readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
@@ -38,7 +45,6 @@ export class SelectTrailingComma extends Rule<string> {
    * @returns An array of diagnostics if the pattern matches, otherwise null.
    */
   evaluate(test: string, documentUri: string | null = null): Diagnostic[] | null {
-
     if (this.enabled === false) {
       return null;
     }
@@ -48,9 +54,8 @@ export class SelectTrailingComma extends Rule<string> {
     }
 
     return null;
-
   }
-  
+
   /**
    * Creates a set of code actions to fix diagnostics.
    *
@@ -60,24 +65,10 @@ export class SelectTrailingComma extends Rule<string> {
    */
   createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): CodeAction[] {
     const edit = {
-        changes: {
-            [textDocument.uri]: [
-                TextEdit.replace(diagnostic.range, '')
-            ]
-        }
+      changes: {
+        [textDocument.uri]: [TextEdit.replace(diagnostic.range, '')],
+      },
     };
-    const actions: CodeAction[] = [];
-    
-    this.codeActionKind.map((kind) => {
-      const fix = CodeAction.create(
-        this.codeActionTitle,
-        edit,
-        kind
-      );
-      fix.diagnostics = [diagnostic];
-      actions.push(fix);
-    });
-
-    return actions;
+    return this.createFixActions(edit, diagnostic, this.codeActionKind, this.codeActionTitle);
   }
 }

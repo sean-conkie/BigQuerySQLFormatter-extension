@@ -1,14 +1,13 @@
-import { ServerSettings } from "../../../settings";
+import type { ServerSettings } from '../../../settings';
 import {
   CodeAction,
   CodeActionKind,
-  Diagnostic,
-  TextDocumentIdentifier,
+  type Diagnostic,
+  type TextDocumentIdentifier,
   TextEdit,
 } from 'vscode-languageserver/node';
 import { Rule } from '../base';
 import { globalTokenCache } from '../../parser/tokenCache';
-
 
 /**
  * The Literals rule
@@ -17,10 +16,11 @@ import { globalTokenCache } from '../../parser/tokenCache';
  * @memberof Linter.Rules
  */
 export class Literals extends Rule<string> {
-  readonly name: string = "literals";
-  readonly code: string = "CP04";
-  readonly message: string = "Capitalisation of boolean/null literal";
-	readonly relatedInformation: string = "To maintain consistency and readability, always write the literals `null`, `true`, and `false` in lowercase.";
+  readonly name: string = 'literals';
+  readonly code: string = 'CP04';
+  readonly message: string = 'Capitalisation of boolean/null literal';
+  readonly relatedInformation: string =
+    'To maintain consistency and readability, always write the literals `null`, `true`, and `false` in lowercase.';
   readonly pattern: RegExp = /FALSE|TRUE|NULL/gm;
   readonly ruleGroup: string = 'capitalisation';
   readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
@@ -44,7 +44,6 @@ export class Literals extends Rule<string> {
    * @returns An array of diagnostics if the pattern matches, otherwise null.
    */
   evaluate(test: string, documentUri: string | null = null): Diagnostic[] | null {
-
     if (this.enabled === false) {
       return null;
     }
@@ -54,9 +53,8 @@ export class Literals extends Rule<string> {
     }
 
     return null;
-
   }
-  
+
   /**
    * Creates a set of code actions to fix diagnostics.
    *
@@ -74,20 +72,14 @@ export class Literals extends Rule<string> {
     const text = cachedDocument.getText(diagnostic.range).toLowerCase();
 
     const edit = {
-        changes: {
-            [textDocument.uri]: [
-                TextEdit.replace(diagnostic.range, text)
-            ]
-        }
+      changes: {
+        [textDocument.uri]: [TextEdit.replace(diagnostic.range, text)],
+      },
     };
     const actions: CodeAction[] = [];
-    
-    this.codeActionKind.map((kind) => {
-      const fix = CodeAction.create(
-        this.codeActionTitle,
-        edit,
-        kind
-      );
+
+    this.codeActionKind.forEach((kind) => {
+      const fix = CodeAction.create(this.codeActionTitle, edit, kind);
       fix.diagnostics = [diagnostic];
       actions.push(fix);
     });

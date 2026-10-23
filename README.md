@@ -45,7 +45,7 @@ style; opening or linting a document does not rewrite its line endings.
 ## Development and CI
 
 Use Node.js 22 and install the locked root, client and server dependencies with `npm ci`.
-The following checks run on pull requests and pushes to `main`:
+The following checks run on all pull requests (including stacked branches) and pushes to `main`:
 
 ```sh
 npm run lint
@@ -67,10 +67,17 @@ and require a display; on headless Linux use
 Release publishing uses Node.js 22 and the locked local `@vscode/vsce` dependency,
 with `VSCE_PAT` supplied by the repository secret.
 
-Code linting uses ESLint and formatting checks use Prettier; conflicting Biome
-defaults are disabled. A separate JSCPD step checks changed pull request files
-against the 5% limit, matching the other changed-file lint checks, and ignores
-comments so repeated API documentation is not counted as duplicated logic.
+TypeScript linting and formatting use pinned Biome 2.6.2 with two-space indentation,
+single quotes, and semicolons. `npm run lint` checks both; `npm run lint:fix` applies
+safe lint fixes and formatting, and `npm run format` only formats. CI uses `biome ci`
+to reject lint and formatting violations. Super-linter's overlapping formatters
+are disabled. Formatting-only commits are listed in `.git-blame-ignore-revs`;
+use `git config blame.ignoreRevsFile .git-blame-ignore-revs` to skip them in blame.
+A separate JSCPD step compares changed pull request files with the same files at
+the PR base. It retains the 5% duplication target and rejects increases above an
+existing higher baseline. Both snapshots are normalized with the same pinned
+formatter before comparing token percentages, so quote styles and line wrapping
+do not manufacture regressions. Comments and tests are excluded.
 Actions are pinned to commit hashes, and lint results appear in the workflow
 summary without requiring permission to post pull request comments.
 

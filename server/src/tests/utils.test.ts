@@ -47,7 +47,7 @@ describe('Utility Functions', () => {
     });
 
     it('should throw an error when start is greater than end', () => {
-      expect(() => range(5, 1)).to.throw("Start value must be less than or equal to end value.");
+      expect(() => range(5, 1)).to.throw('Start value must be less than or equal to end value.');
     });
   });
 
