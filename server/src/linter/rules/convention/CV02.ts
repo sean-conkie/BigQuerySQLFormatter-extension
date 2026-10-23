@@ -1,6 +1,6 @@
 import type { ServerSettings } from '../../../settings';
 import {
-  CodeAction,
+  type CodeAction,
   CodeActionKind,
   CodeActionParams,
   type Diagnostic,
