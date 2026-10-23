@@ -1,11 +1,11 @@
 /*
 Extension.ts is the entry point for the extension. It is responsible for activating the extension and starting the language server. 
-The extension is activated when the user opens a file with the .sql extension. The language server is started when the extension is activated.
+The extension is activated when the user opens a GoogleSQL document. The language server is started when the extension is activated.
 The language server is implemented in the server folder.
 */
 
 import * as path from 'node:path';
-import { workspace, type ExtensionContext } from 'vscode';
+import type { ExtensionContext } from 'vscode';
 
 import {
   LanguageClient,
@@ -32,16 +32,7 @@ export function activate(context: ExtensionContext) {
 
   // Options to control the language client
   const clientOptions: LanguageClientOptions = {
-    // Register the server for sql documents
-    documentSelector: [
-      { scheme: 'file', language: 'sql' },
-      { scheme: 'file', language: 'sql-bigquery' },
-      { scheme: 'file', language: 'googlesql' },
-    ],
-    synchronize: {
-      // Notify the server about file changes to '.clientrc files contained in the workspace
-      fileEvents: workspace.createFileSystemWatcher('**/.clientrc'),
-    },
+    documentSelector: [{ scheme: 'file', language: 'googlesql' }],
   };
 
   // Create the language client and start the client.

@@ -25,10 +25,6 @@
   "engines": {
     "vscode": "^1.75.0"
   },
-  "activationEvents": [
-    "onLanguage:sql",
-    "onLanguage:sql-biqquery"
-  ],
   "main": "./client/out/extension",
   "contributes": {
     "configuration": {
@@ -63,9 +59,6 @@
           "GoogleSQL"
         ],
         "extensions": [
-          ".sql",
-          ".ddl",
-          ".dml",
           ".bqsql",
           ".bqddl",
           ".bqdml"
