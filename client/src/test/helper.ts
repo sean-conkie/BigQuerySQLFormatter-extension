@@ -4,7 +4,7 @@
  * ------------------------------------------------------------------------------------------ */
 
 import * as vscode from "vscode";
-import * as path from "path";
+import * as path from "node:path";
 
 export async function activate(docUri: vscode.Uri) {
   const ext = vscode.extensions.getExtension(

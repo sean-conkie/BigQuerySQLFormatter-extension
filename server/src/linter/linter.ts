@@ -1,19 +1,19 @@
-import { ServerSettings } from "../settings";
+import type { ServerSettings } from '../settings';
 import {
-  Diagnostic,
-  DidChangeTextDocumentParams,
-  TextDocumentItem,
-  CodeActionParams,
-  CodeAction,
+  type Diagnostic,
+  type DidChangeTextDocumentParams,
+  type TextDocumentItem,
+  type CodeActionParams,
+  type CodeAction,
   CodeActionKind,
-  Range,
-} from "vscode-languageserver/node";
-import { Rule } from "./rules/base";
-import { initialiseRules } from "./rules/rules";
-import { RuleType } from "./rules/enums";
-import { FileMap, Parser } from "./parser";
-import { StatementAST } from "./parser/ast";
-import { globalTokenCache } from "./parser/tokenCache";
+  type Range,
+} from 'vscode-languageserver/node';
+import type { Rule } from './rules/base';
+import { initialiseRules } from './rules/rules';
+import { RuleType } from './rules/enums';
+import { type FileMap, Parser } from './parser';
+import type { StatementAST } from './parser/ast';
+import { globalTokenCache } from './parser/tokenCache';
 
 interface Directive extends Range {
   code: string;
@@ -40,10 +40,7 @@ export class Linter {
    * @name initialiseRules
    */
   _initialiseRules() {
-    const rules: Rule<string | FileMap>[] = initialiseRules(
-      this.settings,
-      this.problems,
-    );
+    const rules: Rule<string | FileMap>[] = initialiseRules(this.settings, this.problems);
 
     this.regexRules = rules.filter((rule) => rule.type === RuleType.REGEX);
     this.parserRules = rules.filter((rule) => rule.type === RuleType.PARSER);
@@ -61,8 +58,7 @@ export class Linter {
 
     const diagnostics: Diagnostic[] = [];
 
-    const abstractSyntaxTree: { [key: number]: StatementAST } =
-      await parser.parse(textDocument);
+    const abstractSyntaxTree: { [key: number]: StatementAST } = await parser.parse(textDocument);
 
     for (const rule of this.parserRules) {
       const result = rule.evaluate(abstractSyntaxTree, textDocument.uri);
@@ -72,17 +68,10 @@ export class Linter {
     }
 
     for (const rule of this.regexRules) {
-      const result = rule.evaluate(
-        globalTokenCache.get(textDocument.uri)!.getText(),
-        textDocument.uri,
-      );
+      const result = rule.evaluate(globalTokenCache.get(textDocument.uri)!.getText(), textDocument.uri);
       if (result != null) {
         diagnostics.push(
-          ...result.filter((diagnostic) =>
-            globalTokenCache
-              .get(textDocument.uri)!
-              .isCodeRange(diagnostic.range),
-          ),
+          ...result.filter((diagnostic) => globalTokenCache.get(textDocument.uri)!.isCodeRange(diagnostic.range)),
         );
       }
     }
@@ -102,57 +91,41 @@ export class Linter {
    * 3. Retrieves the text of the document and evaluates it against a set of regex rules, collecting additional diagnostics.
    * 4. Filters out diagnostics that are on lines with `-- noqa` directives.
    */
-  async verifyChanges(
-    textDocumentChangeParams: DidChangeTextDocumentParams,
-  ): Promise<Diagnostic[]> {
+  async verifyChanges(textDocumentChangeParams: DidChangeTextDocumentParams): Promise<Diagnostic[]> {
     const parser = new Parser();
 
     const diagnostics: Diagnostic[] = [];
 
-    const abstractSyntaxTree: { [key: number]: StatementAST } =
-      await parser.parseChange(textDocumentChangeParams);
+    const abstractSyntaxTree: { [key: number]: StatementAST } = await parser.parseChange(textDocumentChangeParams);
 
     for (const rule of this.parserRules) {
-      const result = rule.evaluate(
-        abstractSyntaxTree,
-        textDocumentChangeParams.textDocument.uri,
-      );
+      const result = rule.evaluate(abstractSyntaxTree, textDocumentChangeParams.textDocument.uri);
       if (result != null) {
         diagnostics.push(...result);
       }
     }
     for (const rule of this.regexRules) {
       const result = rule.evaluate(
-        globalTokenCache
-          .get(textDocumentChangeParams.textDocument.uri)!
-          .getText(),
+        globalTokenCache.get(textDocumentChangeParams.textDocument.uri)!.getText(),
         textDocumentChangeParams.textDocument.uri,
       );
       if (result != null) {
         diagnostics.push(
           ...result.filter((diagnostic) =>
-            globalTokenCache
-              .get(textDocumentChangeParams.textDocument.uri)!
-              .isCodeRange(diagnostic.range),
+            globalTokenCache.get(textDocumentChangeParams.textDocument.uri)!.isCodeRange(diagnostic.range),
           ),
         );
       }
     }
 
-    return this.limitDiagnostics(
-      diagnostics,
-      textDocumentChangeParams.textDocument.uri,
-    );
+    return this.limitDiagnostics(diagnostics, textDocumentChangeParams.textDocument.uri);
   }
 
-  private limitDiagnostics(
-    diagnostics: Diagnostic[],
-    uri: string,
-  ): Diagnostic[] {
-    const limited = this.filterDiagnostics(
-      diagnostics,
-      this.createDirectives(uri),
-    ).slice(0, Math.max(0, this.settings.maxNumberOfProblems));
+  private limitDiagnostics(diagnostics: Diagnostic[], uri: string): Diagnostic[] {
+    const limited = this.filterDiagnostics(diagnostics, this.createDirectives(uri)).slice(
+      0,
+      Math.max(0, this.settings.maxNumberOfProblems),
+    );
     this.problems = limited.length;
     return limited;
   }
@@ -168,20 +141,14 @@ export class Linter {
    * If the directive's code is not 'noqa', it checks if the diagnostic's line and code match the directive's line and code.
    * If they match, the diagnostic is filtered out. If the directive's code is 'noqa', it filters out diagnostics that match the directive's line.
    */
-  private filterDiagnostics(
-    diagnostics: Diagnostic[],
-    directives: Directive[],
-  ): Diagnostic[] {
-    directives.map((directive) => {
+  private filterDiagnostics(diagnostics: Diagnostic[], directives: Directive[]): Diagnostic[] {
+    directives.forEach((directive) => {
       diagnostics = diagnostics.filter((diagnostic) => {
-        if (directive.code !== "noqa") {
-          const lineMatch =
-            diagnostic.range.start.line === directive.start.line;
-          const codeMatch =
-            String(diagnostic.code).split(":", 1)[0].toUpperCase() ===
-            directive.code;
+        if (directive.code !== 'noqa') {
+          const lineMatch = diagnostic.range.start.line === directive.start.line;
+          const codeMatch = String(diagnostic.code).split(':', 1)[0].toUpperCase() === directive.code;
 
-          return lineMatch && codeMatch ? false : true;
+          return !(lineMatch && codeMatch);
         }
 
         return diagnostic.range.start.line !== directive.start.line;
@@ -202,26 +169,20 @@ export class Linter {
    */
   private createDirectives(documentUri: string): Directive[] {
     const directives: Directive[] = [];
-    for (const [lineNumber, line] of globalTokenCache
-      .get(documentUri)!
-      .entries()) {
-      const comment = line.tokens.find((token) =>
-        token.scopes.some((scope) => scope.startsWith("comment.line")),
-      );
+    for (const [lineNumber, line] of globalTokenCache.get(documentUri)!.entries()) {
+      const comment = line.tokens.find((token) => token.scopes.some((scope) => scope.startsWith('comment.line')));
       if (!comment) {
         continue;
       }
-      const match = /^--[ \t]*noqa\b(?:[ \t]*:[ \t]*(.*))?/i.exec(
-        line.value.substring(comment.startIndex),
-      );
+      const match = /^--[ \t]*noqa\b(?:[ \t]*:[ \t]*(.*))?/i.exec(line.value.substring(comment.startIndex));
       if (!match) {
         continue;
       }
       const codes =
         match[1] === undefined
-          ? ["noqa"]
+          ? ['noqa']
           : match[1]
-              .split(",")
+              .split(',')
               .map((code) => code.trim().toUpperCase())
               .filter(Boolean);
       for (const code of codes) {
@@ -252,8 +213,8 @@ export class Linter {
   async createCodeActions(params: CodeActionParams): Promise<CodeAction[]> {
     const codeActions: CodeAction[] = [];
 
-    params.context.diagnostics.map((diagnostic) => {
-      this.regexRules.map((rule) => {
+    params.context.diagnostics.forEach((diagnostic) => {
+      this.regexRules.forEach((rule) => {
         if (rule.diagnosticCode === diagnostic.code && rule.is_fix_compatible) {
           const action = rule.createCodeAction(params.textDocument, diagnostic);
           if (action) {
@@ -261,7 +222,7 @@ export class Linter {
           }
         }
       });
-      this.parserRules.map((rule) => {
+      this.parserRules.forEach((rule) => {
         if (rule.diagnosticCode === diagnostic.code && rule.is_fix_compatible) {
           const action = rule.createCodeAction(params.textDocument, diagnostic);
           if (action) {
@@ -272,10 +233,9 @@ export class Linter {
     });
 
     const cache = globalTokenCache.get(params.textDocument.uri);
-    if (cache && cache.eol !== "\n") {
+    if (cache && cache.eol !== '\n') {
       for (const action of codeActions) {
-        for (const edit of action.edit?.changes?.[params.textDocument.uri] ??
-          []) {
+        for (const edit of action.edit?.changes?.[params.textDocument.uri] ?? []) {
           edit.newText = edit.newText.replace(/\r\n?|\n/g, cache.eol);
         }
       }
@@ -284,7 +244,7 @@ export class Linter {
     // split codeActions into two arrays `textEdits` where the code action is SourceFixAll and `quickFixes` where the code action is QuickFix
     const textEdits: CodeAction[] = [];
     const quickFixes: CodeAction[] = [];
-    codeActions.map((action) => {
+    codeActions.forEach((action) => {
       if (action.kind === CodeActionKind.SourceFixAll) {
         textEdits.push(action);
       } else if (action.kind === CodeActionKind.QuickFix) {
@@ -309,10 +269,7 @@ export class Linter {
     let lastRange: Range | null = null;
 
     for (const edit of textEdits) {
-      if (
-        lastRange &&
-        this.areRangesOverlapping(edit.diagnostics![0].range, lastRange)
-      ) {
+      if (lastRange && this.areRangesOverlapping(edit.diagnostics![0].range, lastRange)) {
         // Skip this edit or adjust the range
         continue;
       }
@@ -335,11 +292,7 @@ export class Linter {
     const range2Start = range2.start;
 
     if (range1End.line < range2Start.line) return false;
-    if (
-      range1End.line === range2Start.line &&
-      range1End.character <= range2Start.character
-    )
-      return false;
+    if (range1End.line === range2Start.line && range1End.character <= range2Start.character) return false;
 
     return true;
   }

@@ -6,12 +6,12 @@
  * @requires Rule
  */
 
-import { Rule } from '../base';
-import { ServerSettings } from '../../../settings';
+import type { Rule } from '../base';
+import type { ServerSettings } from '../../../settings';
 import { ElseNull } from './ST01';
 import { Distinct } from './ST08';
 import { Using } from './ST07';
-import { FileMap } from '../../parser';
+import type { FileMap } from '../../parser';
 
 export const classes = [Distinct, ElseNull, Using];
 

@@ -1,5 +1,5 @@
-import { ServerSettings } from "../../../settings";
-import { CodeAction, CodeActionKind, Diagnostic, DiagnosticSeverity, TextDocumentIdentifier, TextEdit } from 'vscode-languageserver/node';
+import type { ServerSettings } from "../../../settings";
+import { CodeAction, CodeActionKind, type Diagnostic, DiagnosticSeverity, type TextDocumentIdentifier, TextEdit } from 'vscode-languageserver/node';
 import { Rule } from '../base';
 
 
@@ -68,7 +68,7 @@ export class SelectTrailingComma extends Rule<string> {
     };
     const actions: CodeAction[] = [];
     
-    this.codeActionKind.map((kind) => {
+    this.codeActionKind.forEach((kind) => {
       const fix = CodeAction.create(
         this.codeActionTitle,
         edit,

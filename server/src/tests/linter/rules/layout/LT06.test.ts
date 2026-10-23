@@ -5,7 +5,7 @@
 import { expect } from 'chai';
 import { defaultSettings } from '../../../../settings';
 import { Functions } from '../../../../linter/rules/layout/LT06';
-import { FileMap, Parser } from '../../../../linter/parser';
+import { type FileMap, Parser } from '../../../../linter/parser';
 import { StatementAST } from '../../../../linter/parser/ast';
 
 describe('Functions', () => {
@@ -52,7 +52,7 @@ describe('Functions', () => {
             return {
                 title: instance.codeActionTitle, edit:{
                 changes: {
-                        ['test.sql']: [
+                        'test.sql': [
                             {
                                 newText: '',
                                 range: {

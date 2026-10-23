@@ -1,7 +1,7 @@
-import { Token, LineToken, joinTokenValues, excludeTokensWithMatchingScopes } from './token';
+import { type Token, type LineToken, joinTokenValues, excludeTokensWithMatchingScopes } from './token';
 import { MatchedRule } from './matches';
 import { findToken, sortTokens } from './utils';
-import { StatementType, JoinType, LogicalOperator, ComparisonOperator } from './enums';
+import { StatementType, JoinType, type LogicalOperator, type ComparisonOperator } from './enums';
 
 // region base types
 
@@ -425,6 +425,7 @@ export class ColumnFunctionAST extends AST {
  */
 export class CaseStatementWhenAST extends AST {
   when: ComparisonGroupAST | null = null;
+  // biome-ignore lint/suspicious/noThenProperty: This models a SQL CASE THEN clause, not a promise.
   then: Column | null = null;
 
   /**
@@ -448,6 +449,7 @@ export class CaseStatementWhenAST extends AST {
     super(tokens);
 
     this.when = new ComparisonGroupAST(when.matches ?? []);
+    // biome-ignore lint/suspicious/noThenProperty: This models a SQL CASE THEN clause, not a promise.
     this.then = new ColumnAST(then);
   }
 }
@@ -593,7 +595,6 @@ export class ComparisonGroupAST extends AST {
       if (match.rule?.type === "operator" && i > 0) {
         comparisonsParts.push([lastIndex, i]);
         lastIndex = i;
-        continue;
       }
     }
 
@@ -603,7 +604,7 @@ export class ComparisonGroupAST extends AST {
 
     for (const part of comparisonsParts) {
       let partMatches = matches.slice(part[0], part[1]);
-      const tokens = partMatches.map((match) => match.tokens).flat();
+      const tokens = partMatches.flatMap((match) => match.tokens);
       let result: (LogicalOperator | ComparisonOperator | null);
       let operator: LogicalOperator | null = null;
       let comparison: ComparisonOperator | null = null;
@@ -729,7 +730,7 @@ export class ArrayAST extends AST {
     this.startLine = matchedRules[0].tokens[0].lineNumber;
     this.startIndex = matchedRules[0].tokens[0].startIndex;
     this.endIndex = matchedRules[matchedRules.length - 1].tokens[matchedRules[matchedRules.length - 1].tokens.length - 1].endIndex;
-    this.tokens = matchedRules.map((match) => match.tokens).flat();
+    this.tokens = matchedRules.flatMap((match) => match.tokens);
 
     for (const match of matchedRules) {
       if (match.rule?.type === 'string') {

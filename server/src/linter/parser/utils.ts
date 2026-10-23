@@ -1,6 +1,6 @@
 
 import { GrammarLoader, Grammar, GrammarTokenizeLineResult } from '../grammarLoader';
-import { LineToken, Token } from './token';
+import type { LineToken, Token } from './token';
 
 /**
  * Filter the tokens to only include the one with the given scope
@@ -10,7 +10,7 @@ import { LineToken, Token } from './token';
  * @name findToken
  */
 export function findToken(tokens: LineToken[] | Token[], scope: string): Token | null {
-	const isLineTokenArray = (x: any): x is LineToken[] => x[0] && x[0].tokens;
+	const isLineTokenArray = (x: any): x is LineToken[] => x[0]?.tokens;
 	let filteredTokens: Token[];
 	if (isLineTokenArray(tokens)) {
 		const ft = tokens.filter((line) => line.tokens.filter((token) => token.scopes.includes(scope)).length > 0);

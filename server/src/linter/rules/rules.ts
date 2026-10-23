@@ -1,12 +1,12 @@
-import { ServerSettings } from '../../settings';
+import type { ServerSettings } from '../../settings';
 import { aliasRules } from './aliasing/rules';
 import { ambiguousRules } from './ambiguous/rules';
 import { capitalisationRules } from './capitalisation/rules';
 import { conventionRules } from './convention/rules';
 import { layoutRules } from './layout/rules';
 import { structureRules } from './structure/rules';
-import { Rule } from './base';
-import { FileMap } from '../parser';
+import type { Rule } from './base';
+import type { FileMap } from '../parser';
 
 
 /**

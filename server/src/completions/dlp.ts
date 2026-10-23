@@ -1,4 +1,4 @@
-import { CompletionItem, CompletionItemKind, InsertTextFormat, InsertTextMode } from 'vscode-languageserver/node';
+import { type CompletionItem, CompletionItemKind, InsertTextFormat, InsertTextMode } from 'vscode-languageserver/node';
 
 export const dlpFunctions: CompletionItem[] = [{
   label: 'dlp_deterministic_encrypt(key, plaintext, surrogate, context): string',

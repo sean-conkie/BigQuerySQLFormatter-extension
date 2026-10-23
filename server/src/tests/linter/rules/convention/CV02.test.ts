@@ -46,7 +46,7 @@ describe('Coalesce', () => {
             return {
                 title: instance.codeActionTitle, edit:{
                 changes: {
-                        ['test.sql']: [
+                        'test.sql': [
                             {
                                 newText: 'coalesce',
                                 range: {

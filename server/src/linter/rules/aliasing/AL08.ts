@@ -1,9 +1,9 @@
 
-import { ServerSettings } from "../../../settings";
-import { Diagnostic, Range } from 'vscode-languageserver/node';
+import type { ServerSettings } from "../../../settings";
+import type { Diagnostic, Range } from 'vscode-languageserver/node';
 import { RuleType } from '../enums';
 import { Rule } from '../base';
-import { FileMap } from '../../parser';
+import type { FileMap } from '../../parser';
 import { ColumnAST } from '../../parser/ast';
 import { excludeTokensWithMatchingScopes } from '../../parser/token';
 import { sortTokens } from '../../parser/utils';
@@ -45,7 +45,7 @@ export class UniqueColumn extends Rule<FileMap>{
       if (!ast[i].columns) { continue; }
       const columnsData: [string, Range][] = [];
       
-      ast[i].columns.map((column) => {
+      ast[i].columns.forEach((column) => {
         let columnName: string | null = null;
         const columnTokens = sortTokens(excludeTokensWithMatchingScopes(column.tokens, ['punctuation.whitespace.leading.sql', 'punctuation.separator.comma.sql']));
         const range = {

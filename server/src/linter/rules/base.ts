@@ -1,17 +1,17 @@
 import {
   CodeAction,
-  CodeActionKind,
-  Diagnostic,
+  type CodeActionKind,
+  type Diagnostic,
   DiagnosticSeverity,
-  DiagnosticTag,
-  Range,
-  TextDocumentIdentifier,
+  type DiagnosticTag,
+  type Range,
+  type TextDocumentIdentifier,
   TextEdit,
-  URI,
+  type URI,
 } from "vscode-languageserver/node";
 import { RuleType } from "./enums";
-import { ServerSettings } from "../../settings";
-import { FileMap } from "../parser";
+import type { ServerSettings } from "../../settings";
+import type { FileMap } from "../parser";
 import packageJson from "../../../package.json";
 import { getRegexMatchRanges } from "./regex";
 
@@ -94,7 +94,7 @@ export abstract class Rule<T extends string | FileMap> {
   ): Diagnostic[] | null {
     const diagnostics: Diagnostic[] = [];
 
-    getRegexMatchRanges(this.pattern, test)?.map((range) => {
+    getRegexMatchRanges(this.pattern, test)?.forEach((range) => {
       diagnostics.push(this.createDiagnostic(range, documentUri));
     });
 

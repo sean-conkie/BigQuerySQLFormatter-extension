@@ -46,7 +46,7 @@ describe('LeftJoin', () => {
             return {
                 title: instance.codeActionTitle, edit:{
                 changes: {
-                        ['test.sql']: [
+                        'test.sql': [
                             {
                                 newText: 'left join',
                                 range: {

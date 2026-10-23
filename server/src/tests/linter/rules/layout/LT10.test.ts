@@ -5,7 +5,7 @@
 import { expect } from 'chai';
 import { defaultSettings } from '../../../../settings';
 import { SelectModifiers } from '../../../../linter/rules/layout/LT10';
-import { runInThisContext } from 'vm';
+import { runInThisContext } from 'node:vm';
 
 describe('SelectModifiers', () => {
     let instance: SelectModifiers;
@@ -53,10 +53,10 @@ describe('SelectModifiers', () => {
             case_number++;
             const new_title: string = element[0].replace('<modifier>', mod);
             const new_sql: string = element[1].replace('<modifier>', mod);
-            const start_line: number = parseInt(element[2]);
-            const start_character: number = parseInt(element[3]);
-            const end_line: number = parseInt(element[2]);
-            const end_character: number = parseInt(element[3]) + mod.length;
+            const start_line: number = parseInt(element[2], 10);
+            const start_character: number = parseInt(element[3], 10);
+            const end_line: number = parseInt(element[2], 10);
+            const end_character: number = parseInt(element[3], 10) + mod.length;
 
             it(`Case ${case_number}: ${new_title}\nshould return diagnostic when rule is enabled and pattern matches`, () => {
                 instance.enabled = true;

@@ -1,6 +1,6 @@
 
-import { Rule } from '../base';
-import { ServerSettings } from '../../../settings';
+import type { Rule } from '../base';
+import type { ServerSettings } from '../../../settings';
 import { Table } from './AL01';
 import { ColumnAlias } from './AL02';
 import { UniqueTable } from './AL04';
@@ -8,7 +8,7 @@ import { UnusedAlias } from './AL05';
 import { TableAlias } from './AL06';
 import { UniqueColumn } from './AL08';
 import { RedundantColumnAlias } from './AL09';
-import { FileMap } from '../../parser';
+import type { FileMap } from '../../parser';
 
 export const classes = [Table, ColumnAlias, UniqueTable, UnusedAlias, TableAlias, UniqueColumn, RedundantColumnAlias];
 

@@ -46,7 +46,7 @@ describe('Count', () => {
             return {
                 title: instance.codeActionTitle, edit:{
                 changes: {
-                        ['test.sql']: [
+                        'test.sql': [
                             {
                                 newText: '1',
                                 range: {

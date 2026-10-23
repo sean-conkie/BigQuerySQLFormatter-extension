@@ -4,13 +4,13 @@ The extension is activated when the user opens a file with the .sql extension. T
 The language server is implemented in the server folder.
 */
 
-import * as path from 'path';
-import { workspace, ExtensionContext } from 'vscode';
+import * as path from 'node:path';
+import { workspace, type ExtensionContext } from 'vscode';
 
 import {
 	LanguageClient,
-	LanguageClientOptions,
-	ServerOptions,
+	type LanguageClientOptions,
+	type ServerOptions,
 	TransportKind
 } from 'vscode-languageclient/node';
 

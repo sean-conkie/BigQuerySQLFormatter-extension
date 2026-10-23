@@ -7,7 +7,7 @@
  */
 
 
-import { CodeAction, CodeActionKind, Diagnostic, TextDocumentIdentifier, TextEdit } from 'vscode-languageserver';
+import { CodeAction, CodeActionKind, type Diagnostic, type TextDocumentIdentifier, TextEdit } from 'vscode-languageserver';
 import { Rule } from '../base';
 import { getLineAndCharacter } from '../regex';
 
@@ -68,7 +68,7 @@ export class EndOfFile extends Rule<string> {
     };
     const actions: CodeAction[] = [];
     
-    this.codeActionKind.map((kind) => {
+    this.codeActionKind.forEach((kind) => {
       const fix = CodeAction.create(
         this.codeActionTitle,
         edit,

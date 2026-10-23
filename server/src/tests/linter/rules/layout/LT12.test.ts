@@ -48,7 +48,7 @@ describe('EndofFile', () => {
             return {
                 title: instance.codeActionTitle, edit:{
                 changes: {
-                        ['test.sql']: [
+                        'test.sql': [
                             {
                                 newText: '\n',
                                 range: {

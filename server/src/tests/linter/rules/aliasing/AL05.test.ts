@@ -6,7 +6,7 @@
 import { expect } from 'chai';
 import { defaultSettings } from '../../../../settings';
 import { UnusedAlias } from '../../../../linter/rules/aliasing/AL05';
-import { FileMap, Parser } from '../../../../linter/parser';
+import { type FileMap, Parser } from '../../../../linter/parser';
 import { StatementAST } from '../../../../linter/parser/ast';
 
 describe('UnusedAlias', () => {

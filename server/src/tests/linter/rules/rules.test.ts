@@ -10,7 +10,7 @@ import { capitalisationRules } from '../../../linter/rules/capitalisation/rules'
 import { conventionRules } from '../../../linter/rules/convention/rules';
 import { layoutRules } from '../../../linter/rules/layout/rules';
 import { structureRules } from '../../../linter/rules/structure/rules';
-import { defaultSettings, ServerSettings } from '../../../settings'; // replace with your actual import
+import { defaultSettings, type ServerSettings } from '../../../settings'; // replace with your actual import
 
 describe('initialiseRules', () => {
     let settings: ServerSettings;

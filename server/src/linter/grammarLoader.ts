@@ -1,7 +1,7 @@
-import * as fs from 'fs';
-import * as path from 'path';
-import { Registry, INITIAL, IGrammar, ITokenizeLineResult, IToken, StateStack } from 'vscode-textmate';
-import { readFileSync } from 'fs';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { Registry, INITIAL, type IGrammar, type ITokenizeLineResult, type IToken, type StateStack } from 'vscode-textmate';
+import { readFileSync } from 'node:fs';
 
 // Load the oniguruma library for vscode-textmate
 import { loadWASM } from 'onigasm';

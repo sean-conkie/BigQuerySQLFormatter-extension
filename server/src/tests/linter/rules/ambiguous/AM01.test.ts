@@ -5,7 +5,7 @@
 import { expect } from 'chai';
 import { defaultSettings } from '../../../../settings';
 import { Distinct } from '../../../../linter/rules/ambiguous/AM01';
-import { FileMap, Parser } from '../../../../linter/parser';
+import { type FileMap, Parser } from '../../../../linter/parser';
 import { StatementAST } from '../../../../linter/parser/ast';
 
 describe('Distinct', () => {
@@ -54,7 +54,7 @@ describe('Distinct', () => {
             return {
                 title: instance.codeActionTitle, edit:{
                 changes: {
-                        ['test.sql']: [
+                        'test.sql': [
                             {
                                 newText: '',
                                 range: {

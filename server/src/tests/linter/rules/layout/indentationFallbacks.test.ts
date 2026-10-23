@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { Parser } from "../../../../linter/parser";
 import {
-  ComparisonAST,
+  type ComparisonAST,
   ComparisonGroupAST,
 } from "../../../../linter/parser/ast";
 import { Indent } from "../../../../linter/rules/layout/LT02";

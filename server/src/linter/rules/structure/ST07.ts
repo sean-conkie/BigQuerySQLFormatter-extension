@@ -1,6 +1,6 @@
-import { ServerSettings } from "../../../settings";
+import type { ServerSettings } from "../../../settings";
 import {
-  Diagnostic,
+  type Diagnostic,
   DiagnosticSeverity,
 } from 'vscode-languageserver/node';
 import { Rule } from '../base';

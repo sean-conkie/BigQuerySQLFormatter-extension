@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { CodeActionKind, TextDocumentContentChangeEvent } from 'vscode-languageserver';
+import { CodeActionKind, type TextDocumentContentChangeEvent } from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { Linter } from '../../linter/linter';
 import { globalTokenCache } from '../../linter/parser/tokenCache';

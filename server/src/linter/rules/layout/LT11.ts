@@ -7,8 +7,8 @@
  */
 
 
-import { ServerSettings } from "../../../settings";
-import {
+import type { ServerSettings } from "../../../settings";
+import type {
   Diagnostic,
 } from 'vscode-languageserver/node';
 import { Rule } from '../base';

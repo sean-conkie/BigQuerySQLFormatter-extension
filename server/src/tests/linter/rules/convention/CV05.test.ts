@@ -47,7 +47,7 @@ describe('IsNull', () => {
             return {
                 title: 'Replace with is', edit:{
                 changes: {
-                        ['test.sql']: [
+                        'test.sql': [
                             {
                                 newText: 'is',
                                 range: {
@@ -90,7 +90,7 @@ describe('IsNull', () => {
             return {
                 title: 'Replace with is not', edit:{
                 changes: {
-                        ['test.sql']: [
+                        'test.sql': [
                             {
                                 newText: 'is not',
                                 range: {

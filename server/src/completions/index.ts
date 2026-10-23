@@ -1,8 +1,8 @@
-import { CompletionItem, CompletionItemKind, Hover, HoverParams, TextDocumentPositionParams } from 'vscode-languageserver/node';
-import { DocumentCache, globalTokenCache } from '../linter/parser/tokenCache';
+import { type CompletionItem, CompletionItemKind, type Hover, type HoverParams, type TextDocumentPositionParams } from 'vscode-languageserver/node';
+import { type DocumentCache, globalTokenCache } from '../linter/parser/tokenCache';
 import { dateFunctions } from './date';
 import { getWordAt } from '../utils';
-import { DocumentUri } from 'vscode-languageserver-textdocument';
+import type { DocumentUri } from 'vscode-languageserver-textdocument';
 import { aggregateFunctions } from './aggregate';
 import { approxFunctions } from './approx';
 import { arrayFunctions } from './array';

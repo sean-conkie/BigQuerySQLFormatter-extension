@@ -1,9 +1,9 @@
 
-import { ServerSettings } from "../../../settings";
-import { Diagnostic, Range } from 'vscode-languageserver/node';
+import type { ServerSettings } from "../../../settings";
+import type { Diagnostic, Range } from 'vscode-languageserver/node';
 import { RuleType } from '../enums';
 import { Rule } from '../base';
-import { FileMap } from '../../parser';
+import type { FileMap } from '../../parser';
 import { excludeTokensWithMatchingScopes, includeTokensWithMatchingScopes } from '../../parser/token';
 import { ObjectAST, StatementAST } from '../../parser/ast';
 
@@ -71,7 +71,7 @@ export class UniqueTable extends Rule<FileMap>{
       }
 
       if (ast[i].joins) {
-        ast[i].joins.map(join => {
+        ast[i].joins.forEach(join => {
           if (join.source) {
             const sourceTokens = excludeTokensWithMatchingScopes(
               join.source.tokens,

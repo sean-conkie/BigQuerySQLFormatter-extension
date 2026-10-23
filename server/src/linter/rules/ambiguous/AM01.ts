@@ -1,16 +1,16 @@
 
-import { ServerSettings } from "../../../settings";
+import type { ServerSettings } from "../../../settings";
 import {
   CodeAction,
   CodeActionKind,
-  Diagnostic,
+  type Diagnostic,
   DiagnosticTag,
-  TextDocumentIdentifier,
+  type TextDocumentIdentifier,
   TextEdit
 } from 'vscode-languageserver/node';
 import { RuleType } from '../enums';
 import { Rule } from '../base';
-import { FileMap } from '../../parser';
+import type { FileMap } from '../../parser';
 import { globalTokenCache } from '../../parser/tokenCache';
 
 
@@ -92,7 +92,7 @@ export class Distinct extends Rule<FileMap>{
     };
     const actions: CodeAction[] = [];
     
-    this.codeActionKind.map((kind) => {
+    this.codeActionKind.forEach((kind) => {
       const fix = CodeAction.create(
         this.codeActionTitle,
         edit,

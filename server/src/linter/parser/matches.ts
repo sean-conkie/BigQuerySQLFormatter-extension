@@ -1,4 +1,4 @@
-import { Token } from './token';
+import type { Token } from './token';
 import { sortTokens } from './utils';
 /**
  * An object to store the match object when splitting the source code into statements

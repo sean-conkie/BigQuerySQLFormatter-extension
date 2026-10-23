@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { GrammarLoader, Grammar } from '../../linter/grammarLoader';
+import { GrammarLoader, type Grammar } from '../../linter/grammarLoader';
 
 describe('GrammarLoader', () => {
     let grammarLoader: GrammarLoader;

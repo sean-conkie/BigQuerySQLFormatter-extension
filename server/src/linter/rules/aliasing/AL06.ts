@@ -1,9 +1,9 @@
 
-import { ServerSettings } from "../../../settings";
-import { Diagnostic } from 'vscode-languageserver/node';
+import type { ServerSettings } from "../../../settings";
+import type { Diagnostic } from 'vscode-languageserver/node';
 import { RuleType } from '../enums';
 import { Rule } from '../base';
-import { FileMap } from '../../parser';
+import type { FileMap } from '../../parser';
 import { excludeTokensWithMatchingScopes, includeTokensWithMatchingScopes } from '../../parser/token';
 
 
@@ -67,7 +67,7 @@ export class TableAlias extends Rule<FileMap>{
       }
 
       if (ast[i].joins) {
-        ast[i].joins.map(join => {
+        ast[i].joins.forEach(join => {
           if (join.source) {
             if (join.source.alias == null) {
 

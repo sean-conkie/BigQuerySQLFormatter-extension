@@ -1,17 +1,17 @@
 
-import { ServerSettings } from "../../../settings";
+import type { ServerSettings } from "../../../settings";
 import {
-  Diagnostic,
+  type Diagnostic,
   DiagnosticSeverity,
   DiagnosticTag,
   CodeAction,
   TextEdit,
-  TextDocumentIdentifier,
+  type TextDocumentIdentifier,
   CodeActionKind
 } from 'vscode-languageserver/node';
 import { RuleType } from '../enums';
 import { Rule } from '../base';
-import { FileMap } from '../../parser';
+import type { FileMap } from '../../parser';
 import { ColumnAST } from '../../parser/ast';
 import { includeTokensWithMatchingScopes } from '../../parser/token';
 
@@ -57,7 +57,7 @@ export class RedundantColumnAlias extends Rule<FileMap>{
 
       if (!ast[i].columns) { continue; }
 
-      ast[i].columns.map((column) => {
+      ast[i].columns.forEach((column) => {
         // check if the column is ColumnAST
         if (column instanceof ColumnAST) {
           const redundantAliasTokens = includeTokensWithMatchingScopes(
@@ -112,7 +112,7 @@ export class RedundantColumnAlias extends Rule<FileMap>{
     };
     const actions: CodeAction[] = [];
     
-    this.codeActionKind.map((kind) => {
+    this.codeActionKind.forEach((kind) => {
       const fix = CodeAction.create(
         this.codeActionTitle,
         edit,

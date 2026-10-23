@@ -1,33 +1,24 @@
 import {
   createConnection,
   ProposedFeatures,
-  InitializeParams,
+  type InitializeParams,
   DidChangeConfigurationNotification,
-  CompletionItem,
-  TextDocumentPositionParams,
+  type CompletionItem,
+  type TextDocumentPositionParams,
   TextDocumentSyncKind,
-  InitializeResult,
+  type InitializeResult,
   CodeActionKind,
-  CodeActionParams,
-  CodeAction,
-  HoverParams,
-  Hover,
-  PublishDiagnosticsParams,
-} from "vscode-languageserver/node";
-import {
-  defaultSettings,
-  documentSettings,
-  getDocumentSettings,
-  ServerSettings,
-} from "./settings";
-import { Linter } from "./linter/linter";
-import {
-  closeTextDocument,
-  validateTextDocument,
-  validateTextDocumentChanges,
-} from "./validate";
-import { CompletionBuilder } from "./completions";
-import { globalTokenCache } from "./linter/parser/tokenCache";
+  type CodeActionParams,
+  type CodeAction,
+  type HoverParams,
+  type Hover,
+  type PublishDiagnosticsParams,
+} from 'vscode-languageserver/node';
+import { defaultSettings, documentSettings, getDocumentSettings, type ServerSettings } from './settings';
+import { Linter } from './linter/linter';
+import { closeTextDocument, validateTextDocument, validateTextDocumentChanges } from './validate';
+import { CompletionBuilder } from './completions';
+import { globalTokenCache } from './linter/parser/tokenCache';
 
 const connection = createConnection(ProposedFeatures.all);
 
@@ -38,10 +29,7 @@ let globalSettings: ServerSettings = defaultSettings;
 const documentSessions = new Map<string, symbol>();
 const pendingValidations = new Map<string, Promise<void>>();
 
-function validateDocument(
-  uri: string,
-  validate: () => Promise<PublishDiagnosticsParams>,
-): void {
+function validateDocument(uri: string, validate: () => Promise<PublishDiagnosticsParams>): void {
   const session = documentSessions.get(uri);
   const pending = (pendingValidations.get(uri) ?? Promise.resolve())
     .then(async () => {
@@ -56,9 +44,7 @@ function validateDocument(
       }
     })
     .catch((error) => {
-      connection.console.error(
-        `Validation failed for ${uri}: ${String(error)}`,
-      );
+      connection.console.error(`Validation failed for ${uri}: ${String(error)}`);
     })
     .finally(() => {
       if (pendingValidations.get(uri) === pending) {
@@ -75,17 +61,9 @@ connection.onInitialize((params: InitializeParams) => {
 
   // Does the client support the `workspace/configuration` request?
   // If not, we fall back using global settings.
-  hasConfigurationCapability = !!(
-    capabilities.workspace && !!capabilities.workspace.configuration
-  );
-  hasWorkspaceFolderCapability = !!(
-    capabilities.workspace && !!capabilities.workspace.workspaceFolders
-  );
-  hasDiagnosticRelatedInformationCapability = !!(
-    capabilities.textDocument &&
-    capabilities.textDocument.publishDiagnostics &&
-    capabilities.textDocument.publishDiagnostics.relatedInformation
-  );
+  hasConfigurationCapability = !!(capabilities.workspace && !!capabilities.workspace.configuration);
+  hasWorkspaceFolderCapability = !!(capabilities.workspace && !!capabilities.workspace.workspaceFolders);
+  hasDiagnosticRelatedInformationCapability = !!capabilities.textDocument?.publishDiagnostics?.relatedInformation;
 
   const result: InitializeResult = {
     capabilities: {
@@ -113,10 +91,7 @@ connection.onInitialize((params: InitializeParams) => {
 connection.onInitialized(() => {
   if (hasConfigurationCapability) {
     // Register for all configuration changes.
-    connection.client.register(
-      DidChangeConfigurationNotification.type,
-      undefined,
-    );
+    connection.client.register(DidChangeConfigurationNotification.type, undefined);
   }
   if (hasWorkspaceFolderCapability) {
     connection.workspace.onDidChangeWorkspaceFolders((_event) => {});
@@ -128,23 +103,15 @@ connection.onDidChangeConfiguration((change) => {
     // Reset all cached document settings
     documentSettings.clear();
   } else {
-    globalSettings = {
-      ...defaultSettings,
-      ...change.settings.bigquerySQLFormatter,
-    };
+    globalSettings = { ...defaultSettings, ...change.settings.bigquerySQLFormatter };
   }
   for (const uri of documentSessions.keys()) {
     validateDocument(uri, async () => {
-      const settings = await getDocumentSettings(
-        uri,
-        connection,
-        globalSettings,
-        hasConfigurationCapability,
-      );
+      const settings = await getDocumentSettings(uri, connection, globalSettings, hasConfigurationCapability);
       return validateTextDocument(
         {
           uri,
-          languageId: "googlesql",
+          languageId: 'googlesql',
           version: 0,
           text: globalTokenCache.get(uri)!.getText(),
         },
@@ -156,18 +123,18 @@ connection.onDidChangeConfiguration((change) => {
 
 connection.onDidChangeWatchedFiles((_change) => {
   // Monitored files have change in VSCode
-  connection.console.log("We received a file change event");
+  connection.console.log('We received a file change event');
 });
 
 // This handler resolves additional information for the item selected in
 // the completion list.
 connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
   if (item.data === 1) {
-    item.detail = "TypeScript details";
-    item.documentation = "TypeScript documentation";
+    item.detail = 'TypeScript details';
+    item.documentation = 'TypeScript documentation';
   } else if (item.data === 2) {
-    item.detail = "JavaScript details";
-    item.documentation = "JavaScript documentation";
+    item.detail = 'JavaScript details';
+    item.documentation = 'JavaScript documentation';
   }
   return item;
 });
@@ -177,12 +144,7 @@ connection.onDidOpenTextDocument((params) => {
   validateDocument(params.textDocument.uri, async () =>
     validateTextDocument(
       params.textDocument,
-      await getDocumentSettings(
-        params.textDocument.uri,
-        connection,
-        globalSettings,
-        hasConfigurationCapability,
-      ),
+      await getDocumentSettings(params.textDocument.uri, connection, globalSettings, hasConfigurationCapability),
     ),
   );
 });
@@ -191,12 +153,7 @@ connection.onDidChangeTextDocument((params) => {
   validateDocument(params.textDocument.uri, async () =>
     validateTextDocumentChanges(
       params,
-      await getDocumentSettings(
-        params.textDocument.uri,
-        connection,
-        globalSettings,
-        hasConfigurationCapability,
-      ),
+      await getDocumentSettings(params.textDocument.uri, connection, globalSettings, hasConfigurationCapability),
     ),
   );
 });
@@ -206,26 +163,17 @@ connection.onDidCloseTextDocument((params) => {
   connection.sendDiagnostics(closeTextDocument(params.textDocument.uri));
 });
 
-connection.onCodeAction(
-  async (params: CodeActionParams): Promise<CodeAction[]> => {
-    const linter = new Linter(
-      await getDocumentSettings(
-        params.textDocument.uri,
-        connection,
-        globalSettings,
-        hasConfigurationCapability,
-      ),
-    );
-    return linter.createCodeActions(params);
-  },
-);
+connection.onCodeAction(async (params: CodeActionParams): Promise<CodeAction[]> => {
+  const linter = new Linter(
+    await getDocumentSettings(params.textDocument.uri, connection, globalSettings, hasConfigurationCapability),
+  );
+  return linter.createCodeActions(params);
+});
 
-connection.onCompletion(
-  (params: TextDocumentPositionParams): CompletionItem[] => {
-    const completionBuilder = new CompletionBuilder(params.textDocument.uri);
-    return completionBuilder.getCompletions(params);
-  },
-);
+connection.onCompletion((params: TextDocumentPositionParams): CompletionItem[] => {
+  const completionBuilder = new CompletionBuilder(params.textDocument.uri);
+  return completionBuilder.getCompletions(params);
+});
 
 connection.onHover((params: HoverParams): Hover | null => {
   const completionBuilder = new CompletionBuilder(params.textDocument.uri);

@@ -1,4 +1,4 @@
-import { Range } from 'vscode-languageserver/node';
+import type { Range } from 'vscode-languageserver/node';
 
 
 /**
@@ -25,7 +25,8 @@ export function getRegexMatchRanges(pattern: RegExp, test: string): Range[] | nu
 
 	const matches: Range[] = [];
 	
-	let match;
+	let match: RegExpExecArray | null;
+	// biome-ignore lint/suspicious/noAssignInExpressions: Advance the stateful regex until it is exhausted.
 	while ((match = pattern.exec(test)) != null) {
 			let groupStartIndex: number;
 			let groupEndIndex: number;

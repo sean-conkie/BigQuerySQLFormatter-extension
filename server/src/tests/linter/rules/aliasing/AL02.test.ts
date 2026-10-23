@@ -5,7 +5,7 @@
 import { expect } from 'chai';
 import { defaultSettings } from '../../../../settings';
 import { ColumnAlias } from '../../../../linter/rules/aliasing/AL02';
-import { FileMap, Parser } from '../../../../linter/parser';
+import { type FileMap, Parser } from '../../../../linter/parser';
 import { StatementAST } from '../../../../linter/parser/ast';
 
 describe('ColumnAlias', () => {
@@ -54,7 +54,7 @@ describe('ColumnAlias', () => {
             return {
                 title: instance.codeActionTitle, edit:{
                 changes: {
-                        ['test.sql']: [
+                        'test.sql': [
                             {
                                 newText: '',
                                 range: {

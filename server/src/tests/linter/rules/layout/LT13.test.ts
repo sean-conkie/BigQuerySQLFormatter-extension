@@ -48,7 +48,7 @@ describe('StartOfFile', () => {
             return {
                 title: instance.codeActionTitle, edit:{
                 changes: {
-                        ['test.sql']: [
+                        'test.sql': [
                             {
                                 newText: '',
                                 range: {

@@ -6,6 +6,7 @@ check:
 
 fix:
 	markdownlint -c .github/linters/.markdown-lint.yml --fix .
+	npm run lint:fix
 
 .PHONY: docs
 

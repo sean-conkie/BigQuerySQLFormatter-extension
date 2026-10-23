@@ -1,16 +1,16 @@
 
-import { ServerSettings } from "../../../settings";
+import type { ServerSettings } from "../../../settings";
 import { RuleType } from '../enums';
 import {
   CodeAction,
   CodeActionKind,
-  Diagnostic,
+  type Diagnostic,
   DiagnosticSeverity,
-  TextDocumentIdentifier,
+  type TextDocumentIdentifier,
   TextEdit,
 } from 'vscode-languageserver/node';
 import { Rule } from '../base';
-import { FileMap } from '../../parser';
+import type { FileMap } from '../../parser';
 import { ColumnFunctionAST, ComparisonAST, ComparisonGroupAST } from '../../parser/ast';
 
 
@@ -59,7 +59,7 @@ export class Functions extends Rule<FileMap> {
     for (const i in ast) {
       // check the columns for functions
       if (ast[i].columns) {
-        ast[i].columns.map((column) => {
+        ast[i].columns.forEach((column) => {
           if (column instanceof ColumnFunctionAST) {
             errors.push(...this.validateFunctionSyntax(column, documentUri));
           }
@@ -164,7 +164,7 @@ export class Functions extends Rule<FileMap> {
     };
     const actions: CodeAction[] = [];
     
-    this.codeActionKind.map((kind) => {
+    this.codeActionKind.forEach((kind) => {
       const fix = CodeAction.create(
         this.codeActionTitle,
         edit,

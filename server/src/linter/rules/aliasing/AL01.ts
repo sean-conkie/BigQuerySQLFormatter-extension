@@ -1,17 +1,17 @@
 
-import { ServerSettings } from "../../../settings";
+import type { ServerSettings } from "../../../settings";
 import {
 	CodeAction,
   CodeActionKind,
-  Diagnostic,
+  type Diagnostic,
   DiagnosticTag,
-	TextDocumentIdentifier,
+	type TextDocumentIdentifier,
 	TextEdit
 } from 'vscode-languageserver/node';
 import { RuleType } from '../enums';
 import { Rule } from '../base';
-import { FileMap } from '../../parser';
-import { ObjectAST, StatementAST } from '../../parser/ast';
+import type { FileMap } from '../../parser';
+import { type ObjectAST, StatementAST } from '../../parser/ast';
 import { globalTokenCache } from '../../parser/tokenCache';
 
 
@@ -56,7 +56,7 @@ export class Table extends Rule<FileMap>{
 			}
 
 			if (ast[i].joins) {
-				ast[i].joins.map(join => {
+				ast[i].joins.forEach(join => {
 					if (join.source) {
 						errors.push(...this.processExplicitAlias(join.source, documentUri));
 					}
@@ -134,7 +134,7 @@ export class Table extends Rule<FileMap>{
 
     const actions: CodeAction[] = [];
     
-    this.codeActionKind.map((kind) => {
+    this.codeActionKind.forEach((kind) => {
       const fix = CodeAction.create(
         this.codeActionTitle,
         edit,

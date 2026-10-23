@@ -7,14 +7,14 @@
  */
 
 
-import { ServerSettings } from "../../../settings";
+import type { ServerSettings } from "../../../settings";
 import { RuleType } from '../enums';
-import {
+import type {
   Diagnostic,
   TextDocumentIdentifier,
 } from 'vscode-languageserver/node';
 import { Rule } from '../base';
-import { FileMap } from '../../parser';
+import type { FileMap } from '../../parser';
 
 
 /**

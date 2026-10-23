@@ -6,20 +6,20 @@
  * @requires Rule
  */
 
-import { ServerSettings } from "../../../settings";
+import type { ServerSettings } from "../../../settings";
 import { RuleType } from "../enums";
 import {
-  CodeAction,
+  type CodeAction,
   CodeActionKind,
-  Diagnostic,
-  DocumentUri,
+  type Diagnostic,
+  type DocumentUri,
   Range,
-  TextDocumentIdentifier,
+  type TextDocumentIdentifier,
 } from "vscode-languageserver/node";
 import { Rule } from "../base";
-import { FileMap } from "../../parser";
+import type { FileMap } from "../../parser";
 import { ComparisonAST, ComparisonGroupAST } from "../../parser/ast";
-import { Token } from "../../parser/token";
+import type { Token } from "../../parser/token";
 
 type RangeCache = Map<string, number>;
 const documentCache: Map<DocumentUri, RangeCache> = new Map<
@@ -86,7 +86,7 @@ export class ComparisonOperators extends Rule<FileMap> {
         continue;
       }
 
-      joins.map((join) => {
+      joins.forEach((join) => {
         if (join.on instanceof ComparisonGroupAST) {
           errors.push(...this.processComparisonGroup(join.on, documentUri));
         }
@@ -129,7 +129,7 @@ export class ComparisonOperators extends Rule<FileMap> {
     }
 
     const requiredIndex = Math.max(...operatorIndexes) + 2;
-    operators.map((operator) => {
+    operators.forEach((operator) => {
       // adjust the startIndex to account for gte & lte & neq
       // we want the '=' to line up so add 1 to the index
       let operatorStartIndex = operator.startIndex;

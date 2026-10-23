@@ -1,6 +1,6 @@
 
 import { mergeArrayToUnique } from '../../utils';
-import { GrammarToken, RuleStack } from '../grammarLoader';
+import { GrammarToken, type RuleStack } from '../grammarLoader';
 
 
 // region functions
@@ -49,7 +49,7 @@ export function includeTokensWithMatchingScopes(tokens: Token[], scopes: string[
 export function excludeTokensWithMatchingScopes(tokens: Token[], scopes: string[]): Token[] {
 	let filteredTokens: Token[] = tokens;
 
-	scopes.map((scope) => {
+	scopes.forEach((scope) => {
 		filteredTokens = filteredTokens.filter((token) => !token.scopes.includes(scope));
 	});
 

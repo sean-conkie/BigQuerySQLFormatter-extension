@@ -1,5 +1,5 @@
-import { ServerSettings } from "../../../settings";
-import { Diagnostic, DiagnosticSeverity, TextDocumentIdentifier } from 'vscode-languageserver/node';
+import type { ServerSettings } from "../../../settings";
+import { type Diagnostic, DiagnosticSeverity, type TextDocumentIdentifier } from 'vscode-languageserver/node';
 import { Rule } from '../base';
 
 

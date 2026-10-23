@@ -1,10 +1,10 @@
 
-import { ServerSettings } from "../../../settings";
-import { Diagnostic } from 'vscode-languageserver/node';
+import type { ServerSettings } from "../../../settings";
+import type { Diagnostic } from 'vscode-languageserver/node';
 import { RuleType } from '../enums';
 import { Rule } from '../base';
-import { FileMap } from '../../parser';
-import { ArrayAST, CaseStatementAST, Column, ColumnAST, ColumnFunctionAST, ComparisonAST, ComparisonGroupAST, OrderAST, StatementAST } from '../../parser/ast';
+import type { FileMap } from '../../parser';
+import { ArrayAST, CaseStatementAST, type Column, ColumnAST, ColumnFunctionAST, type ComparisonAST, ComparisonGroupAST, OrderAST, StatementAST } from '../../parser/ast';
 
 
 export class UnusedAlias extends Rule<FileMap>{
@@ -57,7 +57,7 @@ export class UnusedAlias extends Rule<FileMap>{
     const errors: Diagnostic[] = [];
 
     if (statement.columns) {
-      statement.columns.map(column => {
+      statement.columns.forEach(column => {
         errors.push(...this.processColumn(column, documentUri));
       });
     }
@@ -116,7 +116,7 @@ export class UnusedAlias extends Rule<FileMap>{
         errors.push(...this.processColumn(column.column, documentUri));
       }
     } else if (column instanceof CaseStatementAST) {
-      column.when.map((when) => {
+      column.when.forEach((when) => {
         if (when.when != null) {
           errors.push(...this.processComparison(when.when, documentUri));
         }

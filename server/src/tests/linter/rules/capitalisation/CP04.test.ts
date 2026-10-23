@@ -46,7 +46,7 @@ describe('Literals', () => {
             return {
                 title: instance.codeActionTitle, edit:{
                 changes: {
-                        ['literals.sql']: [
+                        'literals.sql': [
                             {
                                 newText: 'null',
                                 range: {

@@ -6,19 +6,19 @@
  * @requires Rule
  */
 
-import { ServerSettings } from "../../../settings";
+import type { ServerSettings } from "../../../settings";
 import { RuleType } from "../enums";
 import {
-  CodeAction,
+  type CodeAction,
   CodeActionKind,
-  Diagnostic,
+  type Diagnostic,
   DiagnosticSeverity,
-  DocumentUri,
-  Range,
-  TextDocumentIdentifier,
+  type DocumentUri,
+  type Range,
+  type TextDocumentIdentifier,
 } from "vscode-languageserver/node";
 import { Rule } from "../base";
-import { FileMap } from "../../parser";
+import type { FileMap } from "../../parser";
 import { findToken } from "../../parser/utils";
 import {
   excludeTokensWithMatchingScopes,
@@ -94,7 +94,7 @@ export class Indent extends Rule<FileMap> {
       const joins = ast[i].joins;
       const where = ast[i].where;
 
-      columns.map((column) => {
+      columns.forEach((column) => {
         // add alias and index details for later processing
         if (column.alias) {
           const aliasToken = findToken(column.tokens, "entity.name.tag");
@@ -166,7 +166,7 @@ export class Indent extends Rule<FileMap> {
         );
       }
 
-      joins.map((join) => {
+      joins.forEach((join) => {
         // find join type
         const joinParts = join.join?.split(" ");
         let joinOffset =
@@ -321,7 +321,7 @@ export class Indent extends Rule<FileMap> {
     offset: number,
   ): [number, Range][] {
     const results: [number, Range][] = [];
-    comparisons.map((comparison) => {
+    comparisons.forEach((comparison) => {
       let comparisonOffset = offset;
 
       if (comparison instanceof ComparisonAST) {

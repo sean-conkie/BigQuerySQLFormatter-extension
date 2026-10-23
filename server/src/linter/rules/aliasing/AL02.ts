@@ -1,16 +1,16 @@
 
-import { ServerSettings } from "../../../settings";
+import type { ServerSettings } from "../../../settings";
 import {
   CodeAction,
   CodeActionKind,
-  Diagnostic,
+  type Diagnostic,
   DiagnosticTag,
-  TextDocumentIdentifier,
+  type TextDocumentIdentifier,
   TextEdit
 } from 'vscode-languageserver/node';
 import { RuleType } from '../enums';
 import { Rule } from '../base';
-import { FileMap } from '../../parser';
+import type { FileMap } from '../../parser';
 import { excludeTokensWithMatchingScopes, includeTokensWithMatchingScopes } from '../../parser/token';
 import { globalTokenCache } from '../../parser/tokenCache';
 
@@ -53,7 +53,7 @@ export class ColumnAlias extends Rule<FileMap>{
     for (const i in ast) {
 
       if (ast[i].columns) {
-        ast[i].columns.map(column => {
+        ast[i].columns.forEach(column => {
           const filteredTokesn = excludeTokensWithMatchingScopes(column.tokens, ['punctuation.whitespace.sql', 'punctuation.whitespace.leading.sql', 'punctuation.whitespace.trailing.sql']);
           // find an 'keyword.as.sql' token that is followed by a 'meta.column.alias.sql'
           const explicitAlias = filteredTokesn.find((token, index, tokens) => {
@@ -121,7 +121,7 @@ export class ColumnAlias extends Rule<FileMap>{
     };
     const actions: CodeAction[] = [];
     
-    this.codeActionKind.map((kind) => {
+    this.codeActionKind.forEach((kind) => {
       const fix = CodeAction.create(
         this.codeActionTitle,
         edit,

@@ -2,8 +2,8 @@
  * Copyright (c) Microsoft Corporation. All rights reserved.
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
-import * as path from "path";
-import { readdir } from "fs/promises";
+import * as path from "node:path";
+import { readdir } from "node:fs/promises";
 import * as Mocha from "mocha";
 
 export async function run(): Promise<void> {
@@ -21,7 +21,9 @@ export async function run(): Promise<void> {
   if (files.length === 0) {
     throw new Error(`No integration tests found in ${testsRoot}`);
   }
-  files.forEach((file) => mocha.addFile(path.resolve(testsRoot, file)));
+  files.forEach((file) => {
+    mocha.addFile(path.resolve(testsRoot, file));
+  });
 
   return new Promise((resolve, reject) => {
     mocha.run((failures) => {

@@ -7,12 +7,12 @@
  */
 
 
-import { ServerSettings } from "../../../settings";
+import type { ServerSettings } from "../../../settings";
 import {
   CodeAction,
   CodeActionKind,
-  Diagnostic,
-  TextDocumentIdentifier,
+  type Diagnostic,
+  type TextDocumentIdentifier,
   TextEdit,
 } from 'vscode-languageserver/node';
 import { Rule } from '../base';
@@ -85,7 +85,7 @@ export class StartOfFile extends Rule<string> {
     };
     const actions: CodeAction[] = [];
     
-    this.codeActionKind.map((kind) => {
+    this.codeActionKind.forEach((kind) => {
       const fix = CodeAction.create(
         this.codeActionTitle,
         edit,

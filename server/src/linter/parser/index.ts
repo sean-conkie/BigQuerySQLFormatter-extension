@@ -1,11 +1,11 @@
 import syntaxJson from '../syntaxes/syntax.json';
-import { GrammarLoader, Grammar, GrammarTokenizeLineResult, RuleStack } from '../grammarLoader';
-import { Token, LineToken, includeTokensWithMatchingScopes } from './token';
-import { Rule } from './matches';
+import { GrammarLoader, type Grammar, type GrammarTokenizeLineResult, type RuleStack } from '../grammarLoader';
+import { type Token, LineToken, includeTokensWithMatchingScopes } from './token';
+import type { Rule } from './matches';
 import { StatementAST } from './ast';
-import { MatchObj, MatchedRule } from './matches';
+import { type MatchObj, MatchedRule } from './matches';
 import { globalTokenCache, DocumentCache } from './tokenCache';
-import { DidChangeTextDocumentParams, TextDocumentItem, TextDocumentContentChangeEvent, VersionedTextDocumentIdentifier } from 'vscode-languageserver';
+import type { DidChangeTextDocumentParams, TextDocumentItem, TextDocumentContentChangeEvent, VersionedTextDocumentIdentifier } from 'vscode-languageserver';
 import { range } from '../../utils';
 import { findToken  } from './utils';
 
@@ -135,12 +135,12 @@ export class Parser {
 			const statement: MatchObj = statements[i];
 
 			const s = this.parseStatement(
-				range(startLine, statement.line + 1).map((line) => {
+				range(startLine, statement.line + 1).flatMap((line) => {
 					if (globalTokenCache.get(textDocument.uri)?.has(line)) {
-						return globalTokenCache.get(textDocument.uri)?.get(line)?.tokens;
+						return globalTokenCache.get(textDocument.uri)?.get(line)?.tokens ?? [];
 					}
+					return [];
 				})
-				.flat()
 				.filter((t) => t !== undefined)
 			);
 
@@ -223,7 +223,7 @@ export class Parser {
 		
 		const lineMap = new Map<number, string>();
 
-		document.text.split(/\r\n?|\n/).map((line, index) => {
+		document.text.split(/\r\n?|\n/).forEach((line, index) => {
 			lineMap.set(index, line);
 		});
 
@@ -231,7 +231,7 @@ export class Parser {
 
 		const cache: DocumentCache = new DocumentCache(document.text.match(/\r\n?|\n/)?.[0]);
 
-		tokens.map((lineToken) => {
+		tokens.forEach((lineToken) => {
 			cache.set(lineToken.lineNumber!, lineToken);
 		});
 
@@ -351,7 +351,7 @@ export class Parser {
 
 				}
 
-				if (matchedRule.rule && matchedRule.rule.recursive) {
+				if (matchedRule.rule?.recursive) {
 					const [matchedRules, y] = this.recursiveLookahead(tokens.slice(i + 1), null, matchedRule.rule.end);
 					matchedRule.matches!.push(...matchedRules);
 					i += y;
@@ -370,7 +370,6 @@ export class Parser {
 					}
 					statement.processRule(matchedRule);
 					reset();
-					continue;
 				}
 			}
 		}
@@ -455,7 +454,6 @@ export class Parser {
 				if (filteredTokens[i].scopes.includes(rule.scopes[checkIndex]) || rule.scopes[checkIndex] === '*') {
 					tokenCounter++;
 					checkIndex++;
-					continue;
 				} else {
 					return null;
 				}
@@ -564,7 +562,7 @@ export class Parser {
 
 			const matchedRule = new MatchedRule( workingRules.find((rule) => rule.scopes.join('|') === this.getMatchedTokens(expressionTokens)) ?? null, expressionTokens);
 
-			if (matchedRule.rule && matchedRule.rule.recursive) {
+			if (matchedRule.rule?.recursive) {
 				const [matchedRules, y] = this.recursiveLookahead(tokens.slice(i + 1), null, matchedRule.rule.end);
 				matchedRule.matches!.push(...matchedRules);
 				i += y;
@@ -577,7 +575,6 @@ export class Parser {
 				if (exitOnMatch) {
 					break;
 				}
-				continue;
 			}
 
 		}
@@ -672,7 +669,7 @@ export class Parser {
 		const lines: { "start": number, "end": number }[] = [];
 		let r: number = 0;
 
-		source.split('\n').map((line) => {
+		source.split('\n').forEach((line) => {
 			const len = r + line.length;
 			lines.push({ "start": r, "end": len + 1 });
 			r = len + 1;
@@ -681,6 +678,7 @@ export class Parser {
 
 		const statements = [];
 		let start = 0;
+		// biome-ignore lint/suspicious/noAssignInExpressions: Advance the stateful regex until it is exhausted.
 		while ((match = pattern.exec(source))) {
 			const m = {
 				"end": match.index + 1,
