@@ -77,12 +77,11 @@ describe("Indentation fallbacks for incomplete syntax trees", () => {
     }
   });
 
-  it("disables the rule when the problem limit has been reached", () => {
+  it("leaves diagnostic limiting to the linter rather than disabling individual rules", () => {
     const rule = new Indent(
       defaultSettings,
       defaultSettings.maxNumberOfProblems,
     );
-    expect(rule.enabled).to.equal(false);
-    expect(rule.evaluate({})).to.equal(null);
+    expect(rule.enabled).to.equal(true);
   });
 });

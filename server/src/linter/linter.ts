@@ -65,9 +65,6 @@ export class Linter {
       await parser.parse(textDocument);
 
     for (const rule of this.parserRules) {
-      if (diagnostics.length >= this.settings.maxNumberOfProblems) {
-        break;
-      }
       const result = rule.evaluate(abstractSyntaxTree, textDocument.uri);
       if (result != null) {
         diagnostics.push(...result);
@@ -75,9 +72,6 @@ export class Linter {
     }
 
     for (const rule of this.regexRules) {
-      if (diagnostics.length >= this.settings.maxNumberOfProblems) {
-        break;
-      }
       const result = rule.evaluate(
         globalTokenCache.get(textDocument.uri)!.getText(),
         textDocument.uri,
@@ -87,12 +81,7 @@ export class Linter {
       }
     }
 
-    this.problems = diagnostics.length;
-
-    return this.filterDiagnostics(
-      diagnostics,
-      this.createDirectives(textDocument.uri),
-    );
+    return this.limitDiagnostics(diagnostics, textDocument.uri);
   }
 
   /**
@@ -124,7 +113,6 @@ export class Linter {
       );
       if (result != null) {
         diagnostics.push(...result);
-        this.problems = diagnostics.length;
       }
     }
     for (const rule of this.regexRules) {
@@ -136,14 +124,25 @@ export class Linter {
       );
       if (result != null) {
         diagnostics.push(...result);
-        this.problems = diagnostics.length;
       }
     }
 
-    return this.filterDiagnostics(
+    return this.limitDiagnostics(
       diagnostics,
-      this.createDirectives(textDocumentChangeParams.textDocument.uri),
+      textDocumentChangeParams.textDocument.uri,
     );
+  }
+
+  private limitDiagnostics(
+    diagnostics: Diagnostic[],
+    uri: string,
+  ): Diagnostic[] {
+    const limited = this.filterDiagnostics(
+      diagnostics,
+      this.createDirectives(uri),
+    ).slice(0, Math.max(0, this.settings.maxNumberOfProblems));
+    this.problems = limited.length;
+    return limited;
   }
 
   /**

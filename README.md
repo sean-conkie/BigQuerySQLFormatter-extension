@@ -72,6 +72,11 @@ summary without requiring permission to post pull request comments.
 
 ## Configuration
 
+`bigquerySQLFormatter.maxNumberOfProblems` defaults to 100 and limits published
+diagnostics on both opening and editing a document, after `noqa` suppression.
+Set it to 0 to hide diagnostics. Settings are resolved per document, including
+for code actions, and changing configuration revalidates open documents.
+
 ### Fix on save
 
 Add the following to your `settings.json`.
