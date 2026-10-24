@@ -1,4 +1,10 @@
-import type { Diagnostic, Range } from 'vscode-languageserver/node';
+import {
+  CodeActionKind,
+  type Diagnostic,
+  type Range,
+  type TextDocumentIdentifier,
+  type TextEdit,
+} from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type { FileMap } from '../parser';
 import { type DocumentCache, globalTokenCache } from '../parser/tokenCache';
@@ -52,4 +58,34 @@ export abstract class SourceRule extends ParserRule {
   }
 
   protected abstract evaluateSource(tokens: SourceToken[], cache: DocumentCache, uri: string): Diagnostic[];
+}
+
+export abstract class SourceFixRule extends SourceRule {
+  protected abstract readonly fixTitle: string;
+  private readonly fixes = new Map<string, Map<string, TextEdit[]>>();
+
+  evaluate(ast: FileMap, uri: string | null = null): Diagnostic[] | null {
+    if (uri !== null) this.fixes.set(uri, new Map());
+    return super.evaluate(ast, uri);
+  }
+
+  protected diagnosticWithFix(range: Range, uri: string, edits: TextEdit[]): Diagnostic {
+    this.fixes.get(uri)!.set(this.createCacheKey(range), edits);
+    return this.createDiagnostic(range, uri);
+  }
+
+  createCodeAction(document: TextDocumentIdentifier, diagnostic: Diagnostic) {
+    const edits = this.fixes.get(document.uri)?.get(this.createCacheKey(diagnostic.range));
+    if (!edits) return [];
+    return this.createFixActions(
+      { changes: { [document.uri]: structuredClone(edits) } },
+      diagnostic,
+      [CodeActionKind.QuickFix, CodeActionKind.SourceFixAll],
+      this.fixTitle,
+    );
+  }
+
+  closeDocument(uri: string): void {
+    this.fixes.delete(uri);
+  }
 }

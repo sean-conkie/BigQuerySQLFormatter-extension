@@ -1,0 +1,22 @@
+================================================
+Rule: End Statements with a Semicolon and Newline
+================================================
+
+**Rule Code:** ``CV06``
+
+**Name:** ``terminator``
+
+Attach each statement's semicolon to its last SQL token, with no intervening
+whitespace or blank lines. Start the next statement on a new line.
+
+.. code-block:: sql
+
+    SELECT a FROM first_table;
+    SELECT b FROM second_table;
+
+Trailing comments are preserved. Semicolons in strings, quoted identifiers,
+and comments do not terminate statements. Comment-only files need no semicolon.
+
+Quick Fix, Fix All, and formatting insert missing terminators, move detached
+ones without deleting comments, and add a trailing newline while preserving
+the document's line-ending style.
