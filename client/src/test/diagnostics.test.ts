@@ -88,6 +88,7 @@ suite('Language server diagnostics', () => {
       const manuallyFormatted = waitForDiagnostics(
         uri,
         (diagnostics) => !hasRule(diagnostics, 'CP04') && !hasRule(diagnostics, 'CV05'),
+        'manual formatting diagnostics',
       );
       await editor.edit((edit) => {
         for (const replacement of formatted) edit.replace(replacement.range, replacement.newText);
@@ -101,14 +102,21 @@ suite('Language server diagnostics', () => {
       );
       assert.ok(!second || second.length === 0);
       await settings.update('formatOnSave', true, vscode.ConfigurationTarget.Global, true);
-      const formatInputReady = waitForDiagnostics(uri, (diagnostics) => hasRule(diagnostics, 'CP04'));
+      const formatInputReady = waitForDiagnostics(
+        uri,
+        (diagnostics) => hasRule(diagnostics, 'CP04'),
+        'format-on-save input',
+      );
       await editor.edit((edit) =>
         edit.replace(new vscode.Range(0, 0, editor.document.lineCount, 0), 'select a = NULL;\nselect b = NULL;\n'),
       );
       await formatInputReady;
+      assert.equal(editor.document.isDirty, true, 'format-on-save input must be dirty');
+      assert.equal(vscode.workspace.getConfiguration('editor', editor.document).get('formatOnSave'), true);
       const formattedOnSave = waitForDiagnostics(
         uri,
         (diagnostics) => !hasRule(diagnostics, 'CP04') && !hasRule(diagnostics, 'CV05'),
+        'format-on-save result',
       );
       assert.equal(await editor.document.save(), true);
       await formattedOnSave;
@@ -120,12 +128,12 @@ suite('Language server diagnostics', () => {
         vscode.ConfigurationTarget.Global,
         true,
       );
-      const fixInputReady = waitForDiagnostics(uri, (diagnostics) => hasRule(diagnostics, 'CV05'));
+      const fixInputReady = waitForDiagnostics(uri, (diagnostics) => hasRule(diagnostics, 'CV05'), 'fix-on-save input');
       await editor.edit((edit) =>
         edit.replace(new vscode.Range(0, 0, editor.document.lineCount, 0), 'select a = null;\nselect b = null;\n'),
       );
       await fixInputReady;
-      const fixedOnSave = waitForDiagnostics(uri, (diagnostics) => !hasRule(diagnostics, 'CV05'));
+      const fixedOnSave = waitForDiagnostics(uri, (diagnostics) => !hasRule(diagnostics, 'CV05'), 'fix-on-save result');
       assert.equal(await editor.document.save(), true);
       await fixedOnSave;
       assert.equal(editor.document.getText(), 'select a is null;\nselect b is null;\n', 'Fix All on save output');

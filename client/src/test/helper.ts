@@ -19,13 +19,14 @@ export async function activate(docUri: vscode.Uri) {
 export function waitForDiagnostics(
   docUri: vscode.Uri,
   matches: (diagnostics: readonly vscode.Diagnostic[]) => boolean,
+  phase = 'diagnostics',
 ): Promise<readonly vscode.Diagnostic[]> {
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
       subscription.dispose();
       reject(
         new Error(
-          `Timed out waiting for diagnostics for ${docUri.toString()}: ${JSON.stringify(
+          `Timed out waiting for ${phase} for ${docUri.toString()}: ${JSON.stringify(
             vscode.languages.getDiagnostics(docUri),
           )}`,
         ),
