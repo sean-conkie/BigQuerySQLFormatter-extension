@@ -6,6 +6,8 @@ import {
   type CodeActionParams,
   type CodeAction,
   CodeActionKind,
+  type Position,
+  type TextEdit,
   type Range,
   CancellationToken,
   DiagnosticSeverity,
@@ -21,6 +23,17 @@ import { checkCancellation, yieldToEventLoop } from '../cancellation';
 interface Directive extends Range {
   code: string;
   action?: 'disable' | 'enable';
+}
+
+export const sourceFixAllKind = `${CodeActionKind.SourceFixAll}.bigquerySQLFormatter`;
+
+function comparePositions(a: Position, b: Position): number {
+  return a.line - b.line || a.character - b.character;
+}
+
+function rangesConflict(a: Range, b: Range): boolean {
+  if (comparePositions(a.start, b.start) === 0) return true;
+  return comparePositions(a.start, b.end) < 0 && comparePositions(b.start, a.end) < 0;
 }
 
 /**
@@ -211,14 +224,10 @@ export class Linter {
    * @param params - The parameters for the code action request, including the text document and diagnostics.
    * @returns A promise that resolves to an array of code actions.
    *
-   * The function performs the following steps:
-   * 1. Iterates over the diagnostics and applies regex and parser rules to generate initial code actions.
-   * 2. Splits the generated code actions into two arrays: `textEdits` for SourceFixAll actions and `quickFixes` for QuickFix actions.
-   * 3. Sorts the `textEdits` by their start positions in reverse order to ensure later edits are applied first.
-   * 4. Removes overlapping edits from the `textEdits` array.
-   * 5. Combines the non-overlapping `textEdits` with the `quickFixes` and returns the result.
+   * Fix-all actions are combined atomically using actual edit ranges, not diagnostic ranges.
+   * An optional fix range restricts every edit of an accepted fix to the selection.
    */
-  async createCodeActions(params: CodeActionParams): Promise<CodeAction[]> {
+  async createCodeActions(params: CodeActionParams, fixRange?: Range): Promise<CodeAction[]> {
     const codeActions: CodeAction[] = [];
 
     const directives = globalTokenCache.get(params.textDocument.uri)
@@ -227,7 +236,7 @@ export class Linter {
     this.filterDiagnostics(params.context.diagnostics, directives).forEach((diagnostic) => {
       this.regexRules.forEach((rule) => {
         if (this.isRuleEnabled(rule) && rule.diagnosticCode === diagnostic.code && rule.is_fix_compatible) {
-          const action = rule.createCodeAction(params.textDocument, diagnostic);
+          const action = rule.createCodeAction(params.textDocument, structuredClone(diagnostic));
           if (action) {
             codeActions.push(...action);
           }
@@ -235,7 +244,7 @@ export class Linter {
       });
       this.parserRules.forEach((rule) => {
         if (this.isRuleEnabled(rule) && rule.diagnosticCode === diagnostic.code && rule.is_fix_compatible) {
-          const action = rule.createCodeAction(params.textDocument, diagnostic);
+          const action = rule.createCodeAction(params.textDocument, structuredClone(diagnostic));
           if (action) {
             codeActions.push(...action);
           }
@@ -252,59 +261,45 @@ export class Linter {
       }
     }
 
-    // split codeActions into two arrays `textEdits` where the code action is SourceFixAll and `quickFixes` where the code action is QuickFix
-    const textEdits: CodeAction[] = [];
-    const quickFixes: CodeAction[] = [];
-    codeActions.forEach((action) => {
-      if (action.kind === CodeActionKind.SourceFixAll) {
-        textEdits.push(action);
-      } else if (action.kind === CodeActionKind.QuickFix) {
-        quickFixes.push(action);
+    const editsFor = (action: CodeAction) => action.edit?.changes?.[params.textDocument.uri] ?? [];
+    const candidates = codeActions
+      .filter((action) => action.kind === CodeActionKind.SourceFixAll && editsFor(action).length > 0)
+      .sort((a, b) => comparePositions(editsFor(b)[0].range.start, editsFor(a)[0].range.start));
+    const edits: TextEdit[] = [];
+    const diagnostics: Diagnostic[] = [];
+    for (const action of candidates) {
+      const pending: TextEdit[] = [];
+      for (const edit of editsFor(action)) {
+        if (
+          (fixRange &&
+            (comparePositions(edit.range.start, fixRange.start) < 0 ||
+              comparePositions(edit.range.end, fixRange.end) > 0)) ||
+          [...edits, ...pending].some((accepted) => rangesConflict(edit.range, accepted.range))
+        ) {
+          break;
+        }
+        pending.push(edit);
       }
-    });
-
-    // Sort the TextEdits by their start positions in reverse order. This way, edits later in the document are applied first, preventing earlier
-    // edits from shifting the positions of later ones.
-    textEdits.sort((a, b) => {
-      const aStart = a.diagnostics![0].range.start;
-      const bStart = b.diagnostics![0].range.start;
-
-      if (aStart.line !== bStart.line) {
-        return bStart.line - aStart.line;
-      }
-      return bStart.character - aStart.character;
-    });
-
-    // Remove overlapping edits
-    const nonOverlappingEdits: CodeAction[] = [];
-    let lastRange: Range | null = null;
-
-    for (const edit of textEdits) {
-      if (lastRange && this.areRangesOverlapping(edit.diagnostics![0].range, lastRange)) {
-        // Skip this edit or adjust the range
-        continue;
-      }
-      nonOverlappingEdits.push(edit);
-      lastRange = edit.diagnostics![0].range;
+      if (pending.length !== editsFor(action).length) continue;
+      edits.push(...pending);
+      diagnostics.push(...(action.diagnostics ?? []));
     }
 
-    return [...nonOverlappingEdits, ...quickFixes];
-  }
-
-  /**
-   * Determines if two ranges are overlapping.
-   *
-   * @param range1 - The first range to compare.
-   * @param range2 - The second range to compare.
-   * @returns `true` if the ranges overlap, otherwise `false`.
-   */
-  private areRangesOverlapping(range1: Range, range2: Range): boolean {
-    const range1End = range1.end;
-    const range2Start = range2.start;
-
-    if (range1End.line < range2Start.line) return false;
-    if (range1End.line === range2Start.line && range1End.character <= range2Start.character) return false;
-
-    return true;
+    const combined: CodeAction[] = edits.length
+      ? [
+          {
+            title: 'Fix all BigQuery SQL Formatter issues',
+            kind: sourceFixAllKind,
+            diagnostics,
+            edit: { changes: { [params.textDocument.uri]: edits } },
+          },
+        ]
+      : [];
+    const actions = [...combined, ...codeActions.filter((action) => action.kind === CodeActionKind.QuickFix)];
+    return actions.filter(
+      (action) =>
+        !params.context.only ||
+        params.context.only.some((kind) => action.kind === kind || action.kind?.startsWith(`${kind}.`)),
+    );
   }
 }

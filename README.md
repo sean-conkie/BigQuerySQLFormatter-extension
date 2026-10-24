@@ -215,17 +215,48 @@ diagnostics on both opening and editing a document, after `noqa` suppression.
 Set it to 0 to hide diagnostics. Settings are resolved per document, including
 for code actions, and changing configuration revalidates open documents.
 
-### Fix on save
+### Format Document and Format Selection
 
-Add the following to your `settings.json`.
+Use **Format Document** or **Format Selection** in GoogleSQL language mode.
+This extension is the default formatter for GoogleSQL unless you have chosen
+another formatter. To enable formatting on save:
+
+```json
+{
+  "[googlesql]": {
+    "editor.defaultFormatter": "sean-conkie.bigquerysqlformatter",
+    "editor.formatOnSave": true
+  }
+}
+```
+
+Formatting applies enabled, automatically fixable rules repeatedly until the
+result is stable. It respects editor/project rule settings and `noqa` directives,
+preserves line endings, and is not limited by `maxNumberOfProblems`.
+Selection formatting only applies fixes wholly contained in the selection;
+text outside it is unchanged. Rules without automatic fixes remain diagnostics.
+Formatting uses the rules' existing styles; custom indentation, comma-position
+and capitalisation options are not yet supported. Cycling fixes or more than
+100 passes report an error without applying partial formatting.
+
+### Fix All and fix on save
+
+**Fix All** combines non-overlapping fixes across the whole document into one
+action, even when only some diagnostics are visible. Individual quick fixes
+remain available. Overlapping fixes may require another invocation; formatting
+automatically repeats the fixes.
+
+As an alternative to formatting on save, add this to your `settings.json`:
 
 ```json
   "[googlesql]": {
     "editor.codeActionsOnSave": {
-      "source.fixAll": "explicit"
+      "source.fixAll.bigquerySQLFormatter": "explicit"
     }
   },
 ```
+
+The generic `"source.fixAll": "explicit"` setting also includes this extension.
 
 ### Disable Rules
 

@@ -63,4 +63,20 @@ describe('Cached indentation code actions', () => {
       expect(rule.createCodeAction({ uri }, uncachedDiagnostic)).to.deep.equal([]);
     });
   }
+
+  it('does not remove SQL tokens misidentified as indentation in a select expression', async () => {
+    const uri = 'file:///indent-expression.bqsql';
+    const rule = new Indent(defaultSettings, 0);
+    const ast = await new Parser().parse({
+      text: 'select a = NULL, b = NULL;\n',
+      uri,
+      languageId: 'googlesql',
+      version: 1,
+    });
+    const diagnostics = rule.evaluate(ast, uri);
+    expect(diagnostics).not.to.be.empty;
+    for (const diagnostic of diagnostics ?? []) {
+      expect(rule.createCodeAction({ uri }, diagnostic)).to.deep.equal([]);
+    }
+  });
 });

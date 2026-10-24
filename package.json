@@ -115,6 +115,7 @@
     ],
     "configurationDefaults": {
       "[googlesql]": {
+        "editor.defaultFormatter": "sean-conkie.bigquerysqlformatter",
         "editor.tabSize": 2,
         "editor.insertSpaces": true
       }

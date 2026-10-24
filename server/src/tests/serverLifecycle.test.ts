@@ -26,8 +26,13 @@ import {
   CancellationTokenSource,
   LSPErrorCodes,
   ResponseError,
+  DocumentFormattingRequest,
+  DocumentRangeFormattingRequest,
+  type CodeAction,
 } from 'vscode-languageserver/node';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 import { defaultSettings, type ServerSettings } from '../settings';
+import { sourceFixAllKind } from '../linter/linter';
 
 describe('Language server validation queue', function () {
   this.timeout(15000);
@@ -65,6 +70,62 @@ describe('Language server validation queue', function () {
   afterEach(() => {
     connection.dispose();
     child.kill();
+  });
+
+  it('advertises and serves document/range formatting and a single document-wide fix-all', async () => {
+    const initialized = await connection.sendRequest(InitializeRequest.type, {
+      processId: process.pid,
+      capabilities: {},
+      rootUri: null,
+    });
+    expect(initialized.capabilities.documentFormattingProvider).to.equal(true);
+    expect(initialized.capabilities.documentRangeFormattingProvider).to.equal(true);
+    expect(initialized.capabilities.codeActionProvider)
+      .to.have.property('codeActionKinds')
+      .that.includes(sourceFixAllKind);
+    await connection.sendNotification('workspace/didChangeConfiguration', {
+      settings: { bigquerySQLFormatter: { maxNumberOfProblems: 0 } },
+    });
+    let document = TextDocument.create(uri, 'googlesql', 1, 'select a = NULL;\nselect b = NULL;\n');
+    await connection.sendNotification(DidOpenTextDocumentNotification.type, {
+      textDocument: { uri, languageId: document.languageId, version: document.version, text: document.getText() },
+    });
+    expect((await nextDiagnostics()).diagnostics).to.deep.equal([]);
+    const actions = await connection.sendRequest(CodeActionRequest.type, {
+      textDocument: { uri },
+      range: { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } },
+      context: { diagnostics: [], only: ['source.fixAll'] },
+    });
+    expect(actions).to.have.length(1);
+    expect(actions![0]).to.have.property('kind', sourceFixAllKind);
+    const fixAll = actions![0] as CodeAction;
+    expect(TextDocument.applyEdits(document, fixAll.edit!.changes![uri])).to.equal(
+      'select a is null;\nselect b is null;\n',
+    );
+    const options = { tabSize: 2, insertSpaces: true };
+    const selection = await connection.sendRequest(DocumentRangeFormattingRequest.type, {
+      textDocument: { uri },
+      options,
+      range: { start: { line: 1, character: 0 }, end: { line: 2, character: 0 } },
+    });
+    expect(TextDocument.applyEdits(document, selection ?? [])).to.equal('select a = NULL;\nselect b is null;\n');
+    const edits = await connection.sendRequest(DocumentFormattingRequest.type, { textDocument: { uri }, options });
+    const text = TextDocument.applyEdits(document, edits ?? []);
+    expect(text).to.equal('select a is null;\nselect b is null;\n');
+    document = TextDocument.create(uri, 'googlesql', 2, text);
+    await connection.sendNotification(DidChangeTextDocumentNotification.type, {
+      textDocument: { uri, version: 2 },
+      contentChanges: [{ text }],
+    });
+    expect(
+      await connection.sendRequest(DocumentFormattingRequest.type, { textDocument: { uri }, options }),
+    ).to.deep.equal([]);
+    await nextDiagnostics();
+    await connection.sendNotification(DidCloseTextDocumentNotification.type, { textDocument: { uri } });
+    await nextDiagnostics();
+    expect(
+      await connection.sendRequest(DocumentFormattingRequest.type, { textDocument: { uri }, options }),
+    ).to.deep.equal([]);
   });
 
   it('validates edits and clears diagnostics, completions, and hover on close', async () => {
