@@ -16,6 +16,8 @@ describe('GrammarLoader', () => {
     const grammars = await Promise.all(
       Array.from({ length: 3 }, () => new GrammarLoader().loadGrammar('source.googlesql')),
     );
+    expect(grammars[1]).to.equal(grammars[0]);
+    expect(grammars[2]).to.equal(grammars[0]);
     for (const grammar of grammars) {
       expect(grammar).not.to.equal(null);
       if (!grammar) throw new Error('GoogleSQL grammar was not loaded');

@@ -19,8 +19,11 @@ import {
   CompletionRequest,
   HoverRequest,
   CodeActionRequest,
+  CancellationTokenSource,
+  LSPErrorCodes,
+  ResponseError,
 } from 'vscode-languageserver/node';
-import type { ServerSettings } from '../settings';
+import { defaultSettings, type ServerSettings } from '../settings';
 
 describe('Language server validation queue', function () {
   this.timeout(15000);
@@ -120,6 +123,97 @@ describe('Language server validation queue', function () {
     expect(await connection.sendRequest(HoverRequest.type, position)).to.equal(null);
   });
 
+  it('coalesces rapid incremental and multi-change edits and publishes only the latest version', async () => {
+    await connection.sendRequest(InitializeRequest.type, {
+      processId: process.pid,
+      capabilities: {},
+      rootUri: null,
+    });
+    await connection.sendNotification(DidOpenTextDocumentNotification.type, {
+      textDocument: { uri, languageId: 'googlesql', version: 1, text: 'select a;\n' },
+    });
+    await nextDiagnostics();
+    const received: PublishDiagnosticsParams[] = [];
+    connection.onNotification(PublishDiagnosticsNotification.type, (params) => {
+      received.push(params);
+    });
+    await connection.sendNotification(DidChangeTextDocumentNotification.type, {
+      textDocument: { uri, version: 2 },
+      contentChanges: [{ range: { start: { line: 0, character: 7 }, end: { line: 0, character: 8 } }, text: 'ifnull' }],
+    });
+    await connection.sendNotification(DidChangeTextDocumentNotification.type, {
+      textDocument: { uri, version: 3 },
+      contentChanges: [
+        { range: { start: { line: 0, character: 13 }, end: { line: 0, character: 13 } }, text: '(1, 0)' },
+      ],
+    });
+    await connection.sendNotification(DidChangeTextDocumentNotification.type, {
+      textDocument: { uri, version: 4 },
+      contentChanges: [
+        { range: { start: { line: 0, character: 7 }, end: { line: 0, character: 13 } }, text: 'nvl' },
+        { range: { start: { line: 0, character: 10 }, end: { line: 0, character: 11 } }, text: '(' },
+      ],
+    });
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(received).to.deep.equal([]);
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    expect(received).to.have.length(1);
+    expect(received[0].version).to.equal(4);
+    expect(received[0].diagnostics.find((diagnostic) => diagnostic.code === 'CV02: coalesce')?.range).to.deep.equal({
+      start: { line: 0, character: 7 },
+      end: { line: 0, character: 10 },
+    });
+  });
+
+  it('honours LSP cancellation of a code-action request while awaiting settings', async () => {
+    let release!: (settings: ServerSettings[]) => void;
+    const settings = new Promise<ServerSettings[]>((resolve) => {
+      release = resolve;
+    });
+    const requested = new Promise<void>((resolve) => {
+      connection.onRequest('workspace/configuration', () => {
+        resolve();
+        return settings;
+      });
+    });
+    await connection.sendRequest(InitializeRequest.type, {
+      processId: process.pid,
+      capabilities: { workspace: { configuration: true } },
+      rootUri: null,
+    });
+    await connection.sendNotification(DidOpenTextDocumentNotification.type, {
+      textDocument: { uri, languageId: 'googlesql', version: 1, text: 'select 1;\n' },
+    });
+    await requested;
+    const source = new CancellationTokenSource();
+    const result = connection
+      .sendRequest(
+        CodeActionRequest.type,
+        {
+          textDocument: { uri },
+          range: { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } },
+          context: { diagnostics: [] },
+        },
+        source.token,
+      )
+      .then(
+        () => null,
+        (error: unknown) => error,
+      );
+    const position = { textDocument: { uri }, position: { line: 0, character: 0 } };
+    await connection.sendRequest(HoverRequest.type, position);
+    source.cancel();
+    await connection.sendRequest(HoverRequest.type, position);
+    try {
+      expect(await result)
+        .to.be.instanceOf(ResponseError)
+        .with.property('code', LSPErrorCodes.RequestCancelled);
+    } finally {
+      release([defaultSettings]);
+      source.dispose();
+    }
+  });
+
   it('logs failed validation, skips queued changes from a closed session, and validates the reopened document', async () => {
     let rejectSettings!: (reason: Error) => void;
     const pendingSettings = new Promise<ServerSettings[]>((_resolve, reject) => {
@@ -161,6 +255,9 @@ describe('Language server validation queue', function () {
       },
     });
     await settingsRequested;
+    rejectSettings(new Error('Intentional settings failure'));
+    const error = await validationError;
+    expect(error.message).to.include(uri).and.include('Intentional settings failure');
     await connection.sendNotification(DidChangeTextDocumentNotification.type, {
       textDocument: { uri, version: 2 },
       contentChanges: [{ text: 'select still_stale;\n' }],
@@ -177,9 +274,6 @@ describe('Language server validation queue', function () {
         text: 'select abs(-1);\n',
       },
     });
-    rejectSettings(new Error('Intentional settings failure'));
-    const error = await validationError;
-    expect(error.message).to.include(uri).and.include('Intentional settings failure');
     expect((await nextDiagnostics()).uri).to.equal(uri);
     expect(requests).to.equal(2);
     expect(

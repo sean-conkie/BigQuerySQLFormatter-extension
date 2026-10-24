@@ -56,10 +56,7 @@ export class Indent extends ParserRule {
     }
 
     const errors: Diagnostic[] = [];
-    let cache = documentCache.get(documentUri!);
-    if (!cache) {
-      cache = new Map<string, number>();
-    }
+    const cache = new Map<string, number>();
 
     for (const i in ast) {
       const offset = (ast[i].startIndex ?? 0) + 7;
@@ -292,6 +289,10 @@ export class Indent extends ParserRule {
       }
     });
     return results;
+  }
+
+  closeDocument(uri: string): void {
+    documentCache.delete(uri);
   }
 
   createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): CodeAction[] {
