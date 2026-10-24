@@ -2,19 +2,49 @@
 Configuration
 =============
 
-Fix on save
-~~~~~~~~~~~
+Formatting
+~~~~~~~~~~
 
-Add the following to your ``settings.json``.
+Use **Format Document** or **Format Selection** in GoogleSQL language mode.
+The extension supplies the default formatter unless you have selected another.
+Enable formatting on save in ``settings.json``:
+
+.. code-block:: json
+
+    {
+      "[googlesql]": {
+        "editor.defaultFormatter": "sean-conkie.bigquerysqlformatter",
+        "editor.formatOnSave": true
+      }
+    }
+
+Formatting repeatedly applies enabled, automatically fixable rules until stable.
+It respects editor/project settings and ``noqa``, preserves line endings, and is
+independent of the published diagnostic limit. Selection formatting applies only
+fixes wholly inside the selection, leaving all other text unchanged. Rules
+without automatic fixes remain diagnostics. Formatting uses existing rule
+styles, not editor tab/space options. A cycle or more than 100 passes reports an
+error without applying partial formatting.
+
+Fix All and fix on save
+~~~~~~~~~~~~~~~~~~~~~~
+
+Fix All combines non-overlapping fixes across the entire document into a single
+action, even when only some diagnostics are visible. Individual quick fixes are
+unchanged. Overlapping fixes can require another invocation; formatting repeats
+fixes automatically.
+
+As an alternative to formatting on save, add this to your ``settings.json``:
 
 .. code-block:: json
 
     "[googlesql]": {
       "editor.codeActionsOnSave": {
-        "source.fixAll": "explicit"
+        "source.fixAll.bigquerySQLFormatter": "explicit"
       }
     },
 
+The generic ``"source.fixAll": "explicit"`` setting also includes this extension.
 
 Rule settings
 ~~~~~~~~~~~~~
@@ -42,7 +72,7 @@ and ``severity``: ``error``, ``warning``, ``information``, ``hint``, or ``off``.
 ``structure``. An exclusion, a disabled group, or ``severity: off`` takes
 precedence over ``enabled: true``.
 
-These controls affect diagnostics, quick fixes, and fix-on-save. Disabled rules
+These controls affect diagnostics, quick fixes, Fix All, and formatting. Disabled rules
 do not count toward ``bigquerySQLFormatter.maxNumberOfProblems``.
 
 Project configuration

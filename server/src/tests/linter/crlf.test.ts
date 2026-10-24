@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { CodeActionKind, type TextDocumentContentChangeEvent } from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { Linter } from '../../linter/linter';
+import { Linter, sourceFixAllKind } from '../../linter/linter';
 import { globalTokenCache } from '../../linter/parser/tokenCache';
 import { defaultSettings } from '../../settings';
 
@@ -72,7 +72,7 @@ describe('Document line endings', () => {
         expect(TextDocument.applyEdits(document, action!.edit!.changes![uri])).to.equal(source.replace(before, after));
       }
       const edits = actions
-        .filter((action) => action.kind === CodeActionKind.SourceFixAll)
+        .filter((action) => action.kind === sourceFixAllKind)
         .flatMap((action) => action.edit!.changes![uri]);
       expect(edits).to.have.length(4);
       const fixed = TextDocument.applyEdits(document, edits);

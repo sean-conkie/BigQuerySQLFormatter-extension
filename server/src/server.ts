@@ -14,6 +14,11 @@ import {
   type Hover,
   ShowMessageNotification,
   MessageType,
+  type CancellationToken,
+  type Range,
+  type TextEdit,
+  LSPErrorCodes,
+  ResponseError,
 } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import {
@@ -24,7 +29,9 @@ import {
   parseSettings,
   type ServerSettings,
 } from './settings';
-import { closeTextDocument, getDocumentLinter, validateTextDocument } from './validate';
+import { closeTextDocument, validateTextDocument } from './validate';
+import { createDocumentCodeActions, formatDocument } from './formatting';
+import { sourceFixAllKind } from './linter/linter';
 import { CompletionBuilder } from './completions';
 import { ValidationScheduler } from './validationScheduler';
 import { awaitWithCancellation, checkCancellation } from './cancellation';
@@ -97,8 +104,10 @@ connection.onInitialize((params: InitializeParams) => {
         resolveProvider: false,
       },
       codeActionProvider: {
-        codeActionKinds: [CodeActionKind.QuickFix, CodeActionKind.SourceFixAll],
+        codeActionKinds: [CodeActionKind.QuickFix, sourceFixAllKind],
       },
+      documentFormattingProvider: true,
+      documentRangeFormattingProvider: true,
       hoverProvider: true,
     },
   };
@@ -175,10 +184,34 @@ connection.onCodeAction(async (params: CodeActionParams, token): Promise<CodeAct
   checkCancellation(token);
   const settings = await awaitWithCancellation(settingsForDocument(params.textDocument.uri), token);
   checkCancellation(token);
-  if (!documents.has(params.textDocument.uri)) return [];
-  const linter = getDocumentLinter(params.textDocument.uri, settings);
-  return linter.createCodeActions(params);
+  const document = documents.get(params.textDocument.uri);
+  if (!document) return [];
+  const version = document.version;
+  const actions = await createDocumentCodeActions(document, settings, params, token);
+  ensureCurrentDocument(document, version);
+  return actions;
 });
+
+function ensureCurrentDocument(document: TextDocument, version: number): void {
+  if (documents.get(document.uri) !== document || document.version !== version) {
+    throw new ResponseError(LSPErrorCodes.ContentModified, 'Document changed while computing fixes.');
+  }
+}
+
+async function formatting(uri: string, range: Range | undefined, token: CancellationToken): Promise<TextEdit[]> {
+  checkCancellation(token);
+  const settings = await awaitWithCancellation(settingsForDocument(uri), token);
+  checkCancellation(token);
+  const document = documents.get(uri);
+  if (!document) return [];
+  const version = document.version;
+  const edits = await formatDocument(document, settings, range, token);
+  ensureCurrentDocument(document, version);
+  return edits;
+}
+
+connection.onDocumentFormatting((params, token) => formatting(params.textDocument.uri, undefined, token));
+connection.onDocumentRangeFormatting((params, token) => formatting(params.textDocument.uri, params.range, token));
 
 connection.onCompletion((params: TextDocumentPositionParams): CompletionItem[] => {
   const completionBuilder = new CompletionBuilder(params.textDocument.uri);

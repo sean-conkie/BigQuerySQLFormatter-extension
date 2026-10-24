@@ -15,6 +15,7 @@ import type { ServerSettings } from '../../settings';
 import type { FileMap } from '../parser';
 import packageJson from '../../../package.json';
 import { getRegexMatchRanges } from './regex';
+import { globalTokenCache } from '../parser/tokenCache';
 
 /**
  * The version of the extension.
@@ -65,6 +66,10 @@ export abstract class Rule<T extends string | FileMap> {
     title: string,
   ): CodeAction[] {
     if (indentation == null) {
+      return [];
+    }
+    const cachedDocument = globalTokenCache.get(textDocument.uri);
+    if (cachedDocument && /\S/.test(cachedDocument.getText(diagnostic.range))) {
       return [];
     }
     const edit = {
