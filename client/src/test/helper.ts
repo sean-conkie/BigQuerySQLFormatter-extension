@@ -24,10 +24,22 @@ export function waitForDiagnostics(
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
       subscription.dispose();
+      const document = vscode.workspace.textDocuments.find((entry) => entry.uri.toString() === docUri.toString());
+      const settings = vscode.workspace.getConfiguration('editor', document);
       reject(
         new Error(
           `Timed out waiting for ${phase} for ${docUri.toString()}: ${JSON.stringify(
             vscode.languages.getDiagnostics(docUri),
+          )}; document=${JSON.stringify(
+            document && {
+              text: document.getText(),
+              version: document.version,
+              dirty: document.isDirty,
+              language: document.languageId,
+              formatter: settings.get('defaultFormatter'),
+              formatOnSave: settings.get('formatOnSave'),
+              formatOnSaveMode: settings.get('formatOnSaveMode'),
+            },
           )}`,
         ),
       );
