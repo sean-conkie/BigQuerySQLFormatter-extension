@@ -58,7 +58,9 @@ describe('Language server lifecycle', function () {
       new StreamMessageWriter(child.stdin),
     );
     const published: PublishDiagnosticsParams[] = [];
-    connection.onNotification(PublishDiagnosticsNotification.type, (params) => published.push(params));
+    connection.onNotification(PublishDiagnosticsNotification.type, (params) => {
+      published.push(params);
+    });
     let releaseSettings!: () => void;
     const settingsReady = new Promise<void>((resolve) => {
       releaseSettings = resolve;

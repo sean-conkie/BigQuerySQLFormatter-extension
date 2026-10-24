@@ -16,15 +16,19 @@ async function main() {
     // Passed to `--extensionDevelopmentPath`
     let extensionDevelopmentPath = path.resolve(__dirname, '../../../');
     const vsix = process.env.BQSQL_TEST_VSIX;
+    const version = process.env.BQSQL_TEST_VSCODE_VERSION ?? 'stable';
     if (vsix) {
-      const result = await runVSCodeCommand([
-        '--install-extension',
-        path.resolve(vsix),
-        '--user-data-dir',
-        path.join(testProfile, 'user'),
-        '--extensions-dir',
-        path.join(testProfile, 'extensions'),
-      ]);
+      const result = await runVSCodeCommand(
+        [
+          '--install-extension',
+          path.resolve(vsix),
+          '--user-data-dir',
+          path.join(testProfile, 'user'),
+          '--extensions-dir',
+          path.join(testProfile, 'extensions'),
+        ],
+        { version },
+      );
       console.log(result.stdout);
       const installed = (await readdir(path.join(testProfile, 'extensions'))).filter((name) =>
         name.startsWith('sean-conkie.bigquerysqlformatter-'),
@@ -41,6 +45,7 @@ async function main() {
 
     // Download VS Code, unzip it and run the integration test
     await runTests({
+      version,
       extensionDevelopmentPath,
       extensionTestsPath,
       launchArgs: [
