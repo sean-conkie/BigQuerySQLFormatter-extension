@@ -57,6 +57,11 @@ suite('Language server diagnostics', () => {
     const settings = vscode.workspace.getConfiguration('editor', { uri, languageId: 'googlesql' });
     const original = settings.inspect('formatOnSave')?.globalLanguageValue;
     const originalActions = settings.inspect('codeActionsOnSave')?.globalLanguageValue;
+    const hasRule = (diagnostics: readonly vscode.Diagnostic[], rule: string) =>
+      diagnostics.some((diagnostic) => {
+        const code = diagnostic.code;
+        return String(typeof code === 'object' ? code.value : code).startsWith(`${rule}:`);
+      });
     try {
       await writeFile(uri.fsPath, 'select a = NULL;\nselect b = NULL;\n');
       const opened = waitForDiagnostics(uri, (diagnostics) => diagnostics.length > 0);
@@ -91,11 +96,18 @@ suite('Language server diagnostics', () => {
       );
       assert.ok(!second || second.length === 0);
       await settings.update('formatOnSave', true, vscode.ConfigurationTarget.Global, true);
+      const formatInputReady = waitForDiagnostics(uri, (diagnostics) => hasRule(diagnostics, 'CP04'));
       await editor.edit((edit) =>
         edit.replace(new vscode.Range(0, 0, editor.document.lineCount, 0), 'select a = NULL;\nselect b = NULL;\n'),
       );
+      await formatInputReady;
+      const formattedOnSave = waitForDiagnostics(
+        uri,
+        (diagnostics) => !hasRule(diagnostics, 'CP04') && !hasRule(diagnostics, 'CV05'),
+      );
       assert.equal(await editor.document.save(), true);
-      assert.equal(editor.document.getText(), 'select a is null;\nselect b is null;\n');
+      await formattedOnSave;
+      assert.equal(editor.document.getText(), 'select a is null;\nselect b is null;\n', 'format-on-save output');
       await settings.update('formatOnSave', false, vscode.ConfigurationTarget.Global, true);
       await settings.update(
         'codeActionsOnSave',
@@ -103,11 +115,15 @@ suite('Language server diagnostics', () => {
         vscode.ConfigurationTarget.Global,
         true,
       );
+      const fixInputReady = waitForDiagnostics(uri, (diagnostics) => hasRule(diagnostics, 'CV05'));
       await editor.edit((edit) =>
         edit.replace(new vscode.Range(0, 0, editor.document.lineCount, 0), 'select a = null;\nselect b = null;\n'),
       );
+      await fixInputReady;
+      const fixedOnSave = waitForDiagnostics(uri, (diagnostics) => !hasRule(diagnostics, 'CV05'));
       assert.equal(await editor.document.save(), true);
-      assert.equal(editor.document.getText(), 'select a is null;\nselect b is null;\n');
+      await fixedOnSave;
+      assert.equal(editor.document.getText(), 'select a is null;\nselect b is null;\n', 'Fix All on save output');
     } finally {
       await settings.update('formatOnSave', original, vscode.ConfigurationTarget.Global, true);
       await settings.update('codeActionsOnSave', originalActions, vscode.ConfigurationTarget.Global, true);
