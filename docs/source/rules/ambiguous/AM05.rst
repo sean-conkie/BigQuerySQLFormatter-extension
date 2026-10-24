@@ -1,0 +1,19 @@
+=============================
+Rule: Use Explicit INNER JOIN
+=============================
+
+**Rule Code:** ``AM05``
+
+**Name:** ``join``
+
+Qualify bare JOIN clauses with INNER to make the intended join type explicit.
+LEFT, RIGHT, FULL, CROSS, and already-qualified INNER joins are unchanged.
+
+.. code-block:: sql
+
+    SELECT t.id
+    FROM first_table t
+    INNER JOIN second_table u ON t.id = u.id;
+
+Quick Fix, Fix All, and document formatting can insert INNER automatically
+without changing the join condition. Comments between keywords are preserved.

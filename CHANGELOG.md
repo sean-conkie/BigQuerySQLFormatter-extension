@@ -2,6 +2,8 @@
 
 ## Unreleased - 0.4.0
 
+- Add AM05 with quick fixes for explicit INNER JOIN clauses.
+
 - Add AM02 for explicit UNION modifiers. UNION checks move from CV12 to AM02;
   update rule configuration and suppressions accordingly. CV12 retains EXCEPT
   and INTERSECT checks.
