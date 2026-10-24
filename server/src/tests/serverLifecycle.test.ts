@@ -1,6 +1,9 @@
 import { expect } from 'chai';
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import * as path from 'node:path';
+import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { pathToFileURL } from 'node:url';
 import {
   createProtocolConnection,
   StreamMessageReader,
@@ -16,6 +19,7 @@ import {
   LogMessageNotification,
   type LogMessageParams,
   MessageType,
+  DiagnosticSeverity,
   CompletionRequest,
   HoverRequest,
   CodeActionRequest,
@@ -163,6 +167,80 @@ describe('Language server validation queue', function () {
       start: { line: 0, character: 7 },
       end: { line: 0, character: 10 },
     });
+  });
+
+  it('reloads created, edited, and deleted project settings with resource-scoped overrides', async () => {
+    const directory = await mkdtemp(path.join(tmpdir(), 'bqsql-config-lifecycle-'));
+    const nested = path.join(directory, 'queries');
+    const configPath = path.join(directory, '.bqsqlformatter.json');
+    const configUri = pathToFileURL(configPath).href;
+    const documentUri = pathToFileURL(path.join(nested, 'query.sql')).href;
+    const cv05 = (result: PublishDiagnosticsParams) =>
+      result.diagnostics.find((diagnostic) => String(diagnostic.code).startsWith('CV05:'));
+    let editorSettings: ServerSettings = { ...defaultSettings, rules: { CV05: { severity: 'hint' } } };
+    connection.onRequest('workspace/configuration', (params: { items: { scopeUri: string }[] }) => {
+      expect(params.items[0].scopeUri).to.equal(documentUri);
+      return [editorSettings];
+    });
+    try {
+      await mkdir(nested);
+      await connection.sendRequest(InitializeRequest.type, {
+        processId: process.pid,
+        capabilities: { workspace: { configuration: true } },
+        rootUri: pathToFileURL(directory).href,
+      });
+      await connection.sendNotification(DidOpenTextDocumentNotification.type, {
+        textDocument: { uri: documentUri, languageId: 'googlesql', version: 1, text: 'select a = null;\n' },
+      });
+      expect(cv05(await nextDiagnostics())?.severity).to.equal(DiagnosticSeverity.Hint);
+      await writeFile(configPath, '{"rules":{"CV05":{"enabled":false}}}');
+      await connection.sendNotification('workspace/didChangeWatchedFiles', { changes: [{ uri: configUri, type: 1 }] });
+      expect(cv05(await nextDiagnostics())).to.equal(undefined);
+      await writeFile(configPath, '{"rules":{"CV05":{"enabled":true,"severity":"error"}}}');
+      await connection.sendNotification('workspace/didChangeWatchedFiles', { changes: [{ uri: configUri, type: 2 }] });
+      expect(cv05(await nextDiagnostics())?.severity).to.equal(DiagnosticSeverity.Error);
+      await rm(configPath);
+      await connection.sendNotification('workspace/didChangeWatchedFiles', { changes: [{ uri: configUri, type: 3 }] });
+      expect(cv05(await nextDiagnostics())?.severity).to.equal(DiagnosticSeverity.Hint);
+      editorSettings = { ...defaultSettings, rules: { CV05: { severity: 'hint', enabled: false } } };
+      await connection.sendNotification('workspace/didChangeConfiguration', { settings: {} });
+      expect(cv05(await nextDiagnostics())).to.equal(undefined);
+    } finally {
+      await rm(directory, { recursive: true });
+    }
+  });
+
+  it('reports invalid project configuration visibly and recovers after a watched edit', async () => {
+    const directory = await mkdtemp(path.join(tmpdir(), 'bqsql-invalid-config-'));
+    const configPath = path.join(directory, '.bqsqlformatter.json');
+    const documentUri = pathToFileURL(path.join(directory, 'query.sql')).href;
+    const shownError = new Promise<string>((resolve) => {
+      connection.onNotification('window/showMessage', (params: { message: string }) => resolve(params.message));
+    });
+    try {
+      await writeFile(configPath, '{"rules":{"CV05":{"severity":"fatal"}}}');
+      await connection.sendRequest(InitializeRequest.type, {
+        processId: process.pid,
+        capabilities: {},
+        rootUri: pathToFileURL(directory).href,
+      });
+      await connection.sendNotification(DidOpenTextDocumentNotification.type, {
+        textDocument: { uri: documentUri, languageId: 'googlesql', version: 1, text: 'select a = null;\n' },
+      });
+      expect(await shownError)
+        .to.include(configPath)
+        .and.include('severity');
+      await writeFile(configPath, '{"rules":{"CV05":{"severity":"error"}}}');
+      await connection.sendNotification('workspace/didChangeWatchedFiles', {
+        changes: [{ uri: pathToFileURL(configPath).href, type: 2 }],
+      });
+      expect(
+        (await nextDiagnostics()).diagnostics.find((diagnostic) => String(diagnostic.code).startsWith('CV05:'))
+          ?.severity,
+      ).to.equal(DiagnosticSeverity.Error);
+    } finally {
+      await rm(directory, { recursive: true });
+    }
   });
 
   it('honours LSP cancellation of a code-action request while awaiting settings', async () => {

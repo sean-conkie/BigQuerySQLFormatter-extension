@@ -49,7 +49,9 @@ async function main() {
       extensionDevelopmentPath,
       extensionTestsPath,
       launchArgs: [
+        path.resolve(__dirname, '../../testFixture'),
         '--disable-extensions',
+        '--disable-workspace-trust',
         `--user-data-dir=${path.join(testProfile, 'user')}`,
         `--extensions-dir=${path.join(testProfile, 'extensions')}`,
       ],
