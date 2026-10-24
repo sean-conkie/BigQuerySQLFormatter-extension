@@ -38,6 +38,7 @@ Ambiguous rules are guidelines that help developers avoid ambiguity and improve 
 	Rule: Specify DISTINCT or ALL After UNION <ambiguous/AM02>
 	Rule: Avoid Using `select *` <ambiguous/AM04>
 	Rule: Use Explicit INNER JOIN <ambiguous/AM05>
+	Rule: Use Consistent GROUP BY/ORDER BY References <ambiguous/AM06>
 
 .. _capitalisation-rules:
 

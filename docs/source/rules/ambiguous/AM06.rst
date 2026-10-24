@@ -1,0 +1,21 @@
+=================================================
+Rule: Use Consistent GROUP BY/ORDER BY References
+=================================================
+
+**Rule Code:** ``AM06``
+
+**Name:** ``column_references``
+
+Use named expressions throughout a query's GROUP BY and ORDER BY clauses, or
+use integer select-list positions throughout. Do not mix the two styles within
+a clause or between those clauses in the same SELECT.
+
+.. code-block:: sql
+
+    SELECT foo, bar FROM example GROUP BY foo, bar ORDER BY foo;
+    SELECT foo, bar FROM example GROUP BY 1, 2 ORDER BY 1;
+
+Nested SELECTs and set-operation branches are checked independently. Window
+and aggregate-function ORDER BY clauses are excluded. GROUP BY ALL does not
+establish a reference style. No automatic fix is offered because resolving
+positions to expressions can change semantics.

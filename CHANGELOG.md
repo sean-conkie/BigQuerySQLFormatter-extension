@@ -2,6 +2,8 @@
 
 ## Unreleased - 0.4.0
 
+- Add AM06 for consistent named or positional GROUP BY/ORDER BY references.
+
 - Add AM05 with quick fixes for explicit INNER JOIN clauses.
 
 - Add AM02 for explicit UNION modifiers. UNION checks move from CV12 to AM02;
