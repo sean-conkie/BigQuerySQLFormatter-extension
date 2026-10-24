@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased - 0.4.0
+
+- Add AM02 for explicit UNION modifiers. UNION checks move from CV12 to AM02;
+  update rule configuration and suppressions accordingly. CV12 retains EXCEPT
+  and INTERSECT checks.
+
 ## Unreleased - 0.3.0
 
 - Combine Fix All into one document-wide action with conflict-free edits and

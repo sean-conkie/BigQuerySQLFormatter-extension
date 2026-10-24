@@ -12,10 +12,10 @@ export class AllDistinct extends RegexRule {
   readonly is_fix_compatible: boolean = false;
   readonly name: string = 'all_distinct';
   readonly code: string = 'CV12';
-  readonly message: string = 'Set operators require all|distinct';
+  readonly message: string = 'EXCEPT and INTERSECT require DISTINCT.';
   readonly relatedInformation: string =
-    'To ensure better readability and prevent errors, the trailing comma should be omitted in `SELECT` statements.';
-  readonly pattern: RegExp = /union\s+(?!all|distinct)|(?:except|intersect)\s+(?!distinct)/gim;
+    'UNION modifiers are checked by AM02; EXCEPT and INTERSECT require DISTINCT in GoogleSQL.';
+  readonly pattern: RegExp = /\b(?<target>except|intersect)\b(?!\s+distinct\b)/gim;
   readonly severity: DiagnosticSeverity = DiagnosticSeverity.Warning;
   readonly ruleGroup: string = 'convention';
 

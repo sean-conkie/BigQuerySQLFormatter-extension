@@ -19,22 +19,10 @@ describe('AllDistinct', () => {
     expect(result).to.be.null;
   });
 
-  it('should return diagnostic when rule is enabled and pattern matches - union', () => {
+  it('leaves UNION diagnostics to AM02', () => {
     instance.enabled = true;
     const result = instance.evaluate('select a.col from dataset.table a\nunion\nselect b.col from dataset.table b');
-    expect(result).to.deep.equal([
-      {
-        code: instance.diagnosticCode,
-        codeDescription: { href: instance.diagnosticCodeDescription },
-        message: instance.message,
-        severity: instance.severity,
-        range: {
-          start: { line: 1, character: 0 },
-          end: { line: 2, character: 0 },
-        },
-        source: instance.source,
-      },
-    ]);
+    expect(result).to.be.null;
   });
 
   it('should return null when rule is enabled but pattern does not match - union distinct', () => {
@@ -62,7 +50,7 @@ describe('AllDistinct', () => {
         severity: instance.severity,
         range: {
           start: { line: 1, character: 0 },
-          end: { line: 2, character: 0 },
+          end: { line: 1, character: 6 },
         },
         source: instance.source,
       },
@@ -88,7 +76,7 @@ describe('AllDistinct', () => {
         severity: instance.severity,
         range: {
           start: { line: 1, character: 0 },
-          end: { line: 2, character: 0 },
+          end: { line: 1, character: 9 },
         },
         source: instance.source,
       },
