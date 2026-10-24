@@ -13,6 +13,7 @@ import { Indent } from './LT02';
 import { TrailingComma } from './LT04';
 import { Functions } from './LT06';
 import { CteBracket } from './LT07';
+import { CteNewline } from './LT08';
 import { SelectTargets } from './LT09';
 import { SelectModifiers } from './LT10';
 import { UnionCheck } from './LT11';
@@ -27,6 +28,7 @@ export const classes = [
   TrailingComma,
   Functions,
   CteBracket,
+  CteNewline,
   SelectTargets,
   SelectModifiers,
   UnionCheck,
