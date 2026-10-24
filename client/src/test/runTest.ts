@@ -3,7 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 import * as path from 'node:path';
-import { mkdtemp, readdir, rm } from 'node:fs/promises';
+import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 
 import { runTests, runVSCodeCommand } from '@vscode/test-electron';
@@ -52,10 +53,24 @@ async function main() {
         path.resolve(__dirname, '../../testFixture'),
         '--disable-extensions',
         '--disable-workspace-trust',
+        '--log=trace',
         `--user-data-dir=${path.join(testProfile, 'user')}`,
         `--extensions-dir=${path.join(testProfile, 'extensions')}`,
       ],
     });
+  } catch (error) {
+    const logs = path.join(testProfile, 'user', 'logs');
+    if (existsSync(logs)) {
+      for (const file of await readdir(logs, { recursive: true })) {
+        if (!file.endsWith('.log')) continue;
+        const lines = (await readFile(path.join(logs, file), 'utf8'))
+          .split('\n')
+          .filter((line) => /save|format|cancel|error/i.test(line))
+          .slice(-80);
+        if (lines.length > 0) console.error(`VS Code log ${file}:\n${lines.join('\n')}`);
+      }
+    }
+    throw error;
   } finally {
     await rm(testProfile, {
       recursive: true,
