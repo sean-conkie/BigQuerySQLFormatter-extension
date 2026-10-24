@@ -56,7 +56,7 @@ style; opening or linting a document does not rewrite its line endings.
 
 ## Rule configuration
 
-Configure rules in your VS Code user, workspace, or workspace-folder settings:
+Configure rules in your Visual Studio Code user, workspace, or workspace-folder settings:
 
 ```json
 {
@@ -89,7 +89,7 @@ For shared project settings, create `.bqsqlformatter.json`:
 ```
 
 The nearest config between the SQL file and its workspace-folder root overrides
-VS Code settings field by field. Only that config is used; parent project configs
+Visual Studio Code settings field by field. Only that config is used; parent project configs
 are not merged. Exclusion arrays replace rather than extend the editor list.
 Multi-root workspaces remain isolated. Without a workspace, only the SQL file's
 directory is checked. Settings and project-file changes revalidate open documents
@@ -113,6 +113,9 @@ the minimum-version tests locally.
 
 Use Node.js 22.12 or newer in the Node.js 22 release line and install the locked
 root, client and server dependencies with `npm ci`.
+The packaging tool's Azure Identity dependency temporarily overrides MSAL Node
+to a patched release. Remove this override when Azure Identity supports the
+patched version directly.
 The following checks run on all pull requests (including stacked branches) and pushes to `main`:
 
 ```sh
