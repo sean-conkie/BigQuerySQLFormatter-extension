@@ -2,6 +2,11 @@
 
 ## Unreleased - 0.3.0
 
+- Combine Fix All into one document-wide action with conflict-free edits and
+  retain individual quick fixes.
+- Support Format Document, Format Selection, and format-on-save for GoogleSQL,
+  repeating enabled rule fixes until stable while preserving line endings.
+- Prevent indentation fixes from deleting SQL tokens misidentified as whitespace.
 - Correct incremental parsing after multiline edits and normalize CRLF diagnostic
   positions while preserving line endings in quick fixes.
 - Clear diagnostics and document caches on close.
