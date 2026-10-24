@@ -1,20 +1,15 @@
 import { expect } from 'chai';
-import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import * as path from 'node:path';
 import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { pathToFileURL } from 'node:url';
 import {
-  createProtocolConnection,
-  StreamMessageReader,
-  StreamMessageWriter,
   type ProtocolConnection,
   InitializeRequest,
   InitializedNotification,
   DidOpenTextDocumentNotification,
   DidChangeTextDocumentNotification,
   DidCloseTextDocumentNotification,
-  PublishDiagnosticsNotification,
   type PublishDiagnosticsParams,
   LogMessageNotification,
   type LogMessageParams,
@@ -33,43 +28,30 @@ import {
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { defaultSettings, type ServerSettings } from '../settings';
 import { sourceFixAllKind } from '../linter/linter';
+import { startTestServer } from './serverProcess';
 
 describe('Language server validation queue', function () {
   this.timeout(15000);
-  const uri = 'file:///queued-validation.sql';
-  let child: ChildProcessWithoutNullStreams;
+  let uri: string;
+  let testDirectory: string;
+  let server: ReturnType<typeof startTestServer>;
   let connection: ProtocolConnection;
   let nextDiagnostics: () => Promise<PublishDiagnosticsParams>;
 
-  beforeEach(() => {
-    child = spawn(process.execPath, [path.join(__dirname, '../server.js'), '--stdio']);
-    connection = createProtocolConnection(new StreamMessageReader(child.stdout), new StreamMessageWriter(child.stdin));
-    const received: PublishDiagnosticsParams[] = [];
-    const waiting: ((params: PublishDiagnosticsParams) => void)[] = [];
-    connection.onNotification(PublishDiagnosticsNotification.type, (params) => {
-      const resolve = waiting.shift();
-      if (resolve) {
-        resolve(params);
-      } else {
-        received.push(params);
-      }
-    });
-    nextDiagnostics = () =>
-      new Promise((resolve) => {
-        const params = received.shift();
-        if (params) {
-          resolve(params);
-        } else {
-          waiting.push(resolve);
-        }
-      });
-    connection.onRequest('client/registerCapability', () => null);
-    connection.listen();
+  beforeEach(async () => {
+    testDirectory = await mkdtemp(path.join(tmpdir(), 'bqsql-server-queue-'));
+    uri = pathToFileURL(path.join(testDirectory, 'queued-validation.sql')).href;
+    server = startTestServer();
+    connection = server.connection;
+    nextDiagnostics = server.nextDiagnostics;
   });
 
-  afterEach(() => {
-    connection.dispose();
-    child.kill();
+  afterEach(async () => {
+    try {
+      await server.stop();
+    } finally {
+      await rm(testDirectory, { recursive: true, force: true });
+    }
   });
 
   it('advertises and serves document/range formatting and a single document-wide fix-all', async () => {
@@ -198,10 +180,8 @@ describe('Language server validation queue', function () {
       textDocument: { uri, languageId: 'googlesql', version: 1, text: 'select a;\n' },
     });
     await nextDiagnostics();
-    const received: PublishDiagnosticsParams[] = [];
-    connection.onNotification(PublishDiagnosticsNotification.type, (params) => {
-      received.push(params);
-    });
+    const received = server.diagnostics;
+    received.length = 0;
     await connection.sendNotification(DidChangeTextDocumentNotification.type, {
       textDocument: { uri, version: 2 },
       contentChanges: [{ range: { start: { line: 0, character: 7 }, end: { line: 0, character: 8 } }, text: 'ifnull' }],
@@ -221,7 +201,7 @@ describe('Language server validation queue', function () {
     });
     await new Promise((resolve) => setTimeout(resolve, 100));
     expect(received).to.deep.equal([]);
-    await new Promise((resolve) => setTimeout(resolve, 400));
+    await nextDiagnostics();
     expect(received).to.have.length(1);
     expect(received[0].version).to.equal(4);
     expect(received[0].diagnostics.find((diagnostic) => diagnostic.code === 'CV02: coalesce')?.range).to.deep.equal({
@@ -231,7 +211,7 @@ describe('Language server validation queue', function () {
   });
 
   it('reloads created, edited, and deleted project settings with resource-scoped overrides', async () => {
-    const directory = await mkdtemp(path.join(tmpdir(), 'bqsql-config-lifecycle-'));
+    const directory = await mkdtemp(path.join(testDirectory, 'config-'));
     const nested = path.join(directory, 'queries');
     const configPath = path.join(directory, '.bqsqlformatter.json');
     const configUri = pathToFileURL(configPath).href;
@@ -272,7 +252,7 @@ describe('Language server validation queue', function () {
   });
 
   it('reports invalid project configuration visibly and recovers after a watched edit', async () => {
-    const directory = await mkdtemp(path.join(tmpdir(), 'bqsql-invalid-config-'));
+    const directory = await mkdtemp(path.join(testDirectory, 'invalid-config-'));
     const configPath = path.join(directory, '.bqsqlformatter.json');
     const documentUri = pathToFileURL(path.join(directory, 'query.sql')).href;
     const shownError = new Promise<string>((resolve) => {

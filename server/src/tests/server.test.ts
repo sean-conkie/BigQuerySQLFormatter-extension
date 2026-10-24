@@ -1,66 +1,58 @@
 import { expect } from 'chai';
-import { spawn } from 'node:child_process';
 import * as path from 'node:path';
+import { mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { pathToFileURL } from 'node:url';
 import {
-  createProtocolConnection,
-  StreamMessageReader,
-  StreamMessageWriter,
   InitializeRequest,
   DidOpenTextDocumentNotification,
   DidCloseTextDocumentNotification,
-  PublishDiagnosticsNotification,
-  type PublishDiagnosticsParams,
 } from 'vscode-languageserver/node';
+import { startTestServer } from './serverProcess';
 
 describe('Language server lifecycle', function () {
   this.timeout(15000);
-  it('revalidates open documents using the correct fallback configuration section', async () => {
-    const child = spawn(process.execPath, [path.join(__dirname, '../server.js'), '--stdio']);
-    const connection = createProtocolConnection(
-      new StreamMessageReader(child.stdout),
-      new StreamMessageWriter(child.stdin),
-    );
-    connection.listen();
-    const nextDiagnostics = () =>
-      new Promise<PublishDiagnosticsParams>((resolve) => {
-        connection.onNotification(PublishDiagnosticsNotification.type, resolve);
-      });
+  let server: ReturnType<typeof startTestServer>;
+  let directory: string;
+
+  beforeEach(async () => {
+    directory = await mkdtemp(path.join(tmpdir(), 'bqsql-server-lifecycle-'));
+    server = startTestServer();
+  });
+
+  afterEach(async () => {
     try {
-      await connection.sendRequest(InitializeRequest.type, { processId: process.pid, capabilities: {}, rootUri: null });
-      await connection.sendNotification('workspace/didChangeConfiguration', {
-        settings: { bigquerySQLFormatter: { maxNumberOfProblems: 1 } },
-      });
-      const opened = nextDiagnostics();
-      await connection.sendNotification(DidOpenTextDocumentNotification.type, {
-        textDocument: {
-          uri: 'file:///settings.sql',
-          languageId: 'googlesql',
-          version: 1,
-          text: 'select a = null, b = null\n',
-        },
-      });
-      expect((await opened).diagnostics).to.have.length(1);
-      const changed = nextDiagnostics();
-      await connection.sendNotification('workspace/didChangeConfiguration', {
-        settings: { bigquerySQLFormatter: { maxNumberOfProblems: 0 } },
-      });
-      expect((await changed).diagnostics).to.deep.equal([]);
+      await server.stop();
     } finally {
-      connection.dispose();
-      child.kill();
+      await rm(directory, { recursive: true, force: true });
     }
   });
 
-  it('does not publish stale diagnostics after close and can reopen the URI', async () => {
-    const child = spawn(process.execPath, [path.join(__dirname, '../server.js'), '--stdio']);
-    const connection = createProtocolConnection(
-      new StreamMessageReader(child.stdout),
-      new StreamMessageWriter(child.stdin),
-    );
-    const published: PublishDiagnosticsParams[] = [];
-    connection.onNotification(PublishDiagnosticsNotification.type, (params) => {
-      published.push(params);
+  it('revalidates open documents using the correct fallback configuration section', async () => {
+    const { connection, nextDiagnostics } = server;
+    await connection.sendRequest(InitializeRequest.type, { processId: process.pid, capabilities: {}, rootUri: null });
+    await connection.sendNotification('workspace/didChangeConfiguration', {
+      settings: { bigquerySQLFormatter: { maxNumberOfProblems: 1 } },
     });
+    const opened = nextDiagnostics();
+    await connection.sendNotification(DidOpenTextDocumentNotification.type, {
+      textDocument: {
+        uri: pathToFileURL(path.join(directory, 'settings.sql')).href,
+        languageId: 'googlesql',
+        version: 1,
+        text: 'select a = null, b = null\n',
+      },
+    });
+    expect((await opened).diagnostics).to.have.length(1);
+    const changed = nextDiagnostics();
+    await connection.sendNotification('workspace/didChangeConfiguration', {
+      settings: { bigquerySQLFormatter: { maxNumberOfProblems: 0 } },
+    });
+    expect((await changed).diagnostics).to.deep.equal([]);
+  });
+
+  it('does not publish stale diagnostics after close and can reopen the URI', async () => {
+    const { connection, nextDiagnostics, diagnostics: published } = server;
     let releaseSettings!: () => void;
     const settingsReady = new Promise<void>((resolve) => {
       releaseSettings = resolve;
@@ -72,40 +64,33 @@ describe('Language server lifecycle', function () {
         return [{ maxNumberOfProblems: 100 }];
       });
     });
-    connection.listen();
-    try {
-      await connection.sendRequest(InitializeRequest.type, {
-        processId: process.pid,
-        capabilities: { workspace: { configuration: true } },
-        rootUri: null,
-      });
-      const document = {
-        uri: 'file:///lifecycle.sql',
-        languageId: 'googlesql',
-        version: 1,
-        text: '\nselect col\nfrom dataset.table',
-      };
-      await connection.sendNotification(DidOpenTextDocumentNotification.type, { textDocument: document });
-      await settingsRequested;
-      await connection.sendNotification(DidCloseTextDocumentNotification.type, { textDocument: { uri: document.uri } });
-      // A request is processed after the preceding notifications, without waiting for async validation.
-      await connection.sendRequest('textDocument/hover', {
-        textDocument: { uri: document.uri },
-        position: { line: 0, character: 0 },
-      });
-      releaseSettings();
-      await new Promise((resolve) => setTimeout(resolve, 200));
-      expect(published).to.deep.equal([{ uri: document.uri, diagnostics: [] }]);
-      const reopened = new Promise<PublishDiagnosticsParams>((resolve) => {
-        connection.onNotification(PublishDiagnosticsNotification.type, resolve);
-      });
-      await connection.sendNotification(DidOpenTextDocumentNotification.type, {
-        textDocument: { ...document, version: 2 },
-      });
-      expect((await reopened).diagnostics).not.to.be.empty;
-    } finally {
-      connection.dispose();
-      child.kill();
-    }
+    await connection.sendRequest(InitializeRequest.type, {
+      processId: process.pid,
+      capabilities: { workspace: { configuration: true } },
+      rootUri: null,
+    });
+    const document = {
+      uri: pathToFileURL(path.join(directory, 'lifecycle.sql')).href,
+      languageId: 'googlesql',
+      version: 1,
+      text: '\nselect col\nfrom dataset.table',
+    };
+    await connection.sendNotification(DidOpenTextDocumentNotification.type, { textDocument: document });
+    await settingsRequested;
+    await connection.sendNotification(DidCloseTextDocumentNotification.type, { textDocument: { uri: document.uri } });
+    expect(await nextDiagnostics()).to.deep.equal({ uri: document.uri, diagnostics: [] });
+    // A request is processed after the preceding notifications, without waiting for async validation.
+    await connection.sendRequest('textDocument/hover', {
+      textDocument: { uri: document.uri },
+      position: { line: 0, character: 0 },
+    });
+    releaseSettings();
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    expect(published).to.deep.equal([{ uri: document.uri, diagnostics: [] }]);
+    const reopened = nextDiagnostics();
+    await connection.sendNotification(DidOpenTextDocumentNotification.type, {
+      textDocument: { ...document, version: 2 },
+    });
+    expect((await reopened).diagnostics).not.to.be.empty;
   });
 });
