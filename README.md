@@ -32,8 +32,9 @@ and formatting preserve your file's line endings; linting does not rewrite files
 
 ## Installation
 
-Install [BigQuery SQL Formatter from the Visual Studio Code Marketplace](
-https://marketplace.visualstudio.com/items?itemName=sean-conkie.bigquerysqlformatter).
+Install
+[BigQuery SQL Formatter](https://marketplace.visualstudio.com/items?itemName=sean-conkie.bigquerysqlformatter)
+from the Visual Studio Code Marketplace.
 Requires Visual Studio Code 1.91 or newer. Open a BigQuery-specific file or
 select **GoogleSQL** as the document language to start linting.
 
