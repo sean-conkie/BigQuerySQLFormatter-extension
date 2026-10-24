@@ -5,7 +5,7 @@ The language server is implemented in the server folder.
 */
 
 import * as path from 'node:path';
-import type { ExtensionContext } from 'vscode';
+import { workspace, type ExtensionContext } from 'vscode';
 
 import {
   LanguageClient,
@@ -31,8 +31,13 @@ export function activate(context: ExtensionContext) {
   };
 
   // Options to control the language client
+  const configWatcher = workspace.createFileSystemWatcher('**/.bqsqlformatter.json');
+  context.subscriptions.push(configWatcher);
   const clientOptions: LanguageClientOptions = {
     documentSelector: [{ scheme: 'file', language: 'googlesql' }],
+    synchronize: {
+      fileEvents: configWatcher,
+    },
   };
 
   // Create the language client and start the client.

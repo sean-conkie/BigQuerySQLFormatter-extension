@@ -54,6 +54,55 @@ LF, CRLF, and CR line endings are normalized internally for consistent diagnosti
 and edit ranges. Generated quick fixes use the document's original line-ending
 style; opening or linting a document does not rewrite its line endings.
 
+## Rule configuration
+
+Configure rules in your VS Code user, workspace, or workspace-folder settings:
+
+```json
+{
+  "bigquerySQLFormatter.rules": {
+    "CV05": { "enabled": true, "severity": "error" },
+    "LT02": { "enabled": false },
+    "exclude": ["CV01"],
+    "groups": { "capitalisation": false }
+  }
+}
+```
+
+Rules default to enabled with `warning` severity. Supported severities are
+`error`, `warning`, `information`, `hint`, and `off`. Disabling a rule removes
+its diagnostics and fixes, including fix-on-save. Exclusions, disabled groups,
+and `off` take precedence over an individual `enabled: true` setting.
+Group names are `aliasing`, `ambiguous`, `capitalisation`, `convention`, `layout`,
+and `structure`. Use uppercase rule codes in configuration.
+
+For shared project settings, create `.bqsqlformatter.json`:
+
+```json
+{
+  "maxNumberOfProblems": 100,
+  "rules": {
+    "CV05": { "severity": "error" },
+    "LT02": { "enabled": false }
+  }
+}
+```
+
+The nearest config between the SQL file and its workspace-folder root overrides
+VS Code settings field by field. Only that config is used; parent project configs
+are not merged. Exclusion arrays replace rather than extend the editor list.
+Multi-root workspaces remain isolated. Without a workspace, only the SQL file's
+directory is checked. Settings and project-file changes revalidate open documents
+automatically. Invalid configuration produces a visible error.
+
+SQL comments can suppress a line (`-- noqa` or `-- noqa: CV05, LT02`) or a
+file/region (`-- noqa: disable=CV05, LT02` followed by `-- noqa: enable=CV05`).
+Put a disable directive at the top for file-wide suppression; use `all` for all
+rules. Enable directives cannot override configured-disabled rules.
+
+See [Configuration](docs/source/config.rst) for precedence and examples.
+Rule-specific style options and `.sqlfluff` compatibility are not yet supported.
+
 ## Development and CI
 
 The extension requires Visual Studio Code 1.91 or newer, matching the minimum

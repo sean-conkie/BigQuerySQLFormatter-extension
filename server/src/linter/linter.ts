@@ -1,4 +1,4 @@
-import type { ServerSettings } from '../settings';
+import { isRuleEnabled, type ServerSettings, type RuleCode } from '../settings';
 import {
   type Diagnostic,
   type DidChangeTextDocumentParams,
@@ -8,6 +8,7 @@ import {
   CodeActionKind,
   type Range,
   CancellationToken,
+  DiagnosticSeverity,
 } from 'vscode-languageserver/node';
 import type { Rule } from './rules/base';
 import { initialiseRules } from './rules/rules';
@@ -19,6 +20,7 @@ import { checkCancellation, yieldToEventLoop } from '../cancellation';
 
 interface Directive extends Range {
   code: string;
+  action?: 'disable' | 'enable';
 }
 
 /**
@@ -89,15 +91,32 @@ export class Linter {
     const text = cache.getText();
     for (const rule of [...this.parserRules, ...this.regexRules]) {
       await yieldToEventLoop(token);
+      if (!this.isRuleEnabled(rule)) continue;
       const result = rule.evaluate(rule.type === RuleType.PARSER ? ast : text, uri);
       if (result) {
+        const severity = this.settings.rules?.[rule.code as RuleCode]?.severity;
+        const severities = {
+          error: DiagnosticSeverity.Error,
+          warning: DiagnosticSeverity.Warning,
+          information: DiagnosticSeverity.Information,
+          hint: DiagnosticSeverity.Hint,
+        };
         diagnostics.push(
-          ...result.filter((diagnostic) => rule.type === RuleType.PARSER || cache.isCodeRange(diagnostic.range)),
+          ...result
+            .filter((diagnostic) => rule.type === RuleType.PARSER || cache.isCodeRange(diagnostic.range))
+            .map((diagnostic) => ({
+              ...diagnostic,
+              severity: severity && severity !== 'off' ? severities[severity] : diagnostic.severity,
+            })),
         );
       }
     }
     checkCancellation(token);
     return this.limitDiagnostics(diagnostics, uri);
+  }
+
+  private isRuleEnabled(rule: Rule<string | FileMap>): boolean {
+    return rule.enabled && isRuleEnabled(this.settings, rule.code, rule.ruleGroup);
   }
 
   closeDocument(uri: string): void {
@@ -127,20 +146,20 @@ export class Linter {
    * If they match, the diagnostic is filtered out. If the directive's code is 'noqa', it filters out diagnostics that match the directive's line.
    */
   private filterDiagnostics(diagnostics: Diagnostic[], directives: Directive[]): Diagnostic[] {
-    directives.forEach((directive) => {
-      diagnostics = diagnostics.filter((diagnostic) => {
-        if (directive.code !== 'noqa') {
-          const lineMatch = diagnostic.range.start.line === directive.start.line;
-          const codeMatch = String(diagnostic.code).split(':', 1)[0].toUpperCase() === directive.code;
-
-          return !(lineMatch && codeMatch);
+    return diagnostics.filter((diagnostic) => {
+      const code = String(diagnostic.code).split(':', 1)[0].toUpperCase();
+      let disabled = false;
+      for (const directive of directives) {
+        if (directive.start.line > diagnostic.range.start.line) break;
+        if (directive.code !== code && directive.code !== 'noqa') continue;
+        if (directive.action) {
+          disabled = directive.action === 'disable';
+        } else if (directive.start.line === diagnostic.range.start.line) {
+          return false;
         }
-
-        return diagnostic.range.start.line !== directive.start.line;
-      });
+      }
+      return !disabled;
     });
-
-    return diagnostics;
   }
 
   /**
@@ -163,18 +182,22 @@ export class Linter {
       if (!match) {
         continue;
       }
+      const actionMatch = /^(disable|enable)[ \t]*=[ \t]*(.*)$/i.exec(match[1] ?? '');
+      const action = actionMatch?.[1].toLowerCase() as 'disable' | 'enable' | undefined;
       const codes =
         match[1] === undefined
           ? ['noqa']
-          : match[1]
+          : (actionMatch?.[2] ?? match[1])
               .split(',')
               .map((code) => code.trim().toUpperCase())
+              .map((code) => (code === 'ALL' ? 'noqa' : code))
               .filter(Boolean);
       for (const code of codes) {
         directives.push({
           start: { line: lineNumber, character: comment.startIndex },
           end: { line: lineNumber, character: line.value.length },
           code,
+          ...(action ? { action } : {}),
         });
       }
     }
@@ -198,9 +221,12 @@ export class Linter {
   async createCodeActions(params: CodeActionParams): Promise<CodeAction[]> {
     const codeActions: CodeAction[] = [];
 
-    params.context.diagnostics.forEach((diagnostic) => {
+    const directives = globalTokenCache.get(params.textDocument.uri)
+      ? this.createDirectives(params.textDocument.uri)
+      : [];
+    this.filterDiagnostics(params.context.diagnostics, directives).forEach((diagnostic) => {
       this.regexRules.forEach((rule) => {
-        if (rule.diagnosticCode === diagnostic.code && rule.is_fix_compatible) {
+        if (this.isRuleEnabled(rule) && rule.diagnosticCode === diagnostic.code && rule.is_fix_compatible) {
           const action = rule.createCodeAction(params.textDocument, diagnostic);
           if (action) {
             codeActions.push(...action);
@@ -208,7 +234,7 @@ export class Linter {
         }
       });
       this.parserRules.forEach((rule) => {
-        if (rule.diagnosticCode === diagnostic.code && rule.is_fix_compatible) {
+        if (this.isRuleEnabled(rule) && rule.diagnosticCode === diagnostic.code && rule.is_fix_compatible) {
           const action = rule.createCodeAction(params.textDocument, diagnostic);
           if (action) {
             codeActions.push(...action);

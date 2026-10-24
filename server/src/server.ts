@@ -12,9 +12,18 @@ import {
   type CodeAction,
   type HoverParams,
   type Hover,
+  ShowMessageNotification,
+  MessageType,
 } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { defaultSettings, documentSettings, getDocumentSettings, type ServerSettings } from './settings';
+import {
+  defaultSettings,
+  documentSettings,
+  getDocumentSettings,
+  mergeSettings,
+  parseSettings,
+  type ServerSettings,
+} from './settings';
 import { closeTextDocument, getDocumentLinter, validateTextDocument } from './validate';
 import { CompletionBuilder } from './completions';
 import { ValidationScheduler } from './validationScheduler';
@@ -26,6 +35,7 @@ let hasConfigurationCapability = false;
 let hasWorkspaceFolderCapability = false;
 let hasDiagnosticRelatedInformationCapability = false;
 let globalSettings: ServerSettings = defaultSettings;
+let workspaceUris: string[] = [];
 const documents = new Map<string, TextDocument>();
 const validations = new ValidationScheduler(
   (diagnostics) => {
@@ -33,6 +43,21 @@ const validations = new ValidationScheduler(
   },
   (message) => connection.console.error(message),
 );
+
+async function settingsForDocument(uri: string): Promise<ServerSettings> {
+  try {
+    return await getDocumentSettings(uri, connection, globalSettings, hasConfigurationCapability, workspaceUris);
+  } catch (error) {
+    const message = `Unable to configure ${uri}: ${error instanceof Error ? error.message : String(error)}`;
+    void connection.sendNotification(ShowMessageNotification.type, { type: MessageType.Error, message });
+    throw error;
+  }
+}
+
+function revalidateDocuments(): void {
+  documentSettings.clear();
+  for (const document of documents.values()) validateDocument(document);
+}
 
 function validateDocument(document: TextDocument, delay = 0): void {
   const snapshot = {
@@ -44,10 +69,7 @@ function validateDocument(document: TextDocument, delay = 0): void {
   validations.schedule(
     document.uri,
     async (token) => {
-      const settings = await awaitWithCancellation(
-        getDocumentSettings(document.uri, connection, globalSettings, hasConfigurationCapability),
-        token,
-      );
+      const settings = await awaitWithCancellation(settingsForDocument(document.uri), token);
       checkCancellation(token);
       return validateTextDocument(snapshot, settings, token);
     },
@@ -59,6 +81,7 @@ function validateDocument(document: TextDocument, delay = 0): void {
 
 connection.onInitialize((params: InitializeParams) => {
   const capabilities = params.capabilities;
+  workspaceUris = params.workspaceFolders?.map((folder) => folder.uri) ?? (params.rootUri ? [params.rootUri] : []);
 
   // Does the client support the `workspace/configuration` request?
   // If not, we fall back using global settings.
@@ -94,18 +117,31 @@ connection.onInitialized(() => {
     // Register for all configuration changes.
     connection.client.register(DidChangeConfigurationNotification.type, undefined);
   }
+  if (hasWorkspaceFolderCapability) {
+    connection.workspace.onDidChangeWorkspaceFolders((event) => {
+      const removed = new Set(event.removed.map((folder) => folder.uri));
+      workspaceUris = [...workspaceUris.filter((uri) => !removed.has(uri)), ...event.added.map((folder) => folder.uri)];
+      revalidateDocuments();
+    });
+  }
 });
 
 connection.onDidChangeConfiguration((change) => {
-  if (hasConfigurationCapability) {
-    // Reset all cached document settings
-    documentSettings.clear();
-  } else {
-    globalSettings = { ...defaultSettings, ...change.settings.bigquerySQLFormatter };
+  if (!hasConfigurationCapability) {
+    try {
+      globalSettings = mergeSettings(defaultSettings, parseSettings(change.settings?.bigquerySQLFormatter ?? {}));
+    } catch (error) {
+      const message = `Invalid BigQuery SQL Formatter settings: ${error instanceof Error ? error.message : String(error)}`;
+      connection.console.error(message);
+      void connection.sendNotification(ShowMessageNotification.type, { type: MessageType.Error, message });
+      return;
+    }
   }
-  for (const document of documents.values()) {
-    validateDocument(document);
-  }
+  revalidateDocuments();
+});
+
+connection.onDidChangeWatchedFiles((params) => {
+  if (params.changes.some((change) => change.uri.endsWith('/.bqsqlformatter.json'))) revalidateDocuments();
 });
 
 connection.onDidOpenTextDocument((params) => {
@@ -137,10 +173,7 @@ connection.onDidCloseTextDocument((params) => {
 
 connection.onCodeAction(async (params: CodeActionParams, token): Promise<CodeAction[]> => {
   checkCancellation(token);
-  const settings = await awaitWithCancellation(
-    getDocumentSettings(params.textDocument.uri, connection, globalSettings, hasConfigurationCapability),
-    token,
-  );
+  const settings = await awaitWithCancellation(settingsForDocument(params.textDocument.uri), token);
   checkCancellation(token);
   if (!documents.has(params.textDocument.uri)) return [];
   const linter = getDocumentLinter(params.textDocument.uri, settings);
