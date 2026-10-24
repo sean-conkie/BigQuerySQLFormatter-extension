@@ -1,0 +1,21 @@
+=====================================================
+Rule: Put Multiline CTE Closing Brackets on a New Line
+=====================================================
+
+**Rule Code:** ``LT07``
+
+**Name:** ``cte_bracket``
+
+The closing bracket of a multiline CTE belongs on its own line. Single-line
+CTEs are allowed. Ordinary subqueries and function brackets are not CTEs.
+
+.. code-block:: sql
+
+    WITH zoo AS (
+        SELECT a FROM foo
+    )
+
+    SELECT a FROM zoo;
+
+Quick Fix, Fix All, and formatting move the closing bracket to a new line,
+using the indentation of the CTE definition and preserving comments.

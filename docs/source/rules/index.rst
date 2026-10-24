@@ -92,6 +92,7 @@ Layout rules are guidelines that help developers maintain a consistent and reada
 	Rule: Columns Should Be Indented Consistently <layout/LT02>
 	Rule: Place Commas at the End of the Line <layout/LT04>
 	Rule: Function Names Must Be Immediately Followed by Parentheses <layout/LT06>
+	Rule: Put Multiline CTE Closing Brackets on a New Line <layout/LT07>
 	Rule: Select Targets Should Be on Separate Lines <layout/LT09>
 	Rule: select Modifiers Must Be on the Same Line as select <layout/LT10>
 	Rule: UNION Operators Should Be Surrounded by Newlines <layout/LT11>
