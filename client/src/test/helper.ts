@@ -35,13 +35,19 @@ export function waitForDiagnostics(
       if (!event.uris.some((uri) => uri.toString() === docUri.toString())) {
         return;
       }
+      checkDiagnostics();
+    });
+    const checkDiagnostics = () => {
       const diagnostics = vscode.languages.getDiagnostics(docUri);
       if (matches(diagnostics)) {
         clearTimeout(timeout);
         subscription.dispose();
         resolve(diagnostics);
       }
-    });
+    };
+    // Unchanged diagnostics need not emit another event. Subscribe before checking
+    // the current state so a publication cannot be missed between those steps.
+    checkDiagnostics();
   });
 }
 

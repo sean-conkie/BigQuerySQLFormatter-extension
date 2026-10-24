@@ -85,10 +85,15 @@ suite('Language server diagnostics', () => {
         { tabSize: 2, insertSpaces: true },
       );
       assert.ok(formatted.length > 0);
+      const manuallyFormatted = waitForDiagnostics(
+        uri,
+        (diagnostics) => !hasRule(diagnostics, 'CP04') && !hasRule(diagnostics, 'CV05'),
+      );
       await editor.edit((edit) => {
         for (const replacement of formatted) edit.replace(replacement.range, replacement.newText);
       });
       assert.equal(editor.document.getText(), 'select a is null;\nselect b is null;\n');
+      await manuallyFormatted;
       const second = await vscode.commands.executeCommand<vscode.TextEdit[] | undefined>(
         'vscode.executeFormatDocumentProvider',
         uri,
