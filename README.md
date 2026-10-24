@@ -18,41 +18,35 @@ such as:
   maintainable.
 - Language Server Integration: Utilizes a language server to offer real-time feedback and suggestions as users write SQL
   queries.
-- Support for Multiple SQL Dialects: While aimed at BigQuery use, the extension supports various SQL dialects, including
-  standard SQL and GoogleSQL, ensuring compatibility with different BigQuery environments.
+- GoogleSQL Support: Checks BigQuery's SQL dialect, including BigQuery-specific query features.
 - Best Practices Enforcement: Encourages the use of best practices in SQL query writing, such as preferring LEFT JOIN
   over RIGHT JOIN for better readability and maintainability.
 
 This extension is particularly useful for developers and data analysts who frequently write and maintain BigQuery SQL
 queries, providing them with tools to improve code quality and productivity.
 
-Multi-line comments and strings are tracked across lines during initial parsing
-and editing. Incremental edits re-tokenize from the first changed line through
-the end of the document using the preceding line's TextMate state, so subsequent
-diagnostics reflect the current document without reopening it.
+Diagnostics update as you type, including after edits to multiline strings and
+comments. Rules ignore SQL-like text inside strings, quoted identifiers, and
+comments. Style and best-practice diagnostics default to warnings. Quick fixes
+and formatting preserve your file's line endings; linting does not rewrite files.
 
-Closing a document clears its diagnostics and evicts its token and settings caches.
-Reopening it parses the current contents afresh.
+## Installation
 
-Edits update the server's document snapshot immediately and debounce validation
-until 250 ms after the most recent change. Superseded or closed-document work is
-cancelled, and diagnostics are published only for the current version. Parsing
-yields between tokenization batches and during statement processing so incoming
-edits and LSP request cancellations can be handled. Loaded grammars are shared,
-and each open document reuses its parser and rule instances until it is closed.
-Opening a document and changing configuration trigger immediate validation.
+Install [BigQuery SQL Formatter from the Visual Studio Code Marketplace](
+https://marketplace.visualstudio.com/items?itemName=sean-conkie.bigquerysqlformatter).
+Requires Visual Studio Code 1.91 or newer. Open a BigQuery-specific file or
+select **GoogleSQL** as the document language to start linting.
 
-Regex-based diagnostics use TextMate token scopes to exclude matches inside
-strings, quoted identifiers, and comments, on both open and edit. Matching uses
-the original source text so diagnostic and quick-fix offsets stay unchanged.
-Style and best-practice diagnostics default to Warning rather than Error.
-Rules share a central registry and reusable regular expression/parser bases.
-Regular expression ranges use explicit named target groups so contextual matches
-do not alter fix ranges.
+## Rules
 
-LF, CRLF, and CR line endings are normalized internally for consistent diagnostics
-and edit ranges. Generated quick fixes use the document's original line-ending
-style; opening or linting a document does not rewrite its line endings.
+See the [rule reference](https://bigquerysqlformatter.readthedocs.io/en/latest/rules/)
+for all aliasing, ambiguous, capitalisation, convention, layout, and structure rules.
+The 0.4.0 rules add explicit UNION modifiers and INNER JOINs, consistent
+GROUP BY/ORDER BY references, matching set-query column counts, statement
+terminators, and CTE layout.
+
+UNION modifier checks now use **AM02** instead of **CV12**. Move any UNION-specific
+CV12 settings and `noqa` suppressions to AM02. CV12 continues checking EXCEPT and INTERSECT.
 
 ## Rule configuration
 
@@ -100,93 +94,9 @@ file/region (`-- noqa: disable=CV05, LT02` followed by `-- noqa: enable=CV05`).
 Put a disable directive at the top for file-wide suppression; use `all` for all
 rules. Enable directives cannot override configured-disabled rules.
 
-See [Configuration](docs/source/config.rst) for precedence and examples.
+See [Configuration](https://bigquerysqlformatter.readthedocs.io/en/latest/config/)
+for precedence and examples.
 Rule-specific style options and `.sqlfluff` compatibility are not yet supported.
-
-## Development and CI
-
-The extension requires Visual Studio Code 1.91 or newer, matching the minimum
-supported by LSP client/server 10. The Visual Studio Code API types are pinned to
-1.91.0 so compilation cannot silently use newer APIs. End-to-end CI covers both
-Visual Studio Code 1.91.0 and stable; set `BQSQL_TEST_VSCODE_VERSION=1.91.0` to run
-the minimum-version tests locally.
-
-Use Node.js 22.12 or newer in the Node.js 22 release line and install the locked
-root, client and server dependencies with `npm ci`.
-The packaging tool's Azure Identity dependency temporarily overrides MSAL Node
-to a patched release. Remove this override when Azure Identity supports the
-patched version directly.
-The following checks run on all pull requests (including stacked branches) and pushes to `main`:
-
-```sh
-npm run lint
-npm run compile
-npm run coverage
-npx --no-install vsce package --no-yarn --out extension.vsix
-npm run package:check
-npm run citest
-```
-
-`npm test` runs the server unit tests after compilation. `npm run coverage` also
-generates `coverage/lcov.info`, which CI uploads to Codecov using `CODECOV_TOKEN`.
-It fails if overall branch coverage falls below 80%. Regression tests cover
-multiline incremental edits and CRLF, directive edge cases, diagnostic limits,
-and overlapping fix-all edits while preserving individual quick fixes.
-Fork pull requests use Codecov's public-repository tokenless uploads; configure the
-token as a Dependabot secret as well to enable uploads from Dependabot PRs.
-
-Packaging type-checks and bundles the extension through the VSCE prepublish hook.
-`npm run watch` watches both TypeScript types and the esbuild bundles.
-`npm run citest`
-runs server tests followed by client end-to-end tests, which download and launch Visual Studio Code
-and require a display; on headless Linux use
-`xvfb-run -a npm run citest`. Packaging and end-to-end tests run on Linux, macOS and Windows.
-Set `BQSQL_TEST_VSIX` to the absolute path of a VSIX when running `npm run citest`
-to install it into the isolated test profile and run diagnostics tests against
-its packaged contents instead of the source checkout. CI uses this mode on all
-three operating systems.
-
-The VSIX excludes documentation, tests, CI files, development configuration,
-local virtual environments, and root SQL scratch files. `npm run package:check`
-checks the package file list for regressions and verifies that grammar JSON,
-Oniguruma Wasm, extension entry points, and the Marketplace icon are preserved.
-The client and server are bundled with esbuild into `dist/`; grammar JSON and
-`onig.wasm` are copied alongside them. No `node_modules` directories are shipped.
-Bundled dependency licenses and notices are retained in `dist/ThirdPartyNotices.txt`.
-
-Release publishing uses Node.js 22 and the locked local `@vscode/vsce` dependency,
-with `VSCE_PAT` supplied by the repository secret.
-
-Run `npm audit --audit-level=high` in the root, `client`, and `server` directories
-to check tooling and runtime dependencies. Dependabot monitors all three npm
-manifests and GitHub Actions weekly, grouping minor and patch updates with a
-seven-day cooldown.
-Node types stay on 22.x; Chai and sinon-chai major upgrades are deferred until
-the assertion test harness migrates to ESM. The unused `@vscode/test-cli`
-dependency has been removed; end-to-end tests use `@vscode/test-electron` directly.
-Server tests use Mocha 12; the client test runner uses Mocha 11 so it also works
-with the older embedded Node.js in the minimum supported Visual Studio Code version.
-Client-only Mocha overrides select patched `diff` and `serialize-javascript`
-versions until the compatible runner incorporates those updates upstream.
-
-Documentation uses Python 3.13 or newer and the stable Sphinx and theme versions
-pinned in `docs/requirements.txt`.
-
-TypeScript linting and formatting use pinned Biome 2.6.2 with two-space indentation,
-single quotes, and semicolons. `npm run lint` checks both; `npm run lint:fix` applies
-safe lint fixes and formatting, and `npm run format` only formats. CI uses `biome ci`
-to reject lint and formatting violations. Super-linter's overlapping formatters
-are disabled. Formatting-only commits are listed in `.git-blame-ignore-revs`;
-use `git config blame.ignoreRevsFile .git-blame-ignore-revs` to skip them in blame.
-A separate JSCPD step compares changed pull request files with the same files at
-the PR base. It retains the 5% duplication target and rejects increases above an
-existing higher baseline. Both snapshots are normalized with the same pinned
-formatter before comparing token percentages, so quote styles and line wrapping
-do not manufacture regressions. Comments and tests are excluded.
-Generated npm lockfiles are excluded from duplication checks; their repeated
-dependency metadata is not hand-written source code.
-Actions are pinned to commit hashes, and lint results appear in the workflow
-summary without requiring permission to post pull request comments.
 
 ## Configuration
 
@@ -249,11 +159,13 @@ automatically repeats the fixes.
 As an alternative to formatting on save, add this to your `settings.json`:
 
 ```json
+{
   "[googlesql]": {
     "editor.codeActionsOnSave": {
       "source.fixAll.bigquerySQLFormatter": "explicit"
     }
-  },
+  }
+}
 ```
 
 The generic `"source.fixAll": "explicit"` setting also includes this extension.
@@ -286,3 +198,8 @@ select case when cc.enddate is null then 1 else null end as is_current -- noqa: 
 ```
 
 <img width="757" alt="image" src="https://github.com/user-attachments/assets/0bd8c99a-a0ae-44de-9c56-f0d9623d3dcc">
+
+## Contributing
+
+For development, testing, adding rules, and release guidance, see
+[Contributing](https://github.com/sean-conkie/BigQuerySQLFormatter-extension/blob/main/CONTRIBUTING.md).
