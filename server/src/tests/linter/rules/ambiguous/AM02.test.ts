@@ -14,6 +14,8 @@ describe('AM02 UNION modifiers', () => {
     ['SELECT a UNION -- choice\n DISTINCT SELECT b', 0],
     ['SELECT a UNION all_values SELECT b', 1],
     ["SELECT 'UNION', `UNION` -- UNION\n/* UNION */", 0],
+    ["SELECT [1, 2], 'UNION', r'UNION', \"UNION\", '''UNION\nUNION'''", 0],
+    ["SELECT 'it\\'s UNION', `UNION` # UNION", 0],
     ['SELECT a UNION ALL SELECT b UNION SELECT c', 1],
   ] as const) {
     it(`checks ${JSON.stringify(text)}`, async () => {

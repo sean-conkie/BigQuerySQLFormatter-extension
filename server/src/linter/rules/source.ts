@@ -1,4 +1,5 @@
 import type { Diagnostic, Range } from 'vscode-languageserver/node';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 import type { FileMap } from '../parser';
 import { type DocumentCache, globalTokenCache } from '../parser/tokenCache';
 import { ParserRule } from './base';
@@ -15,34 +16,19 @@ export function keyword(token: SourceToken | undefined, value: string): boolean 
 
 export function sourceTokens(cache: DocumentCache): SourceToken[] {
   const result: SourceToken[] = [];
-  for (const line of [...cache.keys].sort((a, b) => a - b)) {
-    let quoted = false;
-    for (const token of cache.get(line)!.tokens) {
-      if (token.scopes.some((scope) => scope.startsWith('comment.'))) continue;
-      if (token.value === '`' && token.scopes.includes('punctuation.definition.string.begin.sql')) quoted = true;
-      const literal =
-        quoted || token.scopes.some((scope) => scope.startsWith('string.') || scope === 'meta.identifier.quoted.sql');
-      if (literal) {
-        result.push({
-          value: token.value,
-          range: {
-            start: { line, character: token.startIndex },
-            end: { line, character: token.endIndex },
-          },
-          literal: true,
-        });
-      } else {
-        for (const match of token.value.matchAll(/[a-z_][\w$]*|\d+(?:\.\d+)?|[^\s]/gi)) {
-          const character = token.startIndex + match.index;
-          result.push({
-            value: match[0],
-            range: { start: { line, character }, end: { line, character: character + match[0].length } },
-            literal: false,
-          });
-        }
-      }
-      if (token.value === '`' && token.scopes.includes('punctuation.definition.string.end.sql')) quoted = false;
-    }
+  const text = cache.getText();
+  const document = TextDocument.create('', 'googlesql', 0, text);
+  // Highlighting can lose string scopes after incomplete or unsupported SQL.
+  // Shield literals independently before interpreting structural punctuation.
+  const pattern =
+    /(?<comment>--[^\n]*|#[^\n]*|\/\*[\s\S]*?(?:\*\/|$))|(?<literal>(?:rb|br|r|b)?(?:'''(?:\\[\s\S]|(?!''')[\s\S])*?(?:'''|$)|"""(?:\\[\s\S]|(?!""")[\s\S])*?(?:"""|$)|'(?:\\[\s\S]|''|[^'\\])*?(?:'|$)|"(?:\\[\s\S]|""|[^"\\])*?(?:"|$))|`(?:\\[\s\S]|``|[^`\\])*?(?:`|$))|[a-z_][\w$]*|\d+(?:\.\d+)?|[^\s]/gi;
+  for (const match of text.matchAll(pattern)) {
+    if (match.groups?.comment !== undefined) continue;
+    result.push({
+      value: match[0],
+      range: { start: document.positionAt(match.index), end: document.positionAt(match.index + match[0].length) },
+      literal: match.groups?.literal !== undefined,
+    });
   }
   return result;
 }
