@@ -18,7 +18,7 @@
     "vscode-textmate": "^9.3.2"
   },
   "devDependencies": {
-    "@types/vscode": "1.91.0"
+    "@types/vscode": "1.140.0"
   },
   "scripts": {}
 }
