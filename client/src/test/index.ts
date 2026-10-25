@@ -7,6 +7,11 @@ import { readdir } from 'node:fs/promises';
 import Mocha from 'mocha';
 
 export async function run(): Promise<void> {
+  const readinessUrl = process.env.BQSQL_TEST_WORKBENCH_URL;
+  if (!readinessUrl) throw new Error('The test runner did not provide a workbench readiness URL');
+  const ready = await fetch(readinessUrl, { signal: AbortSignal.timeout(35000) });
+  if (!ready.ok) throw new Error(`Test workbench is not ready: ${await ready.text()}`);
+
   // Create the mocha test
   const mocha = new Mocha({
     ui: 'tdd',
