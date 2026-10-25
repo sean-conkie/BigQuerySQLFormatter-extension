@@ -52,8 +52,8 @@ the PR base. It retains the 5% duplication target and rejects increases above an
 existing higher baseline. Both snapshots are normalized with the same pinned
 formatter before comparing token percentages, so quote styles and line wrapping
 do not manufacture regressions. Comments and tests are excluded. Generated npm
-lockfiles are excluded because their repeated dependency metadata is not
-hand-written source code.
+lockfiles and the generated function catalog are excluded because their repeated
+metadata is not hand-written source code.
 
 Actions are pinned to commit hashes. Lint results appear in the workflow summary
 without requiring permission to post pull request comments.
@@ -89,6 +89,33 @@ three operating systems.
 The test runner waits for native workbench contributions, including save
 participants, through the Visual Studio Code smoke-test driver before running
 tests. Its debugging and readiness endpoints bind only to the loopback interface.
+
+## Refreshing function completions
+
+Run `npm run generate:completions` with network access to refresh the committed
+`server/src/completions/functions.json` catalog and the generated function scopes
+in `server/src/linter/syntaxes/googlesql.tmLanguage.json`. The generator reads the
+English BigQuery all-functions reference plus AI/ML reference navigation, then
+fetches linked pages for signatures. It records names, signatures, descriptions,
+and documentation links in sorted order, without timestamps. Re-running against
+unchanged reference pages produces identical output.
+
+The source is Google's [BigQuery function reference](https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/functions-all).
+
+Commit both generated outputs together. Do not edit the catalog or the
+`generatedFunctions` grammar entry by hand. Existing grammar patterns remain for
+special syntax such as `SAFE.` and functions used without parentheses. Builds
+and tests use committed data and do not fetch documentation.
+Generated patterns retain existing function-category scopes for parser
+compatibility; newly discovered functions use the shared `function.builtin`
+parser rule in `server/src/linter/syntaxes/syntax.json`.
+
+After regenerating, run `npm run compile` and `npm test`. The offline generator
+tests check reference extraction and catalog/grammar synchronization; server
+tests exercise completion, hover, and actual TextMate scopes for the catalog.
+If Google changes the reference layout, the generator fails explicitly rather
+than silently omitting signatures or descriptions; update its extraction logic
+and fixtures before committing refreshed data.
 
 ## Packaging and release
 

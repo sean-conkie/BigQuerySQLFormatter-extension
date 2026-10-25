@@ -6,68 +6,23 @@ import {
   type TextDocumentPositionParams,
 } from 'vscode-languageserver/node';
 import { type DocumentCache, globalTokenCache } from '../linter/parser/tokenCache';
-import { dateFunctions } from './date';
 import { getWordAt } from '../utils';
 import type { DocumentUri } from 'vscode-languageserver-textdocument';
-import { aggregateFunctions } from './aggregate';
-import { approxFunctions } from './approx';
-import { arrayFunctions } from './array';
-import { bitFunctions } from './bit';
-import { conversionFunctions } from './conversions';
-import { datetimeFunctions } from './datetime';
-import { debuggingFunctions } from './debugging';
-import { dlpFunctions } from './dlp';
-import { federatedQueryFunctions } from './federatedQuery';
-import { geographyFunctions } from './geography';
-import { hashFunctions } from './hash';
-import { hyperLogFunctions } from './hyperLog';
-import { intervalFunctions } from './interval';
-import { jsonFunctions } from './json';
-import { mathFunctions } from './math';
-import { navigationFunctions } from './navigation';
-import { netFunctions } from './net';
-import { numberingFunctions } from './numbering';
-import { rangeFunctions } from './range';
-import { searchFunctions } from './search';
-import { securityFunctions } from './security';
-import { statisticalFunctions } from './statistical';
-import { stringFunctions } from './string';
-import { textAnalysisFunctions } from './textAnalysis';
-import { timeFunctions } from './time';
-import { utilityFunctions } from './utility';
+import functions from './functions.json';
+
+const functionSymbols: CompletionItem[] = functions.map(({ name, signature, description, url }) => ({
+  label: name,
+  detail: signature,
+  documentation: {
+    kind: 'markdown',
+    value: `\`\`\`sql\n${signature}\n\`\`\`\n\n${description}\n\n[BigQuery reference](${url})`,
+  },
+}));
 
 export class CompletionBuilder {
   uri: DocumentUri;
   cachedDocument: DocumentCache | undefined = undefined;
-  functionSymbols: CompletionItem[] = [
-    ...aggregateFunctions,
-    ...approxFunctions,
-    ...arrayFunctions,
-    ...bitFunctions,
-    ...conversionFunctions,
-    ...dateFunctions,
-    ...datetimeFunctions,
-    ...debuggingFunctions,
-    ...dlpFunctions,
-    ...federatedQueryFunctions,
-    ...geographyFunctions,
-    ...hashFunctions,
-    ...hyperLogFunctions,
-    ...intervalFunctions,
-    ...jsonFunctions,
-    ...mathFunctions,
-    ...navigationFunctions,
-    ...netFunctions,
-    ...numberingFunctions,
-    ...rangeFunctions,
-    ...searchFunctions,
-    ...securityFunctions,
-    ...statisticalFunctions,
-    ...stringFunctions,
-    ...textAnalysisFunctions,
-    ...timeFunctions,
-    ...utilityFunctions,
-  ];
+  functionSymbols: CompletionItem[] = functionSymbols;
 
   constructor(uri: DocumentUri) {
     this.uri = uri;
@@ -86,12 +41,12 @@ export class CompletionBuilder {
       end: position,
     });
 
-    // Use a simple regex to get the current word being typed
-    const match = text.match(/[\w$]+$/);
+    const match = text.match(/[\w$]+(?:\.[\w$]*)*$/);
     const prefix = match ? match[0] : '';
 
-    // Filter symbols that start with the prefix
-    const filteredSymbols = this.functionSymbols.filter((symbol) => symbol.label.startsWith(prefix));
+    const filteredSymbols = this.functionSymbols.filter((symbol) =>
+      symbol.label.toUpperCase().startsWith(prefix.toUpperCase()),
+    );
 
     // Map to CompletionItems
     const completionItems: CompletionItem[] = filteredSymbols.map((symbol) => ({
@@ -100,6 +55,14 @@ export class CompletionBuilder {
       detail: symbol.detail,
       documentation: symbol.documentation,
       insertText: symbol.label,
+      ...(prefix.includes('.')
+        ? {
+            textEdit: {
+              range: { start: { line: position.line, character: position.character - prefix.length }, end: position },
+              newText: symbol.label,
+            },
+          }
+        : {}),
     }));
 
     return completionItems;
@@ -125,9 +88,10 @@ export class CompletionBuilder {
         end: { line: params.position.line + 1, character: 0 },
       }),
       params.position.character,
+      true,
     );
 
-    const filteredSymbols = this.functionSymbols.filter((symbol) => symbol.label === word);
+    const filteredSymbols = this.functionSymbols.filter((symbol) => symbol.label.toUpperCase() === word?.toUpperCase());
 
     if (filteredSymbols.length === 0 || filteredSymbols[0].documentation == null) {
       return null;

@@ -16,6 +16,17 @@
 - Detect mixed-case boolean/null literals such as `True` and `Null` in CP04,
   without matching identifier substrings, quoted identifiers, strings or comments.
 
+### New function support
+
+- Generate function completions and hover documentation from the BigQuery
+  reference, including AI/ML, vector search, and newer array and JSON functions.
+  Commit the catalog and matching grammar scopes for offline builds.
+
+### Function lookup fixes
+
+- Match function completions and hover case-insensitively and handle qualified
+  names without inserting a duplicate namespace.
+
 ## 0.4.0 - 2026-10-25
 
 ### Breaking changes
