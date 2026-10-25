@@ -148,6 +148,54 @@ suite('Language server diagnostics', () => {
     }
   });
 
+  test('Reports the 0.4.0 rules and formats their safe fixes together', async () => {
+    const directory = await mkdtemp(path.join(getDocPath(''), 'milestone-rules-'));
+    const uri = vscode.Uri.file(path.join(directory, 'query.bqsql'));
+    const codes = (diagnostics: readonly vscode.Diagnostic[]) =>
+      diagnostics.map((diagnostic) => {
+        const code = diagnostic.code;
+        return String(typeof code === 'object' ? code.value : code).split(':')[0];
+      });
+    const rules = ['AM02', 'AM05', 'AM06', 'AM07', 'CV06', 'LT07', 'LT08'];
+    try {
+      await writeFile(
+        uri.fsPath,
+        'WITH c AS (\n  SELECT a, b FROM source)\nSELECT a, b FROM c JOIN other ON c.a = other.a GROUP BY a, 2\nUNION\nSELECT a FROM c',
+      );
+      const ready = waitForDiagnostics(uri, (diagnostics) => rules.every((rule) => codes(diagnostics).includes(rule)));
+      const editor = await activate(uri);
+      await ready;
+      const edits = await vscode.commands.executeCommand<vscode.TextEdit[]>(
+        'vscode.executeFormatDocumentProvider',
+        uri,
+        { tabSize: 2, insertSpaces: true },
+      );
+      assert.ok(edits.length > 0);
+      const fixed = waitForDiagnostics(
+        uri,
+        (diagnostics) =>
+          ['AM02', 'AM06', 'AM07'].every((rule) => codes(diagnostics).includes(rule)) &&
+          ['AM05', 'CV06', 'LT07', 'LT08'].every((rule) => !codes(diagnostics).includes(rule)),
+      );
+      await editor.edit((edit) => {
+        for (const replacement of edits) edit.replace(replacement.range, replacement.newText);
+      });
+      await fixed;
+      assert.match(editor.document.getText(), /inner join other/i);
+      assert.match(editor.document.getText(), /\n\)\n\nSELECT/i);
+      assert.ok(editor.document.getText().endsWith(';\n'));
+      const second = await vscode.commands.executeCommand<vscode.TextEdit[] | undefined>(
+        'vscode.executeFormatDocumentProvider',
+        uri,
+        { tabSize: 2, insertSpaces: true },
+      );
+      assert.ok(!second || second.length === 0);
+    } finally {
+      await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
+      await rm(directory, { recursive: true });
+    }
+  });
+
   test('Applies editor rule settings and watches project config creation, edits, and deletion', async () => {
     const directory = await mkdtemp(path.join(getDocPath(''), 'rule-config-'));
     const uri = vscode.Uri.file(path.join(directory, 'query.bqsql'));

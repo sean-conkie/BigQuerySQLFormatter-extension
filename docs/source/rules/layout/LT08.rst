@@ -1,0 +1,25 @@
+========================================
+Rule: Add a Blank Line After Each CTE
+========================================
+
+**Rule Code:** ``LT08``
+
+**Name:** ``cte_newline``
+
+Separate CTE definitions from each other and from the main SELECT with a
+blank line. A comma after a CTE remains attached to its closing bracket.
+
+.. code-block:: sql
+
+    WITH first_cte AS (
+        SELECT a FROM foo
+    ),
+
+    second_cte AS (
+        SELECT b FROM bar
+    )
+
+    SELECT a FROM first_cte;
+
+Quick Fix, Fix All, and formatting insert missing blank lines without
+removing comments or existing spacing. Nested and single-line CTEs are checked.
