@@ -38,7 +38,8 @@ export function range(start: number, end: number): number[] {
   return result;
 }
 
-const isWordChar = (char: string): boolean => /[a-zA-Z0-9_]/.test(char);
+const isWordChar = (char: string, qualified: boolean): boolean =>
+  /[a-zA-Z0-9_]/.test(char) || (qualified && char === '.');
 
 /**
  * Finds the word in a string at a given position.
@@ -47,7 +48,7 @@ const isWordChar = (char: string): boolean => /[a-zA-Z0-9_]/.test(char);
  * @param {number} pos - The index position in the text.
  * @returns {string|null} - The word at the given position or null if none found.
  */
-export function getWordAt(text: string, pos: number): string | null {
+export function getWordAt(text: string, pos: number, qualified = false): string | null {
   if (pos < 0 || pos >= text.length) {
     return null;
   }
@@ -61,12 +62,12 @@ export function getWordAt(text: string, pos: number): string | null {
   let end = pos;
 
   // Expand start position backward
-  while (start > 0 && isWordChar(text.charAt(start - 1))) {
+  while (start > 0 && isWordChar(text.charAt(start - 1), qualified)) {
     start--;
   }
 
   // Expand end position forward
-  while (end < text.length && isWordChar(text.charAt(end))) {
+  while (end < text.length && isWordChar(text.charAt(end), qualified)) {
     end++;
   }
 

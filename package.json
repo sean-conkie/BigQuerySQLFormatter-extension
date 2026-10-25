@@ -148,13 +148,14 @@
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -b && node scripts/build.cjs",
+    "generate:completions": "node scripts/generate-completions.cjs",
     "watch": "node scripts/build.cjs --watch",
     "lint": "biome check",
     "lint:fix": "biome check --write",
     "format": "biome format --write",
     "package:check": "node scripts/check-package.cjs",
     "postinstall": "npm ci --prefix client && npm ci --prefix server",
-    "test": "mocha \"server/out/tests/**/*.test.js\"",
+    "test": "node --test scripts/generate-completions.test.cjs && mocha \"server/out/tests/**/*.test.js\"",
     "coverage": "nyc --check-coverage --branches 80 --reporter=lcov --reporter=text-summary npm test",
     "citest": "npm test && node ./client/out/test/runTest",
     "deploy": "vsce publish --no-yarn"
@@ -174,6 +175,7 @@
     "@vscode/test-electron": "^3.1.0",
     "@vscode/vsce": "^4.0.0",
     "chai": "^4.4.1",
+    "cheerio": "1.1.2",
     "esbuild": "^0.25.12",
     "mocha": "^12.0.3",
     "nyc": "^18.0.0",

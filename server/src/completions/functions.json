@@ -1,0 +1,2954 @@
+[
+  {
+    "name": "abs",
+    "signature": "ABS(X)",
+    "description": "Computes the absolute value of X.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#abs"
+  },
+  {
+    "name": "acos",
+    "signature": "ACOS(X)",
+    "description": "Computes the inverse cosine of X.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#acos"
+  },
+  {
+    "name": "acosh",
+    "signature": "ACOSH(X)",
+    "description": "Computes the inverse hyperbolic cosine of X.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#acosh"
+  },
+  {
+    "name": "aead.decrypt_bytes",
+    "signature": "AEAD.DECRYPT_BYTES(keyset, ciphertext, additional_data)",
+    "description": "Uses the matching key from a keyset to decrypt a BYTES ciphertext.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/aead_encryption_functions#aeaddecrypt_bytes"
+  },
+  {
+    "name": "aead.decrypt_string",
+    "signature": "AEAD.DECRYPT_STRING(keyset, ciphertext, additional_data)",
+    "description": "Uses the matching key from a keyset to decrypt a BYTES ciphertext into a STRING plaintext.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/aead_encryption_functions#aeaddecrypt_string"
+  },
+  {
+    "name": "aead.encrypt",
+    "signature": "AEAD.ENCRYPT(keyset, plaintext, additional_data)",
+    "description": "Encrypts STRING plaintext, using the primary cryptographic key in a keyset.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/aead_encryption_functions#aeadencrypt"
+  },
+  {
+    "name": "agg",
+    "signature": "AGG(measure_expression)",
+    "description": "Aggregates a measure type.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/aggregate_functions#agg"
+  },
+  {
+    "name": "ai.agg",
+    "signature": "AI.AGG( [ DISTINCT ] INPUT, INSTRUCTION [, connection_id => 'CONNECTION'] [, endpoint => 'ENDPOINT'] [, max_error_ratio => MAX_ERROR_RATIO] [, output_schema => 'OUTPUT_SCHEMA'] )",
+    "description": "The AI.AGG function uses a Vertex AI Gemini model to aggregate data based on natural language instructions that you provide. The function can process text or multimodal data and returns a single string.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-ai-agg"
+  },
+  {
+    "name": "ai.causal_effect",
+    "signature": "AI.CAUSAL_EFFECT( {TABLE TABLE_NAME | (query_statement)}, data_col => DATA_COL, timestamp_col => TIMESTAMP_COL, intervention_timestamp => INTERVENTION_TIMESTAMP [, id_cols => ID_COLS] [, confidence_level => CONFIDENCE_LEVEL] [, output_time_series => OUTPUT_TIME_SERIES] [, num_post_intervention_points => NUM_POST_INTERVENTION_POINTS] );",
+    "description": "This document describes the AI.CAUSAL_EFFECT function, which lets you quantify the impact of specific interventions on time series data. For example, if you launched a marketing campaign on a specific date, you can measure by how much your incremental sales increased relative to what would have happened without the campaign. The function compares actual post-intervention values against an estimate of the outcome without the action. AI.CAUSAL_EFFECT offers the following features:",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-causal-effect"
+  },
+  {
+    "name": "ai.chunk_document",
+    "signature": "AI.CHUNK_DOCUMENT( { 'STORAGE_URI' | TABLE INPUT_TABLE | (QUERY_STATEMENT) } [, connection_id => 'CONNECTION_ID' ] [, chunk_size => CHUNK_SIZE ] )",
+    "description": "This document describes the AI.CHUNK_DOCUMENT function, a table-valued function that splits unstructured documents into semantically coherent text chunks based on document layout and structure.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-ai-chunk-document"
+  },
+  {
+    "name": "ai.classify",
+    "signature": "AI.CLASSIFY( [ input => ] INPUT, [ categories => ] CATEGORIES [, examples => EXAMPLES ] [, connection_id => 'CONNECTION' ] [, endpoint => 'ENDPOINT' ] [, output_mode => 'OUTPUT_MODE' ] [, embeddings => EMBEDDINGS ] [, optimization_mode => 'OPTIMIZATION_MODE' ] [, max_error_ratio => MAX_ERROR_RATIO ] )",
+    "description": "This document describes the AI.CLASSIFY function, which uses a Gemini Enterprise Agent Platform Gemini model to classify inputs into categories that you provide. BigQuery automatically structures your input to improve the quality of the classification.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-ai-classify"
+  },
+  {
+    "name": "ai.count_tokens",
+    "signature": "AI.COUNT_TOKENS( INPUT, [, endpoint => ENDPOINT ] )",
+    "description": "This document describes the AI.COUNT_TOKENS function, which estimates the token count of text input that you provide.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-ai-count-tokens"
+  },
+  {
+    "name": "ai.detect_anomalies",
+    "signature": "SELECT * FROM AI.DETECT_ANOMALIES( { TABLE HISTORY_TABLE | (HISTORY_QUERY_STATEMENT) }, [ { TABLE TARGET_TABLE | (TARGET_QUERY_STATEMENT) }, ] data_col => 'DATA_COL', timestamp_col => 'TIMESTAMP_COL' [, target_last_n_points => TARGET_LAST_N_POINTS] [, target_start_timestamp => TARGET_START_TIMESTAMP] [, model => 'MODEL'] [, id_cols => ID_COLS] [, anomaly_prob_threshold => ANOMALY_PROB_THRESHOLD] [, context_window => CONTEXT_WINDOW] )",
+    "description": "This document describes the AI.DETECT_ANOMALIES function, which lets you detect anomalies in time series data by using BigQuery ML's built-in TimesFM model.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-ai-detect-anomalies"
+  },
+  {
+    "name": "ai.embed",
+    "signature": "AI.EMBED( [ content => ] 'content', { endpoint => 'endpoint' | model => 'model' } [, task_type => 'task_type'] [, title => 'title'] [, model_params => model_params] [, connection_id => 'connection'] )",
+    "description": "This document describes the AI.EMBED function, which lets you create embeddings from text or image data in BigQuery. For example, the following query creates an embedding for a piece of text:",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-ai-embed"
+  },
+  {
+    "name": "ai.evaluate",
+    "signature": "SELECT * FROM AI.EVALUATE( { TABLE HISTORY_TIME_SERIES_TABLE | (HISTORY_TIME_SERIES_QUERY_STATEMENT) }, { TABLE ACTUAL_TIME_SERIES_TABLE | (ACTUAL_TIME_SERIES_QUERY_STATEMENT) }, data_col => 'DATA_COL', timestamp_col => 'TIMESTAMP_COL', [, model => 'MODEL'] [, id_cols => ID_COLS] [, horizon => HORIZON] [, context_window => CONTEXT_WINDOW] )",
+    "description": "This document describes the AI.EVALUATE function, which lets you evaluate TimesFM forecasted data against a reference time series based on historical data, or TabFM predicted data against ground truth data.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-ai-evaluate"
+  },
+  {
+    "name": "ai.forecast",
+    "signature": "SELECT * FROM AI.FORECAST( { TABLE TABLE | (QUERY_STATEMENT) }, data_col => 'DATA_COL', timestamp_col => 'TIMESTAMP_COL' [, model => 'MODEL'] [, id_cols => ID_COLS] [, horizon => HORIZON] [, forecast_end_timestamp => FORECAST_END_TIMESTAMP] [, confidence_level => CONFIDENCE_LEVEL] [, output_historical_time_series => OUTPUT_HISTORICAL_TIME_SERIES] [, context_window => CONTEXT_WINDOW] )",
+    "description": "This document describes the AI.FORECAST function, which lets you forecast time series by using the TimesFM model that's built into BigQuery ML. You can use this function to perform univariate or multivariate forecasting:",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-ai-forecast"
+  },
+  {
+    "name": "ai.generate",
+    "signature": "AI.GENERATE( [ prompt => ] 'PROMPT', [, endpoint => 'ENDPOINT'] [, model_params => MODEL_PARAMS] [, output_schema => 'OUTPUT_SCHEMA'] [, connection_id => 'CONNECTION'] [, request_type => 'REQUEST_TYPE'] )",
+    "description": "This document describes the AI.GENERATE function, which lets you analyze any combination of structured and unstructured data. You can choose to generate text or structured output according to a custom schema that you specify. The function works by sending requests to a Gemini Enterprise Agent Platform Gemini model and returning a STRUCT that contains your generated data, the full model response, and a status.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-ai-generate"
+  },
+  {
+    "name": "ai.generate_bool",
+    "signature": "AI.GENERATE_BOOL( [ prompt => ] 'PROMPT', [, endpoint => 'ENDPOINT'] [, model_params => MODEL_PARAMS] [, connection_id => 'CONNECTION'] [, request_type => 'REQUEST_TYPE'] )",
+    "description": "This document describes the AI.GENERATE_BOOL function, which lets you analyze any combination of text and unstructured data. For each row in the table, the function generates a STRUCT that contains a BOOL value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-ai-generate-bool"
+  },
+  {
+    "name": "ai.generate_double",
+    "signature": "AI.GENERATE_DOUBLE( [ prompt => ] 'PROMPT', [, endpoint => 'ENDPOINT'] [, model_params => MODEL_PARAMS] [, connection_id => 'CONNECTION'] [, request_type => 'REQUEST_TYPE'] )",
+    "description": "This document describes the AI.GENERATE_DOUBLE function, which lets you analyze any combination of text and unstructured data. The function generates a STRUCT that contains a FLOAT64 value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-ai-generate-double"
+  },
+  {
+    "name": "ai.generate_embedding",
+    "signature": "AI.GENERATE_EMBEDDING( MODEL `PROJECT_ID.DATASET.MODEL_NAME`, { TABLE `PROJECT_ID.DATASET.TABLE_NAME` | (QUERY_STATEMENT) }, STRUCT( [, TASK_TYPE AS task_type] [, OUTPUT_DIMENSIONALITY AS output_dimensionality]) )",
+    "description": "This document describes the AI.GENERATE_EMBEDDING function, a table-valued function that lets you create embeddings that describe an entity—for example, a piece of text or an image.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-ai-generate-embedding"
+  },
+  {
+    "name": "ai.generate_int",
+    "signature": "AI.GENERATE_INT( [ prompt => ] 'PROMPT', [, endpoint => 'ENDPOINT'] [, model_params => MODEL_PARAMS] [, connection_id => 'CONNECTION'] [, request_type => 'REQUEST_TYPE'] )",
+    "description": "This document describes the AI.GENERATE_INT function, which lets you analyze any combination of text and unstructured data. The function generates a STRUCT that contains an INT64 value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-ai-generate-int"
+  },
+  {
+    "name": "ai.generate_table",
+    "signature": "AI.GENERATE_TABLE( MODEL `PROJECT_ID.DATASET.MODEL`, { TABLE `PROJECT_ID.DATASET.TABLE` | (QUERY_STATEMENT) }, STRUCT( OUTPUT_SCHEMA AS output_schema [, MAX_OUTPUT_TOKENS AS max_output_tokens] [, TOP_P AS top_p] [, TEMPERATURE AS temperature] [, STOP_SEQUENCES AS stop_sequences] [, SAFETY_SETTINGS AS safety_settings] [, REQUEST_TYPE AS request_type]) )",
+    "description": "This document describes the AI.GENERATE_TABLE function, which lets you perform generative natural language tasks by using any combination of text and unstructured data from BigQuery standard tables, and also specify a schema to format the response from the model.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-generate-table"
+  },
+  {
+    "name": "ai.generate_text",
+    "signature": "AI.GENERATE_TEXT( MODEL `PROJECT_ID.DATASET.MODEL`, { TABLE `PROJECT_ID.DATASET.TABLE` | (QUERY_STATEMENT) }, STRUCT( { { [MAX_OUTPUT_TOKENS AS max_output_tokens] [, TOP_P AS top_p] [, TEMPERATURE AS temperature] [, STOP_SEQUENCES AS stop_sequences] [, GROUND_WITH_GOOGLE_SEARCH AS ground_with_google_search] [, SAFETY_SETTINGS AS safety_settings] } | [, MODEL_PARAMS AS model_params] } [, REQUEST_TYPE AS request_type]) )",
+    "description": "This document describes the AI.GENERATE_TEXT function, a table-valued function that lets you perform generative natural language tasks by using any combination of text and unstructured data from BigQuery standard tables, or unstructured data from BigQuery object tables.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-ai-generate-text"
+  },
+  {
+    "name": "ai.if",
+    "signature": "AI.IF( [ prompt => ] PROMPT [, examples => EXAMPLES ] [, connection_id => 'CONNECTION' ] [, endpoint => 'ENDPOINT' ] [, embeddings => EMBEDDINGS ] [, optimization_mode => 'OPTIMIZATION_MODE' ] [, max_error_ratio => MAX_ERROR_RATIO ] )",
+    "description": "This document describes the AI.IF function, which uses a Gemini Enterprise Agent Platform Gemini model to evaluate a condition described in natural language and returns a BOOL.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-ai-if"
+  },
+  {
+    "name": "ai.key_drivers",
+    "signature": "AI.KEY_DRIVERS( { TABLE TABLE_NAME | (QUERY_STATEMENT) }, metric_col => 'METRIC_COL', dimension_cols => DIMENSION_COLS, interest_label_col => 'INTEREST_LABEL_COL', [, min_apriori_support => MIN_APRIORI_SUPPORT] [, top_k => TOP_K] [, enable_pruning => ENABLE_PRUNING] )",
+    "description": "This document describes the AI.KEY_DRIVERS function, which you can use to identify segments of data that cause statistically significant changes to a summable metric. For example, if you launch a new product, then the following query identifies the locations where new product sales were most unexpected:",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-ai-key-drivers"
+  },
+  {
+    "name": "ai.predict",
+    "signature": "AI.PREDICT( { TABLE TRAINING_TABLE | (TRAINING_QUERY) }, { TABLE PREDICTION_TABLE | (PREDICTION_QUERY) } [, label_col => 'LABEL_COL' ] )",
+    "description": "This document describes the AI.PREDICT function, which uses a pre-trained foundation model for tabular data, TabFM, to perform regression and classification tasks on structured data.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-ai-predict"
+  },
+  {
+    "name": "ai.score",
+    "signature": "AI.SCORE( [ prompt => ] PROMPT [, connection_id => 'CONNECTION' ] [, endpoint => 'ENDPOINT' ] [, max_error_ratio => MAX_ERROR_RATIO ] )",
+    "description": "This document describes the AI.SCORE function, which uses a Gemini Enterprise Agent Platform Gemini model to rate inputs based on a scoring system that you describe and returns a FLOAT64 value. BigQuery rewrites your input prompt to generate a scoring rubric that can improve the consistency and quality of the results.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-ai-score"
+  },
+  {
+    "name": "ai.search",
+    "signature": "AI.SEARCH( { TABLE base_table | base_table_query }, column_to_search, query_value, mode => mode_value [, top_k => top_k_value ] [, distance_type => distance_type_value ] [, options => options_value] )",
+    "description": "This document describes the AI.SEARCH function, which is a table-valued function for semantic search and hybrid search on tables that have autonomous embedding generation enabled.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-ai-search"
+  },
+  {
+    "name": "ai.similarity",
+    "signature": "AI.SIMILARITY( content1 => 'CONTENT1', content2 => 'CONTENT2', [, { endpoint => 'ENDPOINT' | model => 'MODEL' }] [, model_params => MODEL_PARAMS] [, connection_id => 'CONNECTION_ID'] )",
+    "description": "This document describes the AI.SIMILARITY function, which lets you find the cosine similarity between two inputs. Values closer to 1 indicate more similar inputs and values closer to 0 indicate less similar inputs.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-ai-similarity"
+  },
+  {
+    "name": "ai.translate",
+    "signature": "AI.TRANSLATE( content, target_language [, source_language => source_language] [, model => model_name] [, return_details => return_details] )",
+    "description": "This document describes the AI.TRANSLATE function, which translates text strings between languages. AI.TRANSLATE brings high-quality Translation LLM (TLLM) capabilities to your SQL workflows, while also supporting standard Neural Machine Translation (NMT) workloads.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-ai-translate"
+  },
+  {
+    "name": "any_value",
+    "signature": "ANY_VALUE( expression [ WHERE where_expression ] [ HAVING { MAX | MIN } having_expression ] ) [ OVER over_clause ] over_clause: { named_window | ( [ window_specification ] ) } window_specification: [ named_window ] [ PARTITION BY partition_expression [, ...] ] [ ORDER BY expression [ { ASC | DESC } ] [, ...] ] [ window_frame_clause ]",
+    "description": "Gets an expression for some row.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/aggregate_functions#any_value"
+  },
+  {
+    "name": "appends",
+    "signature": "APPENDS( TABLE table, start_timestamp DEFAULT NULL, end_timestamp DEFAULT NULL)",
+    "description": "Returns all rows appended to a table for a given time range.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/time-series-functions#appends"
+  },
+  {
+    "name": "approx_count_distinct",
+    "signature": "APPROX_COUNT_DISTINCT( expression [ WHERE where_expression ] )",
+    "description": "Gets the approximate result for COUNT(DISTINCT expression).",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/approximate_aggregate_functions#approx_count_distinct"
+  },
+  {
+    "name": "approx_quantiles",
+    "signature": "APPROX_QUANTILES( [ DISTINCT ] expression, number [ { IGNORE | RESPECT } NULLS ] [ WHERE where_expression ] )",
+    "description": "Gets the approximate quantile boundaries.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/approximate_aggregate_functions#approx_quantiles"
+  },
+  {
+    "name": "approx_top_count",
+    "signature": "APPROX_TOP_COUNT(expression, number)",
+    "description": "Gets the approximate top elements and their approximate count.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/approximate_aggregate_functions#approx_top_count"
+  },
+  {
+    "name": "approx_top_sum",
+    "signature": "APPROX_TOP_SUM(expression, weight, number)",
+    "description": "Gets the approximate top elements and sum, based on the approximate sum of an assigned weight.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/approximate_aggregate_functions#approx_top_sum"
+  },
+  {
+    "name": "array",
+    "signature": "ARRAY(subquery)",
+    "description": "Produces an array with one element for each row in a subquery.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/array_functions#array"
+  },
+  {
+    "name": "array_agg",
+    "signature": "ARRAY_AGG( [ DISTINCT ] expression [ { IGNORE | RESPECT } NULLS ] [ WHERE where_expression ] [ ORDER BY key [ { ASC | DESC } ] [, ... ] ] [ LIMIT n ] ) [ OVER over_clause ] over_clause: { named_window | ( [ window_specification ] ) } window_specification: [ named_window ] [ PARTITION BY partition_expression [, ...] ] [ ORDER BY expression [ { ASC | DESC } ] [, ...] ] [ window_frame_clause ]",
+    "description": "Gets an array of values.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/aggregate_functions#array_agg"
+  },
+  {
+    "name": "array_concat",
+    "signature": "ARRAY_CONCAT(array_expression[, ...])",
+    "description": "Concatenates one or more arrays with the same element type into a single array.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/array_functions#array_concat"
+  },
+  {
+    "name": "array_concat_agg",
+    "signature": "ARRAY_CONCAT_AGG( expression [ WHERE where_expression ] [ ORDER BY key [ { ASC | DESC } ] [, ... ] ] [ LIMIT n ] )",
+    "description": "Concatenates arrays and returns a single array as a result.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/aggregate_functions#array_concat_agg"
+  },
+  {
+    "name": "array_first",
+    "signature": "ARRAY_FIRST(array_expression)",
+    "description": "Gets the first element in an array.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/array_functions#array_first"
+  },
+  {
+    "name": "array_last",
+    "signature": "ARRAY_LAST(array_expression)",
+    "description": "Gets the last element in an array.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/array_functions#array_last"
+  },
+  {
+    "name": "array_length",
+    "signature": "ARRAY_LENGTH(array_expression)",
+    "description": "Gets the number of elements in an array.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/array_functions#array_length"
+  },
+  {
+    "name": "array_reverse",
+    "signature": "ARRAY_REVERSE(value)",
+    "description": "Reverses the order of elements in an array.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/array_functions#array_reverse"
+  },
+  {
+    "name": "array_slice",
+    "signature": "ARRAY_SLICE(array_to_slice, start_offset, end_offset)",
+    "description": "Produces an array containing zero or more consecutive elements from an input array.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/array_functions#array_slice"
+  },
+  {
+    "name": "array_to_string",
+    "signature": "ARRAY_TO_STRING(array_expression, delimiter[, null_text])",
+    "description": "Produces a concatenation of the elements in an array as a STRING value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/array_functions#array_to_string"
+  },
+  {
+    "name": "ascii",
+    "signature": "ASCII(value)",
+    "description": "Gets the ASCII code for the first character or byte in a STRING or BYTES value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#ascii"
+  },
+  {
+    "name": "asin",
+    "signature": "ASIN(X)",
+    "description": "Computes the inverse sine of X.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#asin"
+  },
+  {
+    "name": "asinh",
+    "signature": "ASINH(X)",
+    "description": "Computes the inverse hyperbolic sine of X.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#asinh"
+  },
+  {
+    "name": "atan",
+    "signature": "ATAN(X)",
+    "description": "Computes the inverse tangent of X.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#atan"
+  },
+  {
+    "name": "atan2",
+    "signature": "ATAN2(X, Y)",
+    "description": "Computes the inverse tangent of X/Y, using the signs of X and Y to determine the quadrant.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#atan2"
+  },
+  {
+    "name": "atanh",
+    "signature": "ATANH(X)",
+    "description": "Computes the inverse hyperbolic tangent of X.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#atanh"
+  },
+  {
+    "name": "avg",
+    "signature": "AVG( [ DISTINCT ] expression [ WHERE where_expression ] ) [ OVER over_clause ] over_clause: { named_window | ( [ window_specification ] ) } window_specification: [ named_window ] [ PARTITION BY partition_expression [, ...] ] [ ORDER BY expression [ { ASC | DESC } ] [, ...] ] [ window_frame_clause ]",
+    "description": "Gets the average of non-NULL values.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/aggregate_functions#avg"
+  },
+  {
+    "name": "bag_of_words",
+    "signature": "BAG_OF_WORDS(tokenized_document)",
+    "description": "Gets the frequency of each term (token) in a tokenized document.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/text-analysis-functions#bag_of_words"
+  },
+  {
+    "name": "bit_and",
+    "signature": "BIT_AND( expression [ WHERE where_expression ] )",
+    "description": "Performs a bitwise AND operation on an expression.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/aggregate_functions#bit_and"
+  },
+  {
+    "name": "bit_count",
+    "signature": "BIT_COUNT(expression)",
+    "description": "Gets the number of bits that are set in an input expression.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bit_functions#bit_count"
+  },
+  {
+    "name": "bit_or",
+    "signature": "BIT_OR( expression [ WHERE where_expression ] )",
+    "description": "Performs a bitwise OR operation on an expression.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/aggregate_functions#bit_or"
+  },
+  {
+    "name": "bit_xor",
+    "signature": "BIT_XOR( [ DISTINCT ] expression [ WHERE where_expression ] )",
+    "description": "Performs a bitwise XOR operation on an expression.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/aggregate_functions#bit_xor"
+  },
+  {
+    "name": "bool",
+    "signature": "BOOL(json_expr)",
+    "description": "Converts a JSON boolean to a SQL BOOL value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/json_functions#bool_for_json"
+  },
+  {
+    "name": "byte_length",
+    "signature": "BYTE_LENGTH(value)",
+    "description": "Gets the number of BYTES in a STRING or BYTES value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#byte_length"
+  },
+  {
+    "name": "cast",
+    "signature": "CAST(expression AS typename [format_clause])",
+    "description": "Convert the results of an expression to the given type.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/conversion_functions#cast"
+  },
+  {
+    "name": "cbrt",
+    "signature": "CBRT(X)",
+    "description": "Computes the cube root of X.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#cbrt"
+  },
+  {
+    "name": "ceil",
+    "signature": "CEIL(X)",
+    "description": "Gets the smallest integral value that isn't less than X.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#ceil"
+  },
+  {
+    "name": "ceiling",
+    "signature": "CEILING(X)",
+    "description": "Synonym of CEIL.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#ceiling"
+  },
+  {
+    "name": "changes",
+    "signature": "CHANGES( TABLE table, start_timestamp DEFAULT NULL, end_timestamp)",
+    "description": "Returns all rows that have changed in a table for a given time range.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/time-series-functions#changes"
+  },
+  {
+    "name": "char_length",
+    "signature": "CHAR_LENGTH(value)",
+    "description": "Gets the number of characters in a STRING value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#char_length"
+  },
+  {
+    "name": "character_length",
+    "signature": "CHARACTER_LENGTH(value)",
+    "description": "Synonym for CHAR_LENGTH.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#character_length"
+  },
+  {
+    "name": "chr",
+    "signature": "CHR(value)",
+    "description": "Converts a Unicode code point to a character.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#chr"
+  },
+  {
+    "name": "code_points_to_bytes",
+    "signature": "CODE_POINTS_TO_BYTES(ascii_code_points)",
+    "description": "Converts an array of extended ASCII code points to a BYTES value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#code_points_to_bytes"
+  },
+  {
+    "name": "code_points_to_string",
+    "signature": "CODE_POINTS_TO_STRING(unicode_code_points)",
+    "description": "Converts an array of extended ASCII code points to a STRING value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#code_points_to_string"
+  },
+  {
+    "name": "collate",
+    "signature": "COLLATE(value, collate_specification)",
+    "description": "Combines a STRING value and a collation specification into a collation specification-supported STRING value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#collate"
+  },
+  {
+    "name": "concat",
+    "signature": "CONCAT(value1[, ...])",
+    "description": "Concatenates one or more STRING or BYTES values into a single result.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#concat"
+  },
+  {
+    "name": "contains_substr",
+    "signature": "CONTAINS_SUBSTR( expression, search_value_literal [, json_scope => json_scope_value ] )",
+    "description": "Performs a normalized, case-insensitive search to see if a value exists as a substring in an expression.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#contains_substr"
+  },
+  {
+    "name": "corr",
+    "signature": "CORR( X1, X2 [ WHERE where_expression ] ) [ OVER over_clause ] over_clause: { named_window | ( [ window_specification ] ) } window_specification: [ named_window ] [ PARTITION BY partition_expression [, ...] ] [ ORDER BY expression [ { ASC | DESC } ] [, ...] ] [ window_frame_clause ]",
+    "description": "Computes the Pearson coefficient of correlation of a set of number pairs.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/statistical_aggregate_functions#corr"
+  },
+  {
+    "name": "cos",
+    "signature": "COS(X)",
+    "description": "Computes the cosine of X.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#cos"
+  },
+  {
+    "name": "cosh",
+    "signature": "COSH(X)",
+    "description": "Computes the hyperbolic cosine of X.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#cosh"
+  },
+  {
+    "name": "cosine_distance",
+    "signature": "COSINE_DISTANCE(vector1, vector2)",
+    "description": "Computes the cosine distance between two vectors.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#cosine_distance"
+  },
+  {
+    "name": "cot",
+    "signature": "COT(X)",
+    "description": "Computes the cotangent of X.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#cot"
+  },
+  {
+    "name": "coth",
+    "signature": "COTH(X)",
+    "description": "Computes the hyperbolic cotangent of X.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#coth"
+  },
+  {
+    "name": "count",
+    "signature": "COUNT(*) [ OVER over_clause ]",
+    "description": "Gets the number of rows in the input, or the number of rows with an expression evaluated to any value other than NULL.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/aggregate_functions#count"
+  },
+  {
+    "name": "countif",
+    "signature": "COUNTIF( [ DISTINCT ] expression [ WHERE where_expression ] ) [ OVER over_clause ] over_clause: { named_window | ( [ window_specification ] ) } window_specification: [ named_window ] [ PARTITION BY partition_expression [, ...] ] [ ORDER BY expression [ { ASC | DESC } ] [, ...] ] [ window_frame_clause ]",
+    "description": "Gets the number of TRUE values for an expression.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/aggregate_functions#countif"
+  },
+  {
+    "name": "covar_pop",
+    "signature": "COVAR_POP( X1, X2 [ WHERE where_expression ] ) [ OVER over_clause ] over_clause: { named_window | ( [ window_specification ] ) } window_specification: [ named_window ] [ PARTITION BY partition_expression [, ...] ] [ ORDER BY expression [ { ASC | DESC } ] [, ...] ] [ window_frame_clause ]",
+    "description": "Computes the population covariance of a set of number pairs.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/statistical_aggregate_functions#covar_pop"
+  },
+  {
+    "name": "covar_samp",
+    "signature": "COVAR_SAMP( X1, X2 [ WHERE where_expression ] ) [ OVER over_clause ] over_clause: { named_window | ( [ window_specification ] ) } window_specification: [ named_window ] [ PARTITION BY partition_expression [, ...] ] [ ORDER BY expression [ { ASC | DESC } ] [, ...] ] [ window_frame_clause ]",
+    "description": "Computes the sample covariance of a set of number pairs.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/statistical_aggregate_functions#covar_samp"
+  },
+  {
+    "name": "csc",
+    "signature": "CSC(X)",
+    "description": "Computes the cosecant of X.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#csc"
+  },
+  {
+    "name": "csch",
+    "signature": "CSCH(X)",
+    "description": "Computes the hyperbolic cosecant of X.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#csch"
+  },
+  {
+    "name": "cume_dist",
+    "signature": "CUME_DIST() OVER over_clause over_clause: { named_window | ( [ window_specification ] ) } window_specification: [ named_window ] [ PARTITION BY partition_expression [, ...] ] ORDER BY expression [ { ASC | DESC } ] [, ...]",
+    "description": "Gets the cumulative distribution (relative position (0,1]) of each row within a window.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/numbering_functions#cume_dist"
+  },
+  {
+    "name": "current_date",
+    "signature": "CURRENT_DATE()",
+    "description": "Returns the current date as a DATE value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/date_functions#current_date"
+  },
+  {
+    "name": "current_datetime",
+    "signature": "CURRENT_DATETIME([time_zone])",
+    "description": "Returns the current date and time as a DATETIME value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/datetime_functions#current_datetime"
+  },
+  {
+    "name": "current_time",
+    "signature": "CURRENT_TIME([time_zone])",
+    "description": "Returns the current time as a TIME value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/time_functions#current_time"
+  },
+  {
+    "name": "current_timestamp",
+    "signature": "CURRENT_TIMESTAMP()",
+    "description": "Returns the current date and time as a TIMESTAMP object.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/timestamp_functions#current_timestamp"
+  },
+  {
+    "name": "date",
+    "signature": "DATE(year, month, day)",
+    "description": "Constructs a DATE value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/date_functions#date"
+  },
+  {
+    "name": "date_add",
+    "signature": "DATE_ADD(date_expression, INTERVAL step_size step_unit)",
+    "description": "Adds a specified time interval to a DATE value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/date_functions#date_add"
+  },
+  {
+    "name": "date_bucket",
+    "signature": "DATE_BUCKET(date_in_bucket, bucket_width)",
+    "description": "Gets the lower bound of the date bucket that contains a date.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/time-series-functions#date_bucket"
+  },
+  {
+    "name": "date_diff",
+    "signature": "DATE_DIFF(end_date, start_date, granularity)",
+    "description": "Gets the number of unit boundaries between two DATE values at a particular time granularity.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/date_functions#date_diff"
+  },
+  {
+    "name": "date_from_unix_date",
+    "signature": "DATE_FROM_UNIX_DATE(int64_expression)",
+    "description": "Interprets an INT64 expression as the number of days since 1970-01-01.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/date_functions#date_from_unix_date"
+  },
+  {
+    "name": "date_sub",
+    "signature": "DATE_SUB(date_expression, INTERVAL step_size step_unit)",
+    "description": "Subtracts a specified time interval from a DATE value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/date_functions#date_sub"
+  },
+  {
+    "name": "date_trunc",
+    "signature": "DATE_TRUNC(date_value, date_granularity)",
+    "description": "Truncates a DATE, DATETIME, or TIMESTAMP value at a particular granularity.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/date_functions#date_trunc"
+  },
+  {
+    "name": "datetime",
+    "signature": "1. DATETIME(year, month, day, hour, minute, second) 2. DATETIME(date_expression[, time_expression]) 3. DATETIME(timestamp_expression [, time_zone])",
+    "description": "Constructs a DATETIME value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/datetime_functions#datetime"
+  },
+  {
+    "name": "datetime_add",
+    "signature": "DATETIME_ADD(datetime_expression, INTERVAL step_size step_unit)",
+    "description": "Adds a specified time interval to a DATETIME value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/datetime_functions#datetime_add"
+  },
+  {
+    "name": "datetime_bucket",
+    "signature": "DATETIME_BUCKET(datetime_in_bucket, bucket_width)",
+    "description": "Gets the lower bound of the datetime bucket that contains a datetime.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/time-series-functions#datetime_bucket"
+  },
+  {
+    "name": "datetime_diff",
+    "signature": "DATETIME_DIFF(end_datetime, start_datetime, granularity)",
+    "description": "Gets the number of unit boundaries between two DATETIME values at a particular time granularity.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/datetime_functions#datetime_diff"
+  },
+  {
+    "name": "datetime_sub",
+    "signature": "DATETIME_SUB(datetime_expression, INTERVAL step_size step_unit)",
+    "description": "Subtracts a specified time interval from a DATETIME value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/datetime_functions#datetime_sub"
+  },
+  {
+    "name": "datetime_trunc",
+    "signature": "DATETIME_TRUNC(datetime_value, datetime_granularity)",
+    "description": "Truncates a DATETIME or TIMESTAMP value at a particular granularity.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/datetime_functions#datetime_trunc"
+  },
+  {
+    "name": "dense_rank",
+    "signature": "DENSE_RANK() OVER over_clause over_clause: { named_window | ( [ window_specification ] ) } window_specification: [ named_window ] [ PARTITION BY partition_expression [, ...] ] ORDER BY expression [ { ASC | DESC } ] [, ...]",
+    "description": "Gets the dense rank (1-based, no gaps) of each row within a window.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/numbering_functions#dense_rank"
+  },
+  {
+    "name": "destination_node_id",
+    "signature": "DESTINATION_NODE_ID(edge_element)",
+    "description": "Gets a unique identifier of a graph edge's destination node.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/graph-sql-functions#destination_node_id"
+  },
+  {
+    "name": "deterministic_decrypt_bytes",
+    "signature": "DETERMINISTIC_DECRYPT_BYTES(keyset, ciphertext, additional_data)",
+    "description": "Uses the matching key from a keyset to decrypt a BYTES ciphertext, using deterministic AEAD.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/aead_encryption_functions#deterministic_decrypt_bytes"
+  },
+  {
+    "name": "deterministic_decrypt_string",
+    "signature": "DETERMINISTIC_DECRYPT_STRING(keyset, ciphertext, additional_data)",
+    "description": "Uses the matching key from a keyset to decrypt a BYTES ciphertext into a STRING plaintext, using deterministic AEAD.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/aead_encryption_functions#deterministic_decrypt_string"
+  },
+  {
+    "name": "deterministic_encrypt",
+    "signature": "DETERMINISTIC_ENCRYPT(keyset, plaintext, additional_data)",
+    "description": "Encrypts STRING plaintext, using the primary cryptographic key in a keyset, using deterministic AEAD encryption.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/aead_encryption_functions#deterministic_encrypt"
+  },
+  {
+    "name": "div",
+    "signature": "DIV(X, Y)",
+    "description": "Divides integer X by integer Y.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#div"
+  },
+  {
+    "name": "dlp_deterministic_decrypt",
+    "signature": "DLP_DETERMINISTIC_DECRYPT(key, ciphertext, surrogate)",
+    "description": "Decrypts DLP-encrypted data.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/dlp_functions#dlp_deterministic_decrypt"
+  },
+  {
+    "name": "dlp_deterministic_encrypt",
+    "signature": "DLP_DETERMINISTIC_ENCRYPT(key, plaintext, surrogate)",
+    "description": "Encrypts data with a DLP compatible algorithm.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/dlp_functions#dlp_deterministic_encrypt"
+  },
+  {
+    "name": "dlp_key_chain",
+    "signature": "DLP_KEY_CHAIN(kms_resource_name, wrapped_key)",
+    "description": "Gets a data encryption key that's wrapped by Cloud Key Management Service.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/dlp_functions#dlp_key_chain"
+  },
+  {
+    "name": "edges",
+    "signature": "EDGES(graph_path)",
+    "description": "Gets the edges in a graph path. The resulting array retains the original order in the graph path.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/graph-sql-functions#edges"
+  },
+  {
+    "name": "edit_distance",
+    "signature": "EDIT_DISTANCE( value1, value2, [ max_distance => max_distance_value ] )",
+    "description": "Computes the Levenshtein distance between two STRING or BYTES values.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#edit_distance"
+  },
+  {
+    "name": "element_id",
+    "signature": "ELEMENT_ID(element)",
+    "description": "Gets a graph element's unique identifier.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/graph-sql-functions#element_id"
+  },
+  {
+    "name": "ends_with",
+    "signature": "ENDS_WITH(value, suffix)",
+    "description": "Checks if a STRING or BYTES value is the suffix of another value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#ends_with"
+  },
+  {
+    "name": "error",
+    "signature": "ERROR(error_message)",
+    "description": "Produces an error with a custom error message.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/debugging_functions#error"
+  },
+  {
+    "name": "euclidean_distance",
+    "signature": "EUCLIDEAN_DISTANCE(vector1, vector2)",
+    "description": "Computes the Euclidean distance between two vectors.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#euclidean_distance"
+  },
+  {
+    "name": "exp",
+    "signature": "EXP(X)",
+    "description": "Computes e to the power of X.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#exp"
+  },
+  {
+    "name": "external_object_transform",
+    "signature": "EXTERNAL_OBJECT_TRANSFORM(TABLE object_table_name, transform_types_array)",
+    "description": "Produces an object table with the original columns plus one or more additional columns.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/table-functions-built-in#external_object_transform"
+  },
+  {
+    "name": "external_query",
+    "signature": "EXTERNAL_QUERY('connection_id', '''external_database_query'''[, 'options'])",
+    "description": "Executes a query on an external database and returns the results as a temporary table.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/federated_query_functions#external_query"
+  },
+  {
+    "name": "extract",
+    "signature": "EXTRACT(part FROM date_expression)",
+    "description": "Extracts part of a date from a DATE value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/date_functions#extract"
+  },
+  {
+    "name": "farm_fingerprint",
+    "signature": "FARM_FINGERPRINT(value)",
+    "description": "Computes the fingerprint of a STRING or BYTES value using the FarmHash Fingerprint64 algorithm.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/hash_functions#farm_fingerprint"
+  },
+  {
+    "name": "first_value",
+    "signature": "FIRST_VALUE (value_expression [{RESPECT | IGNORE} NULLS]) OVER over_clause over_clause: { named_window | ( [ window_specification ] ) } window_specification: [ named_window ] [ PARTITION BY partition_expression [, ...] ] ORDER BY expression [ { ASC | DESC } ] [, ...] [ window_frame_clause ]",
+    "description": "Gets a value for the first row in the current window frame.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/navigation_functions#first_value"
+  },
+  {
+    "name": "float64",
+    "signature": "FLOAT64( json_expr [, wide_number_mode => { 'exact' | 'round' } ] )",
+    "description": "Converts a JSON number to a SQL FLOAT64 value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/json_functions#double_for_json"
+  },
+  {
+    "name": "floor",
+    "signature": "FLOOR(X)",
+    "description": "Gets the largest integral value that isn't greater than X.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#floor"
+  },
+  {
+    "name": "format",
+    "signature": "FORMAT(format_string_expression, data_type_expression[, ...])",
+    "description": "Formats data and produces the results as a STRING value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#format_string"
+  },
+  {
+    "name": "format_date",
+    "signature": "FORMAT_DATE(format_string, date_expr)",
+    "description": "Formats a DATE value according to a specified format string.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/date_functions#format_date"
+  },
+  {
+    "name": "format_datetime",
+    "signature": "FORMAT_DATETIME(format_string, datetime_expr)",
+    "description": "Formats a DATETIME value according to a specified format string.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/datetime_functions#format_datetime"
+  },
+  {
+    "name": "format_time",
+    "signature": "FORMAT_TIME(format_string, time_expr)",
+    "description": "Formats a TIME value according to the specified format string.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/time_functions#format_time"
+  },
+  {
+    "name": "format_timestamp",
+    "signature": "FORMAT_TIMESTAMP(format_string, timestamp_expr[, time_zone])",
+    "description": "Formats a TIMESTAMP value according to the specified format string.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/timestamp_functions#format_timestamp"
+  },
+  {
+    "name": "from_base32",
+    "signature": "FROM_BASE32(string_expr)",
+    "description": "Converts a base32-encoded STRING value into a BYTES value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#from_base32"
+  },
+  {
+    "name": "from_base64",
+    "signature": "FROM_BASE64(string_expr)",
+    "description": "Converts a base64-encoded STRING value into a BYTES value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#from_base64"
+  },
+  {
+    "name": "from_hex",
+    "signature": "FROM_HEX(string)",
+    "description": "Converts a hexadecimal-encoded STRING value into a BYTES value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#from_hex"
+  },
+  {
+    "name": "gap_fill",
+    "signature": "GAP_FILL ( TABLE time_series_table, time_series_column, bucket_width, [, partitioning_columns => value ] [, value_columns => value ] [, origin => value ] [, ignore_null_values => { TRUE | FALSE } ] )",
+    "description": "Finds and fills gaps in a time series.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/time-series-functions#gap_fill"
+  },
+  {
+    "name": "generate_array",
+    "signature": "GENERATE_ARRAY(start_expression, end_expression[, step_expression])",
+    "description": "Generates an array of values in a range.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/array_functions#generate_array"
+  },
+  {
+    "name": "generate_date_array",
+    "signature": "GENERATE_DATE_ARRAY(start_date, end_date[, INTERVAL step_size step_unit])",
+    "description": "Generates an array of dates in a range.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/array_functions#generate_date_array"
+  },
+  {
+    "name": "generate_range_array",
+    "signature": "GENERATE_RANGE_ARRAY(range_to_split, step_interval)",
+    "description": "Splits a range into an array of subranges.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/range-functions#generate_range_array"
+  },
+  {
+    "name": "generate_timestamp_array",
+    "signature": "GENERATE_TIMESTAMP_ARRAY(start_timestamp, end_timestamp, INTERVAL step_size step_unit)",
+    "description": "Generates an array of timestamps in a range.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/array_functions#generate_timestamp_array"
+  },
+  {
+    "name": "generate_uuid",
+    "signature": "GENERATE_UUID()",
+    "description": "Produces a random universally unique identifier (UUID) as a STRING value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/utility-functions#generate_uuid"
+  },
+  {
+    "name": "greatest",
+    "signature": "GREATEST(X1,...,XN)",
+    "description": "Gets the greatest value among X1,...,XN.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#greatest"
+  },
+  {
+    "name": "grouping",
+    "signature": "GROUPING(groupable_value)",
+    "description": "Checks if a groupable value in the GROUP BY clause is aggregated.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/aggregate_functions#grouping"
+  },
+  {
+    "name": "hll_count.extract",
+    "signature": "HLL_COUNT.EXTRACT(sketch)",
+    "description": "Extracts a cardinality estimate of an HLL++ sketch.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/hll_functions#hll_countextract"
+  },
+  {
+    "name": "hll_count.init",
+    "signature": "HLL_COUNT.INIT(input [, precision])",
+    "description": "Aggregates values of the same underlying type into a new HLL++ sketch.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/hll_functions#hll_countinit"
+  },
+  {
+    "name": "hll_count.merge",
+    "signature": "HLL_COUNT.MERGE(sketch)",
+    "description": "Merges HLL++ sketches of the same underlying type into a new sketch, and then gets the cardinality of the new sketch.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/hll_functions#hll_countmerge"
+  },
+  {
+    "name": "hll_count.merge_partial",
+    "signature": "HLL_COUNT.MERGE_PARTIAL(sketch)",
+    "description": "Merges HLL++ sketches of the same underlying type into a new sketch.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/hll_functions#hll_countmerge_partial"
+  },
+  {
+    "name": "ieee_divide",
+    "signature": "IEEE_DIVIDE(X, Y)",
+    "description": "Divides X by Y, but doesn't generate errors for division by zero or overflow.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#ieee_divide"
+  },
+  {
+    "name": "initcap",
+    "signature": "INITCAP(value[, delimiters])",
+    "description": "Formats a STRING as proper case, which means that the first character in each word is uppercase and all other characters are lowercase.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#initcap"
+  },
+  {
+    "name": "instr",
+    "signature": "INSTR(value, subvalue[, position[, occurrence]])",
+    "description": "Finds the position of a subvalue inside another value, optionally starting the search at a given offset or occurrence.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#instr"
+  },
+  {
+    "name": "int64",
+    "signature": "INT64(json_expr)",
+    "description": "Converts a JSON number to a SQL INT64 value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/json_functions#int64_for_json"
+  },
+  {
+    "name": "is_acyclic",
+    "signature": "IS_ACYCLIC(graph_path)",
+    "description": "Checks if a graph path has a repeating node.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/graph-sql-functions#is_acyclic"
+  },
+  {
+    "name": "is_inf",
+    "signature": "IS_INF(X)",
+    "description": "Checks if X is positive or negative infinity.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#is_inf"
+  },
+  {
+    "name": "is_nan",
+    "signature": "IS_NAN(X)",
+    "description": "Checks if X is a NaN value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#is_nan"
+  },
+  {
+    "name": "is_simple",
+    "signature": "IS_SIMPLE(graph_path)",
+    "description": "Checks if a graph path is simple.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/graph-sql-functions#is_simple"
+  },
+  {
+    "name": "is_trail",
+    "signature": "IS_TRAIL(graph_path)",
+    "description": "Checks if a graph path has a repeating edge.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/graph-sql-functions#is_trail"
+  },
+  {
+    "name": "json_array",
+    "signature": "JSON_ARRAY([value][, ...])",
+    "description": "Creates a JSON array.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/json_functions#json_array"
+  },
+  {
+    "name": "json_array_append",
+    "signature": "JSON_ARRAY_APPEND( json_expr, json_path_value_pair[, ...] [, append_each_element => { TRUE | FALSE } ] ) json_path_value_pair: json_path, value",
+    "description": "Appends JSON data to the end of a JSON array.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/json_functions#json_array_append"
+  },
+  {
+    "name": "json_array_insert",
+    "signature": "JSON_ARRAY_INSERT( json_expr, json_path_value_pair[, ...] [, insert_each_element => { TRUE | FALSE } ] ) json_path_value_pair: json_path, value",
+    "description": "Inserts JSON data into a JSON array.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/json_functions#json_array_insert"
+  },
+  {
+    "name": "json_extract",
+    "signature": "JSON_EXTRACT(json_string_expr, json_path)",
+    "description": "(Deprecated) Extracts a JSON value and converts it to a SQL JSON-formatted STRING or JSON value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/json_functions#json_extract"
+  },
+  {
+    "name": "json_extract_array",
+    "signature": "JSON_EXTRACT_ARRAY(json_string_expr[, json_path])",
+    "description": "(Deprecated) Extracts a JSON array and converts it to a SQL ARRAY<JSON-formatted STRING> or ARRAY<JSON> value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/json_functions#json_extract_array"
+  },
+  {
+    "name": "json_extract_scalar",
+    "signature": "JSON_EXTRACT_SCALAR(json_string_expr[, json_path])",
+    "description": "(Deprecated) Extracts a JSON scalar value and converts it to a SQL STRING value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/json_functions#json_extract_scalar"
+  },
+  {
+    "name": "json_extract_string_array",
+    "signature": "JSON_EXTRACT_STRING_ARRAY(json_string_expr[, json_path])",
+    "description": "(Deprecated) Extracts a JSON array of scalar values and converts it to a SQL ARRAY<STRING> value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/json_functions#json_extract_string_array"
+  },
+  {
+    "name": "json_flatten",
+    "signature": "JSON_FLATTEN(json_expr)",
+    "description": "Produces a new SQL ARRAY<JSON> value containing all non-array values that are either directly in the input JSON value or children of one or more consecutively nested arrays in the input JSON value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/json_functions#json_flatten"
+  },
+  {
+    "name": "json_keys",
+    "signature": "JSON_KEYS( json_expr [, max_depth ] [, mode => { 'strict' | 'lax' | 'lax recursive' } ] )",
+    "description": "Extracts unique JSON keys from a JSON expression.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/json_functions#json_keys"
+  },
+  {
+    "name": "json_object",
+    "signature": "JSON_OBJECT([json_key, json_value][, ...])",
+    "description": "Creates a JSON object.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/json_functions#json_object"
+  },
+  {
+    "name": "json_query",
+    "signature": "JSON_QUERY(json_string_expr, json_path)",
+    "description": "Extracts a JSON value and converts it to a SQL JSON-formatted STRING or JSON value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/json_functions#json_query"
+  },
+  {
+    "name": "json_query_array",
+    "signature": "JSON_QUERY_ARRAY(json_string_expr[, json_path])",
+    "description": "Extracts a JSON array and converts it to a SQL ARRAY<JSON-formatted STRING> or ARRAY<JSON> value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/json_functions#json_query_array"
+  },
+  {
+    "name": "json_remove",
+    "signature": "JSON_REMOVE(json_expr, json_path[, ...])",
+    "description": "Produces JSON with the specified JSON data removed.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/json_functions#json_remove"
+  },
+  {
+    "name": "json_set",
+    "signature": "JSON_SET( json_expr, json_path_value_pair[, ...] [, create_if_missing => { TRUE | FALSE } ] ) json_path_value_pair: json_path, value",
+    "description": "Inserts or replaces JSON data.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/json_functions#json_set"
+  },
+  {
+    "name": "json_strip_nulls",
+    "signature": "JSON_STRIP_NULLS( json_expr [, json_path ] [, include_arrays => { TRUE | FALSE } ] [, remove_empty => { TRUE | FALSE } ] )",
+    "description": "Removes JSON nulls from JSON objects and JSON arrays.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/json_functions#json_strip_nulls"
+  },
+  {
+    "name": "json_type",
+    "signature": "JSON_TYPE(json_expr)",
+    "description": "Gets the JSON type of the outermost JSON value and converts the name of this type to a SQL STRING value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/json_functions#json_type"
+  },
+  {
+    "name": "json_value",
+    "signature": "JSON_VALUE(json_string_expr[, json_path])",
+    "description": "Extracts a JSON scalar value and converts it to a SQL STRING value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/json_functions#json_value"
+  },
+  {
+    "name": "json_value_array",
+    "signature": "JSON_VALUE_ARRAY(json_string_expr[, json_path])",
+    "description": "Extracts a JSON array of scalar values and converts it to a SQL ARRAY<STRING> value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/json_functions#json_value_array"
+  },
+  {
+    "name": "justify_days",
+    "signature": "JUSTIFY_DAYS(interval_expression)",
+    "description": "Normalizes the day part of an INTERVAL value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/interval_functions#justify_days"
+  },
+  {
+    "name": "justify_hours",
+    "signature": "JUSTIFY_HOURS(interval_expression)",
+    "description": "Normalizes the time part of an INTERVAL value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/interval_functions#justify_hours"
+  },
+  {
+    "name": "justify_interval",
+    "signature": "JUSTIFY_INTERVAL(interval_expression)",
+    "description": "Normalizes the day and time parts of an INTERVAL value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/interval_functions#justify_interval"
+  },
+  {
+    "name": "keys.add_key_from_raw_bytes",
+    "signature": "KEYS.ADD_KEY_FROM_RAW_BYTES(keyset, key_type, raw_key_bytes)",
+    "description": "Adds a key to a keyset, and return the new keyset as a serialized BYTES value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/aead_encryption_functions#keysadd_key_from_raw_bytes"
+  },
+  {
+    "name": "keys.keyset_chain",
+    "signature": "KEYS.KEYSET_CHAIN(kms_resource_name, first_level_keyset)",
+    "description": "Produces a Tink keyset that's encrypted with a Cloud KMS key.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/aead_encryption_functions#keyskeyset_chain"
+  },
+  {
+    "name": "keys.keyset_from_json",
+    "signature": "KEYS.KEYSET_FROM_JSON(json_keyset)",
+    "description": "Converts a STRING JSON keyset to a serialized BYTES value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/aead_encryption_functions#keyskeyset_from_json"
+  },
+  {
+    "name": "keys.keyset_length",
+    "signature": "KEYS.KEYSET_LENGTH(keyset)",
+    "description": "Gets the number of keys in the provided keyset.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/aead_encryption_functions#keyskeyset_length"
+  },
+  {
+    "name": "keys.keyset_to_json",
+    "signature": "KEYS.KEYSET_TO_JSON(keyset)",
+    "description": "Gets a JSON STRING representation of a keyset.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/aead_encryption_functions#keyskeyset_to_json"
+  },
+  {
+    "name": "keys.new_keyset",
+    "signature": "KEYS.NEW_KEYSET(key_type)",
+    "description": "Gets a serialized keyset containing a new key based on the key type.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/aead_encryption_functions#keysnew_keyset"
+  },
+  {
+    "name": "keys.new_wrapped_keyset",
+    "signature": "KEYS.NEW_WRAPPED_KEYSET(kms_resource_name, key_type)",
+    "description": "Creates a new keyset and encrypts it with a Cloud KMS key.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/aead_encryption_functions#keysnew_wrapped_keyset"
+  },
+  {
+    "name": "keys.rewrap_keyset",
+    "signature": "KEYS.REWRAP_KEYSET(source_kms_resource_name, target_kms_resource_name, wrapped_keyset)",
+    "description": "Re-encrypts a wrapped keyset with a new Cloud KMS key.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/aead_encryption_functions#keysrewrap_keyset"
+  },
+  {
+    "name": "keys.rotate_keyset",
+    "signature": "KEYS.ROTATE_KEYSET(keyset, key_type)",
+    "description": "Adds a new primary cryptographic key to a keyset, based on the key type.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/aead_encryption_functions#keysrotate_keyset"
+  },
+  {
+    "name": "keys.rotate_wrapped_keyset",
+    "signature": "KEYS.ROTATE_WRAPPED_KEYSET(kms_resource_name, wrapped_keyset, key_type)",
+    "description": "Rewraps a keyset and rotates it.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/aead_encryption_functions#keysrotate_wrapped_keyset"
+  },
+  {
+    "name": "kll_quantiles.extract_float64",
+    "signature": "KLL_QUANTILES.EXTRACT_FLOAT64(sketch, num_quantiles)",
+    "description": "Gets a selected number of quantiles from a FLOAT64-initialized KLL sketch.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/kll_functions#kll_quantilesextract_double"
+  },
+  {
+    "name": "kll_quantiles.extract_int64",
+    "signature": "KLL_QUANTILES.EXTRACT_INT64(sketch, num_quantiles)",
+    "description": "Gets a selected number of quantiles from an INT64-initialized KLL sketch.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/kll_functions#kll_quantilesextract_int64"
+  },
+  {
+    "name": "kll_quantiles.extract_point_float64",
+    "signature": "KLL_QUANTILES.EXTRACT_POINT_FLOAT64(sketch, phi)",
+    "description": "Gets a specific quantile from a FLOAT64-initialized KLL sketch.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/kll_functions#kll_quantilesextract_point_double"
+  },
+  {
+    "name": "kll_quantiles.extract_point_int64",
+    "signature": "KLL_QUANTILES.EXTRACT_POINT_INT64(sketch, phi)",
+    "description": "Gets a specific quantile from an INT64-initialized KLL sketch.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/kll_functions#kll_quantilesextract_point_int64"
+  },
+  {
+    "name": "kll_quantiles.init_float64",
+    "signature": "KLL_QUANTILES.INIT_FLOAT64(input[, precision[, weight => input_weight]])",
+    "description": "Aggregates values into a FLOAT64-initialized KLL sketch.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/kll_functions#kll_quantilesinit_double"
+  },
+  {
+    "name": "kll_quantiles.init_int64",
+    "signature": "KLL_QUANTILES.INIT_INT64( input [, precision [, weight => input_weight ]] )",
+    "description": "Aggregates values into an INT64-initialized KLL sketch.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/kll_functions#kll_quantilesinit_int64"
+  },
+  {
+    "name": "kll_quantiles.merge_float64",
+    "signature": "KLL_QUANTILES.MERGE_FLOAT64(sketch, num_quantiles)",
+    "description": "Merges FLOAT64-initialized KLL sketches into a new sketch, and then gets the quantiles from the new sketch.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/kll_functions#kll_quantilesmerge_double"
+  },
+  {
+    "name": "kll_quantiles.merge_int64",
+    "signature": "KLL_QUANTILES.MERGE_INT64(sketch, num_quantiles)",
+    "description": "Merges INT64-initialized KLL sketches into a new sketch, and then gets the quantiles from the new sketch.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/kll_functions#kll_quantilesmerge_int64"
+  },
+  {
+    "name": "kll_quantiles.merge_partial",
+    "signature": "KLL_QUANTILES.MERGE_PARTIAL(sketch)",
+    "description": "Merges KLL sketches of the same underlying type into a new sketch.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/kll_functions#kll_quantilesmerge_partial"
+  },
+  {
+    "name": "kll_quantiles.merge_point_float64",
+    "signature": "KLL_QUANTILES.MERGE_POINT_FLOAT64(sketch, phi)",
+    "description": "Merges FLOAT64-initialized KLL sketches into a new sketch, and then gets a specific quantile from the new sketch.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/kll_functions#kll_quantilesmerge_point_double"
+  },
+  {
+    "name": "kll_quantiles.merge_point_int64",
+    "signature": "KLL_QUANTILES.MERGE_POINT_INT64(sketch, phi)",
+    "description": "Merges INT64-initialized KLL sketches into a new sketch, and then gets a specific quantile from the new sketch.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/kll_functions#kll_quantilesmerge_point_int64"
+  },
+  {
+    "name": "labels",
+    "signature": "LABELS(element)",
+    "description": "Gets the labels associated with a graph element.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/graph-sql-functions#labels"
+  },
+  {
+    "name": "lag",
+    "signature": "LAG (value_expression[, offset [, default_expression]]) OVER over_clause over_clause: { named_window | ( [ window_specification ] ) } window_specification: [ named_window ] [ PARTITION BY partition_expression [, ...] ] ORDER BY expression [ { ASC | DESC } ] [, ...]",
+    "description": "Gets a value for a preceding row.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/navigation_functions#lag"
+  },
+  {
+    "name": "last_day",
+    "signature": "LAST_DAY(date_expression[, date_part])",
+    "description": "Gets the last day in a specified time period that contains a DATE value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/date_functions#last_day"
+  },
+  {
+    "name": "last_value",
+    "signature": "LAST_VALUE (value_expression [{RESPECT | IGNORE} NULLS]) OVER over_clause over_clause: { named_window | ( [ window_specification ] ) } window_specification: [ named_window ] [ PARTITION BY partition_expression [, ...] ] ORDER BY expression [ { ASC | DESC } ] [, ...] [ window_frame_clause ]",
+    "description": "Gets a value for the last row in the current window frame.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/navigation_functions#last_value"
+  },
+  {
+    "name": "lax_bool",
+    "signature": "LAX_BOOL(json_expr)",
+    "description": "Attempts to convert a JSON value to a SQL BOOL value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/json_functions#lax_bool"
+  },
+  {
+    "name": "lax_float64",
+    "signature": "LAX_FLOAT64(json_expr)",
+    "description": "Attempts to convert a JSON value to a SQL FLOAT64 value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/json_functions#lax_double"
+  },
+  {
+    "name": "lax_int64",
+    "signature": "LAX_INT64(json_expr)",
+    "description": "Attempts to convert a JSON value to a SQL INT64 value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/json_functions#lax_int64"
+  },
+  {
+    "name": "lax_string",
+    "signature": "LAX_STRING(json_expr)",
+    "description": "Attempts to convert a JSON value to a SQL STRING value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/json_functions#lax_string"
+  },
+  {
+    "name": "lead",
+    "signature": "LEAD (value_expression[, offset [, default_expression]]) OVER over_clause over_clause: { named_window | ( [ window_specification ] ) } window_specification: [ named_window ] [ PARTITION BY partition_expression [, ...] ] ORDER BY expression [ { ASC | DESC } ] [, ...]",
+    "description": "Gets a value for a subsequent row.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/navigation_functions#lead"
+  },
+  {
+    "name": "least",
+    "signature": "LEAST(X1,...,XN)",
+    "description": "Gets the least value among X1,...,XN.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#least"
+  },
+  {
+    "name": "left",
+    "signature": "LEFT(value, length)",
+    "description": "Gets the specified leftmost portion from a STRING or BYTES value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#left"
+  },
+  {
+    "name": "length",
+    "signature": "LENGTH(value)",
+    "description": "Gets the length of a STRING or BYTES value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#length"
+  },
+  {
+    "name": "ln",
+    "signature": "LN(X)",
+    "description": "Computes the natural logarithm of X.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#ln"
+  },
+  {
+    "name": "log",
+    "signature": "LOG(X [, Y])",
+    "description": "Computes the natural logarithm of X or the logarithm of X to base Y.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#log"
+  },
+  {
+    "name": "log10",
+    "signature": "LOG10(X)",
+    "description": "Computes the natural logarithm of X to base 10.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#log10"
+  },
+  {
+    "name": "logical_and",
+    "signature": "LOGICAL_AND( expression [ WHERE where_expression ] )",
+    "description": "Gets the logical AND of all non-NULL expressions.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/aggregate_functions#logical_and"
+  },
+  {
+    "name": "logical_or",
+    "signature": "LOGICAL_OR( expression [ WHERE where_expression ] )",
+    "description": "Gets the logical OR of all non-NULL expressions.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/aggregate_functions#logical_or"
+  },
+  {
+    "name": "lower",
+    "signature": "LOWER(value)",
+    "description": "Formats alphabetic characters in a STRING value as lowercase. Formats ASCII characters in a BYTES value as lowercase.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#lower"
+  },
+  {
+    "name": "lpad",
+    "signature": "LPAD(original_value, return_length[, pattern])",
+    "description": "Prepends a STRING or BYTES value with a pattern.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#lpad"
+  },
+  {
+    "name": "ltrim",
+    "signature": "LTRIM(value1[, value2])",
+    "description": "Identical to the TRIM function, but only removes leading characters.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#ltrim"
+  },
+  {
+    "name": "make_interval",
+    "signature": "MAKE_INTERVAL( [ [ year => ] value ] [, [ month => ] value ] [, [ day => ] value ] [, [ hour => ] value ] [, [ minute => ] value ] [, [ second => ] value ] )",
+    "description": "Constructs an INTERVAL value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/interval_functions#make_interval"
+  },
+  {
+    "name": "max",
+    "signature": "MAX( expression [ WHERE where_expression ] ) [ OVER over_clause ] over_clause: { named_window | ( [ window_specification ] ) } window_specification: [ named_window ] [ PARTITION BY partition_expression [, ...] ] [ ORDER BY expression [ { ASC | DESC } ] [, ...] ] [ window_frame_clause ]",
+    "description": "Gets the maximum non-NULL value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/aggregate_functions#max"
+  },
+  {
+    "name": "max_by",
+    "signature": "MAX_BY( x, y )",
+    "description": "Synonym for ANY_VALUE(x HAVING MAX y).",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/aggregate_functions#max_by"
+  },
+  {
+    "name": "md5",
+    "signature": "MD5(input)",
+    "description": "Computes the hash of a STRING or BYTES value using the MD5 algorithm.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/hash_functions#md5"
+  },
+  {
+    "name": "min",
+    "signature": "MIN( expression [ WHERE where_expression ] ) [ OVER over_clause ] over_clause: { named_window | ( [ window_specification ] ) } window_specification: [ named_window ] [ PARTITION BY partition_expression [, ...] ] [ ORDER BY expression [ { ASC | DESC } ] [, ...] ] [ window_frame_clause ]",
+    "description": "Gets the minimum non-NULL value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/aggregate_functions#min"
+  },
+  {
+    "name": "min_by",
+    "signature": "MIN_BY( x, y )",
+    "description": "Synonym for ANY_VALUE(x HAVING MIN y).",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/aggregate_functions#min_by"
+  },
+  {
+    "name": "ml.advanced_weights",
+    "signature": "ML.ADVANCED_WEIGHTS( MODEL `PROJECT_ID.DATASET.MODEL`, STRUCT( [STANDARDIZE AS standardize]))",
+    "description": "This document describes the ML.ADVANCED_WEIGHTS function, which lets you see the underlying weights that a linear or binary logistic regression model uses during prediction, along with the associated p-values and standard errors for that weight. ML.ADVANCED_WEIGHTS is an extended version of ML.WEIGHTS for linear and binary logistic regression models.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-advanced-weights"
+  },
+  {
+    "name": "ml.annotate_image",
+    "signature": "ML.ANNOTATE_IMAGE( MODEL `PROJECT_ID.DATASET.MODEL_NAME`, TABLE `PROJECT_ID.DATASET.OBJECT_TABLE`, STRUCT( [VISION_FEATURES] AS vision_features ) )",
+    "description": "This document describes the ML.ANNOTATE_IMAGE function, which lets you annotate images that are stored in BigQuery object tables by using the Cloud Vision API.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-annotate-image"
+  },
+  {
+    "name": "ml.arima_coefficients",
+    "signature": "ML.ARIMA_COEFFICIENTS( MODEL `PROJECT_ID.DATASET.MODEL` )",
+    "description": "This document describes the ML.ARIMA_COEFFICIENTS function, which lets you see the ARIMA coefficients and the weights of the external regressors for ARIMA_PLUS and ARIMA_PLUS_XREG time series models.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-arima-coefficients"
+  },
+  {
+    "name": "ml.arima_evaluate",
+    "signature": "ML.ARIMA_EVALUATE( MODEL `PROJECT_ID.DATASET.MODEL_NAME`, [, STRUCT(SHOW_ALL_CANDIDATE_MODELS AS show_all_candidate_models)])",
+    "description": "This document describes the ML.ARIMA_EVALUATE function, which you can use to evaluate the model metrics of ARIMA_PLUS or ARIMA_PLUS_XREG time series models.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-arima-evaluate"
+  },
+  {
+    "name": "ml.bag_of_words",
+    "signature": "ML.BAG_OF_WORDS( tokenized_document [, top_k] [, frequency_threshold] ) OVER()",
+    "description": "Use the ML.BAG_OF_WORDS function to compute a representation of tokenized documents as the bag (multiset) of its words, disregarding word ordering and grammar.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-bag-of-words"
+  },
+  {
+    "name": "ml.bucketize",
+    "signature": "ML.BUCKETIZE(numerical_expression, array_split_points [, exclude_boundaries] [, output_format])",
+    "description": "This document describes the ML.BUCKETIZE function, which lets you split a numerical expression into buckets.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-bucketize"
+  },
+  {
+    "name": "ml.centroids",
+    "signature": "ML.CENTROIDS( MODEL `PROJECT_ID.DATASET.MODEL`, STRUCT([, STANDARDIZE AS standardize]))",
+    "description": "This document describes the ML.CENTROIDS function, which lets you return information about the centroids in a k-means model.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-centroids"
+  },
+  {
+    "name": "ml.confusion_matrix",
+    "signature": "ML.CONFUSION_MATRIX( MODEL `PROJECT_ID.DATASET.MODEL_NAME`, [, { TABLE `PROJECT_ID.DATASET.TABLE` | (QUERY_STATEMENT) }] STRUCT( [THRESHOLD AS threshold] [, TRIAL_ID AS trial_id]))",
+    "description": "This document describes the ML.CONFUSION_MATRIX function, which you can use to return a confusion matrix for the input classification model and input data.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-confusion"
+  },
+  {
+    "name": "ml.convert_color_space",
+    "signature": "ML.CONVERT_COLOR_SPACE(image, target_color_space)",
+    "description": "This document describes the ML.CONVERT_COLOR_SPACE scalar function, which lets you convert images that have an RGB color space to a different color space. You can use ML.CONVERT_COLOR_SPACE with the ML.PREDICT function or chain it with other functions or subqueries.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-convert-color-space"
+  },
+  {
+    "name": "ml.convert_image_type",
+    "signature": "ML.CONVERT_IMAGE_TYPE(image)",
+    "description": "This document describes the ML.CONVERT_IMAGE_TYPE scalar function, which lets you convert the data type of pixel values in an image to INT64 with a range of [0, 255). You can use ML.CONVERT_IMAGE_TYPE with the ML.PREDICT function or chain it with other functions or subqueries.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-convert-image-type"
+  },
+  {
+    "name": "ml.correlation",
+    "signature": "ML.CORRELATION( { TABLE TABLE_NAME | (QUERY_STATEMENT) }, target_col => TARGET_COL, target_correlation_cols => TARGET_CORRELATION_COLS [, dimension_cols => DIMENSION_COLS, ] [, method => METHOD ] );",
+    "description": "This document describes the ML.CORRELATION function, which calculates statistical correlations between a target column and one or more metric columns. ML.CORRELATION offers the following features:",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-correlation"
+  },
+  {
+    "name": "ml.decode_image",
+    "signature": "ML.DECODE_IMAGE(data) AS input_field",
+    "description": "This document describes the ML.DECODE_IMAGE scalar function, which lets you convert image bytes to a multi-dimensional ARRAY representation. This conversion lets you do inference using the ML.PREDICT function on vision models that require images to be in ARRAY format.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-decode-image"
+  },
+  {
+    "name": "ml.describe_data",
+    "signature": "ML.DESCRIBE_DATA( { TABLE `PROJECT_ID.DATASET.TABLE_NAME` | (QUERY_STATEMENT) }, STRUCT( [NUM_QUANTILES AS num_quantiles] [, NUM_ARRAY_LENGTH_QUANTILES AS num_array_length_quantiles] [, TOP_K AS top_k]) )",
+    "description": "This document describes the ML.DESCRIBE_DATA function, which you can use to generate descriptive statistics for the columns in a table or subquery. For example, you might want to know statistics for a table of training or serving data that you plan to use with a machine learning (ML) model. You can use the data output by this function for such purposes as feature preprocessing or model monitoring.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-describe-data"
+  },
+  {
+    "name": "ml.detect_anomalies",
+    "signature": "# ARIMA_PLUS and ARIMA_PLUS_XREG models: ML.DETECT_ANOMALIES( MODEL `PROJECT_ID.DATASET.MODEL_NAME` [, STRUCT(ANOMALY_PROB_THRESHOLD AS anomaly_prob_threshold)] [, { TABLE `PROJECT_ID.DATASET.TABLE` | (QUERY_STATEMENT) }] ) #Autoencoder, k-means, or PCA models: ML.DETECT_ANOMALIES( MODEL `PROJECT_ID.DATASET.MODEL_NAME`, STRUCT(CONTAMINATION AS contamination), { TABLE `PROJECT_ID.DATASET.TABLE` | (QUERY_STATEMENT) } )",
+    "description": "This document describes the ML.DETECT_ANOMALIES function, which lets you perform anomaly detection in BigQuery ML.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-detect-anomalies"
+  },
+  {
+    "name": "ml.detect_change_points",
+    "signature": "ML.DETECT_CHANGE_POINTS( { TABLE TABLE_NAME | (QUERY_STATEMENT) }, data_col => 'DATA_COL', timestamp_col => 'TIMESTAMP_COL' [, id_cols => ID_COLS] )",
+    "description": "This document describes the ML.DETECT_CHANGE_POINTS function, which performs change point detection to identify intervals where the statistical behavior or properties of time series data have shifted. This function provides insight into significant structural breaks, rather than transient or isolated events, without the overhead of creating and managing a model. For example, you can use this function to detect a level change in daily product sales after a marketing campaign.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-detect-change-points"
+  },
+  {
+    "name": "ml.distance",
+    "signature": "ML.DISTANCE(vector1, vector2 [, type])",
+    "description": "This document describes the ML.DISTANCE scalar function, which lets you compute the distance between two vectors.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-distance"
+  },
+  {
+    "name": "ml.entity_features_at_time",
+    "signature": "ML.ENTITY_FEATURES_AT_TIME( { TABLE `PROJECT_ID.DATASET.FEATURE_TABLE_NAME` | (FEATURE_QUERY_STATEMENT) }, { TABLE `PROJECT_ID.DATASET.ENTITY_TIME_TABLE_NAME` | (ENTITY_TIME_QUERY_STATEMENT) }, [, NUM_ROWS => INT64][, IGNORE_FEATURE_NULLS => BOOL])",
+    "description": "This document describes the ML.ENTITY_FEATURES_AT_TIME function, which lets you use multiple point-in-time cutoffs for multiple entities when retrieving features, because features can have time dependencies if they include time-sensitive data. To avoid data leakage, use point-in-time features when training models and running inference.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-entity-feature-time"
+  },
+  {
+    "name": "ml.evaluate",
+    "signature": "ML.EVALUATE( MODEL `PROJECT_ID.DATASET.MODEL` [, { TABLE `PROJECT_ID.DATASET.TABLE` | (QUERY_STATEMENT) }], STRUCT( [PERFORM_AGGREGATION AS perform_aggregation] [, HORIZON AS horizon] [, CONFIDENCE_LEVEL AS confidence_level]) )",
+    "description": "This document describes the ML.EVALUATE function, which lets you evaluate model metrics.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-evaluate"
+  },
+  {
+    "name": "ml.explain_forecast",
+    "signature": "# `ARIMA_PLUS` models: ML.EXPLAIN_FORECAST( MODEL `PROJECT_ID.DATASET.MODEL`, STRUCT( [HORIZON AS horizon] [, CONFIDENCE_LEVEL AS confidence_level])) # `ARIMA_PLUS_XREG` model: ML.EXPLAIN_FORECAST( MODEL `PROJECT_ID.DATASET.MODEL`, STRUCT( [HORIZON AS horizon] [, CONFIDENCE_LEVEL AS confidence_level]), { TABLE `PROJECT_ID.DATASET.TABLE` | (QUERY_STATEMENT) })",
+    "description": "This document describes the ML.EXPLAIN_FORECAST function, which lets you generate forecasts that are based on a trained time series model. It only works on ARIMA_PLUS models with the training option decompose_time_series enabled or on ARIMA_PLUS_XREG models. The ML.EXPLAIN_FORECAST function encompasses the ML.FORECAST function because its output is a superset of the results of ML.FORECAST.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-explain-forecast"
+  },
+  {
+    "name": "ml.explain_predict",
+    "signature": "ML.EXPLAIN_PREDICT( MODEL `PROJECT_ID.DATASET.MODEL`, { TABLE `PROJECT_ID.DATASET.TABLE` | (QUERY_STATEMENT) }, STRUCT( [MAX_OUTPUT_TOKENS AS max_output_tokens] [, TOP_K_FEATURES AS top_k_features] [, THRESHOLD AS threshold] [, APPROX_FEATURE_CONTRIB AS approx_feature_contrib]) )",
+    "description": "This document describes the ML.EXPLAIN_PREDICT function, which lets you generate a predicted value and a set of feature attributions for each instance of the input data. Feature attributions indicate how much each feature in your model contributed to the final prediction for each given instance. ML.EXPLAIN_PREDICT is essentially an extended version of ML.PREDICT.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-explain-predict"
+  },
+  {
+    "name": "ml.feature_cross",
+    "signature": "ML.FEATURE_CROSS(struct_categorical_features [, degree])",
+    "description": "This document describes the ML.FEATURE_CROSS function, which lets you create feature crosses.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-feature-cross"
+  },
+  {
+    "name": "ml.feature_importance",
+    "signature": "ML.FEATURE_IMPORTANCE( MODEL `PROJECT_ID.DATASET.MODEL` )",
+    "description": "This document describes the ML.FEATURE_IMPORTANCE function, which lets you see the feature importance score. This score indicates how useful or valuable each feature was in the construction of a boosted tree or a random forest model during training. For more information, see the feature_importances property in the XGBoost library.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-importance"
+  },
+  {
+    "name": "ml.feature_info",
+    "signature": "ML.FEATURE_INFO(MODEL `PROJECT_ID.DATASET.MODEL_NAME`)",
+    "description": "This document describes the ML.FEATURE_INFO function, which lets you see information about the input features that are used to train a model.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-feature"
+  },
+  {
+    "name": "ml.features_at_time",
+    "signature": "ML.FEATURES_AT_TIME( { TABLE `PROJECT_ID.DATASET.TABLE_NAME` | (QUERY_STATEMENT) } [, TIME => TIMESTAMP][, NUM_ROWS => INT64][, IGNORE_FEATURE_NULLS => BOOL])",
+    "description": "This document describes the ML.FEATURES_AT_TIME function, which lets you use a point-in-time cutoff for all entities when retrieving features, because features can have time dependencies if they include time-sensitive data. To avoid data leakage, use point-in-time features when training models and running inference.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-feature-time"
+  },
+  {
+    "name": "ml.forecast",
+    "signature": "# ARIMA_PLUS models: ML.FORECAST( MODEL `PROJECT_ID.DATASET.MODEL_NAME`, STRUCT( [, HORIZON AS horizon] [, CONFIDENCE_LEVEL AS confidence_level]) ) # ARIMA_PLUS_XREG model: ML.FORECAST( MODEL `PROJECT_ID.DATASET.MODEL_NAME`, STRUCT( [HORIZON AS horizon] [, CONFIDENCE_LEVEL AS confidence_level]), { TABLE `PROJECT_ID.DATASET.TABLE` | (QUERY_STATEMENT) } )",
+    "description": "This document describes the ML.FORECAST function, which you can use to forecast a time series based on a trained ARIMA_PLUS or ARIMA_PLUS_XREG model.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-forecast"
+  },
+  {
+    "name": "ml.generate_embedding",
+    "signature": "ML.GENERATE_EMBEDDING( MODEL `PROJECT_ID.DATASET.MODEL_NAME`, { TABLE `PROJECT_ID.DATASET.TABLE_NAME` | (QUERY_STATEMENT) }, STRUCT( [FLATTEN_JSON_OUTPUT AS flatten_json_output] [, TASK_TYPE AS task_type] [, OUTPUT_DIMENSIONALITY AS output_dimensionality]) )",
+    "description": "This document describes the ML.GENERATE_EMBEDDING function, which lets you create embeddings that describe an entity—for example, a piece of text or an image.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-generate-embedding"
+  },
+  {
+    "name": "ml.generate_text",
+    "signature": "ML.GENERATE_TEXT( MODEL `PROJECT_ID.DATASET.MODEL`, { TABLE `PROJECT_ID.DATASET.TABLE` | (QUERY_STATEMENT) }, STRUCT( { { [MAX_OUTPUT_TOKENS AS max_output_tokens] [, TOP_P AS top_p] [, TEMPERATURE AS temperature] [, STOP_SEQUENCES AS stop_sequences] [, GROUND_WITH_GOOGLE_SEARCH AS ground_with_google_search] [, SAFETY_SETTINGS AS safety_settings] } | [, MODEL_PARAMS AS model_params] } [, FLATTEN_JSON_OUTPUT AS flatten_json_output] [, REQUEST_TYPE AS request_type]) )",
+    "description": "This document describes the ML.GENERATE_TEXT function, which lets you perform generative natural language tasks by using any combination of text and unstructured data from BigQuery standard tables, or unstructured data from BigQuery object tables.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-generate-text"
+  },
+  {
+    "name": "ml.get_insights",
+    "signature": "ML.GET_INSIGHTS( MODEL `PROJECT_ID.DATASET.MODEL_NAME` )",
+    "description": "This document describes the ML.GET_INSIGHTS function, which you can use to retrieve information about changes to key metrics in your multi-dimensional data from a contribution analysis model. You can use a CREATE MODEL statement to create a contribution analysis model in BigQuery.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-get-insights"
+  },
+  {
+    "name": "ml.global_explain",
+    "signature": "ML.GLOBAL_EXPLAIN( MODEL `PROJECT_ID.DATASET.MODEL`, STRUCT( [CLASS_LEVEL_EXPLAIN AS class_level_explain]))",
+    "description": "This document describes the ML.GLOBAL_EXPLAIN function, which lets you provide explanations for the entire model by aggregating the local explanations of the evaluation data. You can only use ML.GLOBAL_EXPLAIN with models that are trained with the ENABLE_GLOBAL_EXPLAIN option set to TRUE.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-global-explain"
+  },
+  {
+    "name": "ml.hash_bucketize",
+    "signature": "ML.HASH_BUCKETIZE(string_expression, hash_bucket_size)",
+    "description": "This document describes the ML.HASH_BUCKETIZE function, which lets you convert a string expression to a deterministic hash and then bucketize it by the modulo value of that hash.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-hash-bucketize"
+  },
+  {
+    "name": "ml.holiday_info",
+    "signature": "ML.HOLIDAY_INFO( MODEL `PROJECT_ID.DATASET.MODEL_NAME` )",
+    "description": "This document describes the ML.HOLIDAY_INFO function, which you can use to return the list of holidays being modeled by an ARIMA_PLUS or ARIMA_PLUS_XREG time series forecasting model.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-holiday-info"
+  },
+  {
+    "name": "ml.imputer",
+    "signature": "ML.IMPUTER(expression, strategy) OVER()",
+    "description": "This document describes the ML.IMPUTER function, which lets you replace NULL values in a string or numerical expression. You can replace NULL values with the most frequently used value for string expressions, or the mean or median value for numerical expressions.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-imputer"
+  },
+  {
+    "name": "ml.label_encoder",
+    "signature": "ML.LABEL_ENCODER(string_expression [, top_k] [, frequency_threshold]) OVER()",
+    "description": "This document describes the ML.LABEL_ENCODER function, which you can use to encode a string expression to an INT64 value in [0, <number of categories>].",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-label-encoder"
+  },
+  {
+    "name": "ml.lp_norm",
+    "signature": "ML.LP_NORM(vector, degree)",
+    "description": "This document describes the ML.LP_NORM scalar function, which lets you compute the Lp norm for a vector, where p is the degree.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-lp-norm"
+  },
+  {
+    "name": "ml.max_abs_scaler",
+    "signature": "ML.MAX_ABS_SCALER(numerical_expression) OVER()",
+    "description": "This document describes the ML.MAX_ABS_SCALER function, which lets you scale a numerical expression to the range [-1, 1] by dividing with the maximum absolute value. It doesn't shift or center the data, and so doesn't destroy any sparsity.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-max-abs-scaler"
+  },
+  {
+    "name": "ml.metrics",
+    "signature": "SELECT * FROM ML.METRICS( { TABLE TABLE | (QUERY_STATEMENT) }, predicted_col => 'PREDICTED_COL', actual_col => 'ACTUAL_COL', task_type => 'TASK_TYPE' )",
+    "description": "This document describes the ML.METRICS function, which lets you compute evaluation metrics for machine learning (ML) classification or regression tasks on any table or query that contains actual and predicted values. This function lets you evaluate predictions without needing to create or reference a stored model in BigQuery ML.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-metrics"
+  },
+  {
+    "name": "ml.min_max_scaler",
+    "signature": "ML.MIN_MAX_SCALER(numerical_expression) OVER()",
+    "description": "This document describes the ML.MIN_MAX_SCALER function, which lets you scale a numerical_expression to the range [0, 1]. Negative values are set to 0, and values above 1 are set to 1.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-min-max-scaler"
+  },
+  {
+    "name": "ml.multi_hot_encoder",
+    "signature": "ML.MULTI_HOT_ENCODER(array_expression [, top_k] [, frequency_threshold]) OVER()",
+    "description": "This document describes the ML.MULTI_HOT_ENCODER function, which lets you encode a string array expression by using a multi-hot encoding scheme.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-multi-hot-encoder"
+  },
+  {
+    "name": "ml.ngrams",
+    "signature": "ML.NGRAMS(array_input, range [, separator])",
+    "description": "This document describes the ML.NGRAMS function, which lets you create n-grams of the input values.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-ngrams"
+  },
+  {
+    "name": "ml.normalizer",
+    "signature": "ML.NORMALIZER(array_expression [, p])",
+    "description": "This document describes the ML.NORMALIZER function, which lets you normalize an array of numerical expressions using a given p-norm.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-normalizer"
+  },
+  {
+    "name": "ml.one_hot_encoder",
+    "signature": "ML.ONE_HOT_ENCODER(string_expression [, drop] [, top_k] [, frequency_threshold]) OVER()",
+    "description": "This document describes the ML.ONE_HOT_ENCODER function, which lets you encode a string expression using a one-hot or dummy encoding scheme.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-one-hot-encoder"
+  },
+  {
+    "name": "ml.polynomial_expand",
+    "signature": "ML.POLYNOMIAL_EXPAND(struct_numerical_features [, degree])",
+    "description": "This document describes the ML.POLYNOMIAL_EXPAND function, which lets you calculate all polynomial combinations of the input features.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-polynomial-expand"
+  },
+  {
+    "name": "ml.predict",
+    "signature": "ML.PREDICT( MODEL `PROJECT_ID.DATASET.MODEL_NAME`, { TABLE `PROJECT_ID.DATASET.TABLE` | (QUERY_STATEMENT) } STRUCT( [THRESHOLD AS threshold] [, KEEP_ORIGINAL_COLUMNS AS keep_original_columns] [, TRIAL_ID AS trial_id]) )",
+    "description": "This document describes the ML.PREDICT function, which you can use to predict outcomes by using a model. ML.PREDICT works with the following models:",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-predict"
+  },
+  {
+    "name": "ml.principal_component_info",
+    "signature": "ML.PRINCIPAL_COMPONENT_INFO( MODEL `PROJECT_ID.DATASET.MODEL` )",
+    "description": "This document describes the ML.PRINCIPAL_COMPONENT_INFO function, which lets you see the statistics of the principal components in a principal component analysis (PCA) model, such as eigenvalue and explained variance ratio.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-principal-component-info"
+  },
+  {
+    "name": "ml.principal_components",
+    "signature": "ML.PRINCIPAL_COMPONENTS( MODEL `PROJECT_ID.DATASET.MODEL` )",
+    "description": "This document describes the ML.PRINCIPAL_COMPONENTS function, which lets you see the principal components of a principal component analysis (PCA) model. Principal components and eigenvectors are the same concepts in PCA models.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-principal-components"
+  },
+  {
+    "name": "ml.process_document",
+    "signature": "ML.PROCESS_DOCUMENT( MODEL `PROJECT_ID.DATASET.MODEL`, { TABLE `PROJECT_ID.DATASET.OBJECT_TABLE` | (QUERY_STATEMENT) }, [, PROCESS_OPTIONS => ( JSON 'PROCESS_OPTIONS')] )",
+    "description": "This document describes the ML.PROCESS_DOCUMENT function, which lets you process unstructured documents from an object table by using the Document AI API.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-process-document"
+  },
+  {
+    "name": "ml.quantile_bucketize",
+    "signature": "ML.QUANTILE_BUCKETIZE(numerical_expression, num_buckets [, output_format]) OVER()",
+    "description": "This document describes the ML.QUANTILE_BUCKETIZE function, which lets you break a continuous numerical feature into buckets based on quantiles.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-quantile-bucketize"
+  },
+  {
+    "name": "ml.recommend",
+    "signature": "ML.RECOMMEND( MODEL `PROJECT_ID.DATASET.MODEL_NAME`, [, { TABLE `PROJECT_ID.DATASET.TABLE` | (QUERY_STATEMENT) }] [, STRUCT(TRIAL_ID AS trial_id)])",
+    "description": "This document describes the ML.RECOMMEND function, which lets you generate a predicted rating for every user-item row combination for a matrix factorization model. Because the input data for a matrix factorization model tends to be a sparse matrix with missing values, ML.RECOMMEND can return the predictions for those missing values without requiring specification of each entry.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-recommend"
+  },
+  {
+    "name": "ml.reconstruction_loss",
+    "signature": "ML.RECONSTRUCTION_LOSS( MODEL `PROJECT_ID.DATASET.MODEL_NAME`, { TABLE `PROJECT_ID.DATASET.TABLE` | (QUERY_STATEMENT) } )",
+    "description": "This document describes the ML.RECONSTRUCTION_LOSS function, which you can use to compute the reconstruction losses between the input and output data of an autoencoder model.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-reconstruction-loss"
+  },
+  {
+    "name": "ml.resize_image",
+    "signature": "ML.RESIZE_IMAGE(image, target_height, target_width, preserve_aspect_ratio)",
+    "description": "This document describes the ML.RESIZE_IMAGE scalar function, which lets you resize images by using bilinear interpolation. You can use ML.RESIZE_IMAGE with the ML.PREDICT function or chain it with other functions or subqueries.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-resize-image"
+  },
+  {
+    "name": "ml.robust_scaler",
+    "signature": "ML.ROBUST_SCALER(numerical_expression [, quantile_range] [, with_median] [, with_quantile_range]) OVER()",
+    "description": "This document describes the ML.ROBUST_SCALER function, which lets you scale a numerical expression by using statistics that are robust to outliers. The function performs the scaling by removing the median and scaling the data according to the quantile range.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-robust-scaler"
+  },
+  {
+    "name": "ml.roc_curve",
+    "signature": "ML.ROC_CURVE( MODEL `PROJECT_ID.DATASET.MODEL_NAME`, { TABLE `PROJECT_ID.DATASET.TABLE` | (QUERY_STATEMENT) }, [, GENERATE_ARRAY(THRESHOLDS)] [, STRUCT(TRIAL_ID AS trial_id)])",
+    "description": "This document describes the ML.ROC_CURVE function, which you can use to evaluate binary class classification specific metrics.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-roc"
+  },
+  {
+    "name": "ml.seasonality",
+    "signature": "ML.SEASONALITY( { TABLE TABLE_NAME | (QUERY_STATEMENT) }, data_col => 'DATA_COL', timestamp_col => 'TIMESTAMP_COL' [, id_cols => [ID_COLS]] [, seasonalities => [SEASONALITIES]] [, horizon => HORIZON] )",
+    "description": "This document describes the ML.SEASONALITY function, which lets you obtain seasonality insights from time series data. The seasonality component of a time series represents repeating patterns over fixed time periods in your data, such as years, weeks, or days. For example, your business might see a small spike in sales every weekend and a larger spike in sales every year around particular holidays.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-seasonality"
+  },
+  {
+    "name": "ml.standard_scaler",
+    "signature": "ML.STANDARD_SCALER(numerical_expression) OVER()",
+    "description": "This document describes the ML.STANDARD_SCALER function, which lets you scale a numerical expression by using z-score.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-standard-scaler"
+  },
+  {
+    "name": "ml.tf_idf",
+    "signature": "ML.TF_IDF( tokenized_document [, top_k] [, frequency_threshold] ) OVER()",
+    "description": "The term frequency-inverse document frequency (TF-IDF) reflects how important a word is to a document in a collection or corpus. Use the ML.TF_IDF function to compute TF-IDF of terms in a document, given the precomputed inverse-document frequency for use in machine learning model creation.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-tf-idf"
+  },
+  {
+    "name": "ml.tfdv_describe",
+    "signature": "ML.TFDV_DESCRIBE( { TABLE `PROJECT_ID.DATASET.TABLE_NAME` | (QUERY_STATEMENT) }, STRUCT( [NUM_HISTOGRAM_BUCKETS AS num_histogram_buckets] [, NUM_QUANTILES_HISTOGRAM_BUCKETS AS num_quantiles_histogram_buckets] [, NUM_VALUES_HISTOGRAM_BUCKETS AS num_values_histogram_buckets] [, NUM_RANK_HISTOGRAM_BUCKETS AS num_rank_histogram_buckets]) )",
+    "description": "This document describes the ML.TFDV_DESCRIBE function, which you can use to generate fine-grained statistics for the columns in a table. For example, you might want to know statistics for a table of training or serving data statistics that you plan to use with a machine learning (ML) model. Calling this function provides the same behavior as calling the TensorFlow TensorFlow tfdv.generate_statistics_from_csv API. You can use the data output by this function for such purposes as feature preprocessing or model monitoring.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-tfdv-describe"
+  },
+  {
+    "name": "ml.tfdv_validate",
+    "signature": "ML.TFDV_VALIDATE( base_statistics, study_statistics [, detection_type] [, categorical_default_threshold] [, categorical_metric_type] [, numerical_default_threshold] [, numerical_metric_type] [, thresholds] )",
+    "description": "This document describes the ML.TFDV_VALIDATE function, which you can use to compare the statistics for training and serving data, or two sets of serving data, in order to identify anomalous differences between the two data sets. Calling this function provides the same behavior as calling the TensorFlow validate_statistics API. You can use the data output by this function for model monitoring.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-tfdv-validate"
+  },
+  {
+    "name": "ml.training_info",
+    "signature": "ML.TRAINING_INFO( MODEL `PROJECT_ID.DATASET.MODEL_NAME`, )",
+    "description": "This document describes the ML.TRAINING_INFO function, which lets you see information about the training iterations of a model.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-train"
+  },
+  {
+    "name": "ml.transcribe",
+    "signature": "ML.TRANSCRIBE( MODEL `PROJECT_ID.DATASET.MODEL_NAME`, TABLE `PROJECT_ID.DATASET.OBJECT_TABLE`, [RECOGNITION_CONFIG => ( JSON 'RECOGNITION_CONFIG')] )",
+    "description": "This document describes the ML.TRANSCRIBE function, which lets you transcribe audio files from an object table by using the Speech-to-Text API.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-transcribe"
+  },
+  {
+    "name": "ml.transform",
+    "signature": "ML.TRANSFORM( MODEL `PROJECT_ID.DATASET.MODEL_NAME`, { TABLE `PROJECT_ID.DATASET.TABLE_NAME` | (QUERY_STATEMENT) } )",
+    "description": "This document describes the ML.TRANSFORM function, which you can use to preprocess feature data. This function processes input data by applying the data transformations captured in the TRANSFORM clause of an existing model. The statistics that were calculated for data transformation during model training are applied to the input data of the function.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-transform"
+  },
+  {
+    "name": "ml.translate",
+    "signature": "ML.TRANSLATE( MODEL `PROJECT_ID.DATASET.MODEL`, { TABLE `PROJECT_ID.DATASET.TABLE` | (QUERY_STATEMENT) }, STRUCT('MODE_NAME' AS translate_mode [, 'TARGET_LANGUAGE_CODE' AS target_language_code ]) )",
+    "description": "This document describes the ML.TRANSLATE function, which lets you translate text stored in BigQuery tables by using the Cloud Translation API.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-translate"
+  },
+  {
+    "name": "ml.trend",
+    "signature": "ML.TREND( { TABLE TABLE_NAME | (QUERY_STATEMENT) }, data_col => 'DATA_COL', timestamp_col => 'TIMESTAMP_COL' [, id_cols => [ID_COLS]] [, horizon => HORIZON] [, smoothing_window_size => SMOOTHING_WINDOW_SIZE] [, adjust_step_changes => ADJUST_STEP_CHANGES] )",
+    "description": "This document describes the ML.TREND function, which provides insight into trends in your time series data. The trend component of a time series represents the directional trajectory of a metric over time, while ignoring short-term fluctuations or noise.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-trend"
+  },
+  {
+    "name": "ml.trial_info",
+    "signature": "ML.TRIAL_INFO(MODEL `PROJECT_ID.DATASET.MODEL_NAME`)",
+    "description": "This document describes the ML.TRIAL_INFO function, which lets you display information about trials from a model that uses hyperparameter tuning.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-trial-info"
+  },
+  {
+    "name": "ml.understand_text",
+    "signature": "ML.UNDERSTAND_TEXT( MODEL `PROJECT_ID.DATASET.MODEL`, { TABLE `PROJECT_ID.DATASET.TABLE` | (QUERY_STATEMENT) }, STRUCT('OPTION_NAME' AS nlu_option [, FLATTEN_JSON_OUTPUT AS flatten_json_output] [, ENCODING_TYPE AS encoding_type]) )",
+    "description": "This document describes the ML.UNDERSTAND_TEXT function, which lets you analyze text that's stored in BigQuery tables by using the Cloud Natural Language API.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-understand-text"
+  },
+  {
+    "name": "ml.validate_data_drift",
+    "signature": "ML.VALIDATE_DATA_DRIFT( { TABLE `PROJECT_ID.DATASET.BASE_TABLE_NAME` | (BASE_QUERY_STATEMENT) }, { TABLE `PROJECT_ID.DATASET.STUDY_TABLE_NAME` | (STUDY_QUERY_STATEMENT) }, STRUCT( [NUM_HISTOGRAM_BUCKETS AS num_histogram_buckets] [, NUM_QUANTILES_HISTOGRAM_BUCKETS AS num_quantiles_histogram_buckets] [, NUM_VALUES_HISTOGRAM_BUCKETS AS num_values_histogram_buckets,] [, NUM_RANK_HISTOGRAM_BUCKETS AS num_rank_histogram_buckets] [, CATEGORICAL_DEFAULT_THRESHOLD AS categorical_default_threshold] [, CATEGORICAL_METRIC_TYPE AS categorical_metric_type] [, NUMERICAL_DEFAULT_THRESHOLD AS numerical_default_threshold] [, NUMERICAL_METRIC_TYPE AS numerical_metric_type] [, THRESHOLDS AS thresholds]) [, MODEL `PROJECT_ID.DATASET.MODEL_NAME`] )",
+    "description": "This document describes the ML.VALIDATE_DATA_DRIFT function, which you can use to compute the data drift between two sets of serving data. This function computes and compares the statistics for the two data sets, and then identifies where there are anomalous differences between the two data sets.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-validate-data-drift"
+  },
+  {
+    "name": "ml.validate_data_skew",
+    "signature": "ML.VALIDATE_DATA_SKEW( MODEL `PROJECT_ID.DATASET.MODEL_NAME`, { TABLE `PROJECT_ID.DATASET.TABLE_NAME` | (QUERY_STATEMENT) }, STRUCT( [CATEGORICAL_DEFAULT_THRESHOLD AS categorical_default_threshold] [, CATEGORICAL_METRIC_TYPE AS categorical_metric_type] [, NUMERICAL_DEFAULT_THRESHOLD AS numerical_default_threshold] [, NUMERICAL_METRIC_TYPE AS numerical_metric_type] [, THRESHOLDS AS thresholds] [, ENABLE_VISUALIZATION_LINK AS enable_visualization_link]) )",
+    "description": "This document describes the ML.VALIDATE_DATA_SKEW function, which you can use to compute the data skew between a model's training and serving data. This function computes the statistics for the serving data, compares them to the statistics that were computed for the training data at the time the model was created, and identifies where there are anomalous differences between the two data sets.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-validate-data-skew"
+  },
+  {
+    "name": "ml.weights",
+    "signature": "ML.WEIGHTS( MODEL `PROJECT_ID.DATASET.MODEL`, STRUCT([, STANDARDIZE AS standardize]))",
+    "description": "This document describes the ML.WEIGHTS function, which lets you see the underlying weights that a model uses during prediction. This function applies to linear and logistic regression models and matrix factorization models.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-weights"
+  },
+  {
+    "name": "mod",
+    "signature": "MOD(X, Y)",
+    "description": "Gets the remainder of the division of X by Y.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#mod"
+  },
+  {
+    "name": "net.host",
+    "signature": "NET.HOST(url)",
+    "description": "Gets the hostname from a URL.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/net_functions#nethost"
+  },
+  {
+    "name": "net.ip_from_string",
+    "signature": "NET.IP_FROM_STRING(addr_str)",
+    "description": "Converts an IPv4 or IPv6 address from a STRING value to a BYTES value in network byte order.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/net_functions#netip_from_string"
+  },
+  {
+    "name": "net.ip_net_mask",
+    "signature": "NET.IP_NET_MASK(num_output_bytes, prefix_length)",
+    "description": "Gets a network mask.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/net_functions#netip_net_mask"
+  },
+  {
+    "name": "net.ip_to_string",
+    "signature": "NET.IP_TO_STRING(addr_bin)",
+    "description": "Converts an IPv4 or IPv6 address from a BYTES value in network byte order to a STRING value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/net_functions#netip_to_string"
+  },
+  {
+    "name": "net.ip_trunc",
+    "signature": "NET.IP_TRUNC(addr_bin, prefix_length)",
+    "description": "Converts a BYTES IPv4 or IPv6 address in network byte order to a BYTES subnet address.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/net_functions#netip_trunc"
+  },
+  {
+    "name": "net.ipv4_from_int64",
+    "signature": "NET.IPV4_FROM_INT64(integer_value)",
+    "description": "Converts an IPv4 address from an INT64 value to a BYTES value in network byte order.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/net_functions#netipv4_from_int64"
+  },
+  {
+    "name": "net.ipv4_to_int64",
+    "signature": "NET.IPV4_TO_INT64(addr_bin)",
+    "description": "Converts an IPv4 address from a BYTES value in network byte order to an INT64 value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/net_functions#netipv4_to_int64"
+  },
+  {
+    "name": "net.public_suffix",
+    "signature": "NET.PUBLIC_SUFFIX(url)",
+    "description": "Gets the public suffix from a URL.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/net_functions#netpublic_suffix"
+  },
+  {
+    "name": "net.reg_domain",
+    "signature": "NET.REG_DOMAIN(url)",
+    "description": "Gets the registered or registrable domain from a URL.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/net_functions#netreg_domain"
+  },
+  {
+    "name": "net.safe_ip_from_string",
+    "signature": "NET.SAFE_IP_FROM_STRING(addr_str)",
+    "description": "Similar to the NET.IP_FROM_STRING, but returns NULL instead of producing an error if the input is invalid.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/net_functions#netsafe_ip_from_string"
+  },
+  {
+    "name": "nodes",
+    "signature": "NODES(graph_path)",
+    "description": "Gets the nodes in a graph path. The resulting array retains the original order in the graph path.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/graph-sql-functions#nodes"
+  },
+  {
+    "name": "normalize",
+    "signature": "NORMALIZE(value[, normalization_mode])",
+    "description": "Case-sensitively normalizes the characters in a STRING value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#normalize"
+  },
+  {
+    "name": "normalize_and_casefold",
+    "signature": "NORMALIZE_AND_CASEFOLD(value[, normalization_mode])",
+    "description": "Case-insensitively normalizes the characters in a STRING value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#normalize_and_casefold"
+  },
+  {
+    "name": "nth_value",
+    "signature": "NTH_VALUE (value_expression, constant_integer_expression [{RESPECT | IGNORE} NULLS]) OVER over_clause over_clause: { named_window | ( [ window_specification ] ) } window_specification: [ named_window ] [ PARTITION BY partition_expression [, ...] ] ORDER BY expression [ { ASC | DESC } ] [, ...] [ window_frame_clause ]",
+    "description": "Gets a value for the Nth row of the current window frame.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/navigation_functions#nth_value"
+  },
+  {
+    "name": "ntile",
+    "signature": "NTILE(constant_integer_expression) OVER over_clause over_clause: { named_window | ( [ window_specification ] ) } window_specification: [ named_window ] [ PARTITION BY partition_expression [, ...] ] ORDER BY expression [ { ASC | DESC } ] [, ...]",
+    "description": "Gets the quantile bucket number (1-based) of each row within a window.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/numbering_functions#ntile"
+  },
+  {
+    "name": "obj.fetch_metadata",
+    "signature": "OBJ.FETCH_METADATA( objectref )",
+    "description": "Fetches Cloud Storage metadata for a partially populated ObjectRef value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/objectref_functions#objfetch_metadata"
+  },
+  {
+    "name": "obj.get_access_url",
+    "signature": "OBJ.GET_ACCESS_URL( objectref, mode [, duration] )",
+    "description": "Returns access URLs for a Cloud Storage object.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/objectref_functions#objget_access_url"
+  },
+  {
+    "name": "obj.get_read_url",
+    "signature": "OBJ.GET_READ_URL(objectref)",
+    "description": "Returns a read URL and status for a Cloud Storage object.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/objectref_functions#objget_read_url"
+  },
+  {
+    "name": "obj.list",
+    "signature": "OBJ.LIST( uri [, authorizer ] )",
+    "description": "Returns a table of metadata and ObjectRef values for files stored in Cloud Storage.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/objectref_functions#objlist"
+  },
+  {
+    "name": "obj.make_ref",
+    "signature": "OBJ.MAKE_REF( uri [, authorizer ] [, version => version_value ] [, details => gcs_metadata_json ] )",
+    "description": "Creates an ObjectRef value that contains reference information for a Cloud Storage object.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/objectref_functions#objmake_ref"
+  },
+  {
+    "name": "octet_length",
+    "signature": "OCTET_LENGTH(value)",
+    "description": "Alias for BYTE_LENGTH.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#octet_length"
+  },
+  {
+    "name": "parse_bignumeric",
+    "signature": "PARSE_BIGNUMERIC(string_expression)",
+    "description": "Converts a STRING value to a BIGNUMERIC value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/conversion_functions#parse_bignumeric"
+  },
+  {
+    "name": "parse_date",
+    "signature": "PARSE_DATE(format_string, date_string)",
+    "description": "Converts a STRING value to a DATE value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/date_functions#parse_date"
+  },
+  {
+    "name": "parse_datetime",
+    "signature": "PARSE_DATETIME(format_string, datetime_string)",
+    "description": "Converts a STRING value to a DATETIME value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/datetime_functions#parse_datetime"
+  },
+  {
+    "name": "parse_json",
+    "signature": "PARSE_JSON( json_string_expr [, wide_number_mode => { 'exact' | 'round' } ] )",
+    "description": "Converts a JSON-formatted STRING value to a JSON value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/json_functions#parse_json"
+  },
+  {
+    "name": "parse_numeric",
+    "signature": "PARSE_NUMERIC(string_expression)",
+    "description": "Converts a STRING value to a NUMERIC value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/conversion_functions#parse_numeric"
+  },
+  {
+    "name": "parse_time",
+    "signature": "PARSE_TIME(format_string, time_string)",
+    "description": "Converts a STRING value to a TIME value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/time_functions#parse_time"
+  },
+  {
+    "name": "parse_timestamp",
+    "signature": "PARSE_TIMESTAMP(format_string, timestamp_string[, time_zone])",
+    "description": "Converts a STRING value to a TIMESTAMP value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/timestamp_functions#parse_timestamp"
+  },
+  {
+    "name": "path_first",
+    "signature": "PATH_FIRST(graph_path)",
+    "description": "Gets the first node in a graph path.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/graph-sql-functions#path_first"
+  },
+  {
+    "name": "path_last",
+    "signature": "PATH_LAST(graph_path)",
+    "description": "Gets the last node in a graph path.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/graph-sql-functions#path_last"
+  },
+  {
+    "name": "path_length",
+    "signature": "PATH_LENGTH(graph_path)",
+    "description": "Gets the number of edges in a graph path.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/graph-sql-functions#path_length"
+  },
+  {
+    "name": "percent_rank",
+    "signature": "PERCENT_RANK() OVER over_clause over_clause: { named_window | ( [ window_specification ] ) } window_specification: [ named_window ] [ PARTITION BY partition_expression [, ...] ] ORDER BY expression [ { ASC | DESC } ] [, ...]",
+    "description": "Gets the percentile rank (from 0 to 1) of each row within a window.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/numbering_functions#percent_rank"
+  },
+  {
+    "name": "percentile_cont",
+    "signature": "PERCENTILE_CONT (value_expression, percentile [{RESPECT | IGNORE} NULLS]) OVER over_clause over_clause: { named_window | ( [ window_specification ] ) } window_specification: [ named_window ] [ PARTITION BY partition_expression [, ...] ]",
+    "description": "Computes the specified percentile for a value, using linear interpolation.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/navigation_functions#percentile_cont"
+  },
+  {
+    "name": "percentile_disc",
+    "signature": "PERCENTILE_DISC (value_expression, percentile [{RESPECT | IGNORE} NULLS]) OVER over_clause over_clause: { named_window | ( [ window_specification ] ) } window_specification: [ named_window ] [ PARTITION BY partition_expression [, ...] ]",
+    "description": "Computes the specified percentile for a discrete value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/navigation_functions#percentile_disc"
+  },
+  {
+    "name": "pow",
+    "signature": "POW(X, Y)",
+    "description": "Produces the value of X raised to the power of Y.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#pow"
+  },
+  {
+    "name": "power",
+    "signature": "POWER(X, Y)",
+    "description": "Synonym of POW.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#power"
+  },
+  {
+    "name": "rand",
+    "signature": "RAND()",
+    "description": "Generates a pseudo-random value of type FLOAT64 in the range of [0, 1).",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#rand"
+  },
+  {
+    "name": "range",
+    "signature": "RANGE(lower_bound, upper_bound)",
+    "description": "Constructs a range of DATE, DATETIME, or TIMESTAMP values.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/range-functions#range"
+  },
+  {
+    "name": "range_bucket",
+    "signature": "RANGE_BUCKET(point, boundaries_array)",
+    "description": "Scans through a sorted array and returns the 0-based position of a point's upper bound.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#range_bucket"
+  },
+  {
+    "name": "range_contains",
+    "signature": "RANGE_CONTAINS(outer_range, inner_range)",
+    "description": "Signature 1: Checks if one range is in another range. Signature 2: Checks if a value is in a range.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/range-functions#range_contains"
+  },
+  {
+    "name": "range_end",
+    "signature": "RANGE_END(range_to_check)",
+    "description": "Gets the upper bound of a range.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/range-functions#range_end"
+  },
+  {
+    "name": "range_intersect",
+    "signature": "RANGE_INTERSECT(range_a, range_b)",
+    "description": "Gets a segment of two ranges that intersect.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/range-functions#range_intersect"
+  },
+  {
+    "name": "range_overlaps",
+    "signature": "RANGE_OVERLAPS(range_a, range_b)",
+    "description": "Checks if two ranges overlap.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/range-functions#range_overlaps"
+  },
+  {
+    "name": "range_sessionize",
+    "signature": "RANGE_SESSIONIZE( TABLE table_name, range_column, partitioning_columns )",
+    "description": "Produces a table of sessionized ranges.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/range-functions#range_sessionize"
+  },
+  {
+    "name": "range_start",
+    "signature": "RANGE_START(range_to_check)",
+    "description": "Gets the lower bound of a range.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/range-functions#range_start"
+  },
+  {
+    "name": "rank",
+    "signature": "RANK() OVER over_clause over_clause: { named_window | ( [ window_specification ] ) } window_specification: [ named_window ] [ PARTITION BY partition_expression [, ...] ] ORDER BY expression [ { ASC | DESC } ] [, ...]",
+    "description": "Gets the rank (1-based) of each row within a window.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/numbering_functions#rank"
+  },
+  {
+    "name": "regexp_contains",
+    "signature": "REGEXP_CONTAINS(value, regexp)",
+    "description": "Checks if a value is a partial match for a regular expression.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#regexp_contains"
+  },
+  {
+    "name": "regexp_extract",
+    "signature": "REGEXP_EXTRACT(value, regexp[, position[, occurrence]])",
+    "description": "Produces a substring that matches a regular expression.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#regexp_extract"
+  },
+  {
+    "name": "regexp_extract_all",
+    "signature": "REGEXP_EXTRACT_ALL(value, regexp)",
+    "description": "Produces an array of all substrings that match a regular expression.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#regexp_extract_all"
+  },
+  {
+    "name": "regexp_instr",
+    "signature": "REGEXP_INSTR(source_value, regexp [, position[, occurrence, [occurrence_position]]])",
+    "description": "Finds the position of a regular expression match in a value, optionally starting the search at a given offset or occurrence.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#regexp_instr"
+  },
+  {
+    "name": "regexp_replace",
+    "signature": "REGEXP_REPLACE(value, regexp, replacement)",
+    "description": "Produces a STRING value where all substrings that match a regular expression are replaced with a specified value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#regexp_replace"
+  },
+  {
+    "name": "regexp_substr",
+    "signature": "REGEXP_SUBSTR(value, regexp[, position[, occurrence]])",
+    "description": "Synonym for REGEXP_EXTRACT.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#regexp_substr"
+  },
+  {
+    "name": "repeat",
+    "signature": "REPEAT(original_value, repetitions)",
+    "description": "Produces a STRING or BYTES value that consists of an original value, repeated.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#repeat"
+  },
+  {
+    "name": "replace",
+    "signature": "REPLACE(original_value, from_pattern, to_pattern)",
+    "description": "Replaces all occurrences of a pattern with another pattern in a STRING or BYTES value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#replace"
+  },
+  {
+    "name": "reverse",
+    "signature": "REVERSE(value)",
+    "description": "Reverses a STRING or BYTES value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#reverse"
+  },
+  {
+    "name": "right",
+    "signature": "RIGHT(value, length)",
+    "description": "Gets the specified rightmost portion from a STRING or BYTES value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#right"
+  },
+  {
+    "name": "round",
+    "signature": "ROUND(X [, N [, rounding_mode]])",
+    "description": "Rounds X to the nearest integer or rounds X to N decimal places after the decimal point.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#round"
+  },
+  {
+    "name": "row_number",
+    "signature": "ROW_NUMBER() OVER over_clause over_clause: { named_window | ( [ window_specification ] ) } window_specification: [ named_window ] [ PARTITION BY partition_expression [, ...] ] [ ORDER BY expression [ { ASC | DESC } ] [, ...] ]",
+    "description": "Gets the sequential row number (1-based) of each row within a window.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/numbering_functions#row_number"
+  },
+  {
+    "name": "rpad",
+    "signature": "RPAD(original_value, return_length[, pattern])",
+    "description": "Appends a STRING or BYTES value with a pattern.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#rpad"
+  },
+  {
+    "name": "rtrim",
+    "signature": "RTRIM(value1[, value2])",
+    "description": "Identical to the TRIM function, but only removes trailing characters.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#rtrim"
+  },
+  {
+    "name": "s2_cellidfrompoint",
+    "signature": "S2_CELLIDFROMPOINT(point_geography[, level => cell_level])",
+    "description": "Gets the S2 cell ID covering a point GEOGRAPHY value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#s2_cellidfrompoint"
+  },
+  {
+    "name": "s2_coveringcellids",
+    "signature": "S2_COVERINGCELLIDS( geography [, min_level => cell_level] [, max_level => cell_level] [, max_cells => max_cells] [, buffer => buffer])",
+    "description": "Gets an array of S2 cell IDs that cover a GEOGRAPHY value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#s2_coveringcellids"
+  },
+  {
+    "name": "safe_add",
+    "signature": "SAFE_ADD(X, Y)",
+    "description": "Equivalent to the addition operator (X + Y), but returns NULL if overflow occurs.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#safe_add"
+  },
+  {
+    "name": "safe_cast",
+    "signature": "SAFE_CAST(expression AS typename [format_clause])",
+    "description": "Similar to the CAST function, but returns NULL when a runtime error is produced.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/conversion_functions#safe_casting"
+  },
+  {
+    "name": "safe_convert_bytes_to_string",
+    "signature": "SAFE_CONVERT_BYTES_TO_STRING(value)",
+    "description": "Converts a BYTES value to a STRING value and replace any invalid UTF-8 characters with the Unicode replacement character, U+FFFD.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#safe_convert_bytes_to_string"
+  },
+  {
+    "name": "safe_divide",
+    "signature": "SAFE_DIVIDE(X, Y)",
+    "description": "Equivalent to the division operator (X / Y), but returns NULL if an error occurs.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#safe_divide"
+  },
+  {
+    "name": "safe_multiply",
+    "signature": "SAFE_MULTIPLY(X, Y)",
+    "description": "Equivalent to the multiplication operator (X * Y), but returns NULL if overflow occurs.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#safe_multiply"
+  },
+  {
+    "name": "safe_negate",
+    "signature": "SAFE_NEGATE(X)",
+    "description": "Equivalent to the unary minus operator (-X), but returns NULL if overflow occurs.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#safe_negate"
+  },
+  {
+    "name": "safe_subtract",
+    "signature": "SAFE_SUBTRACT(X, Y)",
+    "description": "Equivalent to the subtraction operator (X - Y), but returns NULL if overflow occurs.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#safe_subtract"
+  },
+  {
+    "name": "search",
+    "signature": "SEARCH( data_to_search, search_query [, json_scope => { 'JSON_VALUES' | 'JSON_KEYS' | 'JSON_KEYS_AND_VALUES' } ] [, analyzer => { 'LOG_ANALYZER' | 'NO_OP_ANALYZER' | 'PATTERN_ANALYZER'} ] [, analyzer_options => analyzer_options_values ] )",
+    "description": "Checks to see whether a table or other search data contains a set of search terms.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/search_functions#search"
+  },
+  {
+    "name": "sec",
+    "signature": "SEC(X)",
+    "description": "Computes the secant of X.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#sec"
+  },
+  {
+    "name": "sech",
+    "signature": "SECH(X)",
+    "description": "Computes the hyperbolic secant of X.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#sech"
+  },
+  {
+    "name": "session_user",
+    "signature": "SESSION_USER()",
+    "description": "Get the email address or principal identifier of the user that's running the query.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/security_functions#session_user"
+  },
+  {
+    "name": "sha1",
+    "signature": "SHA1(input)",
+    "description": "Computes the hash of a STRING or BYTES value using the SHA-1 algorithm.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/hash_functions#sha1"
+  },
+  {
+    "name": "sha256",
+    "signature": "SHA256(input)",
+    "description": "Computes the hash of a STRING or BYTES value using the SHA-256 algorithm.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/hash_functions#sha256"
+  },
+  {
+    "name": "sha512",
+    "signature": "SHA512(input)",
+    "description": "Computes the hash of a STRING or BYTES value using the SHA-512 algorithm.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/hash_functions#sha512"
+  },
+  {
+    "name": "sign",
+    "signature": "SIGN(X)",
+    "description": "Produces -1 , 0, or +1 for negative, zero, and positive arguments respectively.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#sign"
+  },
+  {
+    "name": "sin",
+    "signature": "SIN(X)",
+    "description": "Computes the sine of X.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#sin"
+  },
+  {
+    "name": "sinh",
+    "signature": "SINH(X)",
+    "description": "Computes the hyperbolic sine of X.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#sinh"
+  },
+  {
+    "name": "soundex",
+    "signature": "SOUNDEX(value)",
+    "description": "Gets the Soundex codes for words in a STRING value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#soundex"
+  },
+  {
+    "name": "source_node_id",
+    "signature": "SOURCE_NODE_ID(edge_element)",
+    "description": "Gets a unique identifier of a graph edge's source node.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/graph-sql-functions#source_node_id"
+  },
+  {
+    "name": "split",
+    "signature": "SPLIT(value[, delimiter])",
+    "description": "Splits a STRING or BYTES value, using a delimiter.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#split"
+  },
+  {
+    "name": "sqrt",
+    "signature": "SQRT(X)",
+    "description": "Computes the square root of X.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#sqrt"
+  },
+  {
+    "name": "st_angle",
+    "signature": "ST_ANGLE(point_geography_1, point_geography_2, point_geography_3)",
+    "description": "Takes three point GEOGRAPHY values, which represent two intersecting lines, and returns the angle between these lines.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_angle"
+  },
+  {
+    "name": "st_area",
+    "signature": "ST_AREA(geography_expression[, use_spheroid])",
+    "description": "Gets the area covered by the polygons in a GEOGRAPHY value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_area"
+  },
+  {
+    "name": "st_asbinary",
+    "signature": "ST_ASBINARY(geography_expression)",
+    "description": "Converts a GEOGRAPHY value to a BYTES WKB geography value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_asbinary"
+  },
+  {
+    "name": "st_asgeojson",
+    "signature": "ST_ASGEOJSON(geography_expression)",
+    "description": "Converts a GEOGRAPHY value to a STRING GeoJSON geography value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_asgeojson"
+  },
+  {
+    "name": "st_astext",
+    "signature": "ST_ASTEXT(geography_expression)",
+    "description": "Converts a GEOGRAPHY value to a STRING WKT geography value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_astext"
+  },
+  {
+    "name": "st_azimuth",
+    "signature": "ST_AZIMUTH(point_geography_1, point_geography_2)",
+    "description": "Gets the azimuth of a line segment formed by two point GEOGRAPHY values.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_azimuth"
+  },
+  {
+    "name": "st_boundary",
+    "signature": "ST_BOUNDARY(geography_expression)",
+    "description": "Gets the union of component boundaries in a GEOGRAPHY value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_boundary"
+  },
+  {
+    "name": "st_boundingbox",
+    "signature": "ST_BOUNDINGBOX(geography_expression)",
+    "description": "Gets the bounding box for a GEOGRAPHY value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_boundingbox"
+  },
+  {
+    "name": "st_buffer",
+    "signature": "ST_BUFFER( geography, buffer_radius [, num_seg_quarter_circle => num_segments] [, use_spheroid => boolean_expression] [, endcap => endcap_style] [, side => line_side])",
+    "description": "Gets the buffer around a GEOGRAPHY value, using a specific number of segments.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_buffer"
+  },
+  {
+    "name": "st_bufferwithtolerance",
+    "signature": "ST_BUFFERWITHTOLERANCE( geography, buffer_radius, tolerance_meters => tolerance [, use_spheroid => boolean_expression] [, endcap => endcap_style] [, side => line_side])",
+    "description": "Gets the buffer around a GEOGRAPHY value, using tolerance.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_bufferwithtolerance"
+  },
+  {
+    "name": "st_centroid",
+    "signature": "ST_CENTROID(geography_expression)",
+    "description": "Gets the centroid of a GEOGRAPHY value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_centroid"
+  },
+  {
+    "name": "st_centroid_agg",
+    "signature": "ST_CENTROID_AGG(geography [ WHERE where_expression ])",
+    "description": "Gets the centroid of a set of GEOGRAPHY values.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_centroid_agg"
+  },
+  {
+    "name": "st_closestpoint",
+    "signature": "ST_CLOSESTPOINT(geography_1, geography_2[, use_spheroid])",
+    "description": "Gets the point on a GEOGRAPHY value which is closest to any point in a second GEOGRAPHY value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_closestpoint"
+  },
+  {
+    "name": "st_clusterdbscan",
+    "signature": "ST_CLUSTERDBSCAN(geography_column, epsilon, minimum_geographies) OVER over_clause over_clause: { named_window | ( [ window_specification ] ) } window_specification: [ named_window ] [ PARTITION BY partition_expression [, ...] ] [ ORDER BY expression [ { ASC | DESC } ] [, ...] ]",
+    "description": "Performs DBSCAN clustering on a group of GEOGRAPHY values and produces a 0-based cluster number for this row.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_clusterdbscan"
+  },
+  {
+    "name": "st_contains",
+    "signature": "ST_CONTAINS(geography_1, geography_2)",
+    "description": "Checks if one GEOGRAPHY value contains another GEOGRAPHY value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_contains"
+  },
+  {
+    "name": "st_convexhull",
+    "signature": "ST_CONVEXHULL(geography_expression)",
+    "description": "Returns the convex hull for a GEOGRAPHY value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_convexhull"
+  },
+  {
+    "name": "st_coveredby",
+    "signature": "ST_COVEREDBY(geography_1, geography_2)",
+    "description": "Checks if all points of a GEOGRAPHY value are on the boundary or interior of another GEOGRAPHY value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_coveredby"
+  },
+  {
+    "name": "st_covers",
+    "signature": "ST_COVERS(geography_1, geography_2)",
+    "description": "Checks if all points of a GEOGRAPHY value are on the boundary or interior of another GEOGRAPHY value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_covers"
+  },
+  {
+    "name": "st_difference",
+    "signature": "ST_DIFFERENCE(geography_1, geography_2)",
+    "description": "Gets the point set difference between two GEOGRAPHY values.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_difference"
+  },
+  {
+    "name": "st_dimension",
+    "signature": "ST_DIMENSION(geography_expression)",
+    "description": "Gets the dimension of the highest-dimensional element in a GEOGRAPHY value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_dimension"
+  },
+  {
+    "name": "st_disjoint",
+    "signature": "ST_DISJOINT(geography_1, geography_2)",
+    "description": "Checks if two GEOGRAPHY values are disjoint (don't intersect).",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_disjoint"
+  },
+  {
+    "name": "st_distance",
+    "signature": "ST_DISTANCE(geography_1, geography_2[, use_spheroid])",
+    "description": "Gets the shortest distance in meters between two GEOGRAPHY values.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_distance"
+  },
+  {
+    "name": "st_dump",
+    "signature": "ST_DUMP(geography[, dimension])",
+    "description": "Returns an array of simple GEOGRAPHY components in a GEOGRAPHY value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_dump"
+  },
+  {
+    "name": "st_dwithin",
+    "signature": "ST_DWITHIN(geography_1, geography_2, distance[, use_spheroid])",
+    "description": "Checks if any points in two GEOGRAPHY values are within a given distance.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_dwithin"
+  },
+  {
+    "name": "st_endpoint",
+    "signature": "ST_ENDPOINT(linestring_geography)",
+    "description": "Gets the last point of a linestring GEOGRAPHY value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_endpoint"
+  },
+  {
+    "name": "st_equals",
+    "signature": "ST_EQUALS(geography_1, geography_2)",
+    "description": "Checks if two GEOGRAPHY values represent the same GEOGRAPHY value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_equals"
+  },
+  {
+    "name": "st_extent",
+    "signature": "ST_EXTENT(geography_expression [ WHERE where_expression ])",
+    "description": "Gets the bounding box for a group of GEOGRAPHY values.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_extent"
+  },
+  {
+    "name": "st_exteriorring",
+    "signature": "ST_EXTERIORRING(polygon_geography)",
+    "description": "Returns a linestring GEOGRAPHY value that corresponds to the outermost ring of a polygon GEOGRAPHY value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_exteriorring"
+  },
+  {
+    "name": "st_geogfrom",
+    "signature": "ST_GEOGFROM(expression)",
+    "description": "Converts a STRING or BYTES value into a GEOGRAPHY value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_geogfrom"
+  },
+  {
+    "name": "st_geogfromgeojson",
+    "signature": "ST_GEOGFROMGEOJSON( geojson_string [, make_valid => constant_expression ] )",
+    "description": "Converts a STRING GeoJSON geometry value into a GEOGRAPHY value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_geogfromgeojson"
+  },
+  {
+    "name": "st_geogfromtext",
+    "signature": "ST_GEOGFROMTEXT( wkt_string [ , oriented => value ] [ , planar => value ] [ , make_valid => value ] )",
+    "description": "Converts a STRING WKT geometry value into a GEOGRAPHY value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_geogfromtext"
+  },
+  {
+    "name": "st_geogfromwkb",
+    "signature": "ST_GEOGFROMWKB( wkb_bytes_expression [ , oriented => value ] [ , planar => value ] [ , make_valid => value ] )",
+    "description": "Converts a BYTES or hexadecimal-text STRING WKT geometry value into a GEOGRAPHY value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_geogfromwkb"
+  },
+  {
+    "name": "st_geogpoint",
+    "signature": "ST_GEOGPOINT(longitude, latitude)",
+    "description": "Creates a point GEOGRAPHY value for a given longitude and latitude.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_geogpoint"
+  },
+  {
+    "name": "st_geogpointfromgeohash",
+    "signature": "ST_GEOGPOINTFROMGEOHASH(geohash)",
+    "description": "Gets a point GEOGRAPHY value that's in the middle of a bounding box defined in a STRING GeoHash value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_geogpointfromgeohash"
+  },
+  {
+    "name": "st_geohash",
+    "signature": "ST_GEOHASH(geography_expression[, maxchars])",
+    "description": "Converts a point GEOGRAPHY value to a STRING GeoHash value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_geohash"
+  },
+  {
+    "name": "st_geometrytype",
+    "signature": "ST_GEOMETRYTYPE(geography_expression)",
+    "description": "Gets the Open Geospatial Consortium (OGC) geometry type for a GEOGRAPHY value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_geometrytype"
+  },
+  {
+    "name": "st_hausdorffdistance",
+    "signature": "ST_HAUSDORFFDISTANCE( geography_1, geography_2 [, directed => { TRUE | FALSE } ] )",
+    "description": "Gets the discrete Hausdorff distance between two geometries.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_hausdorffdistance"
+  },
+  {
+    "name": "st_hausdorffdwithin",
+    "signature": "ST_HAUSDORFFDWITHIN( geography_1, geography_2, distance [, directed => { TRUE | FALSE } ] )",
+    "description": "Checks if the Hausdorff distance between two GEOGRAPHY values is within a given distance.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_hausdorffdwithin"
+  },
+  {
+    "name": "st_interiorrings",
+    "signature": "ST_INTERIORRINGS(polygon_geography)",
+    "description": "Gets the interior rings of a polygon GEOGRAPHY value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_interiorrings"
+  },
+  {
+    "name": "st_intersection",
+    "signature": "ST_INTERSECTION(geography_1, geography_2)",
+    "description": "Gets the point set intersection of two GEOGRAPHY values.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_intersection"
+  },
+  {
+    "name": "st_intersects",
+    "signature": "ST_INTERSECTS(geography_1, geography_2)",
+    "description": "Checks if at least one point appears in two GEOGRAPHY values.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_intersects"
+  },
+  {
+    "name": "st_intersectsbox",
+    "signature": "ST_INTERSECTSBOX(geography, lng1, lat1, lng2, lat2)",
+    "description": "Checks if a GEOGRAPHY value intersects a rectangle.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_intersectsbox"
+  },
+  {
+    "name": "st_isclosed",
+    "signature": "ST_ISCLOSED(geography_expression)",
+    "description": "Checks if all components in a GEOGRAPHY value are closed.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_isclosed"
+  },
+  {
+    "name": "st_iscollection",
+    "signature": "ST_ISCOLLECTION(geography_expression)",
+    "description": "Checks if the total number of points, linestrings, and polygons is greater than one in a GEOGRAPHY value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_iscollection"
+  },
+  {
+    "name": "st_isempty",
+    "signature": "ST_ISEMPTY(geography_expression)",
+    "description": "Checks if a GEOGRAPHY value is empty.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_isempty"
+  },
+  {
+    "name": "st_isring",
+    "signature": "ST_ISRING(geography_expression)",
+    "description": "Checks if a GEOGRAPHY value is a closed, simple linestring.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_isring"
+  },
+  {
+    "name": "st_length",
+    "signature": "ST_LENGTH(geography_expression[, use_spheroid])",
+    "description": "Gets the total length of lines in a GEOGRAPHY value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_length"
+  },
+  {
+    "name": "st_lineinterpolatepoint",
+    "signature": "ST_LINEINTERPOLATEPOINT(linestring_geography, fraction)",
+    "description": "Gets a point at a specific fraction in a linestring GEOGRAPHY value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_lineinterpolatepoint"
+  },
+  {
+    "name": "st_linelocatepoint",
+    "signature": "ST_LINELOCATEPOINT(linestring_geography, point_geography)",
+    "description": "Gets a section of a linestring GEOGRAPHY value between the start point and a point GEOGRAPHY value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_linelocatepoint"
+  },
+  {
+    "name": "st_linesubstring",
+    "signature": "ST_LINESUBSTRING(linestring_geography, start_fraction, end_fraction);",
+    "description": "Gets a segment of a single linestring at a specific starting and ending fraction.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_linesubstring"
+  },
+  {
+    "name": "st_makeline",
+    "signature": "ST_MAKELINE(geography_1, geography_2)",
+    "description": "Creates a linestring GEOGRAPHY value by concatenating the point and linestring vertices of GEOGRAPHY values.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_makeline"
+  },
+  {
+    "name": "st_makepolygon",
+    "signature": "ST_MAKEPOLYGON(polygon_shell[, array_of_polygon_holes])",
+    "description": "Constructs a polygon GEOGRAPHY value by combining a polygon shell with polygon holes.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_makepolygon"
+  },
+  {
+    "name": "st_makepolygonoriented",
+    "signature": "ST_MAKEPOLYGONORIENTED(array_of_geography)",
+    "description": "Constructs a polygon GEOGRAPHY value, using an array of linestring GEOGRAPHY values. The vertex ordering of each linestring determines the orientation of each polygon ring.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_makepolygonoriented"
+  },
+  {
+    "name": "st_maxdistance",
+    "signature": "ST_MAXDISTANCE(geography_1, geography_2[, use_spheroid])",
+    "description": "Gets the longest distance between two non-empty GEOGRAPHY values.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_maxdistance"
+  },
+  {
+    "name": "st_npoints",
+    "signature": "ST_NPOINTS(geography_expression)",
+    "description": "An alias of ST_NUMPOINTS.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_npoints"
+  },
+  {
+    "name": "st_numgeometries",
+    "signature": "ST_NUMGEOMETRIES(geography_expression)",
+    "description": "Gets the number of geometries in a GEOGRAPHY value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_numgeometries"
+  },
+  {
+    "name": "st_numpoints",
+    "signature": "ST_NUMPOINTS(geography_expression)",
+    "description": "Gets the number of vertices in the a GEOGRAPHY value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_numpoints"
+  },
+  {
+    "name": "st_perimeter",
+    "signature": "ST_PERIMETER(geography_expression[, use_spheroid])",
+    "description": "Gets the length of the boundary of the polygons in a GEOGRAPHY value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_perimeter"
+  },
+  {
+    "name": "st_pointn",
+    "signature": "ST_POINTN(linestring_geography, index)",
+    "description": "Gets the point at a specific index of a linestring GEOGRAPHY value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_pointn"
+  },
+  {
+    "name": "st_regionstats",
+    "signature": "ST_REGIONSTATS( geography, raster_id [ , [band => ] value ] [ , include => value ] [ , options => value ] )",
+    "description": "Computes statistics describing the pixels in a geospatial raster image that intersect a GEOGRAPHY value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_regionstats"
+  },
+  {
+    "name": "st_simplify",
+    "signature": "ST_SIMPLIFY(geography, tolerance_meters)",
+    "description": "Converts a GEOGRAPHY value into a simplified GEOGRAPHY value, using tolerance.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_simplify"
+  },
+  {
+    "name": "st_snaptogrid",
+    "signature": "ST_SNAPTOGRID(geography_expression, grid_size)",
+    "description": "Produces a GEOGRAPHY value, where each vertex has been snapped to a longitude/latitude grid.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_snaptogrid"
+  },
+  {
+    "name": "st_startpoint",
+    "signature": "ST_STARTPOINT(linestring_geography)",
+    "description": "Gets the first point of a linestring GEOGRAPHY value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_startpoint"
+  },
+  {
+    "name": "st_touches",
+    "signature": "ST_TOUCHES(geography_1, geography_2)",
+    "description": "Checks if two GEOGRAPHY values intersect and their interiors have no elements in common.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_touches"
+  },
+  {
+    "name": "st_union",
+    "signature": "ST_UNION(geography_1, geography_2)",
+    "description": "Gets the point set union of multiple GEOGRAPHY values.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_union"
+  },
+  {
+    "name": "st_union_agg",
+    "signature": "ST_UNION_AGG(geography [ WHERE where_expression ])",
+    "description": "Aggregates over GEOGRAPHY values and gets their point set union.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_union_agg"
+  },
+  {
+    "name": "st_within",
+    "signature": "ST_WITHIN(geography_1, geography_2)",
+    "description": "Checks if one GEOGRAPHY value contains another GEOGRAPHY value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_within"
+  },
+  {
+    "name": "st_x",
+    "signature": "ST_X(point_geography_expression)",
+    "description": "Gets the longitude from a point GEOGRAPHY value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_x"
+  },
+  {
+    "name": "st_y",
+    "signature": "ST_Y(point_geography_expression)",
+    "description": "Gets the latitude from a point GEOGRAPHY value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_y"
+  },
+  {
+    "name": "starts_with",
+    "signature": "STARTS_WITH(value, prefix)",
+    "description": "Checks if a STRING or BYTES value is a prefix of another value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#starts_with"
+  },
+  {
+    "name": "stddev",
+    "signature": "STDDEV( [ DISTINCT ] expression [ WHERE where_expression ] ) [ OVER over_clause ] over_clause: { named_window | ( [ window_specification ] ) } window_specification: [ named_window ] [ PARTITION BY partition_expression [, ...] ] [ ORDER BY expression [ { ASC | DESC } ] [, ...] ] [ window_frame_clause ]",
+    "description": "An alias of the STDDEV_SAMP function.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/statistical_aggregate_functions#stddev"
+  },
+  {
+    "name": "stddev_pop",
+    "signature": "STDDEV_POP( [ DISTINCT ] expression [ WHERE where_expression ] ) [ OVER over_clause ] over_clause: { named_window | ( [ window_specification ] ) } window_specification: [ named_window ] [ PARTITION BY partition_expression [, ...] ] [ ORDER BY expression [ { ASC | DESC } ] [, ...] ] [ window_frame_clause ]",
+    "description": "Computes the population (biased) standard deviation of the values.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/statistical_aggregate_functions#stddev_pop"
+  },
+  {
+    "name": "stddev_samp",
+    "signature": "STDDEV_SAMP( [ DISTINCT ] expression [ WHERE where_expression ] ) [ OVER over_clause ] over_clause: { named_window | ( [ window_specification ] ) } window_specification: [ named_window ] [ PARTITION BY partition_expression [, ...] ] [ ORDER BY expression [ { ASC | DESC } ] [, ...] ] [ window_frame_clause ]",
+    "description": "Computes the sample (unbiased) standard deviation of the values.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/statistical_aggregate_functions#stddev_samp"
+  },
+  {
+    "name": "string",
+    "signature": "STRING(json_expr)",
+    "description": "Converts a JSON string to a SQL STRING value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/json_functions#string_for_json"
+  },
+  {
+    "name": "string_agg",
+    "signature": "STRING_AGG( [ DISTINCT ] expression [, delimiter] [ WHERE where_expression ] [ ORDER BY key [ { ASC | DESC } ] [, ... ] ] [ LIMIT n ] ) [ OVER over_clause ] over_clause: { named_window | ( [ window_specification ] ) } window_specification: [ named_window ] [ PARTITION BY partition_expression [, ...] ] [ ORDER BY expression [ { ASC | DESC } ] [, ...] ] [ window_frame_clause ]",
+    "description": "Concatenates non-NULL STRING or BYTES values.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/aggregate_functions#string_agg"
+  },
+  {
+    "name": "strpos",
+    "signature": "STRPOS(value, subvalue)",
+    "description": "Finds the position of the first occurrence of a subvalue inside another value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#strpos"
+  },
+  {
+    "name": "substr",
+    "signature": "SUBSTR(value, position[, length])",
+    "description": "Gets a portion of a STRING or BYTES value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#substr"
+  },
+  {
+    "name": "substring",
+    "signature": "SUBSTRING(value, position[, length])",
+    "description": "Alias for SUBSTR",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#substring"
+  },
+  {
+    "name": "sum",
+    "signature": "SUM( [ DISTINCT ] expression [ WHERE where_expression ] ) [ OVER over_clause ] over_clause: { named_window | ( [ window_specification ] ) } window_specification: [ named_window ] [ PARTITION BY partition_expression [, ...] ] [ ORDER BY expression [ { ASC | DESC } ] [, ...] ] [ window_frame_clause ]",
+    "description": "Gets the sum of non-NULL values.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/aggregate_functions#sum"
+  },
+  {
+    "name": "tan",
+    "signature": "TAN(X)",
+    "description": "Computes the tangent of X.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#tan"
+  },
+  {
+    "name": "tanh",
+    "signature": "TANH(X)",
+    "description": "Computes the hyperbolic tangent of X.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#tanh"
+  },
+  {
+    "name": "text_analyze",
+    "signature": "TEXT_ANALYZE( text [, analyzer => { 'LOG_ANALYZER' | 'NO_OP_ANALYZER' | 'PATTERN_ANALYZER' } ] [, analyzer_options => analyzer_options_values ] )",
+    "description": "Extracts terms (tokens) from text and converts them into a tokenized document.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/text-analysis-functions#text_analyze"
+  },
+  {
+    "name": "tf_idf",
+    "signature": "TF_IDF(tokenized_document) OVER()",
+    "description": "Evaluates how relevant a term (token) is to a tokenized document in a set of tokenized documents.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/text-analysis-functions#tf_idf"
+  },
+  {
+    "name": "time",
+    "signature": "1. TIME(hour, minute, second) 2. TIME(timestamp, [time_zone]) 3. TIME(datetime)",
+    "description": "Constructs a TIME value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/time_functions#time"
+  },
+  {
+    "name": "time_add",
+    "signature": "TIME_ADD(time_expression, INTERVAL step_size step_unit)",
+    "description": "Adds a specified time interval to a TIME value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/time_functions#time_add"
+  },
+  {
+    "name": "time_diff",
+    "signature": "TIME_DIFF(end_time, start_time, granularity)",
+    "description": "Gets the number of unit boundaries between two TIME values at a particular time granularity.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/time_functions#time_diff"
+  },
+  {
+    "name": "time_sub",
+    "signature": "TIME_SUB(time_expression, INTERVAL step_size step_unit)",
+    "description": "Subtracts a specified time interval from a TIME value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/time_functions#time_sub"
+  },
+  {
+    "name": "time_trunc",
+    "signature": "TIME_TRUNC(time_value, time_granularity)",
+    "description": "Truncates a TIME value at a particular granularity.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/time_functions#time_trunc"
+  },
+  {
+    "name": "timestamp",
+    "signature": "TIMESTAMP(string_expression[, time_zone]) TIMESTAMP(date_expression[, time_zone]) TIMESTAMP(datetime_expression[, time_zone])",
+    "description": "Constructs a TIMESTAMP value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/timestamp_functions#timestamp"
+  },
+  {
+    "name": "timestamp_add",
+    "signature": "TIMESTAMP_ADD(timestamp_expression, INTERVAL step_size step_unit)",
+    "description": "Adds a specified time interval to a TIMESTAMP value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/timestamp_functions#timestamp_add"
+  },
+  {
+    "name": "timestamp_bucket",
+    "signature": "TIMESTAMP_BUCKET(timestamp_in_bucket, bucket_width)",
+    "description": "Gets the lower bound of the timestamp bucket that contains a timestamp.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/time-series-functions#timestamp_bucket"
+  },
+  {
+    "name": "timestamp_diff",
+    "signature": "TIMESTAMP_DIFF(end_timestamp, start_timestamp, granularity)",
+    "description": "Gets the number of unit boundaries between two TIMESTAMP values at a particular time granularity.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/timestamp_functions#timestamp_diff"
+  },
+  {
+    "name": "timestamp_micros",
+    "signature": "TIMESTAMP_MICROS(int64_expression)",
+    "description": "Converts the number of microseconds since 1970-01-01 00:00:00 UTC to a TIMESTAMP.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/timestamp_functions#timestamp_micros"
+  },
+  {
+    "name": "timestamp_millis",
+    "signature": "TIMESTAMP_MILLIS(int64_expression)",
+    "description": "Converts the number of milliseconds since 1970-01-01 00:00:00 UTC to a TIMESTAMP.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/timestamp_functions#timestamp_millis"
+  },
+  {
+    "name": "timestamp_seconds",
+    "signature": "TIMESTAMP_SECONDS(int64_expression)",
+    "description": "Converts the number of seconds since 1970-01-01 00:00:00 UTC to a TIMESTAMP.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/timestamp_functions#timestamp_seconds"
+  },
+  {
+    "name": "timestamp_sub",
+    "signature": "TIMESTAMP_SUB(timestamp_expression, INTERVAL step_size step_unit)",
+    "description": "Subtracts a specified time interval from a TIMESTAMP value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/timestamp_functions#timestamp_sub"
+  },
+  {
+    "name": "timestamp_trunc",
+    "signature": "TIMESTAMP_TRUNC(timestamp_value, timestamp_granularity[, time_zone])",
+    "description": "Truncates a TIMESTAMP or DATETIME value at a particular granularity.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/timestamp_functions#timestamp_trunc"
+  },
+  {
+    "name": "to_base32",
+    "signature": "TO_BASE32(bytes_expr)",
+    "description": "Converts a BYTES value to a base32-encoded STRING value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#to_base32"
+  },
+  {
+    "name": "to_base64",
+    "signature": "TO_BASE64(bytes_expr)",
+    "description": "Converts a BYTES value to a base64-encoded STRING value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#to_base64"
+  },
+  {
+    "name": "to_code_points",
+    "signature": "TO_CODE_POINTS(value)",
+    "description": "Converts a STRING or BYTES value into an array of extended ASCII code points.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#to_code_points"
+  },
+  {
+    "name": "to_hex",
+    "signature": "TO_HEX(bytes)",
+    "description": "Converts a BYTES value to a hexadecimal STRING value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#to_hex"
+  },
+  {
+    "name": "to_json",
+    "signature": "TO_JSON( sql_value [, stringify_wide_numbers => { TRUE | FALSE } ] )",
+    "description": "Converts a SQL value to a JSON value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/json_functions#to_json"
+  },
+  {
+    "name": "to_json_string",
+    "signature": "TO_JSON_STRING(value[, pretty_print])",
+    "description": "Converts a SQL value to a JSON-formatted STRING value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/json_functions#to_json_string"
+  },
+  {
+    "name": "translate",
+    "signature": "TRANSLATE(expression, source_characters, target_characters)",
+    "description": "Within a value, replaces each source character with the corresponding target character.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#translate"
+  },
+  {
+    "name": "trim",
+    "signature": "TRIM(value_to_trim[, set_of_characters_to_remove])",
+    "description": "Removes the specified leading and trailing Unicode code points or bytes from a STRING or BYTES value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#trim"
+  },
+  {
+    "name": "trunc",
+    "signature": "TRUNC(X [, N])",
+    "description": "Rounds a number like ROUND(X) or ROUND(X, N), but always rounds towards zero and never overflows.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/mathematical_functions#trunc"
+  },
+  {
+    "name": "typeof",
+    "signature": "TYPEOF(expression)",
+    "description": "Gets the name of the data type for an expression.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/utility-functions#typeof"
+  },
+  {
+    "name": "unicode",
+    "signature": "UNICODE(value)",
+    "description": "Gets the Unicode code point for the first character in a value.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#unicode"
+  },
+  {
+    "name": "unix_date",
+    "signature": "UNIX_DATE(date_expression)",
+    "description": "Converts a DATE value to the number of days since 1970-01-01.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/date_functions#unix_date"
+  },
+  {
+    "name": "unix_micros",
+    "signature": "UNIX_MICROS(timestamp_expression)",
+    "description": "Converts a TIMESTAMP value to the number of microseconds since 1970-01-01 00:00:00 UTC.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/timestamp_functions#unix_micros"
+  },
+  {
+    "name": "unix_millis",
+    "signature": "UNIX_MILLIS(timestamp_expression)",
+    "description": "Converts a TIMESTAMP value to the number of milliseconds since 1970-01-01 00:00:00 UTC.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/timestamp_functions#unix_millis"
+  },
+  {
+    "name": "unix_seconds",
+    "signature": "UNIX_SECONDS(timestamp_expression)",
+    "description": "Converts a TIMESTAMP value to the number of seconds since 1970-01-01 00:00:00 UTC.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/timestamp_functions#unix_seconds"
+  },
+  {
+    "name": "upper",
+    "signature": "UPPER(value)",
+    "description": "Formats alphabetic characters in a STRING value as uppercase. Formats ASCII characters in a BYTES value as uppercase.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#upper"
+  },
+  {
+    "name": "var_pop",
+    "signature": "VAR_POP( [ DISTINCT ] expression [ WHERE where_expression ] ) [ OVER over_clause ] over_clause: { named_window | ( [ window_specification ] ) } window_specification: [ named_window ] [ PARTITION BY partition_expression [, ...] ] [ ORDER BY expression [ { ASC | DESC } ] [, ...] ] [ window_frame_clause ]",
+    "description": "Computes the population (biased) variance of the values.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/statistical_aggregate_functions#var_pop"
+  },
+  {
+    "name": "var_samp",
+    "signature": "VAR_SAMP( [ DISTINCT ] expression [ WHERE where_expression ] ) [ OVER over_clause ] over_clause: { named_window | ( [ window_specification ] ) } window_specification: [ named_window ] [ PARTITION BY partition_expression [, ...] ] [ ORDER BY expression [ { ASC | DESC } ] [, ...] ] [ window_frame_clause ]",
+    "description": "Computes the sample (unbiased) variance of the values.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/statistical_aggregate_functions#var_samp"
+  },
+  {
+    "name": "variance",
+    "signature": "VARIANCE( [ DISTINCT ] expression [ WHERE where_expression ] ) [ OVER over_clause ] over_clause: { named_window | ( [ window_specification ] ) } window_specification: [ named_window ] [ PARTITION BY partition_expression [, ...] ] [ ORDER BY expression [ { ASC | DESC } ] [, ...] ] [ window_frame_clause ]",
+    "description": "An alias of VAR_SAMP.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/statistical_aggregate_functions#variance"
+  },
+  {
+    "name": "vector_index.statistics",
+    "signature": "VECTOR_INDEX.STATISTICS( TABLE table_name )",
+    "description": "Calculate how much an indexed table's data has drifted between when a vector index was trained and the present.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/vectorindex_functions#vector_indexstatistics"
+  },
+  {
+    "name": "vector_search",
+    "signature": "VECTOR_SEARCH( { TABLE base_table | (base_table_query) }, column_to_search, { TABLE query_table | (query_table_query) }, [, query_column_to_search => query_column_to_search_value] [, top_k => top_k_value ] [, distance_type => distance_type_value ] [, options => options_value ] )",
+    "description": "Performs a semantic search or a hybrid search on embeddings to find similar entities.",
+    "url": "https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/search_functions#vector_search"
+  }
+]
