@@ -2,7 +2,7 @@
 
 ## Unreleased - 0.4.0
 
-- Add LT08 with fixes for blank lines between CTEs and the main query.
+- Add LT08 with fixes for empty lines between CTEs and the main query.
 
 - Add LT07 with fixes for multiline CTE closing-bracket layout.
 
