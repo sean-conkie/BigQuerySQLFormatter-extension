@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-### Added
+### Added (unreleased)
 
 - Add typed per-rule options with defaults, validation, editor schema completion,
   and field-by-field project overrides. Invalid options report errors and reset
@@ -11,7 +11,7 @@
   backed by a reusable token-scope capitalisation rule base with quick fixes,
   Fix All, and formatting.
 
-### Fixed
+### Fixed (unreleased)
 
 - Detect mixed-case boolean/null literals such as `True` and `Null` in CP04,
   without matching identifier substrings, quoted identifiers, strings or comments.
