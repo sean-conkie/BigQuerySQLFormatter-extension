@@ -44,4 +44,28 @@ describe('Document settings', () => {
       connection.dispose();
     }
   });
+
+  it('reports invalid editor options and keeps rule defaults and other editor fields', async () => {
+    const connection = createConnection(new PassThrough(), new PassThrough());
+    const request = stub().resolves({
+      rules: { CP04: { severity: 'error', options: { capitalisation_policy: 'title' } } },
+    });
+    const configuration = stub(connection.workspace, 'getConfiguration').callsFake(request);
+    const errors: string[] = [];
+    try {
+      const settings = await getDocumentSettings('options.sql', connection, defaultSettings, true, [], (message) =>
+        errors.push(message),
+      );
+      expect(settings.rules?.CP04).to.deep.equal({
+        severity: 'error',
+        options: { capitalisation_policy: 'lower' },
+      });
+      expect(errors).to.have.length(1);
+      await getDocumentSettings('options.sql', connection, defaultSettings, true);
+      expect(configuration.calledOnce).to.equal(true);
+    } finally {
+      configuration.restore();
+      connection.dispose();
+    }
+  });
 });

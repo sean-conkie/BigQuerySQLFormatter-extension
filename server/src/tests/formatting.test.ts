@@ -6,6 +6,7 @@ import { createDocumentCodeActions, formatDocument } from '../formatting';
 import { Linter, sourceFixAllKind } from '../linter/linter';
 import { globalTokenCache } from '../linter/parser/tokenCache';
 import { defaultSettings } from '../settings';
+import type { CapitalisationPolicy } from '../ruleOptions';
 
 describe('Formatting and document fixes', () => {
   const uri = 'file:///formatting.bqsql';
@@ -15,6 +16,28 @@ describe('Formatting and document fixes', () => {
     sinon.restore();
     globalTokenCache.delete(uri);
   });
+
+  for (const [policy, expected] of [
+    ['lower', 'select true, null, false;\n'],
+    ['upper', 'select TRUE, NULL, FALSE;\n'],
+    ['consistent', 'select TRUE, NULL, FALSE;\n'],
+  ] satisfies [CapitalisationPolicy, string][]) {
+    it(`uses ${policy} in combined Fix All and idempotent formatting`, async () => {
+      const source = document('select TRUE, Null, false;\n');
+      const settings = {
+        ...defaultSettings,
+        rules: { CP04: { options: { capitalisation_policy: policy } } },
+      };
+      const actions = await createDocumentCodeActions(source, settings, {
+        textDocument: { uri },
+        range: Range.create(0, 0, 0, 0),
+        context: { diagnostics: [], only: [CodeActionKind.SourceFixAll] },
+      });
+      expect(TextDocument.applyEdits(source, actions[0].edit!.changes![uri])).to.equal(expected);
+      expect(TextDocument.applyEdits(source, await formatDocument(source, settings))).to.equal(expected);
+      expect(await formatDocument(document(expected), settings)).to.deep.equal([]);
+    });
+  }
 
   for (const eol of ['\n', '\r\n', '\r']) {
     it(`formats every fixable issue idempotently with ${JSON.stringify(eol)} line endings`, async () => {

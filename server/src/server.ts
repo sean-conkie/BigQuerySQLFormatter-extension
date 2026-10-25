@@ -51,9 +51,21 @@ const validations = new ValidationScheduler(
   (message) => connection.console.error(message),
 );
 
+function reportConfigurationError(message: string): void {
+  connection.console.error(message);
+  void connection.sendNotification(ShowMessageNotification.type, { type: MessageType.Error, message });
+}
+
 async function settingsForDocument(uri: string): Promise<ServerSettings> {
   try {
-    return await getDocumentSettings(uri, connection, globalSettings, hasConfigurationCapability, workspaceUris);
+    return await getDocumentSettings(
+      uri,
+      connection,
+      globalSettings,
+      hasConfigurationCapability,
+      workspaceUris,
+      (message) => reportConfigurationError(`Unable to configure ${uri}: ${message}`),
+    );
   } catch (error) {
     const message = `Unable to configure ${uri}: ${error instanceof Error ? error.message : String(error)}`;
     void connection.sendNotification(ShowMessageNotification.type, { type: MessageType.Error, message });
@@ -139,7 +151,12 @@ connection.onInitialized(() => {
 connection.onDidChangeConfiguration((change) => {
   if (!hasConfigurationCapability) {
     try {
-      globalSettings = mergeSettings(defaultSettings, parseSettings(change.settings?.bigquerySQLFormatter ?? {}));
+      globalSettings = mergeSettings(
+        defaultSettings,
+        parseSettings(change.settings?.bigquerySQLFormatter ?? {}, (message) =>
+          reportConfigurationError(`Invalid BigQuery SQL Formatter settings: ${message}`),
+        ),
+      );
     } catch (error) {
       const message = `Invalid BigQuery SQL Formatter settings: ${error instanceof Error ? error.message : String(error)}`;
       connection.console.error(message);

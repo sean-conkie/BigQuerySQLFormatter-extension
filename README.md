@@ -71,6 +71,21 @@ and `off` take precedence over an individual `enabled: true` setting.
 Group names are `aliasing`, `ambiguous`, `capitalisation`, `convention`, `layout`,
 and `structure`. Use uppercase rule codes in configuration.
 
+Rules with declared style options accept an `options` object. For example:
+
+```json
+{
+  "bigquerySQLFormatter.rules": {
+    "CP04": { "options": { "capitalisation_policy": "upper" } }
+  }
+}
+```
+
+CP04 accepts `lower` (the default), `upper`, or `consistent`. `consistent` follows
+the first boolean/null literal in the file; a mixed-case first literal selects
+lowercase. Strings, quoted identifiers, and comments are ignored. Group settings
+remain boolean toggles, not shared option defaults.
+
 For shared project settings, create `.bqsqlformatter.json`:
 
 ```json
@@ -88,7 +103,11 @@ Visual Studio Code settings field by field. Only that config is used; parent pro
 are not merged. Exclusion arrays replace rather than extend the editor list.
 Multi-root workspaces remain isolated. Without a workspace, only the SQL file's
 directory is checked. Settings and project-file changes revalidate open documents
-automatically. Invalid configuration produces a visible error.
+automatically. Options use the same `rules.CODE.options` shape in project files,
+and project values override individual option fields, retaining omitted editor
+values. Invalid configuration produces a visible error. Unknown options or
+invalid option values reset that rule's entire options object to its declared
+defaults, without disabling other settings or rules.
 
 SQL comments can suppress a line (`-- noqa` or `-- noqa: CV05, LT02`) or a
 file/region (`-- noqa: disable=CV05, LT02` followed by `-- noqa: enable=CV05`).

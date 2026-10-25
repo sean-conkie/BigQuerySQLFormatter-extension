@@ -75,6 +75,34 @@ precedence over ``enabled: true``.
 These controls affect diagnostics, quick fixes, Fix All, and formatting. Disabled rules
 do not count toward ``bigquerySQLFormatter.maxNumberOfProblems``.
 
+Rule options
+~~~~~~~~~~~~
+
+Rules declare their supported option names, types, allowed values, and defaults.
+Set these in a rule's ``options`` object in either VS Code settings or a project
+file. The VS Code settings schema offers completion and validation. Currently
+CP04 declares ``capitalisation_policy``:
+
+.. code-block:: json
+
+    {
+      "bigquerySQLFormatter.rules": {
+        "CP04": {
+          "options": { "capitalisation_policy": "upper" }
+        }
+      }
+    }
+
+``lower`` (default) requires lowercase boolean/null literals; ``upper`` requires
+uppercase. ``consistent`` follows the first matching token in the file. A
+mixed-case first token selects lowercase. Strings, quoted identifiers, and
+comments do not set the policy and are never changed. Options apply to
+diagnostics, quick fixes, Fix All, and formatting.
+
+Options are per-rule only; ``groups`` remains a set of boolean toggles and
+does not supply shared option defaults. Rules without declared options accept
+only an empty ``options`` object.
+
 Project configuration
 ~~~~~~~~~~~~~~~~~~~~~
 
@@ -99,17 +127,23 @@ own directory is checked. Non-file documents do not load project configuration.
 Only the nearest config is used; project configs do not inherit from each other.
 
 Project values override VS Code settings field by field, including individual
-rule fields and group toggles. ``exclude`` replaces the editor's exclusion list;
-use ``[]`` to clear it. Omitted fields retain their editor values. The problem
-limit must be a non-negative integer.
+rule fields, individual ``options`` fields, and group toggles. ``exclude``
+replaces the editor's exclusion list; use ``[]`` to clear it. Omitted fields
+retain their editor values. The problem limit must be a non-negative integer.
 
 Creating, editing, or deleting a config file in the workspace immediately
 revalidates open SQL files, as do VS Code setting changes. Invalid JSON, invalid
 rule settings, and unreadable configs report errors rather than silently
 falling back to another configuration.
 
-Rule-specific style options (indentation, comma position, capitalisation and
-quotes) and ``.sqlfluff`` compatibility are not currently supported.
+Unknown options, invalid option types/values, or a non-object ``options`` value
+produce the same visible configuration error, but reset only that rule's entire
+options object to its declared defaults. This also overrides inherited editor
+option values; other valid settings remain active. An empty ``options`` object
+retains inherited editor values.
+
+Other style options (indentation, comma position and quotes) and ``.sqlfluff``
+compatibility are not currently supported.
 
 Disable rules in SQL
 ~~~~~~~~~~~~~~~~~~~~

@@ -42,8 +42,35 @@
           "scope": "resource",
           "type": "object",
           "default": {},
-          "description": "Per-rule configuration. Set a rule code's enabled or severity fields; exclude lists disabled codes, and groups toggles rule families. The nearest .bqsqlformatter.json overrides these values.",
+          "description": "Per-rule configuration. Set enabled, severity, and supported options; exclude lists disabled codes, and groups toggles rule families. The nearest .bqsqlformatter.json overrides individual fields.",
           "properties": {
+            "CP04": {
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "default": true
+                },
+                "severity": {
+                  "type": "string",
+                  "enum": ["error", "warning", "information", "hint", "off"],
+                  "default": "warning"
+                },
+                "options": {
+                  "type": "object",
+                  "properties": {
+                    "capitalisation_policy": {
+                      "type": "string",
+                      "enum": ["lower", "upper", "consistent"],
+                      "default": "lower",
+                      "description": "Literal casing. Consistent follows the first matching literal; a mixed-case first literal selects lowercase."
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            },
             "exclude": {
               "type": "array",
               "items": {
@@ -78,7 +105,7 @@
             }
           },
           "patternProperties": {
-            "^(AL|AM|CP|CV|LT|ST)[0-9]{2}$": {
+            "^(?!CP04$)(AL|AM|CP|CV|LT|ST)[0-9]{2}$": {
               "type": "object",
               "properties": {
                 "enabled": {
@@ -95,6 +122,10 @@
                     "off"
                   ],
                   "default": "warning"
+                },
+                "options": {
+                  "type": "object",
+                  "additionalProperties": false
                 }
               },
               "additionalProperties": false

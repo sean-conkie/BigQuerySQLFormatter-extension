@@ -4,8 +4,108 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { defaultSettings, getProjectSettings, isRuleEnabled, mergeSettings, parseSettings } from '../settings';
+import { isValidOption, ruleOptionSchemas, type OptionDefinition } from '../ruleOptions';
+import manifest from '../../../package.json';
 
 describe('Rule configuration', () => {
+  it('keeps contributed option schemas aligned with rule declarations', () => {
+    const schema = manifest.contributes.configuration.properties['bigquerySQLFormatter.rules'];
+    const properties: Record<string, unknown> = schema.properties;
+    for (const [code, definitions] of Object.entries(ruleOptionSchemas)) {
+      expect(properties[code]).to.have.nested.property('properties.options.additionalProperties', false);
+      for (const [name, definition] of Object.entries(definitions)) {
+        expect(properties[code])
+          .to.have.nested.property(`properties.options.properties.${name}`)
+          .that.deep.includes(definition);
+      }
+      expect(Object.keys(schema.patternProperties).some((pattern) => new RegExp(pattern).test(code))).to.equal(false);
+    }
+  });
+
+  it('validates declared primitive types, enumerations and numeric constraints', () => {
+    const cases: [OptionDefinition, unknown, unknown][] = [
+      [{ type: 'boolean', default: true }, false, 'false'],
+      [{ type: 'integer', default: 2 }, 3, 1.5],
+      [{ type: 'number', default: 2 }, 1.5, Infinity],
+      [{ type: 'string', default: 'hello' }, 'world', 1],
+      [{ type: 'string', enum: ['a', 'b'], default: 'a' }, 'b', 'c'],
+    ];
+    for (const [definition, valid, invalid] of cases) {
+      expect(isValidOption(definition, valid)).to.equal(true);
+      expect(isValidOption(definition, invalid)).to.equal(false);
+    }
+  });
+
+  it('merges individual option fields without mutating editor settings', () => {
+    const editor = {
+      ...defaultSettings,
+      rules: { CP04: { severity: 'error' as const, options: { capitalisation_policy: 'upper' } } },
+    };
+    expect(mergeSettings(editor, parseSettings({ rules: { CP04: { options: {} } } })).rules?.CP04).to.deep.equal(
+      editor.rules.CP04,
+    );
+    expect(
+      mergeSettings(
+        editor,
+        parseSettings({
+          rules: { CP04: { options: { capitalisation_policy: 'consistent' } } },
+        }),
+      ).rules?.CP04,
+    ).to.deep.equal({
+      severity: 'error',
+      options: { capitalisation_policy: 'consistent' },
+    });
+    expect(editor.rules.CP04.options.capitalisation_policy).to.equal('upper');
+  });
+
+  for (const options of [
+    null,
+    [],
+    false,
+    { typo: 'upper' },
+    { capitalisation_policy: 'title' },
+    { capitalisation_policy: 1 },
+  ]) {
+    it(`reports invalid options and resets the rule to defaults: ${JSON.stringify(options)}`, () => {
+      const errors: string[] = [];
+      const result = parseSettings(
+        {
+          rules: { CP04: { severity: 'error', options }, CV05: { enabled: false } },
+        },
+        (message) => errors.push(message),
+      );
+      expect(errors).to.have.length(1);
+      expect(errors[0]).to.include('rules.CP04.options');
+      expect(result.rules).to.deep.equal({
+        CP04: { severity: 'error', options: { capitalisation_policy: 'lower' } },
+        CV05: { enabled: false },
+      });
+      expect(
+        mergeSettings(
+          {
+            ...defaultSettings,
+            rules: { CP04: { options: { capitalisation_policy: 'upper' } } },
+          },
+          result,
+        ).rules?.CP04?.options,
+      ).to.deep.equal({ capitalisation_policy: 'lower' });
+    });
+  }
+
+  it('rejects options not declared by a rule', () => {
+    const errors: string[] = [];
+    expect(
+      parseSettings(
+        {
+          rules: { CV05: { options: { capitalisation_policy: 'upper' } } },
+        },
+        (message) => errors.push(message),
+      ).rules?.CV05?.options,
+    ).to.deep.equal({});
+    expect(errors[0]).to.include('rules.CV05.options.capitalisation_policy');
+    expect(() => parseSettings({ rules: { CP04: { options: { unknown: true } } } })).to.throw();
+  });
+
   it('merges rule fields and group toggles without mutating settings; replaces exclusions', () => {
     const base = {
       ...defaultSettings,
@@ -152,5 +252,24 @@ describe('Project configuration discovery', () => {
     } catch (error) {
       expect(error).to.have.property('code', 'EISDIR');
     }
+  });
+
+  it('reports invalid project options with the file path and uses defaults over editor options', async () => {
+    const configPath = join(directory, '.bqsqlformatter.json');
+    await writeFile(configPath, '{"rules":{"CP04":{"options":{"capitalisation_policy":"title"}}}}');
+    const errors: string[] = [];
+    const project = await getProjectSettings(uri(join(directory, 'query.sql')), [uri(directory)], (message) =>
+      errors.push(message),
+    );
+    expect(errors[0]).to.include(configPath).and.include('rules.CP04.options.capitalisation_policy');
+    expect(
+      mergeSettings(
+        {
+          ...defaultSettings,
+          rules: { CP04: { options: { capitalisation_policy: 'upper' } } },
+        },
+        project,
+      ).rules?.CP04?.options,
+    ).to.deep.equal({ capitalisation_policy: 'lower' });
   });
 });

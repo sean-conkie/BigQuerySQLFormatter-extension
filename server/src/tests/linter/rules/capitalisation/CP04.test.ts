@@ -1,76 +1,107 @@
-/**
- * @fileoverview Test suite for LT13 module
- */
-
 import { expect } from 'chai';
+import { TextDocument } from 'vscode-languageserver-textdocument';
+import { CodeActionKind } from 'vscode-languageserver/node';
 import { defaultSettings } from '../../../../settings';
+import type { CapitalisationPolicy } from '../../../../ruleOptions';
 import { Literals } from '../../../../linter/rules/capitalisation/CP04';
 import { Parser } from '../../../../linter/parser';
+import { globalTokenCache } from '../../../../linter/parser/tokenCache';
 
 describe('Literals', () => {
+  const uri = 'literals.sql';
+  const otherUri = 'other-literals.sql';
+  const parser = new Parser();
   let instance: Literals;
 
   beforeEach(() => {
     instance = new Literals(defaultSettings, 0);
   });
 
-  it('should return null when rule is disabled', () => {
-    instance.enabled = false;
-    const result = instance.evaluate('test');
-    expect(result).to.be.null;
+  afterEach(() => {
+    instance.closeDocument(uri);
+    instance.closeDocument(otherUri);
+    globalTokenCache.delete(uri);
+    globalTokenCache.delete(otherUri);
   });
 
-  it('should return diagnostic when rule is enabled and pattern matches', () => {
-    instance.enabled = true;
-    const result = instance.evaluate('select NULL from table');
-    expect(result).to.deep.equal([
-      {
-        code: instance.diagnosticCode,
-        codeDescription: { href: instance.diagnosticCodeDescription },
-        message: instance.message,
-        severity: instance.severity,
-        range: {
+  async function evaluate(text: string) {
+    await parser.parse({ text, uri, languageId: 'googlesql', version: 1 });
+    return instance.evaluate(text, uri);
+  }
+
+  it('returns no diagnostics when disabled or no token cache is available', () => {
+    expect(instance.evaluate('select NULL;')).to.equal(null);
+    expect(instance.evaluate('select NULL;', uri)).to.equal(null);
+    instance.enabled = false;
+    expect(instance.evaluate('select NULL;', uri)).to.equal(null);
+    expect(
+      instance.createCodeAction(
+        { uri },
+        instance.createDiagnostic({
           start: { line: 0, character: 7 },
           end: { line: 0, character: 11 },
-        },
-        source: instance.source,
-      },
+        }),
+      ),
+    ).to.deep.equal([]);
+  });
+
+  it('checks mixed-case literals, but not substrings, comments, strings or quoted identifiers', async () => {
+    const diagnostics = await evaluate(
+      "select True, Null, fAlSe, true_value, NULLABLE, 'TRUE', `NULL`; -- FALSE\n/* Null */\nselect '''True\nNULL''';\n",
+    );
+    expect(diagnostics).to.have.length(3);
+    expect(diagnostics!.map((diagnostic) => globalTokenCache.get(uri)!.getText(diagnostic.range))).to.deep.equal([
+      'True',
+      'Null',
+      'fAlSe',
     ]);
   });
 
-  it('should return codeaction when rule is enabled and as used', async () => {
-    instance.enabled = true;
-    const parser = new Parser();
-    await parser.parse({ text: 'select NULL from table', uri: 'literals.sql', languageId: 'sql', version: 0 });
-    const diagnostics = instance.evaluate('select NULL from table');
-    const actions = instance.createCodeAction({ uri: 'literals.sql' }, diagnostics![0]);
-    expect(actions).to.deep.equal(
-      instance.codeActionKind.map((kind) => {
-        return {
-          title: instance.codeActionTitle,
-          edit: {
-            changes: {
-              'literals.sql': [
-                {
-                  newText: 'null',
-                  range: {
-                    start: { line: 0, character: 7 },
-                    end: { line: 0, character: 11 },
-                  },
-                },
-              ],
-            },
-          },
-          kind: kind,
-          diagnostics: diagnostics,
-        };
-      }),
-    );
-  });
+  for (const [policy, source, expected] of [
+    ['lower', 'select TRUE, Null, false;', 'select true, null, false;'],
+    ['upper', 'select true, Null, FALSE;', 'select TRUE, NULL, FALSE;'],
+    ['consistent', 'select TRUE, Null, false;', 'select TRUE, NULL, FALSE;'],
+    ['consistent', 'select true, NULL, False;', 'select true, null, false;'],
+    ['consistent', 'select True, NULL, false;', 'select true, null, false;'],
+  ] satisfies [CapitalisationPolicy, string, string][]) {
+    it(`provides quick fixes and Fix All for ${policy}: ${source}`, async () => {
+      instance = new Literals(
+        {
+          ...defaultSettings,
+          rules: { CP04: { options: { capitalisation_policy: policy } } },
+        },
+        0,
+      );
+      const diagnostics = await evaluate(source);
+      const edits = diagnostics!.map((diagnostic) => {
+        const actions = instance.createCodeAction({ uri }, diagnostic);
+        expect(actions.map((action) => action.kind)).to.have.members([
+          CodeActionKind.QuickFix,
+          CodeActionKind.SourceFixAll,
+        ]);
+        return actions[0].edit!.changes![uri][0];
+      });
+      expect(TextDocument.applyEdits(TextDocument.create(uri, 'googlesql', 1, source), edits)).to.equal(expected);
+      expect(await evaluate(expected)).to.equal(null);
+    });
+  }
 
-  it('should return null when rule is enabled but pattern does not match', () => {
-    instance.enabled = true;
-    const result = instance.evaluate('select null from table');
-    expect(result).to.be.null;
+  it('infers consistent casing afresh after edits and independently per document', async () => {
+    instance = new Literals(
+      {
+        ...defaultSettings,
+        rules: { CP04: { options: { capitalisation_policy: 'consistent' } } },
+      },
+      0,
+    );
+    expect(await evaluate('select TRUE, NULL;')).to.equal(null);
+    await parser.parse({ text: 'select true, null;', uri: otherUri, languageId: 'googlesql', version: 1 });
+    expect(instance.evaluate('select true, null;', otherUri)).to.equal(null);
+    expect(await evaluate('select TRUE, NULL;')).to.equal(null);
+    expect(await evaluate('select true, null;')).to.equal(null);
+    const diagnostics = await evaluate('-- TRUE\nselect null, TRUE;');
+    expect(diagnostics).to.have.length(1);
+    instance.closeDocument(uri);
+    expect(instance.createCodeAction({ uri }, diagnostics![0])).to.deep.equal([]);
   });
 });
