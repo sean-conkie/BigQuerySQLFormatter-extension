@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Add typed per-rule options with defaults, validation, editor schema completion,
+  and field-by-field project overrides. Invalid options report errors and reset
+  only that rule's options to defaults; changes apply without reloading.
+- Add CP04 `capitalisation_policy`: `lower` (default), `upper`, or `consistent`,
+  backed by a reusable token-scope capitalisation rule base with quick fixes,
+  Fix All, and formatting.
+
+### Fixed
+
+- Detect mixed-case boolean/null literals such as `True` and `Null` in CP04,
+  without matching identifier substrings, quoted identifiers, strings or comments.
+
 ## 0.4.0 - 2026-10-25
 
 ### Breaking changes

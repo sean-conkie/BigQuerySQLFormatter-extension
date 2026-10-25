@@ -16,6 +16,7 @@ import type { FileMap } from '../parser';
 import packageJson from '../../../package.json';
 import { getRegexMatchRanges } from './regex';
 import { globalTokenCache } from '../parser/tokenCache';
+import { ruleOptionSchemas, type OptionDefinitions } from '../../ruleOptions';
 
 /**
  * The version of the extension.
@@ -48,6 +49,10 @@ export abstract class Rule<T extends string | FileMap> {
   constructor(settings: ServerSettings, problems: number) {
     this.settings = settings;
     this.problems = problems;
+  }
+
+  get optionDefinitions(): OptionDefinitions {
+    return ruleOptionSchemas[this.code] ?? {};
   }
 
   abstract evaluate(test: T, documentUri: string | null): Diagnostic[] | null;

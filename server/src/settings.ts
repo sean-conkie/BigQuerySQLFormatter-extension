@@ -2,6 +2,7 @@ import type { _Connection } from 'vscode-languageserver/node';
 import { readFile } from 'node:fs/promises';
 import { dirname, join, relative, isAbsolute, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parseRuleOptions, type OptionValue } from './ruleOptions';
 
 export const ruleGroups = ['aliasing', 'ambiguous', 'capitalisation', 'convention', 'layout', 'structure'] as const;
 export type RuleGroup = (typeof ruleGroups)[number];
@@ -10,6 +11,7 @@ export type Severity = 'error' | 'warning' | 'information' | 'hint' | 'off';
 export interface RuleConfiguration {
   enabled?: boolean;
   severity?: Severity;
+  options?: Record<string, OptionValue>;
 }
 export type RulesSettings = Partial<Record<RuleCode, RuleConfiguration>> & {
   exclude?: string[];
@@ -44,7 +46,12 @@ function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-export function parseSettings(value: unknown): Partial<ServerSettings> {
+export function parseSettings(
+  value: unknown,
+  reportOptionError: (message: string) => void = (message) => {
+    throw new Error(message);
+  },
+): Partial<ServerSettings> {
   if (!isObject(value)) throw new Error('Configuration must be an object');
   const { maxNumberOfProblems, rules } = value;
   if (
@@ -94,6 +101,8 @@ export function parseSettings(value: unknown): Partial<ServerSettings> {
             optionValue === 'off')
         ) {
           config.severity = optionValue;
+        } else if (option === 'options') {
+          config.options = parseRuleOptions(key, optionValue, reportOptionError);
         } else {
           throw new Error(`Invalid rules.${key}.${option}`);
         }
@@ -113,6 +122,9 @@ export function mergeSettings(base: ServerSettings, overrides: Partial<ServerSet
     if (/^(AL|AM|CP|CV|LT|ST)\d{2}$/.test(key)) {
       const code = key as RuleCode;
       result.rules[code] = { ...base.rules?.[code], ...overrides.rules?.[code] };
+      if (base.rules?.[code]?.options || overrides.rules?.[code]?.options) {
+        result.rules[code].options = { ...base.rules?.[code]?.options, ...overrides.rules?.[code]?.options };
+      }
     }
   }
   if (base.rules?.groups || overrides.rules?.groups) {
@@ -135,6 +147,7 @@ export function isRuleEnabled(settings: ServerSettings, code: string, group: str
 export async function getProjectSettings(
   resource: string,
   workspaceUris: readonly string[],
+  reportOptionError?: (message: string) => void,
 ): Promise<Partial<ServerSettings>> {
   if (!resource.startsWith('file:')) return {};
   let directory = dirname(fileURLToPath(resource));
@@ -165,7 +178,10 @@ export async function getProjectSettings(
       ) {
         throw new Error('Expected an object containing rules and/or maxNumberOfProblems');
       }
-      return parseSettings(value);
+      return parseSettings(value, (message) => {
+        if (reportOptionError) reportOptionError(`Invalid ${configPath}: ${message}`);
+        else throw new Error(message);
+      });
     } catch (error) {
       throw new Error(`Invalid ${configPath}: ${error instanceof Error ? error.message : String(error)}`);
     }
@@ -187,6 +203,7 @@ export function getDocumentSettings(
   globalSettings: ServerSettings,
   hasConfigurationCapability: boolean,
   workspaceUris: readonly string[] = [],
+  reportOptionError?: (message: string) => void,
 ): Thenable<ServerSettings> {
   let result = documentSettings.get(resource);
   if (!result) {
@@ -199,10 +216,11 @@ export function getDocumentSettings(
                 scopeUri: resource,
                 section: 'bigquerySQLFormatter',
               })) ?? {},
+              reportOptionError,
             ),
           )
         : globalSettings;
-      return mergeSettings(settings, await getProjectSettings(resource, workspaceUris));
+      return mergeSettings(settings, await getProjectSettings(resource, workspaceUris, reportOptionError));
     })();
     documentSettings.set(resource, result);
   }

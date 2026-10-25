@@ -178,6 +178,12 @@ line-ending style; opening or linting a document does not rewrite its line endin
 3. Register the class in that family's `rules.ts`. The central `ruleRegistry`
    in `server/src/linter/rules/rules.ts` assembles the families; each rule code
    must be unique.
+   For configurable rules, declare option types, enums, and defaults in
+   `server/src/ruleOptions.ts` and add the rule code to `ruleOptionSchemas`.
+   Mirror that declaration in the manifest's explicit rule property, excluding
+   the code from the generic rule pattern. The schema alignment test guards
+   against drift. Capitalisation rules can reuse `CapitalisationRule` and the
+   shared policy declaration.
 4. Add tests under `server/src/tests/linter/rules/`. Cover compliant and
    noncompliant SQL, comments and literals, settings and suppression, nested
    queries, and exact diagnostic ranges. For fixes, test edit application,

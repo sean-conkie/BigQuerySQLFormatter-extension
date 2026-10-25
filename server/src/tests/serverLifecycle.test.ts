@@ -24,6 +24,8 @@ import {
   DocumentFormattingRequest,
   DocumentRangeFormattingRequest,
   type CodeAction,
+  ShowMessageNotification,
+  type ShowMessageParams,
 } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { defaultSettings, type ServerSettings } from '../settings';
@@ -108,6 +110,114 @@ describe('Language server validation queue', function () {
     expect(
       await connection.sendRequest(DocumentFormattingRequest.type, { textDocument: { uri }, options }),
     ).to.deep.equal([]);
+  });
+
+  it('revalidates live option changes and project overrides without reopening documents', async () => {
+    await connection.sendRequest(InitializeRequest.type, {
+      processId: process.pid,
+      capabilities: {},
+      rootUri: pathToFileURL(testDirectory).href,
+    });
+    const setEditorPolicy = (policy: string) =>
+      connection.sendNotification('workspace/didChangeConfiguration', {
+        settings: {
+          bigquerySQLFormatter: {
+            rules: { CP04: { severity: 'error', options: { capitalisation_policy: policy } } },
+          },
+        },
+      });
+    await setEditorPolicy('upper');
+    await connection.sendNotification(DidOpenTextDocumentNotification.type, {
+      textDocument: { uri, languageId: 'googlesql', version: 1, text: 'select TRUE, null;\n' },
+    });
+    const literalDiagnostics = async () =>
+      (await nextDiagnostics()).diagnostics.filter((diagnostic) => String(diagnostic.code).startsWith('CP04:'));
+    let diagnostics = await literalDiagnostics();
+    expect(diagnostics.map((diagnostic) => diagnostic.range.start.character)).to.deep.equal([13]);
+    expect(diagnostics[0].severity).to.equal(DiagnosticSeverity.Error);
+
+    await setEditorPolicy('lower');
+    expect((await literalDiagnostics()).map((diagnostic) => diagnostic.range.start.character)).to.deep.equal([7]);
+
+    const configPath = path.join(testDirectory, '.bqsqlformatter.json');
+    const notifyProject = (type: number) =>
+      connection.sendNotification('workspace/didChangeWatchedFiles', {
+        changes: [{ uri: pathToFileURL(configPath).href, type }],
+      });
+    await writeFile(configPath, '{"rules":{"CP04":{"options":{"capitalisation_policy":"upper"}}}}');
+    await notifyProject(1);
+    diagnostics = await literalDiagnostics();
+    expect(diagnostics.map((diagnostic) => diagnostic.range.start.character)).to.deep.equal([13]);
+    expect(diagnostics[0].severity).to.equal(DiagnosticSeverity.Error);
+    await writeFile(configPath, '{"rules":{"CP04":{"options":{"capitalisation_policy":"lower"}}}}');
+    await notifyProject(2);
+    expect((await literalDiagnostics()).map((diagnostic) => diagnostic.range.start.character)).to.deep.equal([7]);
+    await setEditorPolicy('upper');
+    expect((await literalDiagnostics()).map((diagnostic) => diagnostic.range.start.character)).to.deep.equal([7]);
+    await rm(configPath);
+    await notifyProject(3);
+    expect((await literalDiagnostics()).map((diagnostic) => diagnostic.range.start.character)).to.deep.equal([13]);
+  });
+
+  it('reports invalid resource-scoped and project options visibly while continuing with defaults', async () => {
+    let policy = 'upper';
+    connection.onRequest('workspace/configuration', () => [
+      {
+        rules: { CP04: { options: { capitalisation_policy: policy } } },
+      },
+    ]);
+    await connection.sendRequest(InitializeRequest.type, {
+      processId: process.pid,
+      capabilities: { workspace: { configuration: true } },
+      rootUri: pathToFileURL(testDirectory).href,
+    });
+    await connection.sendNotification(InitializedNotification.type, {});
+    await connection.sendNotification(DidOpenTextDocumentNotification.type, {
+      textDocument: { uri, languageId: 'googlesql', version: 1, text: 'select TRUE, null;\n' },
+    });
+    const literalPositions = async () =>
+      (await nextDiagnostics()).diagnostics
+        .filter((diagnostic) => String(diagnostic.code).startsWith('CP04:'))
+        .map((diagnostic) => diagnostic.range.start.character);
+    expect(await literalPositions()).to.deep.equal([13]);
+
+    for (const source of ['editor', 'project']) {
+      let resolveMessage!: (params: ShowMessageParams) => void;
+      const message = new Promise<ShowMessageParams>((resolve) => {
+        resolveMessage = resolve;
+      });
+      const listener = connection.onNotification(ShowMessageNotification.type, resolveMessage);
+      try {
+        if (source === 'editor') {
+          policy = 'invalid';
+          await connection.sendNotification('workspace/didChangeConfiguration', { settings: {} });
+        } else {
+          const configPath = path.join(testDirectory, '.bqsqlformatter.json');
+          await writeFile(configPath, '{"rules":{"CP04":{"options":{"unknown":true}}}}');
+          await connection.sendNotification('workspace/didChangeWatchedFiles', {
+            changes: [{ uri: pathToFileURL(configPath).href, type: 1 }],
+          });
+        }
+        const error = await message;
+        expect(error.type).to.equal(MessageType.Error);
+        expect(error.message).to.include('rules.CP04.options').and.include('using rule option defaults');
+        if (source === 'project') expect(error.message).to.include('.bqsqlformatter.json');
+        expect(await literalPositions()).to.deep.equal([7]);
+      } finally {
+        listener.dispose();
+      }
+      policy = 'upper';
+      if (source === 'editor') {
+        await connection.sendNotification('workspace/didChangeConfiguration', { settings: {} });
+        expect(await literalPositions()).to.deep.equal([13]);
+      }
+    }
+    const document = TextDocument.create(uri, 'googlesql', 1, 'select TRUE, null;\n');
+    const edits = await connection.sendRequest(DocumentFormattingRequest.type, {
+      textDocument: { uri },
+      options: { tabSize: 2, insertSpaces: true },
+    });
+    expect(TextDocument.applyEdits(document, edits ?? [])).to.equal('select true, null;\n');
   });
 
   it('validates edits and clears diagnostics, completions, and hover on close', async () => {
