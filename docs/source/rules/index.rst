@@ -39,6 +39,7 @@ Ambiguous rules are guidelines that help developers avoid ambiguity and improve 
 	Rule: Avoid Using `select *` <ambiguous/AM04>
 	Rule: Use Explicit INNER JOIN <ambiguous/AM05>
 	Rule: Use Consistent GROUP BY/ORDER BY References <ambiguous/AM06>
+	Rule: Set Queries Must Select Matching Columns <ambiguous/AM07>
 
 .. _capitalisation-rules:
 

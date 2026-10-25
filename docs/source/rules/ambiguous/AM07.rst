@@ -1,0 +1,24 @@
+===============================================
+Rule: Set Queries Must Select Matching Columns
+===============================================
+
+**Rule Code:** ``AM07``
+
+**Name:** ``set_columns``
+
+Positional UNION, INTERSECT, and EXCEPT branches must produce the same number
+of columns. Use explicit select lists wherever possible.
+
+.. code-block:: sql
+
+    SELECT a, b FROM first_table
+    UNION ALL
+    SELECT c, d FROM second_table;
+
+Nested queries and CTEs are checked independently. Wildcards from a single CTE
+can be counted when its select list is known. Unknown external table schemas
+are not guessed; AM04 separately discourages wildcards. BY NAME and
+CORRESPONDING operations are excluded from positional comparison.
+
+No automatic fix is offered: adding or removing result columns requires a
+decision about the query's meaning.
