@@ -86,6 +86,10 @@ to install it into the isolated test profile and run diagnostics tests against
 its packaged contents instead of the source checkout. CI uses this mode on all
 three operating systems.
 
+The test runner waits for native workbench contributions, including save
+participants, through the Visual Studio Code smoke-test driver before running
+tests. Its debugging and readiness endpoints bind only to the loopback interface.
+
 ## Packaging and release
 
 Packaging type-checks and bundles the extension through the VSCE prepublish hook.
