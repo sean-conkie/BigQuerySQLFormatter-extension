@@ -6,13 +6,80 @@ import * as path from 'node:path';
 import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
+import { createServer } from 'node:http';
+import { once } from 'node:events';
 
 import { runTests, runVSCodeCommand } from '@vscode/test-electron';
+
+async function waitForWorkbench(userDataDir: string): Promise<void> {
+  const port = (await readFile(path.join(userDataDir, 'DevToolsActivePort'), 'utf8')).split('\n')[0];
+  const response = await fetch(`http://127.0.0.1:${port}/json/list`);
+  if (!response.ok) throw new Error(`Cannot discover the test workbench: HTTP ${response.status}`);
+  const targets: unknown = await response.json();
+  if (!Array.isArray(targets)) throw new Error('The test debugger did not return a target list');
+  const pages = targets.filter(
+    (target: unknown): target is { webSocketDebuggerUrl: string } =>
+      typeof target === 'object' &&
+      target !== null &&
+      'type' in target &&
+      target.type === 'page' &&
+      'url' in target &&
+      typeof target.url === 'string' &&
+      target.url.includes('/workbench') &&
+      'webSocketDebuggerUrl' in target &&
+      typeof target.webSocketDebuggerUrl === 'string',
+  );
+  if (pages.length !== 1) throw new Error(`Expected one test workbench, found ${pages.length}`);
+
+  const socket = new WebSocket(pages[0].webSocketDebuggerUrl);
+  const signal = AbortSignal.timeout(30000);
+  try {
+    await once(socket, 'open', { signal });
+    const completed = once(socket, 'message', { signal });
+    socket.send(
+      JSON.stringify({
+        id: 1,
+        method: 'Runtime.evaluate',
+        params: {
+          expression: 'window.driver.whenWorkbenchRestored().then(() => true)',
+          awaitPromise: true,
+          returnByValue: true,
+        },
+      }),
+    );
+    const [event] = await completed;
+    const result: {
+      id?: number;
+      error?: { message: string };
+      result?: { exceptionDetails?: { text: string }; result?: { value?: boolean } };
+    } = JSON.parse(String(event.data));
+    if (result.id !== 1 || result.error || result.result?.exceptionDetails || result.result?.result?.value !== true) {
+      throw new Error(`Workbench initialization failed: ${JSON.stringify(result)}`);
+    }
+  } finally {
+    socket.close();
+  }
+}
 
 async function main() {
   // Keep the profile path short enough for macOS IPC sockets and isolate test settings.
   const testProfile = await mkdtemp(path.join(tmpdir(), 'bqsql-'));
+  const userDataDir = path.join(testProfile, 'user');
+  const readiness = createServer((_request, response) => {
+    waitForWorkbench(userDataDir).then(
+      () => response.end('Workbench contributions ready'),
+      (error: Error) => {
+        console.error('Cannot initialize the test workbench', error);
+        response.statusCode = 500;
+        response.end(error.message);
+      },
+    );
+  });
   try {
+    readiness.listen(0, '127.0.0.1');
+    await once(readiness, 'listening');
+    const address = readiness.address();
+    if (!address || typeof address === 'string') throw new Error('Cannot determine the test readiness port');
     // The folder containing the Extension Manifest package.json
     // Passed to `--extensionDevelopmentPath`
     let extensionDevelopmentPath = path.resolve(__dirname, '../../../');
@@ -49,10 +116,14 @@ async function main() {
       version,
       extensionDevelopmentPath,
       extensionTestsPath,
+      extensionTestsEnv: { BQSQL_TEST_WORKBENCH_URL: `http://127.0.0.1:${address.port}` },
       launchArgs: [
         path.resolve(__dirname, '../../testFixture'),
         '--disable-extensions',
         '--disable-workspace-trust',
+        '--enable-smoke-test-driver',
+        '--remote-debugging-port=0',
+        '--remote-debugging-address=127.0.0.1',
         '--log=trace',
         `--user-data-dir=${path.join(testProfile, 'user')}`,
         `--extensions-dir=${path.join(testProfile, 'extensions')}`,
@@ -72,6 +143,7 @@ async function main() {
     }
     throw error;
   } finally {
+    await new Promise<void>((resolve, reject) => readiness.close((error) => (error ? reject(error) : resolve())));
     await rm(testProfile, {
       recursive: true,
       force: true,
