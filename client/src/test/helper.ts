@@ -19,14 +19,27 @@ export async function activate(docUri: vscode.Uri) {
 export function waitForDiagnostics(
   docUri: vscode.Uri,
   matches: (diagnostics: readonly vscode.Diagnostic[]) => boolean,
+  phase = 'diagnostics',
 ): Promise<readonly vscode.Diagnostic[]> {
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
       subscription.dispose();
+      const document = vscode.workspace.textDocuments.find((entry) => entry.uri.toString() === docUri.toString());
+      const settings = vscode.workspace.getConfiguration('editor', document);
       reject(
         new Error(
-          `Timed out waiting for diagnostics for ${docUri.toString()}: ${JSON.stringify(
+          `Timed out waiting for ${phase} for ${docUri.toString()}: ${JSON.stringify(
             vscode.languages.getDiagnostics(docUri),
+          )}; document=${JSON.stringify(
+            document && {
+              text: document.getText(),
+              version: document.version,
+              dirty: document.isDirty,
+              language: document.languageId,
+              formatter: settings.get('defaultFormatter'),
+              formatOnSave: settings.get('formatOnSave'),
+              formatOnSaveMode: settings.get('formatOnSaveMode'),
+            },
           )}`,
         ),
       );
@@ -35,13 +48,19 @@ export function waitForDiagnostics(
       if (!event.uris.some((uri) => uri.toString() === docUri.toString())) {
         return;
       }
+      checkDiagnostics();
+    });
+    const checkDiagnostics = () => {
       const diagnostics = vscode.languages.getDiagnostics(docUri);
       if (matches(diagnostics)) {
         clearTimeout(timeout);
         subscription.dispose();
         resolve(diagnostics);
       }
-    });
+    };
+    // Unchanged diagnostics need not emit another event. Subscribe before checking
+    // the current state so a publication cannot be missed between those steps.
+    checkDiagnostics();
   });
 }
 
