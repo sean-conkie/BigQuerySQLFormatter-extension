@@ -3,8 +3,8 @@
 ## Getting started
 
 Use Node.js 22.12 or newer in the Node.js 22 release line and Visual Studio Code
-1.91 or newer. LSP client/server 10 requires that VS Code minimum. API types are
-pinned to 1.91.0 so compilation cannot silently use newer APIs.
+1.91 or newer. LSP client/server 10 requires that Visual Studio Code minimum.
+API types are pinned to 1.91.0 so compilation cannot silently use newer APIs.
 
 ```sh
 npm ci
@@ -14,9 +14,9 @@ npm run watch
 
 The root install also installs locked client and server dependencies.
 Watch mode watches TypeScript types and esbuild bundles. Open this repository in
-VS Code, choose **Run > Start Debugging**, and use an Extension Development Host
+Visual Studio Code, choose **Run > Start Debugging**, and use an Extension Development Host
 launch configuration with `--extensionDevelopmentPath` pointing to this checkout.
-If no launch configuration exists, select **VS Code Extension Development** when
+If no launch configuration exists, select `VS Code Extension Development` when
 creating one. Open a `.bqsql` file in the development host to exercise the extension.
 
 ## Checks
@@ -71,14 +71,14 @@ cases, diagnostic limits, and overlapping fix-all edits while preserving
 individual quick fixes.
 
 `npm run citest` runs server tests followed by client end-to-end tests. These
-download and launch VS Code and require a display. On headless Linux:
+download and launch Visual Studio Code and require a display. On headless Linux:
 
 ```sh
 xvfb-run -a npm run citest
 ```
 
 Packaging and end-to-end CI run on Linux, macOS, and Windows. End-to-end CI covers
-both VS Code 1.91.0 and stable. Set `BQSQL_TEST_VSCODE_VERSION=1.91.0` to run the
+both Visual Studio Code 1.91.0 and stable. Set `BQSQL_TEST_VSCODE_VERSION=1.91.0` to run the
 minimum-version tests locally.
 
 Set `BQSQL_TEST_VSIX` to the absolute path of a VSIX when running `npm run citest`
@@ -101,8 +101,8 @@ root SQL scratch files. `npm run package:check` checks the file list for
 regressions and verifies that grammar JSON, Oniguruma Wasm, extension entry
 points, and the Marketplace icon are preserved.
 
-The README is the Marketplace page; keep contributor details here and use
-absolute GitHub links when linking here from the README.
+The readme is the Marketplace page; keep contributor details here and use
+absolute GitHub links when linking here from the readme.
 
 Release publishing uses Node.js 22 and the locked local `@vscode/vsce`
 dependency in `.github/workflows/publish.yml`, with `VSCE_PAT` supplied by the
@@ -120,7 +120,7 @@ Node types stay on 22.x. Chai and sinon-chai major upgrades are deferred until
 the assertion test harness migrates to ESM. The unused `@vscode/test-cli`
 dependency has been removed; end-to-end tests use `@vscode/test-electron` directly.
 Server tests use Mocha 12; the client test runner uses Mocha 11 so it also works
-with the older embedded Node.js in the minimum supported VS Code version.
+with the older embedded Node.js in the minimum supported Visual Studio Code version.
 Client-only Mocha overrides select patched `diff` and `serialize-javascript`
 versions until the compatible runner incorporates those updates upstream.
 
@@ -166,7 +166,7 @@ line-ending style; opening or linting a document does not rewrite its line endin
 
 ## Adding a rule
 
-1. Use `.github/ISSUE_TEMPLATE/rule.md` to describe the rule code, anti-pattern,
+1. Use `.github/ISSUE_TEMPLATE/rule.md` to describe the rule code, antipattern,
    and best practice.
 2. Add the implementation under the appropriate rule family in
    `server/src/linter/rules/`. Reuse `RegexRule`, `RegexReplaceRule`, or
