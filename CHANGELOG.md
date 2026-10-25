@@ -2,6 +2,8 @@
 
 ## Unreleased - 0.4.0
 
+- Add LT07 with fixes for multiline CTE closing-bracket layout.
+
 - Add CV06 with fixes for attached statement terminators and newlines.
 
 - Add AM07 to compare statically known column counts across set-query branches.
