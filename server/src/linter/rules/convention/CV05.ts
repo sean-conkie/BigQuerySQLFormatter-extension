@@ -21,7 +21,7 @@ export class IsNull extends RegexRule {
   readonly message: string = 'Comparisons with NULL should use “IS” or “IS NOT”.';
   readonly relatedInformation: string =
     'Using `=` or `!=` to compare a column with `NULL` is an anti-pattern because these operators do not behave as expected with `NULL` values.';
-  readonly pattern: RegExp = /(?<target>!?=)\s*?null/gim;
+  readonly pattern: RegExp = /(?<target>!?=)\s*?null\b/gim;
   readonly severity: DiagnosticSeverity = DiagnosticSeverity.Warning;
   readonly ruleGroup: string = 'convention';
   readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];

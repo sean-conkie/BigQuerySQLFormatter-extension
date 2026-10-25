@@ -832,6 +832,9 @@ export class ObjectAST extends AST {
  * The abstract syntax tree for the SQL code
  */
 export class StatementAST extends AST {
+  // These queries retain their source tokens instead of using the SELECT-only clause model.
+  hasExtendedQuerySyntax: boolean = false;
+  pipeStages: { operator: string; depth: number; tokens: Token[] }[] = [];
   with: StatementAST | null = null;
   type: StatementType | null = StatementType.SELECT;
   object: ObjectAST | null = null;

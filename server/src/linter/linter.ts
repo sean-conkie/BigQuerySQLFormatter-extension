@@ -27,6 +27,9 @@ interface Directive extends Range {
 
 export const sourceFixAllKind = `${CodeActionKind.SourceFixAll}.bigquerySQLFormatter`;
 
+// Clause/SELECT-based rules must opt in once they understand pipe, graph and pattern queries.
+const extendedQuerySafeRules = new Set(['CP04', 'CV01', 'CV02', 'CV04', 'CV05', 'CV13', 'LT01', 'LT12', 'LT13']);
+
 function comparePositions(a: Position, b: Position): number {
   return a.line - b.line || a.character - b.character;
 }
@@ -102,10 +105,14 @@ export class Linter {
     const diagnostics: Diagnostic[] = [];
     const cache = globalTokenCache.get(uri)!;
     const text = cache.getText();
+    const extendedQueries = Object.values(ast).filter((statement) => statement.hasExtendedQuerySyntax);
+    const traditionalAst = Object.fromEntries(
+      Object.entries(ast).filter(([, statement]) => !statement.hasExtendedQuerySyntax),
+    );
     for (const rule of [...this.parserRules, ...this.regexRules]) {
       await yieldToEventLoop(token);
       if (!this.isRuleEnabled(rule)) continue;
-      const result = rule.evaluate(rule.type === RuleType.PARSER ? ast : text, uri);
+      const result = rule.evaluate(rule.type === RuleType.PARSER ? traditionalAst : text, uri);
       if (result) {
         const severity = this.settings.rules?.[rule.code as RuleCode]?.severity;
         const severities = {
@@ -116,7 +123,23 @@ export class Linter {
         };
         diagnostics.push(
           ...result
-            .filter((diagnostic) => rule.type === RuleType.PARSER || cache.isCodeRange(diagnostic.range))
+            .filter((diagnostic) => {
+              if (rule.type !== RuleType.PARSER && !cache.isCodeRange(diagnostic.range)) return false;
+              if (extendedQuerySafeRules.has(rule.code)) return true;
+              return !extendedQueries.some((statement) => {
+                const first = statement.tokens[0];
+                const last = statement.tokens[statement.tokens.length - 1];
+                if (first.lineNumber === null || last.lineNumber === null) {
+                  throw new Error('Extended query tokens have no line number');
+                }
+                const start = { line: first.lineNumber, character: first.startIndex };
+                const end = { line: last.lineNumber, character: last.endIndex };
+                return (
+                  comparePositions(diagnostic.range.start, end) <= 0 &&
+                  comparePositions(diagnostic.range.end, start) >= 0
+                );
+              });
+            })
             .map((diagnostic) => ({
               ...diagnostic,
               severity: severity && severity !== 'off' ? severities[severity] : diagnostic.severity,

@@ -191,6 +191,17 @@ when incomplete SQL causes the highlighting grammar to lose scopes. Shared CTE
 navigation lives in `server/src/linter/rules/queries.ts`. Fixable source rules
 cache edits per document and diagnostic range and clear them on close.
 
+Pipe queries, pattern recognition, graph queries and temporal table references
+retain their complete source tokens in the AST. Pipe stages record their operator,
+nesting depth and tokens. Until structural rules understand these constructs,
+statements containing them are excluded from the traditional SELECT AST passed
+to rules, and their structural diagnostics/fixes are suppressed. This includes
+an enclosing traditional query when the new syntax occurs inside a CTE or subquery.
+The explicit syntax-independent rule allow-list in `server/src/linter/linter.ts`
+keeps CP04, CV01, CV02, CV04, CV05, CV13, LT01, LT12 and LT13 active. Extend that
+list only with corpus tests showing safe diagnostics and idempotent fixes.
+Statements elsewhere in the same document continue to receive all enabled checks.
+
 LF, CRLF, and CR line endings are normalized internally for consistent
 diagnostics and edit ranges. Generated quick fixes use the document's original
 line-ending style; opening or linting a document does not rewrite its line endings.
