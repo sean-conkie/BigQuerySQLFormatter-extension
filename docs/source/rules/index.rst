@@ -35,6 +35,7 @@ Ambiguous rules are guidelines that help developers avoid ambiguity and improve 
 	:maxdepth: 1
 
 	Rule: Do Not Use `DISTINCT` with `GROUP BY` <ambiguous/AM01>
+	Rule: Specify DISTINCT or ALL After UNION <ambiguous/AM02>
 	Rule: Avoid Using `select *` <ambiguous/AM04>
 
 .. _capitalisation-rules:
@@ -69,7 +70,7 @@ By applying convention rules, teams can create a more collaborative and coherent
 	Rule: Use `count(1)` to Express “Count Number of Rows” <convention/CV04>
 	Rule: Comparisons with `NULL` Should Use `IS` or `IS NOT` <convention/CV05>
 	Rule: Use LEFT join Instead of RIGHT join <convention/CV08>
-	Rule: `UNION` and `EXCEPT` Must Be Followed by `ALL` or `DISTINCT` <convention/CV12>
+	Rule: EXCEPT and INTERSECT Must Be Followed by DISTINCT <convention/CV12>
 	Rule: Use Spaces for Indentation, Not Tabs <convention/CV13>
 
 .. _layout-rules:

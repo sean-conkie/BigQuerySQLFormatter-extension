@@ -1,72 +1,18 @@
-==================================================================
-Rule: `UNION` and `EXCEPT` Must Be Followed by `ALL` or `DISTINCT`
-==================================================================
+================================================================================
+Rule: EXCEPT and INTERSECT Must Be Followed by DISTINCT
+================================================================================
 
 **Rule Code:** ``CV12``
 
 **Name:** ``all_distinct``
 
-Overview
---------
-
-In BigQuery SQL, when using set operators such as `UNION` and `EXCEPT`, the query must explicitly specify whether `ALL` or `DISTINCT` should be applied. This ensures that the intent of the operation is clear, defining whether all rows are retained (`ALL`) or if duplicates are removed (`DISTINCT`). Failing to specify either `ALL` or `DISTINCT` results in invalid syntax. The requirement to use `ALL` or `DISTINCT` for `UNION` and `EXCEPT` helps clarify the behavior of the set operation and ensures that the query behaves consistently across different environments.
-
-Explanation
------------
-
-Anti-pattern: Omitting `ALL` or `DISTINCT` in Set Operators
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-When using `UNION` or `EXCEPT` without explicitly specifying `ALL` or `DISTINCT`, the query is invalid in BigQuery SQL. This ambiguity in the set operation can lead to confusion or unexpected behavior, as the result set will either retain all rows (`ALL`) or remove duplicates (`DISTINCT`) based on the set operator used. 
-
-**Example of Invalid `UNION` or `EXCEPT` Without `ALL` or `DISTINCT` (Anti-pattern):**
+GoogleSQL requires an explicit ``DISTINCT`` modifier for EXCEPT and INTERSECT.
 
 .. code-block:: sql
 
-    select col1
-      from table1
-    union
-    select col1
-      from table2;
+    SELECT a FROM first_table
+    EXCEPT DISTINCT
+    SELECT b FROM second_table;
 
-In this example, the `UNION` operation is missing the required `ALL` or `DISTINCT` keyword, making the query invalid.
-
-Best Practice: Always Specify `ALL` or `DISTINCT` After Set Operators
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-To ensure that the query is valid and behaves as expected, it is essential to explicitly specify `ALL` or `DISTINCT` after `UNION` and `EXCEPT`. This makes the intent of the query clear, defining whether the operation should retain all rows or remove duplicates.
-
-**Refactored Example with `ALL` Specified (Best Practice):**
-
-.. code-block:: sql
-
-    select col1
-      from table1
-    union all
-    select col1
-      from table2;
-
-In this refactored example, the `UNION ALL` operation is used to specify that all rows should be retained in the result set, ensuring the query is valid and the behavior is clear.
-
-**Refactored Example with `DISTINCT` Specified (Best Practice):**
-
-.. code-block:: sql
-
-    select col1
-      from table1
-    except distinct
-    select col1
-      from table2;
-
-In this example, `EXCEPT DISTINCT` is used to ensure that duplicates are removed from the result set, which clarifies the intent of the query.
-
-Conclusion
-----------
-
-In BigQuery SQL, the `UNION` and `EXCEPT` set operators must be followed by `ALL` or `DISTINCT` to ensure clarity and correctness. Specifying `ALL` retains all rows, while `DISTINCT` removes duplicates. By following this rule, developers ensure that their queries are valid and behave consistently across different SQL environments.
-
-Groups:
--------
-
-- `all <../..>`_
-- `convention <../..#convention-rules>`_
+Since 0.4.0, UNION modifiers are checked by :doc:`../ambiguous/AM02`.
+Move UNION-specific CV12 configuration and suppressions to AM02.
