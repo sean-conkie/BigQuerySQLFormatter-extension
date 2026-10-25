@@ -44,6 +44,7 @@ describe('Document line endings', () => {
       expect(diagnostics.map((diagnostic) => String(diagnostic.code).split(':')[0])).to.have.members([
         'AL01',
         'CV05',
+        'CV06',
         'LT01',
         'LT12',
       ]);

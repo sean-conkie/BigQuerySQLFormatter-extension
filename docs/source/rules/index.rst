@@ -72,6 +72,7 @@ By applying convention rules, teams can create a more collaborative and coherent
 	Rule: Select Statements Should Not Include a Trailing Comma <convention/CV03>
 	Rule: Use `count(1)` to Express “Count Number of Rows” <convention/CV04>
 	Rule: Comparisons with `NULL` Should Use `IS` or `IS NOT` <convention/CV05>
+	Rule: End Statements with a Semicolon and Newline <convention/CV06>
 	Rule: Use LEFT join Instead of RIGHT join <convention/CV08>
 	Rule: EXCEPT and INTERSECT Must Be Followed by DISTINCT <convention/CV12>
 	Rule: Use Spaces for Indentation, Not Tabs <convention/CV13>
