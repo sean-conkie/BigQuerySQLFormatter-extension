@@ -84,7 +84,18 @@ suite('Language server diagnostics', () => {
         (diagnostics) => !hasRule(diagnostics, 'CP04') && !hasRule(diagnostics, 'CV05'),
         'manual formatting diagnostics',
       );
-      await vscode.commands.executeCommand('editor.action.formatDocument');
+      const formatted = await vscode.commands.executeCommand<vscode.TextEdit[]>(
+        'vscode.executeFormatDocumentProvider',
+        uri,
+        { tabSize: 2, insertSpaces: true },
+      );
+      assert.ok(formatted.length > 0);
+      assert.equal(
+        await editor.edit((edit) => {
+          for (const replacement of formatted) edit.replace(replacement.range, replacement.newText);
+        }),
+        true,
+      );
       assert.equal(editor.document.getText(), 'select a is null;\nselect b is null;\n');
       await manuallyFormatted;
       const second = await vscode.commands.executeCommand<vscode.TextEdit[] | undefined>(
