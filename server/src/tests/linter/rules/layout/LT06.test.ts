@@ -21,6 +21,25 @@ describe('Functions', () => {
     expect(result).to.be.null;
   });
 
+  for (const name of ['ai.generate', 'ml.generate_embedding', 'array_first', 'json_keys']) {
+    it(`parses generated function ${name} and removes redundant whitespace`, async () => {
+      const parser = new Parser();
+      const diagnostics = instance.evaluate(
+        await parser.parse({
+          text: `SELECT ${name} (value)`,
+          uri: 'test.sql',
+          languageId: 'googlesql',
+          version: 0,
+        }),
+      );
+      expect(diagnostics).to.have.length(1);
+      expect(diagnostics![0].range).to.deep.equal({
+        start: { line: 0, character: 7 + name.length },
+        end: { line: 0, character: 8 + name.length },
+      });
+    });
+  }
+
   it('should return diagnostic when rule is enabled and there is a space between function and parenthesis', async () => {
     instance.enabled = true;
 

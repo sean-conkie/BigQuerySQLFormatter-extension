@@ -486,6 +486,20 @@
       "alias": false
     },
     {
+      "name": "function.builtin",
+      "scopes": [
+        "support.function.builtin.sql",
+        "punctuation.definition.section.bracket.round.begin.sql"
+      ],
+      "type": "function",
+      "lookahead": 0,
+      "negativeLookahead": null,
+      "recursive": true,
+      "children": ["function.over"],
+      "end": null,
+      "alias": true
+    },
+    {
       "name": "function.string",
       "scopes": [
         "support.function.string.sql",
