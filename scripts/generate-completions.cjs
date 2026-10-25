@@ -78,7 +78,7 @@ async function generate(fetchPage = async (url) => {
   const response = await fetch(url, { signal: AbortSignal.timeout(60000) });
   if (!response.ok) throw new Error(`HTTP ${response.status}: ${url}`);
   return response.text();
-}) {
+}, outputRoot = root) {
   const entries = discoverFunctions(await fetchPage(`${reference}functions-all?hl=en`));
   const pages = new Map();
   for (const entry of entries) {
@@ -101,7 +101,7 @@ async function generate(fetchPage = async (url) => {
     url.searchParams.set('hl', 'en');
     return readFunction(entry, pages.get(url.href));
   });
-  const grammarPath = path.join(root, 'server/src/linter/syntaxes/googlesql.tmLanguage.json');
+  const grammarPath = path.join(outputRoot, 'server/src/linter/syntaxes/googlesql.tmLanguage.json');
   const grammarText = await readFile(grammarPath, 'utf8');
   const grammar = JSON.parse(grammarText);
   if (!grammar.patterns.some((pattern) => pattern.include === '#generatedFunctions') ||
@@ -111,12 +111,12 @@ async function generate(fetchPage = async (url) => {
   const generated = JSON.stringify({ patterns: functionPatterns(functions, grammar.repository.functions.patterns) });
   const updatedGrammar = grammarText.replace(/^    "generatedFunctions": .*,$/m, () => `    "generatedFunctions": ${generated},`);
   // Complete all downloads and parsing before changing either committed output.
-  await writeFile(path.join(root, 'server/src/completions/functions.json'), `${JSON.stringify(functions, null, 2)}\n`);
+  await writeFile(path.join(outputRoot, 'server/src/completions/functions.json'), `${JSON.stringify(functions, null, 2)}\n`);
   await writeFile(grammarPath, updatedGrammar);
   console.log(`Generated ${functions.length} functions from ${pages.size} reference pages.`);
 }
 
-module.exports = { discoverFunctions, readFunction, functionPatterns };
+module.exports = { discoverFunctions, readFunction, functionPatterns, generate };
 if (require.main === module) {
   generate().catch((error) => {
     console.error(error);

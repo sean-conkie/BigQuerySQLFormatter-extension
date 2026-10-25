@@ -2,13 +2,13 @@
 
 ## Unreleased
 
-### Added
+### New function support
 
 - Generate function completions and hover documentation from the BigQuery
   reference, including AI/ML, vector search, and newer array and JSON functions.
   Commit the catalog and matching grammar scopes for offline builds.
 
-### Fixed
+### Function lookup fixes
 
 - Match function completions and hover case-insensitively and handle qualified
   names without inserting a duplicate namespace.
