@@ -81,7 +81,8 @@ Rule options
 Rules declare their supported option names, types, allowed values, and defaults.
 Set these in a rule's ``options`` object in either VS Code settings or a project
 file. The VS Code settings schema offers completion and validation. Currently
-CP01 (keywords), CP02 (unquoted identifiers), CP03 (functions) and CP04 (literals) declare
+CP01 (keywords), CP02 (unquoted identifiers), CP03 (functions), CP04 (literals)
+and CP05 (data types) declare
 ``capitalisation_policy``:
 
 .. code-block:: json

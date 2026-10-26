@@ -19,6 +19,17 @@ interface CasingFixture {
 
 const fixtures: CasingFixture[] = [
   {
+    code: 'CP05',
+    lower:
+      'create table t (a int64, b string(20), c numeric(10, 2), d array<struct<e int64, f string>>, g timestamp, h json, i range<date>);\n',
+    upper:
+      'create table t (a INT64, b STRING(20), c NUMERIC(10, 2), d ARRAY<STRUCT<e INT64, f STRING>>, g TIMESTAMP, h JSON, i RANGE<DATE>);\n',
+    mixed:
+      'create table t (a Int64, b String(20), c Numeric(10, 2), d Array<Struct<e Int64, f String>>, g Timestamp, h Json, i Range<Date>);\n',
+    ignored: "-- INT64\n/* STRING */\nselect 'TIMESTAMP', `INT64`, '''ARRAY\nSTRUCT''', cast(a as int64);\n",
+    pipe: 'from ds.tbl |> extend cast(a as INT64) as n;\n',
+  },
+  {
     code: 'CP03',
     lower: "select sum(a), coalesce(b, 0), safe_cast(c as INT64), ai.generate('x'), ds.myfunc(a), custom_fn(a);\n",
     upper: "select SUM(a), COALESCE(b, 0), SAFE_CAST(c as INT64), AI.GENERATE('x'), DS.MYFUNC(a), CUSTOM_FN(a);\n",
@@ -176,7 +187,7 @@ for (const fixture of fixtures) {
 
       it('keeps function and identifier policies independent, including user-defined calls', async () => {
         const configuration = settings('upper');
-        configuration.rules!.exclude = ['CP01', 'CP04'];
+        configuration.rules!.exclude = ['CP01', 'CP04', 'CP05'];
         configuration.rules!.CP02 = { options: { capitalisation_policy: 'lower' } };
         const source = document('select Ds.MyFunc(A), SUM(B) as Result;\n');
         const expected = 'select DS.MYFUNC(a), SUM(b) as result;\n';
@@ -189,6 +200,25 @@ for (const fixture of fixtures) {
         expect(TextDocument.applyEdits(input, await formatDocument(input, settings()))).to.equal(
           'select project.ds.myfunc(a) from ds.mytvf(1);\n',
         );
+      });
+    }
+
+    if (fixture.code === 'CP05') {
+      it('distinguishes parameterised types from conversion and constructor functions', async () => {
+        const configuration = settings('upper');
+        configuration.rules!.exclude = ['CP01', 'CP02', 'CP04'];
+        configuration.rules!.CP03 = { options: { capitalisation_policy: 'lower' } };
+        const source = document(
+          'create table t (\n  a STRING(20),\n  b BYTES(10),\n  c ARRAY<STRUCT<d STRING(5)>>\n);\n' +
+            'select STRING(123), STRUCT(1), DATE(2026, 1, 1), cast(a as string(20));\n' +
+            'declare v string(10);\n',
+        );
+        const expected =
+          'create table t (\n  a STRING(20),\n  b BYTES(10),\n  c ARRAY<STRUCT<d STRING(5)>>\n);\n' +
+          'select string(123), struct(1), date(2026, 1, 1), cast(a as STRING(20));\n' +
+          'declare v STRING(10);\n';
+        expect(TextDocument.applyEdits(source, await formatDocument(source, configuration))).to.equal(expected);
+        expect(await formatDocument(document(expected), configuration)).to.deep.equal([]);
       });
     }
 

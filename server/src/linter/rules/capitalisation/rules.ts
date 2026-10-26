@@ -4,9 +4,10 @@ import { Literals } from './CP04';
 import { Keywords } from './CP01';
 import { Identifiers } from './CP02';
 import { Functions } from './CP03';
+import { Types } from './CP05';
 import type { FileMap } from '../../parser';
 
-export const classes = [Keywords, Identifiers, Functions, Literals];
+export const classes = [Keywords, Identifiers, Functions, Literals, Types];
 
 export function capitalisationRules(settings: ServerSettings, problems: number): Rule<string | FileMap>[] {
   return instantiateRules(classes, settings, problems);

@@ -22,6 +22,7 @@ export const ruleOptionSchemas: Readonly<Record<string, OptionDefinitions>> = {
   CP02: capitalisationOptions,
   CP03: capitalisationOptions,
   CP04: capitalisationOptions,
+  CP05: capitalisationOptions,
 };
 
 export function isValidOption<T extends OptionValue>(definition: OptionDefinition<T>, value: unknown): value is T {

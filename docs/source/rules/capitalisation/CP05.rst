@@ -1,0 +1,53 @@
+=======================================
+Rule: Consistent Data Type Capitalisation
+=======================================
+
+**Rule Code:** ``CP05``
+
+**Name:** ``types``
+
+Overview
+--------
+
+Enforce data-type casing using ``storage.type.sql`` grammar tokens, including
+parameterised types such as ``numeric(10, 2)`` and ``string(20)``, and nested
+types such as ``array<struct<a int64>>``. Strings, quoted identifiers and
+comments are ignored. Conversion and constructor calls such as ``STRING(123)``
+are functions, controlled separately by CP03.
+
+Options
+-------
+
+``capitalisation_policy`` accepts ``lower`` (default), ``upper`` or ``consistent``.
+Consistent uses the first matching type in the file; a mixed-case first type
+selects lowercase. The policy is recomputed after edits.
+
+Set ``"CP05": { "options": { "capitalisation_policy": "upper" } }`` under
+``bigquerySQLFormatter.rules`` in VS Code or ``rules`` in ``.bqsqlformatter.json``.
+Invalid options report an error and reset this rule's options to defaults.
+
+Examples
+--------
+
+Anti-pattern with the default policy:
+
+.. code-block:: sql
+
+    create table t (a INT64, b STRING, c ARRAY<STRUCT<d NUMERIC(10, 2)>>);
+
+Quick fixes, Fix All and formatting produce:
+
+.. code-block:: sql
+
+    create table t (a int64, b string, c array<struct<d numeric(10, 2)>>);
+
+With ``upper``, types become uppercase. With ``consistent``,
+``create table t (a INT64, b string);`` becomes
+``create table t (a INT64, b STRING);``. Fixes preserve line endings and support
+``noqa`` without changing precision, scale or field names.
+
+Groups
+------
+
+* ``all``
+* ``capitalisation``
