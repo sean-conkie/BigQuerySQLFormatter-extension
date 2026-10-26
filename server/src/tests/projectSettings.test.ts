@@ -12,13 +12,16 @@ describe('Rule configuration', () => {
     const schema = manifest.contributes.configuration.properties['bigquerySQLFormatter.rules'];
     const properties: Record<string, unknown> = schema.properties;
     for (const [code, definitions] of Object.entries(ruleOptionSchemas)) {
-      expect(properties[code]).to.have.nested.property('properties.options.additionalProperties', false);
+      expect(properties).to.have.property(code);
+      const matching = Object.entries(schema.patternProperties).filter(([pattern]) => new RegExp(pattern).test(code));
+      expect(matching).to.have.length(1);
+      const ruleSchema = matching[0][1];
+      expect(ruleSchema).to.have.nested.property('properties.options.additionalProperties', false);
       for (const [name, definition] of Object.entries(definitions)) {
-        expect(properties[code])
+        expect(ruleSchema)
           .to.have.nested.property(`properties.options.properties.${name}`)
           .that.deep.includes(definition);
       }
-      expect(Object.keys(schema.patternProperties).some((pattern) => new RegExp(pattern).test(code))).to.equal(false);
     }
   });
 
