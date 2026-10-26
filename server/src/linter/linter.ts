@@ -30,6 +30,7 @@ export const sourceFixAllKind = `${CodeActionKind.SourceFixAll}.bigquerySQLForma
 // Clause/SELECT-based rules must opt in once they understand pipe, graph and pattern queries.
 const extendedQuerySafeRules = new Set([
   'CP01',
+  'CP02',
   'CP04',
   'CV01',
   'CV02',

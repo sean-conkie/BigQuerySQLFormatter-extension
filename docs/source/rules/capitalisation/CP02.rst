@@ -1,0 +1,53 @@
+========================================
+Rule: Consistent Identifier Capitalisation
+========================================
+
+**Rule Code:** ``CP02``
+
+**Name:** ``identifiers``
+
+Overview
+--------
+
+Enforce casing of unquoted column names, column and table aliases, datasets,
+tables and CTE names using grammar tokens. Project names are excluded.
+Strings, quoted identifiers (including quoted table paths) and comments are
+ignored. Column aliases use the grammar's ``entity.name.tag`` scope in addition
+to the standard identifier scopes.
+
+Options
+-------
+
+``capitalisation_policy`` accepts ``lower`` (default), ``upper`` or ``consistent``.
+Consistent uses the first matching identifier in the file; a mixed-case first
+identifier selects lowercase. Project names and quoted names do not set the
+policy. The policy is recomputed after edits.
+
+Set ``"CP02": { "options": { "capitalisation_policy": "upper" } }`` under
+``bigquerySQLFormatter.rules`` in VS Code or ``rules`` in ``.bqsqlformatter.json``.
+Invalid options report an error and reset this rule's options to defaults.
+
+Examples
+--------
+
+Anti-pattern with the default policy:
+
+.. code-block:: sql
+
+    select T.Col as Result from MyProject.Dataset.Table T;
+
+Quick fixes, Fix All and formatting produce:
+
+.. code-block:: sql
+
+    select t.col as result from MyProject.dataset.table t;
+
+With ``upper``, identifiers become uppercase. With ``consistent``,
+``select A, b;`` becomes ``select A, B;``. Fixes preserve line endings and
+support ``noqa``. Quoted identifiers retain their original spelling.
+
+Groups
+------
+
+* ``all``
+* ``capitalisation``
