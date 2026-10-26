@@ -166,8 +166,8 @@ result is stable. It respects editor/project rule settings and `noqa` directives
 preserves line endings, and is not limited by `maxNumberOfProblems`.
 Selection formatting only applies fixes wholly contained in the selection;
 text outside it is unchanged. Rules without automatic fixes remain diagnostics.
-Formatting uses the rules' existing styles; custom indentation, comma-position
-and capitalisation options are not yet supported. Cycling fixes or more than
+Formatting uses the rules' existing styles and configured capitalisation policies;
+custom indentation and comma-position options are not yet supported. Cycling fixes or more than
 100 passes report an error without applying partial formatting.
 
 ### Fix All and fix on save
