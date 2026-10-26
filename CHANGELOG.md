@@ -4,6 +4,8 @@
 
 ### Added (unreleased)
 
+- Add CP03 function capitalisation with casing policies for built-in, namespaced
+  and unquoted user-defined calls, quick fixes, Fix All and formatting.
 - Add CP02 unquoted identifier capitalisation, excluding project names and quoted
   identifiers, with casing policies, quick fixes, Fix All and formatting.
 - Add CP01 keyword capitalisation with `lower`, `upper`, and `consistent`

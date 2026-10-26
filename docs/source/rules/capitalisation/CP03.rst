@@ -1,0 +1,51 @@
+========================================
+Rule: Consistent Function Capitalisation
+========================================
+
+**Rule Code:** ``CP03``
+
+**Name:** ``functions``
+
+Overview
+--------
+
+Enforce function-name casing using grammar tokens. Built-in functions, qualified
+functions such as ``ai.generate`` and unquoted user-defined calls follow the
+same policy. Quoted function names, strings and comments are ignored. Argument
+identifiers are controlled separately by CP02.
+
+Options
+-------
+
+``capitalisation_policy`` accepts ``lower`` (default), ``upper`` or ``consistent``.
+Consistent uses the first matching function in the file; a mixed-case first
+function selects lowercase. The policy is recomputed after edits.
+
+Set ``"CP03": { "options": { "capitalisation_policy": "upper" } }`` under
+``bigquerySQLFormatter.rules`` in VS Code or ``rules`` in ``.bqsqlformatter.json``.
+Invalid options report an error and reset this rule's options to defaults.
+
+Examples
+--------
+
+Anti-pattern with the default policy:
+
+.. code-block:: sql
+
+    select SUM(a), Coalesce(b, 0), dataset.MyFunc(c);
+
+Quick fixes, Fix All and formatting produce:
+
+.. code-block:: sql
+
+    select sum(a), coalesce(b, 0), dataset.myfunc(c);
+
+With ``upper``, function names become uppercase, including their unquoted
+namespace. With ``consistent``, ``select SUM(a), max(b);`` becomes
+``select SUM(a), MAX(b);``. Fixes preserve line endings and support ``noqa``.
+
+Groups
+------
+
+* ``all``
+* ``capitalisation``

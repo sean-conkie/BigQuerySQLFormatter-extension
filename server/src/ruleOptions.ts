@@ -20,6 +20,7 @@ export const capitalisationOptions = {
 export const ruleOptionSchemas: Readonly<Record<string, OptionDefinitions>> = {
   CP01: capitalisationOptions,
   CP02: capitalisationOptions,
+  CP03: capitalisationOptions,
   CP04: capitalisationOptions,
 };
 

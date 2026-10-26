@@ -81,7 +81,7 @@ Rules with declared style options accept an `options` object. For example:
 }
 ```
 
-CP01 (keywords), CP02 (unquoted identifiers) and CP04 (literals) accept
+CP01 (keywords), CP02 (unquoted identifiers), CP03 (functions) and CP04 (literals) accept
 `lower` (the default), `upper`, or
 `consistent`. `consistent` follows
 the first matching token in the file; a mixed-case first token selects
