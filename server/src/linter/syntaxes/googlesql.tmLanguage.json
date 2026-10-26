@@ -2,8 +2,9 @@
   "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
   "name": "GoogleSQL",
   "patterns": [
-    { "include": "#quotedIdentifiers" },
     { "include": "#parameterisedTypes" },
+    { "include": "#quotedIdentifiers" },
+    { "include": "#typeArguments" },
     { "include": "#generatedFunctions" },
     { "include": "#storage" },
     { "include": "#constants" },
@@ -120,10 +121,11 @@
     "parameterisedTypes": {
       "patterns": [
         {
-          "match": "(?i)(?:(?<=[,(<])|^)\\s*((?!(?:select|as|default|return)\\b)[A-Za-z_][\\w]*)\\s+(string|bytes)(?=\\s*\\()",
+          "match": "(?i)(?:(?<=[,(<])|^)\\s*(?:((?!(?:select|as|default|return)\\b)[A-Za-z_][\\w]*)|(`[^`]+`))\\s+(string|bytes)(?=\\s*\\()",
           "captures": {
             "1": { "name": "entity.other.column.sql" },
-            "2": { "name": "storage.type.sql" }
+            "2": { "name": "meta.identifier.quoted.sql" },
+            "3": { "name": "storage.type.sql" }
           }
         },
         {
@@ -141,6 +143,28 @@
             "3": { "name": "storage.type.sql" }
           }
         }
+      ]
+    },
+    "typeArguments": {
+      "begin": "(?i)\\b(array|struct|range)\\s*(<)",
+      "beginCaptures": {
+        "1": { "name": "storage.type.sql" },
+        "2": { "name": "keyword.operator.comparison.sql" }
+      },
+      "end": ">",
+      "endCaptures": {
+        "0": { "name": "keyword.operator.comparison.sql" }
+      },
+      "patterns": [
+        { "include": "#comments" },
+        { "include": "#parameterisedTypes" },
+        { "include": "#quotedIdentifiers" },
+        { "include": "#typeArguments" },
+        {
+          "match": "(?i)\\b(string|bytes)\\b",
+          "name": "storage.type.sql"
+        },
+        { "include": "$self" }
       ]
     },
     "storage": {

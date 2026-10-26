@@ -220,6 +220,18 @@ for (const fixture of fixtures) {
         expect(TextDocument.applyEdits(source, await formatDocument(source, configuration))).to.equal(expected);
         expect(await formatDocument(document(expected), configuration)).to.deep.equal([]);
       });
+
+      it('checks parameterised types after quoted fields and in unnamed nested type arguments', async () => {
+        const source = document(
+          'create table t (`Name` STRING(20), a ARRAY<STRUCT<STRING(10), BYTES(5)>>);\n' +
+            'select cast(a as ARRAY<STRUCT<STRING(10)>>);\n',
+        );
+        const expected =
+          'create table t (`Name` string(20), a array<struct<string(10), bytes(5)>>);\n' +
+          'select cast(a as array<struct<string(10)>>);\n';
+        expect(TextDocument.applyEdits(source, await formatDocument(source, settings()))).to.equal(expected);
+        expect(await formatDocument(document(expected), settings())).to.deep.equal([]);
+      });
     }
 
     it('remains active for pipe queries', async () => {
