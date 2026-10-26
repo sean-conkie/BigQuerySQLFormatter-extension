@@ -27,7 +27,7 @@ styles, not editor tab/space options. A cycle or more than 100 passes reports an
 error without applying partial formatting.
 
 Fix All and fix on save
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
 
 Fix All combines non-overlapping fixes across the entire document into a single
 action, even when only some diagnostics are visible. Individual quick fixes are
