@@ -53,7 +53,7 @@ describe('CV06 statement terminators', () => {
       ...defaultSettings,
       rules: { groups: { aliasing: false, layout: false } },
     });
-    expect(TextDocument.applyEdits(document, edits)).to.equal('SELECT a\r\nFROM t;\r\n');
+    expect(TextDocument.applyEdits(document, edits)).to.equal('select a\r\nfrom t;\r\n');
   });
 
   it('clears cached fixes on close and does not expose edits for stale diagnostics', async () => {

@@ -1,0 +1,49 @@
+=====================================
+Rule: Consistent Keyword Capitalisation
+=====================================
+
+**Rule Code:** ``CP01``
+
+**Name:** ``keywords``
+
+Overview
+--------
+
+Enforce keyword casing using grammar tokens, including multi-word keywords and
+pipe operators. Strings, quoted identifiers and comments are ignored.
+
+Options
+-------
+
+``capitalisation_policy`` accepts ``lower`` (default), ``upper`` or ``consistent``.
+Consistent uses the first matching keyword in the file; a mixed-case first
+keyword selects lowercase. The policy is recomputed after edits.
+
+Set ``"CP01": { "options": { "capitalisation_policy": "upper" } }`` under
+``bigquerySQLFormatter.rules`` in VS Code or ``rules`` in ``.bqsqlformatter.json``.
+Invalid options report an error and reset this rule's options to defaults.
+
+Examples
+--------
+
+Anti-pattern with the default policy:
+
+.. code-block:: sql
+
+    SELECT a FROM foo WHERE a IS NOT NULL;
+
+Quick fixes, Fix All and formatting produce:
+
+.. code-block:: sql
+
+    select a from foo where a is not NULL;
+
+CP04 controls literal casing separately. With ``upper``, keywords become
+uppercase. With ``consistent``, ``SELECT a from foo;`` becomes
+``SELECT a FROM foo;``. Fixes preserve line endings and support ``noqa``.
+
+Groups
+------
+
+* ``all``
+* ``capitalisation``
