@@ -198,7 +198,7 @@ statements containing them are excluded from the traditional SELECT AST passed
 to rules, and their structural diagnostics/fixes are suppressed. This includes
 an enclosing traditional query when the new syntax occurs inside a CTE or subquery.
 The explicit syntax-independent rule allow-list in `server/src/linter/linter.ts`
-keeps CP04, CV01, CV02, CV04, CV05, CV13, LT01, LT12 and LT13 active. Extend that
+keeps CP01-CP05, CV01, CV02, CV04, CV05, CV13, LT01, LT12 and LT13 active. Extend that
 list only with corpus tests showing safe diagnostics and idempotent fixes.
 Statements elsewhere in the same document continue to receive all enabled checks.
 
