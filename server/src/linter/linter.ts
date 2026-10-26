@@ -33,6 +33,7 @@ const extendedQuerySafeRules = new Set([
   'CP02',
   'CP03',
   'CP04',
+  'CP05',
   'CV01',
   'CV02',
   'CV04',

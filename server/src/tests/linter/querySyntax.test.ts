@@ -181,7 +181,7 @@ describe('Recent query syntax', () => {
       try {
         for (const text of corpus) {
           const diagnostics = await linter.verify(item(text));
-          if (code === 'CP01' || code === 'CP02' || code === 'CP03') {
+          if (code.startsWith('CP') && code !== 'CP04') {
             for (const diagnostic of diagnostics) {
               const value = globalTokenCache.get(uri)!.getText(diagnostic.range);
               expect(value, text).not.to.equal(value.toLowerCase());

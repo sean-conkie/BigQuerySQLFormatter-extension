@@ -60,6 +60,10 @@
               "type": "object",
               "description": "Boolean/null literal capitalisation."
             },
+            "CP05": {
+              "type": "object",
+              "description": "Data type capitalisation, including parameterised and nested types."
+            },
             "exclude": {
               "type": "array",
               "items": {
@@ -94,7 +98,7 @@
             }
           },
           "patternProperties": {
-            "^CP0[1-4]$": {
+            "^CP0[1-5]$": {
               "type": "object",
               "properties": {
                 "enabled": { "type": "boolean", "default": true },
@@ -118,7 +122,7 @@
               },
               "additionalProperties": false
             },
-            "^(?!CP0[1-4]$)(AL|AM|CP|CV|LT|ST)[0-9]{2}$": {
+            "^(?!CP0[1-5]$)(AL|AM|CP|CV|LT|ST)[0-9]{2}$": {
               "type": "object",
               "properties": {
                 "enabled": {

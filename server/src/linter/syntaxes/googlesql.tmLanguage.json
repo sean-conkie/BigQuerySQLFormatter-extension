@@ -2,7 +2,9 @@
   "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
   "name": "GoogleSQL",
   "patterns": [
+    { "include": "#parameterisedTypes" },
     { "include": "#quotedIdentifiers" },
+    { "include": "#typeArguments" },
     { "include": "#generatedFunctions" },
     { "include": "#storage" },
     { "include": "#constants" },
@@ -116,10 +118,59 @@
       "end": "(?<!\\\\)`",
       "name": "meta.identifier.quoted.sql"
     },
+    "parameterisedTypes": {
+      "patterns": [
+        {
+          "match": "(?i)(?:(?<=[,(<])|^)\\s*(?:((?!(?:select|as|default|return)\\b)[A-Za-z_][\\w]*)|(`[^`]+`))\\s+(string|bytes)(?=\\s*\\()",
+          "captures": {
+            "1": { "name": "entity.other.column.sql" },
+            "2": { "name": "meta.identifier.quoted.sql" },
+            "3": { "name": "storage.type.sql" }
+          }
+        },
+        {
+          "match": "(?i)\\b(as|returns)\\s+(string|bytes)(?=\\s*\\()",
+          "captures": {
+            "1": { "name": "keyword.as.sql" },
+            "2": { "name": "storage.type.sql" }
+          }
+        },
+        {
+          "match": "(?i)\\b(declare)\\s+([A-Za-z_][\\w]*)\\s+(string|bytes)(?=\\s*\\()",
+          "captures": {
+            "1": { "name": "keyword.procedure.sql" },
+            "2": { "name": "entity.other.column.sql" },
+            "3": { "name": "storage.type.sql" }
+          }
+        }
+      ]
+    },
+    "typeArguments": {
+      "begin": "(?i)\\b(array|struct|range)\\s*(<)",
+      "beginCaptures": {
+        "1": { "name": "storage.type.sql" },
+        "2": { "name": "keyword.operator.comparison.sql" }
+      },
+      "end": ">",
+      "endCaptures": {
+        "0": { "name": "keyword.operator.comparison.sql" }
+      },
+      "patterns": [
+        { "include": "#comments" },
+        { "include": "#parameterisedTypes" },
+        { "include": "#quotedIdentifiers" },
+        { "include": "#typeArguments" },
+        {
+          "match": "(?i)\\b(string|bytes)\\b",
+          "name": "storage.type.sql"
+        },
+        { "include": "$self" }
+      ]
+    },
     "storage": {
       "patterns": [
         {
-          "match": "(?i)\\b(array|boolean|bytes|date(?!\\s*\\()|datetime(?!\\s*\\()|geography|numeric|decimal|bignumeric|bigdecimal|float|float64|int64|int|smallint|integer|bigint|tinyint|byteint|bool|record|any\\s+type|string(?!\\s*\\()|struct|time(?!\\s*\\(|\\s+as\\s+of|\\s+zone)|timestamp(?!\\s*\\())\\b",
+          "match": "(?i)\\b(array|boolean|bytes|date(?!\\s*\\()|datetime(?!\\s*\\()|geography|json|range(?=\\s*<)|numeric|decimal|bignumeric|bigdecimal|float|float64|int64|int|smallint|integer|bigint|tinyint|byteint|bool|record|any\\s+type|string(?!\\s*\\()|struct(?!\\s*\\()|time(?!\\s*\\(|\\s+as\\s+of|\\s+zone)|timestamp(?!\\s*\\())\\b",
           "name": "storage.type.sql"
         }
       ]

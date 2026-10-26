@@ -56,6 +56,7 @@ Capitalisation rules are guidelines that help developers maintain consistent cas
 	Rule: Consistent Identifier Capitalisation <capitalisation/CP02>
 	Rule: Consistent Function Capitalisation <capitalisation/CP03>
 	Rule: Use Lowercase for Literal `null`/`true`/`false` Values <capitalisation/CP04>
+	Rule: Consistent Data Type Capitalisation <capitalisation/CP05>
 
 .. _convention-rules:
 

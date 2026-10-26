@@ -4,6 +4,8 @@
 
 ### Added (unreleased)
 
+- Add CP05 data type capitalisation with casing policies for parameterised and
+  nested types, quick fixes, Fix All and formatting.
 - Add CP03 function capitalisation with casing policies for built-in, namespaced
   and unquoted user-defined calls, quick fixes, Fix All and formatting.
 - Add CP02 unquoted identifier capitalisation, excluding project names and quoted
