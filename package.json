@@ -50,11 +50,11 @@
             },
             "CP02": {
               "type": "object",
-              "description": "Unquoted identifier capitalisation, excluding project names."
+              "description": "Case-insensitive identifier capitalisation: columns, fields, aliases and visible CTE names. Project, dataset and table names are preserved."
             },
             "CP03": {
               "type": "object",
-              "description": "Function capitalisation, including unquoted user-defined calls."
+              "description": "Catalogued built-in function capitalisation, including namespaces and SAFE. prefixes. User-defined functions and unknown calls are preserved."
             },
             "CP04": {
               "type": "object",

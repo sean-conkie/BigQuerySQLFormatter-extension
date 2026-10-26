@@ -1,53 +1,61 @@
 # Changelog
 
-## Unreleased
+## 0.5.0 - 2026-10-26
 
-### Added (unreleased)
+### Notable changes
 
-- Add CP05 data type capitalisation with casing policies for parameterised and
-  nested types, quick fixes, Fix All and formatting.
-- Add CP03 function capitalisation with casing policies for built-in, namespaced
-  and unquoted user-defined calls, quick fixes, Fix All and formatting.
-- Add CP02 unquoted identifier capitalisation, excluding project names and quoted
-  identifiers, with casing policies, quick fixes, Fix All and formatting.
-- Add CP01 keyword capitalisation with `lower`, `upper`, and `consistent`
-  policies, including pipe operators, quick fixes, Fix All and formatting.
-- Add typed per-rule options with defaults, validation, editor schema completion,
-  and field-by-field project overrides. Invalid options report errors and reset
-  only that rule's options to defaults; changes apply without reloading.
-- Add CP04 `capitalisation_policy`: `lower` (default), `upper`, or `consistent`,
-  backed by a reusable token-scope capitalisation rule base with quick fixes,
-  Fix All, and formatting.
+- Four new capitalisation rules (CP01, CP02, CP03, CP05) are enabled by default
+  with the `lower` policy. Upper- or mixed-case SQL now reports warnings, and
+  Format Document, format-on-save and Fix All lowercase keywords, identifiers,
+  built-in function names and data types. Case-sensitive dataset, table and
+  user-defined function names are preserved. To keep existing casing, set the rule's
+  `capitalisation_policy` to `upper` or `consistent`, or turn the group off with
+  `"groups": { "capitalisation": false }`.
+- Rules that depend on SELECT clause structure skip statements that contain pipe
+  syntax, `MATCH_RECOGNIZE`, `GRAPH_TABLE` or `FOR SYSTEM_TIME AS OF`, including
+  an enclosing query when the new syntax is inside a CTE or subquery.
+  CP01–CP05, CV01, CV02, CV04, CV05, CV13, LT01, LT12 and LT13 still check these
+  statements.
 
-### Fixed (unreleased)
+### Added
 
-- Detect mixed-case boolean/null literals such as `True` and `Null` in CP04,
-  without matching identifier substrings, quoted identifiers, strings or comments.
+- Configure rule behaviour with typed per-rule `options` in settings and
+  `.bqsqlformatter.json`, with completion and validation in the editor. Project
+  options override editor options field by field, and changes apply without
+  reloading. Invalid options are reported and only that rule falls back to its
+  defaults.
+- Add a `capitalisation_policy` option to CP01–CP05: `lower` (default), `upper`
+  or `consistent` (follow the first matching token in the file).
+- Add CP01 for keyword capitalisation, including multi-word keywords and pipe
+  operators.
+- Add CP02 for unquoted identifier capitalisation: columns, field references,
+  aliases and CTE names, including references to visible CTEs. Project, dataset
+  and table names and quoted identifiers are left unchanged.
+- Add CP03 for built-in function name capitalisation, including namespaced and
+  `SAFE.`-prefixed built-ins from the generated catalog. User-defined functions
+  and unknown calls are left unchanged.
+- Add CP05 for data type capitalisation, including parameterised and nested
+  types such as `numeric(10, 2)` and `array<struct<a int64>>`.
+- Support GoogleSQL pipe syntax (`|>`), `MATCH_RECOGNIZE`, `GRAPH_TABLE` and
+  `FOR SYSTEM_TIME AS OF` in highlighting and parsing, including nested pipe
+  queries. Formatting and Fix All preserve these queries.
+- Generate function completions and hover documentation for 492 functions from
+  the BigQuery reference, including AI/ML, vector search and newer array and JSON
+  functions. Completion is also triggered after a dot.
 
-### New function support
+### Fixed
 
-- Generate function completions and hover documentation from the BigQuery
-  reference, including AI/ML, vector search, and newer array and JSON functions.
-  Commit the catalog and matching grammar scopes for offline builds.
-
-### Function lookup fixes
-
-- Match function completions and hover case-insensitively and handle qualified
-  names without inserting a duplicate namespace.
-
-### Query syntax support
-
-- Highlight GoogleSQL pipe operators, `MATCH_RECOGNIZE`, `GRAPH_TABLE` and
-  `FOR SYSTEM_TIME AS OF`. Preserve pipe stages, including nested queries, in
-  the parser without treating pipe `SET` or `DROP` as DML/DDL statements.
-
-### Query parsing and formatting fixes
-
-- Split statements using tokenized terminators, not semicolons inside comments,
-  strings or quoted identifiers, including multiple statements on one line.
-- Avoid SELECT-only structural diagnostics and fixes in statements containing
-  recent query syntax. Syntax-independent literal, operator, function and
-  whitespace checks remain active; formatting and Fix All preserve these queries.
+- Preserve case-sensitive dataset, table and user-defined function names in
+  CP02/CP03 quick fixes, Fix All and formatting under every casing policy.
+- Flag mixed-case boolean and null literals such as `True` and `Null` in CP04.
+- Stop CP04 and CV05 fixes from changing `NULLIF` and identifiers that start
+  with `NULL`.
+- Split statements only at real terminators, not semicolons inside comments,
+  strings or quoted identifiers, and handle several statements on one line.
+- Keep highlighting correct inside nested constructs after zero-length
+  whitespace matches.
+- Match function completions and hover case-insensitively, and complete
+  qualified names without duplicating the namespace.
 
 ## 0.4.0 - 2026-10-25
 

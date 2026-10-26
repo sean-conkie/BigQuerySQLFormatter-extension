@@ -31,16 +31,16 @@ const fixtures: CasingFixture[] = [
   },
   {
     code: 'CP03',
-    lower: "select sum(a), coalesce(b, 0), safe_cast(c as INT64), ai.generate('x'), ds.myfunc(a), custom_fn(a);\n",
-    upper: "select SUM(a), COALESCE(b, 0), SAFE_CAST(c as INT64), AI.GENERATE('x'), DS.MYFUNC(a), CUSTOM_FN(a);\n",
-    mixed: "select Sum(a), Coalesce(b, 0), Safe_Cast(c as INT64), Ai.Generate('x'), Ds.MyFunc(a), Custom_Fn(a);\n",
+    lower: "select sum(a), sqrt(b), safe_cast(c as INT64), ai.generate('x'), Ds.MyFunc(a), Custom_Fn(a);\n",
+    upper: "select SUM(a), SQRT(b), SAFE_CAST(c as INT64), AI.GENERATE('x'), Ds.MyFunc(a), Custom_Fn(a);\n",
+    mixed: "select Sum(a), Sqrt(b), Safe_Cast(c as INT64), Ai.Generate('x'), Ds.MyFunc(a), Custom_Fn(a);\n",
     ignored: "-- SUM(a)\n/* MAX(b) */\nselect 'COUNT(c)', `SUM`(a), '''AVG(d)\nSUM(e)''', sum(a);\n",
     pipe: "from ds.tbl |> extend AI.GENERATE('x') as answer |> aggregate SUM(a) as total;\n",
   },
   {
     code: 'CP02',
-    lower: 'with cte as (select a as b from MyProject.ds.tbl t) select c.b from cte c;\n',
-    upper: 'with CTE as (select A as B from MyProject.DS.TBL T) select C.B from CTE C;\n',
+    lower: 'with cte as (select a as b from MyProject.Ds.Tbl t) select c.b from cte c;\n',
+    upper: 'with CTE as (select A as B from MyProject.Ds.Tbl T) select C.B from CTE C;\n',
     mixed: 'with Cte as (select A as B from MyProject.Ds.Tbl T) select C.B from Cte C;\n',
     ignored: "-- FOO\n/* BAR */\nselect 'X', `Y`, '''Z\nQ''', a from MyProject.ds.tbl;\n",
     pipe: 'from ds.tbl |> select A as B;\n',
@@ -165,7 +165,7 @@ for (const fixture of fixtures) {
           'select `Quoted`, `Project.Dataset.Table`.Field, Foo ImplicitAlias from MyProject.MyDataset.MyTable T;\n',
         );
         expect(TextDocument.applyEdits(source, await formatDocument(source, settings()))).to.equal(
-          'select `Quoted`, `Project.Dataset.Table`.field, foo implicitalias from MyProject.mydataset.mytable t;\n',
+          'select `Quoted`, `Project.Dataset.Table`.field, foo implicitalias from MyProject.MyDataset.MyTable t;\n',
         );
         const quoted = 'select t.Field from `MyProject.MyDataset.MyTable` T;\n';
         expect(TextDocument.applyEdits(document(quoted), await formatDocument(document(quoted), settings()))).to.equal(
@@ -190,16 +190,14 @@ for (const fixture of fixtures) {
         configuration.rules!.exclude = ['CP01', 'CP04', 'CP05'];
         configuration.rules!.CP02 = { options: { capitalisation_policy: 'lower' } };
         const source = document('select Ds.MyFunc(A), SUM(B) as Result;\n');
-        const expected = 'select DS.MYFUNC(a), SUM(b) as result;\n';
+        const expected = 'select Ds.MyFunc(a), SUM(b) as result;\n';
         expect(TextDocument.applyEdits(source, await formatDocument(source, configuration))).to.equal(expected);
         expect(await formatDocument(document(expected), configuration)).to.deep.equal([]);
       });
 
-      it('checks table-valued and project-qualified user-defined function calls', async () => {
+      it('preserves table-valued and project-qualified user-defined function calls', async () => {
         const input = document('select Project.Ds.MyFunc(a) from Ds.MyTvf(1);\n');
-        expect(TextDocument.applyEdits(input, await formatDocument(input, settings()))).to.equal(
-          'select project.ds.myfunc(a) from ds.mytvf(1);\n',
-        );
+        expect(TextDocument.applyEdits(input, await formatDocument(input, settings()))).to.equal(input.getText());
       });
     }
 
@@ -215,7 +213,7 @@ for (const fixture of fixtures) {
         );
         const expected =
           'create table t (\n  a STRING(20),\n  b BYTES(10),\n  c ARRAY<STRUCT<d STRING(5)>>\n);\n' +
-          'select string(123), struct(1), date(2026, 1, 1), cast(a as STRING(20));\n' +
+          'select string(123), STRUCT(1), date(2026, 1, 1), cast(a as STRING(20));\n' +
           'declare v STRING(10);\n';
         expect(TextDocument.applyEdits(source, await formatDocument(source, configuration))).to.equal(expected);
         expect(await formatDocument(document(expected), configuration)).to.deep.equal([]);

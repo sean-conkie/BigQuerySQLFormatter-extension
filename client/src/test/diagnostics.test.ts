@@ -77,6 +77,51 @@ suite('Language server diagnostics', () => {
     assert.deepEqual(vscode.languages.getDiagnostics(uri), []);
   });
 
+  test('Formatting and Fix All preserve case-sensitive table and UDF names', async () => {
+    const directory = await mkdtemp(path.join(getDocPath(''), 'safe-names-'));
+    const uri = vscode.Uri.file(path.join(directory, 'query.bqsql'));
+    const source = 'select MyDataset.ParseSku(Id), SUM(x) from MyProject.SalesData.Orders;\n';
+    const expected = 'select MyDataset.ParseSku(id), sum(x) from MyProject.SalesData.Orders;\n';
+    const hasCasingDiagnostics = (diagnostics: readonly vscode.Diagnostic[]) =>
+      diagnostics.some((diagnostic) => {
+        const code = diagnostic.code;
+        return /^CP0[23]:/.test(String(typeof code === 'object' ? code.value : code));
+      });
+    try {
+      await writeFile(uri.fsPath, source);
+      const ready = waitForDiagnostics(uri, hasCasingDiagnostics);
+      const editor = await activate(uri);
+      await ready;
+      const edits = await vscode.commands.executeCommand<vscode.TextEdit[]>(
+        'vscode.executeFormatDocumentProvider',
+        uri,
+        { tabSize: 2, insertSpaces: true },
+      );
+      const formatted = new vscode.WorkspaceEdit();
+      formatted.set(uri, edits);
+      const clean = waitForDiagnostics(uri, (diagnostics) => !hasCasingDiagnostics(diagnostics));
+      assert.equal(await vscode.workspace.applyEdit(formatted), true);
+      assert.equal(editor.document.getText(), expected);
+      await clean;
+      const reset = waitForDiagnostics(uri, hasCasingDiagnostics);
+      await editor.edit((edit) => edit.replace(new vscode.Range(0, 0, editor.document.lineCount, 0), source));
+      await reset;
+      const actions = await vscode.commands.executeCommand<vscode.CodeAction[]>(
+        'vscode.executeCodeActionProvider',
+        uri,
+        new vscode.Range(0, 0, editor.document.lineCount, 0),
+        'source.fixAll.bigquerySQLFormatter',
+      );
+      assert.equal(actions.length, 1);
+      assert.ok(actions[0].edit);
+      assert.equal(await vscode.workspace.applyEdit(actions[0].edit), true);
+      assert.equal(editor.document.getText(), expected);
+    } finally {
+      await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
   test('Formats documents/selections and applies formatting or Fix All on save', async () => {
     const directory = await mkdtemp(path.join(getDocPath(''), 'formatting-'));
     const uri = vscode.Uri.file(path.join(directory, 'query.bqsql'));

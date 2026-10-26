@@ -1,6 +1,12 @@
-import { CodeActionKind, type Diagnostic, type TextDocumentIdentifier, TextEdit } from 'vscode-languageserver/node';
+import {
+  CodeActionKind,
+  type Diagnostic,
+  type Range,
+  type TextDocumentIdentifier,
+  TextEdit,
+} from 'vscode-languageserver/node';
 import { Rule } from '../base';
-import { globalTokenCache } from '../../parser/tokenCache';
+import { type DocumentCache, globalTokenCache } from '../../parser/tokenCache';
 import { capitalisationOptions, resolveOption } from '../../../ruleOptions';
 import type { RuleCode } from '../../../settings';
 
@@ -9,6 +15,24 @@ export abstract class CapitalisationRule extends Rule<string> {
   abstract readonly scopes: readonly string[];
   readonly codeActionKind = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
   private readonly casing = new Map<string, 'lower' | 'upper'>();
+
+  protected *tokens(cache: DocumentCache): Iterable<{ value: string; range: Range }> {
+    for (const [line, entry] of cache.entries()) {
+      for (const token of entry.tokens) {
+        if (
+          token.scopes.some((scope) => this.scopes.some((target) => scope === target || scope.startsWith(`${target}.`)))
+        ) {
+          yield {
+            value: token.value,
+            range: {
+              start: { line, character: token.startIndex },
+              end: { line, character: token.endIndex },
+            },
+          };
+        }
+      }
+    }
+  }
 
   evaluate(_text: string, uri: string | null = null): Diagnostic[] | null {
     if (!this.enabled || uri === null) return null;
@@ -20,25 +44,14 @@ export abstract class CapitalisationRule extends Rule<string> {
     );
     let casing = policy === 'consistent' ? undefined : policy;
     const diagnostics: Diagnostic[] = [];
-    for (const [line, entry] of cache.entries()) {
-      for (const token of entry.tokens) {
-        if (
-          !token.scopes.some((scope) =>
-            this.scopes.some((target) => scope === target || scope.startsWith(`${target}.`)),
-          ) ||
-          !/[a-z]/i.test(token.value)
-        )
-          continue;
-        const range = {
-          start: { line, character: token.startIndex },
-          end: { line, character: token.endIndex },
-        };
-        if (!cache.isCodeRange(range)) continue;
-        // Mixed-case first tokens have no uniform casing; use the default policy.
-        casing ??= token.value === token.value.toUpperCase() ? 'upper' : 'lower';
-        const expected = casing === 'upper' ? token.value.toUpperCase() : token.value.toLowerCase();
-        if (token.value !== expected) diagnostics.push(this.createDiagnostic(range, uri));
-      }
+    for (const token of this.tokens(cache)) {
+      if (!/[a-z]/i.test(token.value)) continue;
+      const { range } = token;
+      if (!cache.isCodeRange(range)) continue;
+      // Mixed-case first tokens have no uniform casing; use the default policy.
+      casing ??= token.value === token.value.toUpperCase() ? 'upper' : 'lower';
+      const expected = casing === 'upper' ? token.value.toUpperCase() : token.value.toLowerCase();
+      if (token.value !== expected) diagnostics.push(this.createDiagnostic(range, uri));
     }
     this.casing.set(uri, casing ?? 'lower');
     return diagnostics.length ? diagnostics : null;
