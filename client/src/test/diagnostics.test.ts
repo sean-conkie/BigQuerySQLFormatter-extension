@@ -51,6 +51,32 @@ suite('Language server diagnostics', () => {
     assert.equal(document.languageId, 'sql');
   });
 
+  test('Preserves pipe, pattern, graph and temporal queries through formatting and Fix All', async () => {
+    const uri = getDocUri('querySyntax.bqsql');
+    const editor = await activate(uri);
+    assert.equal(editor.document.languageId, 'googlesql');
+    const ready = waitForDiagnostics(uri, (diagnostics) => diagnostics.length > 0, 'query syntax provider readiness');
+    assert.equal(await editor.edit((edit) => edit.insert(new vscode.Position(0, 0), '\n')), true);
+    await ready;
+    const clean = waitForDiagnostics(uri, (diagnostics) => diagnostics.length === 0, 'query syntax diagnostics');
+    assert.equal(await editor.edit((edit) => edit.delete(new vscode.Range(0, 0, 1, 0))), true);
+    await clean;
+    const edits = await vscode.commands.executeCommand<vscode.TextEdit[] | undefined>(
+      'vscode.executeFormatDocumentProvider',
+      uri,
+      { tabSize: 2, insertSpaces: true },
+    );
+    assert.ok(edits === undefined || edits.length === 0);
+    const actions = await vscode.commands.executeCommand<vscode.CodeAction[] | undefined>(
+      'vscode.executeCodeActionProvider',
+      uri,
+      new vscode.Range(0, 0, editor.document.lineCount, 0),
+      vscode.CodeActionKind.SourceFixAll.value,
+    );
+    assert.ok(actions === undefined || actions.length === 0);
+    assert.deepEqual(vscode.languages.getDiagnostics(uri), []);
+  });
+
   test('Formats documents/selections and applies formatting or Fix All on save', async () => {
     const directory = await mkdtemp(path.join(getDocPath(''), 'formatting-'));
     const uri = vscode.Uri.file(path.join(directory, 'query.bqsql'));

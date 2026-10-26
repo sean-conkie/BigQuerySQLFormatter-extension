@@ -13,8 +13,8 @@ import type {
 } from 'vscode-languageserver';
 import { CancellationToken } from 'vscode-languageserver';
 import { checkCancellation, yieldToEventLoop } from '../../cancellation';
-import { range } from '../../utils';
 import { findToken } from './utils';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 
 const punctuation: string[] = syntaxJson.punctuation;
 const skipTokens: string[] = syntaxJson.skipTokens;
@@ -134,29 +134,18 @@ export class Parser {
    * @returns A file map where each key is the index of the statement and the value is the parsed statement object.
    */
   private async parseStatements(textDocument: TextDocumentItem, token: CancellationToken): Promise<FileMap> {
-    const statements = this.splitSource(textDocument.text);
-    let startLine: number = 0;
+    const tokens = [...globalTokenCache.get(textDocument.uri)!.tokens].flatMap((line) => line.tokens);
+    const statements = this.splitSource(textDocument.text, tokens);
     const fileMap: FileMap = {};
 
     for (let i = 0; i < statements.length; i++) {
       await yieldToEventLoop(token);
       const statement: MatchObj = statements[i];
 
-      const s = await this.parseStatement(
-        range(startLine, statement.line + 1)
-          .flatMap((line) => {
-            if (globalTokenCache.get(textDocument.uri)?.has(line)) {
-              return globalTokenCache.get(textDocument.uri)?.get(line)?.tokens ?? [];
-            }
-            return [];
-          })
-          .filter((t) => t !== undefined),
-        token,
-      );
+      const s = await this.parseStatement(statements[i].tokens, token);
 
       s.statement = statement.statement;
       fileMap[i] = s;
-      startLine = statement.line + 1;
     }
 
     return fileMap;
@@ -284,6 +273,44 @@ export class Parser {
    */
   private async parseStatement(tokens: Token[], cancellation: CancellationToken): Promise<StatementAST> {
     const statement = new StatementAST(tokens);
+
+    const firstCodeToken = tokens.find(
+      (token) => token.value.trim() && !token.scopes.some((scope) => scope.startsWith('comment.')),
+    );
+    statement.hasExtendedQuerySyntax =
+      firstCodeToken?.scopes.includes('keyword.from.sql') === true ||
+      tokens.some((token) =>
+        token.scopes.some((scope) =>
+          ['keyword.operator.pipe.sql', 'keyword.control.query.sql', 'keyword.control.temporal.sql'].includes(scope),
+        ),
+      );
+    if (statement.hasExtendedQuerySyntax) {
+      let depth = 0;
+      const activeStages = new Map<number, StatementAST['pipeStages'][number]>();
+      for (const token of tokens) {
+        if (token.scopes.includes('keyword.operator.pipe.sql')) {
+          const stage: StatementAST['pipeStages'][number] = { operator: '', depth, tokens: [] };
+          activeStages.set(depth, stage);
+          statement.pipeStages.push(stage);
+        }
+        for (const stage of activeStages.values()) {
+          stage.tokens.push(token);
+          if (
+            stage.depth === depth &&
+            (token.scopes.includes('keyword.control.pipe.sql') ||
+              (!stage.operator && token.scopes.includes('keyword.control.query.sql')))
+          ) {
+            stage.operator = `${stage.operator ? `${stage.operator} ` : ''}${token.value.toUpperCase().replace(/\s+/g, ' ')}`;
+          }
+        }
+        if (token.scopes.includes('punctuation.definition.section.bracket.round.begin.sql')) depth++;
+        if (token.scopes.includes('punctuation.definition.section.bracket.round.end.sql')) {
+          activeStages.delete(depth);
+          depth--;
+        }
+      }
+      return statement;
+    }
 
     if (tokens.length === 0) {
       return statement;
@@ -730,50 +757,33 @@ export class Parser {
    * @param {string} source The source code to split
    * @returns {MatchObj[]} The source code split into statements
    */
-  private splitSource(source: string): MatchObj[] {
-    const pattern = /;/g;
-    let match: RegExpExecArray | null;
-
-    const lines: { start: number; end: number }[] = [];
-    let r: number = 0;
-
-    source.split('\n').forEach((line) => {
-      const len = r + line.length;
-      lines.push({ start: r, end: len + 1 });
-      r = len + 1;
-    });
-
-    const statements = [];
+  private splitSource(source: string, tokens: Token[]): (MatchObj & { tokens: Token[] })[] {
+    const document = TextDocument.create('', 'googlesql', 0, source);
+    const statements: (MatchObj & { tokens: Token[] })[] = [];
     let start = 0;
-    // biome-ignore lint/suspicious/noAssignInExpressions: Advance the stateful regex until it is exhausted.
-    while ((match = pattern.exec(source))) {
-      const m = {
-        end: match.index + 1,
-        start: start,
-        line: lines.indexOf(
-          lines.find((line) => (match?.index ?? -1) >= line.start && (match?.index ?? -1) < line.end) ?? lines[0],
-        ),
-        statement: source.substring(start, match.index + 1),
-      };
-      start = m.end + 1;
-      statements.push(m);
-    }
-
-    if (statements.length === 0) {
+    let tokenStart = 0;
+    for (let index = 0; index < tokens.length; index++) {
+      const token = tokens[index];
+      if (!token.scopes.includes('punctuation.terminator.statement.semicolon.sql')) continue;
+      if (token.lineNumber === null) throw new Error('Statement terminator has no line number');
+      const end = document.offsetAt({ line: token.lineNumber, character: token.endIndex });
       statements.push({
-        start: 0,
-        end: source.length,
-        statement: source,
-        line: lines.indexOf(lines.find((line) => source.length >= line.start && source.length < line.end) ?? lines[0]),
+        start,
+        end,
+        line: token.lineNumber,
+        statement: source.slice(start, end),
+        tokens: tokens.slice(tokenStart, index + 1),
       });
+      start = end;
+      tokenStart = index + 1;
     }
-
-    if (statements[statements.length - 1].end < source.length) {
+    if (start < source.length || statements.length === 0) {
       statements.push({
-        start: statements[statements.length - 1].end,
+        start,
         end: source.length,
-        statement: source.substring(statements[statements.length - 1].end, source.length),
-        line: lines.indexOf(lines.find((line) => source.length >= line.start && source.length < line.end) ?? lines[0]),
+        statement: source.slice(start),
+        line: document.positionAt(source.length).line,
+        tokens: tokens.slice(tokenStart),
       });
     }
 

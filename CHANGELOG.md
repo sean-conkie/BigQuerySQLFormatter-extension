@@ -27,6 +27,20 @@
 - Match function completions and hover case-insensitively and handle qualified
   names without inserting a duplicate namespace.
 
+### Query syntax support
+
+- Highlight GoogleSQL pipe operators, `MATCH_RECOGNIZE`, `GRAPH_TABLE` and
+  `FOR SYSTEM_TIME AS OF`. Preserve pipe stages, including nested queries, in
+  the parser without treating pipe `SET` or `DROP` as DML/DDL statements.
+
+### Query parsing and formatting fixes
+
+- Split statements using tokenized terminators, not semicolons inside comments,
+  strings or quoted identifiers, including multiple statements on one line.
+- Avoid SELECT-only structural diagnostics and fixes in statements containing
+  recent query syntax. Syntax-independent literal, operator, function and
+  whitespace checks remain active; formatting and Fix All preserve these queries.
+
 ## 0.4.0 - 2026-10-25
 
 ### Breaking changes
