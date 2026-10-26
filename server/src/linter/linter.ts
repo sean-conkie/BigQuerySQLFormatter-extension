@@ -28,7 +28,18 @@ interface Directive extends Range {
 export const sourceFixAllKind = `${CodeActionKind.SourceFixAll}.bigquerySQLFormatter`;
 
 // Clause/SELECT-based rules must opt in once they understand pipe, graph and pattern queries.
-const extendedQuerySafeRules = new Set(['CP04', 'CV01', 'CV02', 'CV04', 'CV05', 'CV13', 'LT01', 'LT12', 'LT13']);
+const extendedQuerySafeRules = new Set([
+  'CP01',
+  'CP04',
+  'CV01',
+  'CV02',
+  'CV04',
+  'CV05',
+  'CV13',
+  'LT01',
+  'LT12',
+  'LT13',
+]);
 
 function comparePositions(a: Position, b: Position): number {
   return a.line - b.line || a.character - b.character;

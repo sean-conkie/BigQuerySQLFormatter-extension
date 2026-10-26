@@ -22,7 +22,13 @@ export abstract class CapitalisationRule extends Rule<string> {
     const diagnostics: Diagnostic[] = [];
     for (const [line, entry] of cache.entries()) {
       for (const token of entry.tokens) {
-        if (!token.scopes.some((scope) => this.scopes.includes(scope)) || !/[a-z]/i.test(token.value)) continue;
+        if (
+          !token.scopes.some((scope) =>
+            this.scopes.some((target) => scope === target || scope.startsWith(`${target}.`)),
+          ) ||
+          !/[a-z]/i.test(token.value)
+        )
+          continue;
         const range = {
           start: { line, character: token.startIndex },
           end: { line, character: token.endIndex },

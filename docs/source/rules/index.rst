@@ -52,6 +52,7 @@ Capitalisation rules are guidelines that help developers maintain consistent cas
 .. toctree::
 	:maxdepth: 1
 
+	Rule: Consistent Keyword Capitalisation <capitalisation/CP01>
 	Rule: Use Lowercase for Literal `null`/`true`/`false` Values <capitalisation/CP04>
 
 .. _convention-rules:

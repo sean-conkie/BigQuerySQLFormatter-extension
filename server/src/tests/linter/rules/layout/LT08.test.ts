@@ -56,7 +56,7 @@ describe('LT08 CTE blank lines', () => {
     const edits = await formatDocument(document, settings);
     const fixed = TextDocument.applyEdits(document, edits);
     expect(fixed).to.equal(
-      'WITH c AS (\r\n  WITH d AS (\r\n    SELECT a\r\n  )\r\n\r\n  SELECT a FROM d\r\n)\r\n\r\nSELECT a FROM c;\r\n',
+      'with c as (\r\n  with d as (\r\n    select a\r\n  )\r\n\r\n  select a from d\r\n)\r\n\r\nselect a from c;\r\n',
     );
     expect(await formatDocument(TextDocument.create(uri, 'googlesql', 2, fixed), settings)).to.deep.equal([]);
   });

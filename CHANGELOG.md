@@ -4,6 +4,8 @@
 
 ### Added (unreleased)
 
+- Add CP01 keyword capitalisation with `lower`, `upper`, and `consistent`
+  policies, including pipe operators, quick fixes, Fix All and formatting.
 - Add typed per-rule options with defaults, validation, editor schema completion,
   and field-by-field project overrides. Invalid options report errors and reset
   only that rule's options to defaults; changes apply without reloading.

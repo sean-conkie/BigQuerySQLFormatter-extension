@@ -18,6 +18,7 @@ export const capitalisationOptions = {
 } as const;
 
 export const ruleOptionSchemas: Readonly<Record<string, OptionDefinitions>> = {
+  CP01: capitalisationOptions,
   CP04: capitalisationOptions,
 };
 

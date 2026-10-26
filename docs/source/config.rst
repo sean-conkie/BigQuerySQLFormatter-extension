@@ -27,7 +27,7 @@ styles, not editor tab/space options. A cycle or more than 100 passes reports an
 error without applying partial formatting.
 
 Fix All and fix on save
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
 
 Fix All combines non-overlapping fixes across the entire document into a single
 action, even when only some diagnostics are visible. Individual quick fixes are
@@ -81,7 +81,7 @@ Rule options
 Rules declare their supported option names, types, allowed values, and defaults.
 Set these in a rule's ``options`` object in either VS Code settings or a project
 file. The VS Code settings schema offers completion and validation. Currently
-CP04 declares ``capitalisation_policy``:
+CP01 (keywords) and CP04 (literals) declare ``capitalisation_policy``:
 
 .. code-block:: json
 
@@ -93,7 +93,7 @@ CP04 declares ``capitalisation_policy``:
       }
     }
 
-``lower`` (default) requires lowercase boolean/null literals; ``upper`` requires
+``lower`` (default) requires lowercase tokens; ``upper`` requires
 uppercase. ``consistent`` follows the first matching token in the file. A
 mixed-case first token selects lowercase. Strings, quoted identifiers, and
 comments do not set the policy and are never changed. Options apply to

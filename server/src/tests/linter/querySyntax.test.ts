@@ -180,7 +180,15 @@ describe('Recent query syntax', () => {
       for (const rule of [...linter.parserRules, ...linter.regexRules]) rule.enabled = true;
       try {
         for (const text of corpus) {
-          expect(await linter.verify(item(text)), text).to.deep.equal([]);
+          const diagnostics = await linter.verify(item(text));
+          if (code === 'CP01') {
+            for (const diagnostic of diagnostics) {
+              const value = globalTokenCache.get(uri)!.getText(diagnostic.range);
+              expect(value, text).not.to.equal(value.toLowerCase());
+            }
+          } else {
+            expect(diagnostics, text).to.deep.equal([]);
+          }
         }
       } finally {
         linter.closeDocument(uri);
@@ -189,10 +197,11 @@ describe('Recent query syntax', () => {
   }
 
   it('preserves every corpus query through formatting and Fix All, idempotently', async () => {
+    const settings = { ...defaultSettings, rules: { groups: { capitalisation: false } } };
     for (const text of corpus) {
       const source = document(text);
-      expect(await formatDocument(source, defaultSettings), text).to.deep.equal([]);
-      const actions = await createDocumentCodeActions(source, defaultSettings, {
+      expect(await formatDocument(source, settings), text).to.deep.equal([]);
+      const actions = await createDocumentCodeActions(source, settings, {
         textDocument: { uri },
         range: Range.create(0, 0, source.lineCount, 0),
         context: { diagnostics: [], only: [CodeActionKind.SourceFixAll] },
@@ -205,7 +214,7 @@ describe('Recent query syntax', () => {
     for (const eol of ['\n', '\r\n', '\r']) {
       const text = `FROM dataset.sales |> WHERE amount = NULL AND active <> FALSE  ${eol}|> SELECT 'TRUE; |> SET x = NULL' AS text; -- FALSE${eol}`;
       const source = document(text);
-      const expected = `FROM dataset.sales |> WHERE amount is null AND active != false${eol}|> SELECT 'TRUE; |> SET x = NULL' AS text; -- FALSE${eol}`;
+      const expected = `from dataset.sales |> where amount is null and active != false${eol}|> select 'TRUE; |> SET x = NULL' as text; -- FALSE${eol}`;
       const formatted = TextDocument.applyEdits(source, await formatDocument(source, defaultSettings));
       expect(formatted).to.equal(expected);
       expect(await formatDocument(document(formatted), defaultSettings)).to.deep.equal([]);
@@ -225,7 +234,11 @@ describe('Recent query syntax', () => {
     try {
       const diagnostics = await linter.verify(item('FROM t |> SELECT *;SELECT * FROM dataset.sales;\n'));
       expect(diagnostics.some((diagnostic) => String(diagnostic.code).startsWith('AM04:'))).to.equal(true);
-      expect(diagnostics.every((diagnostic) => diagnostic.range.start.character >= 19)).to.equal(true);
+      expect(
+        diagnostics
+          .filter((diagnostic) => !String(diagnostic.code).startsWith('CP01:'))
+          .every((diagnostic) => diagnostic.range.start.character >= 19),
+      ).to.equal(true);
     } finally {
       linter.closeDocument(uri);
     }
