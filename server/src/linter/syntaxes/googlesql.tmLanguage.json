@@ -14,6 +14,7 @@
     { "include": "#keywords" },
     { "include": "#ddl" },
     { "include": "#dml" },
+    { "include": "#userFunctions" },
     { "include": "#columns" },
     { "include": "#strings" },
     { "include": "#params" },
@@ -571,7 +572,7 @@
             "8": { "name": "punctuation.definition.string.end.sql" },
             "9": { "name": "keyword.ddl.as.sql" }
           },
-          "match": "(?i:)^\\s*(create(?:\\s+or\\s+replace)?(?:\\s+temporary|\\s+temp)?|drop|alter)\\s+(schema|table(?:\\s+function)?|view|materialized\\s+view|(?:external|snapshot)\\s+table|model|function|procedure|column)\\b(?:\\s+(if(?:\\s+not)?\\s+exists)\\b)?(?:\\s+(`?)(?:([\\w_]+)\\.)?(?:([\\w_]+)\\.([\\w_]+)(`?)))(?:\\s+(as))?",
+          "match": "(?i)\\b(create(?:\\s+or\\s+replace)?(?:\\s+temporary|\\s+temp)?|drop|alter)\\s+(schema|table(?:\\s+function)?|view|materialized\\s+view|(?:external|snapshot)\\s+table|model|function|procedure|column)\\b(?:\\s+(if(?:\\s+not)?\\s+exists)\\b)?\\s+(`?)(?:(?:([\\w_]+)\\.)?([\\w_]+)\\.)?([\\w_]+)(`?)(?:\\s+(as))?",
           "name": "meta.ddl.sql"
         },
         {
@@ -628,7 +629,7 @@
             "8": { "name": "keyword.as.sql" },
             "9": { "name": "entity.name.alias.sql" }
           },
-          "match": "(?i)(?:(from|update)|((?:(?:(?:inner|cross|(?:left|right|full)(?:\\s+outer)?)\\s+)join)))(?:\\s+(`?)(?:([\\w_]+)\\.)?(?:([\\w_]+)\\.([\\w_]+))(`?)(?:\\s+(?:(as)\\s+)?((?!(?:for|match_recognize|graph_table)\\b)[\\w_]+))?)",
+          "match": "(?i)(?:(from|update)|((?:(?:(?:inner|cross|(?:left|right|full)(?:\\s+outer)?)\\s+)join)))(?:\\s+(`?)(?:([\\w_]+)\\.)?(?:([\\w_]+)\\.([\\w_]+))(`?)(?![\\w.]|\\s*\\()(?:\\s+(?:(as)\\s+)?((?!(?:for|match_recognize|graph_table)\\b)[\\w_]+))?)",
           "name": "meta.source.sql"
         },
         {
@@ -871,6 +872,15 @@
         {
           "match": "(?i)\\b(as)\\b",
           "name": "keyword.as.sql"
+        }
+      ]
+    },
+    "userFunctions": {
+      "patterns": [
+        {
+          "captures": { "1": { "name": "support.function.builtin.sql" } },
+          "match": "(?<![\\w.`@])([A-Za-z_][\\w]*(?:\\.[A-Za-z_][\\w]*)*)(?=\\s*\\()",
+          "name": "meta.function.sql"
         }
       ]
     },

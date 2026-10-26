@@ -19,6 +19,14 @@ interface CasingFixture {
 
 const fixtures: CasingFixture[] = [
   {
+    code: 'CP03',
+    lower: "select sum(a), coalesce(b, 0), safe_cast(c as INT64), ai.generate('x'), ds.myfunc(a), custom_fn(a);\n",
+    upper: "select SUM(a), COALESCE(b, 0), SAFE_CAST(c as INT64), AI.GENERATE('x'), DS.MYFUNC(a), CUSTOM_FN(a);\n",
+    mixed: "select Sum(a), Coalesce(b, 0), Safe_Cast(c as INT64), Ai.Generate('x'), Ds.MyFunc(a), Custom_Fn(a);\n",
+    ignored: "-- SUM(a)\n/* MAX(b) */\nselect 'COUNT(c)', `SUM`(a), '''AVG(d)\nSUM(e)''', sum(a);\n",
+    pipe: "from ds.tbl |> extend AI.GENERATE('x') as answer |> aggregate SUM(a) as total;\n",
+  },
+  {
     code: 'CP02',
     lower: 'with cte as (select a as b from MyProject.ds.tbl t) select c.b from cte c;\n',
     upper: 'with CTE as (select A as B from MyProject.DS.TBL T) select C.B from CTE C;\n',
@@ -151,6 +159,35 @@ for (const fixture of fixtures) {
         const quoted = 'select t.Field from `MyProject.MyDataset.MyTable` T;\n';
         expect(TextDocument.applyEdits(document(quoted), await formatDocument(document(quoted), settings()))).to.equal(
           'select t.field from `MyProject.MyDataset.MyTable` t;\n',
+        );
+      });
+    }
+
+    if (fixture.code === 'CP03') {
+      it('does not classify DDL object names as function calls', async () => {
+        for (const text of [
+          'CREATE TABLE MyTable (a INT64);\n',
+          'create table MyDataset.MyTable (a INT64);\n',
+          'CREATE TEMP FUNCTION MyFunc(a INT64) AS (a);\n',
+        ]) {
+          expect(await verify(text), text).to.deep.equal([]);
+        }
+      });
+
+      it('keeps function and identifier policies independent, including user-defined calls', async () => {
+        const configuration = settings('upper');
+        configuration.rules!.exclude = ['CP01', 'CP04'];
+        configuration.rules!.CP02 = { options: { capitalisation_policy: 'lower' } };
+        const source = document('select Ds.MyFunc(A), SUM(B) as Result;\n');
+        const expected = 'select DS.MYFUNC(a), SUM(b) as result;\n';
+        expect(TextDocument.applyEdits(source, await formatDocument(source, configuration))).to.equal(expected);
+        expect(await formatDocument(document(expected), configuration)).to.deep.equal([]);
+      });
+
+      it('checks table-valued and project-qualified user-defined function calls', async () => {
+        const input = document('select Project.Ds.MyFunc(a) from Ds.MyTvf(1);\n');
+        expect(TextDocument.applyEdits(input, await formatDocument(input, settings()))).to.equal(
+          'select project.ds.myfunc(a) from ds.mytvf(1);\n',
         );
       });
     }

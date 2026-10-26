@@ -31,6 +31,7 @@ export const sourceFixAllKind = `${CodeActionKind.SourceFixAll}.bigquerySQLForma
 const extendedQuerySafeRules = new Set([
   'CP01',
   'CP02',
+  'CP03',
   'CP04',
   'CV01',
   'CV02',
