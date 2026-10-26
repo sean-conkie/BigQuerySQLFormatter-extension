@@ -4,6 +4,8 @@
 
 ### Added (unreleased)
 
+- Add CP02 unquoted identifier capitalisation, excluding project names and quoted
+  identifiers, with casing policies, quick fixes, Fix All and formatting.
 - Add CP01 keyword capitalisation with `lower`, `upper`, and `consistent`
   policies, including pipe operators, quick fixes, Fix All and formatting.
 - Add typed per-rule options with defaults, validation, editor schema completion,

@@ -19,6 +19,14 @@ interface CasingFixture {
 
 const fixtures: CasingFixture[] = [
   {
+    code: 'CP02',
+    lower: 'with cte as (select a as b from MyProject.ds.tbl t) select c.b from cte c;\n',
+    upper: 'with CTE as (select A as B from MyProject.DS.TBL T) select C.B from CTE C;\n',
+    mixed: 'with Cte as (select A as B from MyProject.Ds.Tbl T) select C.B from Cte C;\n',
+    ignored: "-- FOO\n/* BAR */\nselect 'X', `Y`, '''Z\nQ''', a from MyProject.ds.tbl;\n",
+    pipe: 'from ds.tbl |> select A as B;\n',
+  },
+  {
     code: 'CP01',
     lower: 'select a from t where a is not null group by a;\n',
     upper: 'SELECT a FROM t WHERE a IS NOT null GROUP BY a;\n',
@@ -131,6 +139,21 @@ for (const fixture of fixtures) {
       expect(errors).to.have.length(1);
       expect(parsed).to.have.nested.property(`rules.${fixture.code}.options.capitalisation_policy`, 'lower');
     });
+
+    if (fixture.code === 'CP02') {
+      it('preserves quoted paths and project names while fixing implicit aliases and field references', async () => {
+        const source = document(
+          'select `Quoted`, `Project.Dataset.Table`.Field, Foo ImplicitAlias from MyProject.MyDataset.MyTable T;\n',
+        );
+        expect(TextDocument.applyEdits(source, await formatDocument(source, settings()))).to.equal(
+          'select `Quoted`, `Project.Dataset.Table`.field, foo implicitalias from MyProject.mydataset.mytable t;\n',
+        );
+        const quoted = 'select t.Field from `MyProject.MyDataset.MyTable` T;\n';
+        expect(TextDocument.applyEdits(document(quoted), await formatDocument(document(quoted), settings()))).to.equal(
+          'select t.field from `MyProject.MyDataset.MyTable` t;\n',
+        );
+      });
+    }
 
     it('remains active for pipe queries', async () => {
       const diagnostics = await verify(fixture.pipe);
