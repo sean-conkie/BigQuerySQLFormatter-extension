@@ -111,14 +111,14 @@ Layout rules are guidelines that help developers maintain a consistent and reada
 References Rules
 ----------------
 
-The ``references`` group and ``RF`` rule-code prefix are reserved for upcoming
-reference checks. No RF rules are currently registered, so configuring this
-group does not yet produce diagnostics or fixes.
+Reference rules check identifier naming and usage. RF01 remains reserved and
+disabled by default; implemented rules are enabled by default.
 
 .. toctree::
 	:maxdepth: 1
 
 	References groundwork: RF01 (disabled by default) <references/RF01>
+	Rule: Avoid Keywords as Identifiers <references/RF04>
 
 .. _structure-rules:
 

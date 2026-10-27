@@ -75,9 +75,9 @@ precedence over ``enabled: true``.
 
 Rules declared disabled by default require an explicit ``"enabled": true`` in
 editor settings or ``.bqsqlformatter.json``. Severity, options, and enabling a
-group do not opt a rule in. RF01 is reserved as **Disabled by default**, but no
-RF checks are implemented yet; accepting its configuration does not add lint
-behaviour.
+group do not opt a rule in. RF01 is reserved as **Disabled by default**;
+accepting its configuration does not add lint behaviour. Implemented reference
+rules are enabled by default; see their individual pages for options.
 
 These controls affect diagnostics, quick fixes, Fix All, and formatting. Disabled rules
 do not count toward ``bigquerySQLFormatter.maxNumberOfProblems``.
@@ -114,8 +114,11 @@ only an empty ``options`` object.
 
 Option declarations also support string lists, represented in the settings
 schema as ``{"type": "array", "items": {"type": "string"}}``. Every element
-must be a string; empty lists are valid. This is groundwork for future
-word/character options, not an active RF rule option.
+must be a string; empty lists are valid. RF04 uses ``ignore_words`` for
+case-insensitive exceptions. Its ``unquoted_identifiers_policy`` defaults to
+``aliases`` and ``quoted_identifiers_policy`` defaults to ``none``; both support
+``aliases``, ``column_aliases``, ``table_aliases`` and ``all``. Quoted identifiers
+also support ``none``. The same options work in project configuration files.
 
 Project configuration
 ~~~~~~~~~~~~~~~~~~~~~

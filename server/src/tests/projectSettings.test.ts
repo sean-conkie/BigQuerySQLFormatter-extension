@@ -63,9 +63,10 @@ describe('Rule configuration', () => {
     expect(resolveOption(definition, [])).to.deep.equal([]);
   });
 
-  it('reserves the references registry without adding RF lint behaviour', () => {
-    expect(classes).to.deep.equal([]);
-    expect(referencesRules(defaultSettings, 0)).to.deep.equal([]);
+  it('registers implemented reference rules with enabled defaults', () => {
+    expect(classes.length).to.be.greaterThan(0);
+    expect(referencesRules(defaultSettings, 0).map((rule) => rule.code)).to.include('RF04');
+    expect(referencesRules(defaultSettings, 0).every((rule) => rule.defaultEnabled)).to.equal(true);
   });
 
   it('keeps RF schema patterns, exclusions, groups and the opt-in default aligned', () => {

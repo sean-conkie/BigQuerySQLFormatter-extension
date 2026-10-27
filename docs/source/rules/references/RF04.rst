@@ -1,0 +1,46 @@
+RF04: Avoid keywords as identifiers
+==================================
+
+``references.keywords`` is enabled by default. It checks unquoted aliases,
+including CTE names, against reserved and non-reserved GoogleSQL keywords.
+Type names such as ``date``, ``timestamp`` and ``json`` are legal identifiers
+but can be confusing. Prefer ``created_ts`` over ``timestamp``, for example.
+
+Options
+-------
+
+* ``unquoted_identifiers_policy``: ``aliases`` (default), ``column_aliases``,
+  ``table_aliases`` or ``all``.
+* ``quoted_identifiers_policy``: ``none`` (default), ``aliases``,
+  ``column_aliases``, ``table_aliases`` or ``all``.
+* ``ignore_words``: case-insensitive string list, default ``[]``.
+
+``table_aliases`` includes CTE names. ``all`` also checks column and table
+names, including each part of a path. Backtick-quoted reserved words are
+accepted by default. Use ``-- noqa: RF04`` to suppress a diagnostic.
+
+For example, in ``.bqsqlformatter.json``:
+
+.. code-block:: json
+
+   {
+     "rules": {
+       "RF04": {
+         "options": {
+           "unquoted_identifiers_policy": "column_aliases",
+           "ignore_words": ["date"]
+         }
+       }
+     }
+   }
+
+There is no automatic fix: renaming requires updating every reference.
+
+Keyword data
+------------
+
+The checked-in ``server/src/linter/keywords.json`` is generated with
+``npm run generate:keywords``. Reserved words come from the GoogleSQL
+`lexical reference <https://cloud.google.com/bigquery/docs/reference/standard-sql/lexical#reserved_keywords>`_.
+Non-reserved words and type names come from the extension's GoogleSQL grammar,
+excluding the reserved list. The generated data is used offline at runtime.

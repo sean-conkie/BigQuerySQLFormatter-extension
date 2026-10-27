@@ -42,7 +42,9 @@ select **GoogleSQL** as the document language to start linting.
 
 See the [rule reference](https://bigquerysqlformatter.readthedocs.io/en/latest/rules/)
 for all aliasing, ambiguous, capitalisation, convention, layout, references, and structure rules.
-The `references` (RF) group is reserved for upcoming rules; no RF checks run yet.
+The `references` (RF) group checks identifier naming. RF04 is enabled by default
+and warns about keywords used as unquoted aliases. Quoted names are accepted by
+default; identifier policies and `ignore_words` are configurable.
 The 0.4.0 rules add explicit UNION modifiers and INNER JOINs, consistent
 GROUP BY/ORDER BY references, matching set-query column counts, statement
 terminators, and CTE layout.
@@ -95,10 +97,9 @@ the first matching token in the file; a mixed-case first token selects
 lowercase. Strings, quoted identifiers, and comments are ignored. Group settings
 remain boolean toggles, not shared option defaults.
 
-Option declarations also support lists of strings for future word/character
-options. Lists must contain only strings; an empty list is valid. Project
+Option declarations also support lists of strings, including RF04's
+case-insensitive `ignore_words`. Lists must contain only strings; an empty list is valid. Project
 lists replace the corresponding editor list rather than being concatenated.
-No reference-rule list options are active yet.
 
 For shared project settings, create `.bqsqlformatter.json`:
 

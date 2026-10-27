@@ -46,13 +46,13 @@ test('committed keyword data is deterministic, sorted, disjoint and synchronized
   assert.deepEqual(catalog, keywordCatalog(await fixture(), grammar));
   for (const words of Object.values(catalog)) {
     assert.deepEqual(words, [...new Set(words)].sort());
-    assert.ok(words.every((word) => /^[a-z][a-z_]*$/.test(word)));
+    assert.ok(words.every((word) => /^[a-z][a-z_0-9]*$/.test(word)));
   }
   assert.ok(catalog.nonReserved.every((word) => !catalog.reserved.includes(word)));
-  for (const word of ['aggregate', 'acyclic', 'match_recognize', 'microsecond', 'millisecond', 'pivot', 'unpivot']) {
+  for (const word of ['aggregate', 'acyclic', 'match_recognize', 'microsecond', 'millisecond', 'pivot', 'unpivot', 'date', 'timestamp', 'json', 'int64']) {
     assert.ok(catalog.nonReserved.includes(word), word);
   }
-  for (const word of ['abs', 'int64', 'w', 's', 'alpha', 'functionif']) {
+  for (const word of ['abs', 'w', 's', 'alpha', 'functionif']) {
     assert.ok(!catalog.nonReserved.includes(word), word);
   }
   assert.ok(!catalog.nonReserved.includes('select'));
@@ -69,12 +69,12 @@ test('extracts scoped words, phrase components and nested literal alternatives o
       { begin: '(?i)(begin)', end: '(?i)(end)', beginCaptures: { 1: { name: 'keyword.begin.sql' } }, endCaptures: { 1: { name: 'keyword.end.sql' } } },
       { match: '\\*|\\+', name: 'keyword.operator.sql' },
       { match: 'NOT_A_KEYWORD', name: 'support.function.builtin.sql' },
-      { match: 'NOT_A_TYPE_KEYWORD', name: 'storage.type.sql' },
+      { match: 'int64|date', name: 'storage.type.sql' },
     ],
     repository: { extra: { patterns: [{ match: '(?i)\\b(order\\s+by)\\b', captures: { 1: { name: 'keyword.order.sql' } } }] } },
   };
   assert.deepEqual(grammarKeywords(sample), [
-    'begin', 'by', 'custom', 'end', 'from', 'function', 'if', 'microsecond', 'millisecond', 'not', 'order', 'second',
+    'begin', 'by', 'custom', 'date', 'end', 'from', 'function', 'if', 'int64', 'microsecond', 'millisecond', 'not', 'order', 'second',
   ]);
 });
 
