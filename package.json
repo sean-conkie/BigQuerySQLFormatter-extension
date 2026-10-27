@@ -82,6 +82,10 @@
               "type": "object",
               "description": "Avoid special characters in backtick-quoted identifiers."
             },
+            "RF06": {
+              "type": "object",
+              "description": "Remove unnecessary backticks; table paths are skipped by default."
+            },
             "exclude": {
               "type": "array",
               "items": {
@@ -156,7 +160,7 @@
               },
               "additionalProperties": false
             },
-            "^(?!CP0[1-5]$|RF01$|RF04$|RF05$)(AL|AM|CP|CV|LT|RF|ST)[0-9]{2}$": {
+            "^(?!CP0[1-5]$|RF01$|RF04$|RF05$|RF06$)(AL|AM|CP|CV|LT|RF|ST)[0-9]{2}$": {
               "type": "object",
               "properties": {
                 "enabled": {
@@ -210,6 +214,22 @@
                     "allow_space_in_identifier": { "type": "boolean", "default": false },
                     "additional_allowed_characters": { "type": "array", "items": { "type": "string" }, "default": [] },
                     "ignore_words": { "type": "array", "items": { "type": "string" }, "default": [] }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            },
+            "^RF06$": {
+              "type": "object",
+              "properties": {
+                "enabled": { "type": "boolean", "default": true, "description": "Enable unnecessary-backtick diagnostics and fixes." },
+                "severity": { "type": "string", "description": "Severity for unnecessary-backtick diagnostics; off also disables fixes.", "enum": ["error", "warning", "information", "hint", "off"], "default": "warning" },
+                "options": {
+                  "type": "object",
+                  "properties": {
+                    "check_table_paths": { "type": "boolean", "default": false, "description": "Also remove unnecessary backticks from table paths, preserving case-sensitive names." },
+                    "ignore_words": { "type": "array", "items": { "type": "string" }, "default": [], "description": "Case-insensitive identifiers or path components whose backticks should be preserved." }
                   },
                   "additionalProperties": false
                 }

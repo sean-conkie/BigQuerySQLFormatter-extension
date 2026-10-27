@@ -45,6 +45,10 @@ for all aliasing, ambiguous, capitalisation, convention, layout, references, and
 The `references` (RF) group checks identifier naming. RF04 is enabled by default
 and warns about keywords used as unquoted aliases. Quoted names are accepted by
 default; identifier policies and `ignore_words` are configurable.
+RF05 checks quoted identifiers for special characters, with exceptions for
+dashed project IDs and INFORMATION_SCHEMA region qualifiers. RF06 removes
+unnecessary backticks from columns, aliases and CTE names. Both are enabled by
+default; RF06 leaves table paths quoted unless `check_table_paths` is enabled.
 The 0.4.0 rules add explicit UNION modifiers and INNER JOINs, consistent
 GROUP BY/ORDER BY references, matching set-query column counts, statement
 terminators, and CTE layout.
@@ -186,10 +190,10 @@ custom indentation and comma-position options are not yet supported. Cycling fix
 
 ### Fix All and fix on save
 
-**Fix All** combines non-overlapping fixes across the whole document into one
-action, even when only some diagnostics are visible. Individual quick fixes
-remain available. Overlapping fixes may require another invocation; formatting
-automatically repeats the fixes.
+**Fix All** combines fixes across the whole document into one action, even when
+only some diagnostics are visible. Like formatting, it repeats safe,
+non-overlapping fixes until stable, including issues exposed by earlier fixes.
+Individual quick fixes remain available.
 
 As an alternative to formatting on save, add this to your `settings.json`:
 

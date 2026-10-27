@@ -120,6 +120,7 @@ disabled by default; implemented rules are enabled by default.
 	References groundwork: RF01 (disabled by default) <references/RF01>
 	Rule: Avoid Keywords as Identifiers <references/RF04>
 	Rule: Avoid Special Characters in Identifiers <references/RF05>
+	Rule: Remove Unnecessary Backticks <references/RF06>
 
 .. _structure-rules:
 

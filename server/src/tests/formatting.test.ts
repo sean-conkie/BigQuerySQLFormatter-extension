@@ -180,36 +180,46 @@ describe('Formatting and document fixes', () => {
   });
 
   for (const cycle of [true, false]) {
-    it(`reports ${cycle ? 'cycling' : 'non-converging'} fixes instead of returning partial formatting`, async () => {
-      const keys = [...globalTokenCache.keys()];
-      let calls = 0;
-      sinon.stub(Linter.prototype, 'verify').resolves([]);
-      sinon.stub(Linter.prototype, 'createCodeActions').callsFake(async (params) => [
-        {
-          title: 'Test',
-          kind: sourceFixAllKind,
-          edit: {
-            changes: {
-              [params.textDocument.uri]: [
-                {
-                  range: Range.create(0, 0, 0, 1),
-                  newText: cycle ? (++calls % 2 ? 'b' : 'a') : String.fromCharCode(1000 + calls++),
-                },
-              ],
+    for (const operation of ['formatting', 'Fix All']) {
+      it(`reports ${cycle ? 'cycling' : 'non-converging'} fixes instead of returning partial ${operation}`, async () => {
+        const keys = [...globalTokenCache.keys()];
+        let calls = 0;
+        sinon.stub(Linter.prototype, 'verify').resolves([]);
+        sinon.stub(Linter.prototype, 'createCodeActions').callsFake(async (params) => [
+          {
+            title: 'Test',
+            kind: sourceFixAllKind,
+            edit: {
+              changes: {
+                [params.textDocument.uri]: [
+                  {
+                    range: Range.create(0, 0, 0, 1),
+                    newText: cycle ? (++calls % 2 ? 'b' : 'a') : String.fromCharCode(1000 + calls++),
+                  },
+                ],
+              },
             },
           },
-        },
-      ]);
-      try {
-        await formatDocument(document('a'), defaultSettings);
-        expect.fail('Expected convergence failure');
-      } catch (error) {
-        expect(error).to.have.property('code', LSPErrorCodes.RequestFailed);
-        expect(error)
-          .to.have.property('message')
-          .that.includes(cycle ? 'cycle' : '100 fix passes');
-      }
-      expect([...globalTokenCache.keys()]).to.deep.equal(keys);
-    });
+        ]);
+        try {
+          if (operation === 'formatting') {
+            await formatDocument(document('a'), defaultSettings);
+          } else {
+            await createDocumentCodeActions(document('a'), defaultSettings, {
+              textDocument: { uri },
+              range: Range.create(0, 0, 0, 1),
+              context: { diagnostics: [], only: [CodeActionKind.SourceFixAll] },
+            });
+          }
+          expect.fail('Expected convergence failure');
+        } catch (error) {
+          expect(error).to.have.property('code', LSPErrorCodes.RequestFailed);
+          expect(error)
+            .to.have.property('message')
+            .that.includes(cycle ? 'cycle' : '100 fix passes');
+        }
+        expect([...globalTokenCache.keys()]).to.deep.equal(keys);
+      });
+    }
   }
 });
