@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Reserve the `references` rule group and `RF` rule codes in editor and project
+  settings. No reference checks are enabled or implemented yet.
+- Support rules that are disabled by default and require explicit
+  `enabled: true`. RF01 is reserved with a disabled default; exclusions,
+  disabled groups and severity `off` retain precedence.
+
 ## 0.5.0 - 2026-10-27
 
 ### Notable changes

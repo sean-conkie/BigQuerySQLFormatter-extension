@@ -166,7 +166,7 @@ export class Linter {
   }
 
   private isRuleEnabled(rule: Rule<string | FileMap>): boolean {
-    return rule.enabled && isRuleEnabled(this.settings, rule.code, rule.ruleGroup);
+    return rule.enabled && isRuleEnabled(this.settings, rule.code, rule.ruleGroup, rule.defaultEnabled);
   }
 
   closeDocument(uri: string): void {
