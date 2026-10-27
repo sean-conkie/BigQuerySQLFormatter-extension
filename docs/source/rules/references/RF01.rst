@@ -1,0 +1,35 @@
+==============================
+RF01: References (groundwork)
+==============================
+
+**Disabled by default**
+
+RF01 is reserved for a future reference check. No RF01 rule is implemented or
+registered yet, so enabling it currently produces no diagnostics or fixes.
+The ``references`` group, ``RF`` rule codes and settings schema are available
+in preparation for reference rules.
+
+Rules declared disabled by default require explicit opt-in in VS Code settings:
+
+.. code-block:: json
+
+    {
+      "bigquerySQLFormatter.rules": {
+        "RF01": { "enabled": true }
+      }
+    }
+
+The equivalent project-file setting is:
+
+.. code-block:: json
+
+    {
+      "rules": {
+        "RF01": { "enabled": true }
+      }
+    }
+
+Setting severity or options, or enabling the ``references`` group, does not
+enable an opt-in rule. Exclusions, ``groups.references: false`` and
+``severity: off`` still take precedence over ``enabled: true``.
+RF01 does not declare any options.

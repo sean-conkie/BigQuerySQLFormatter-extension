@@ -42,6 +42,7 @@ export abstract class Rule<T extends string | FileMap> {
   readonly docsUrl: string = 'https://bigquerysqlformatter.readthedocs.io/en/';
   ruleGroup: string = '';
   severity: DiagnosticSeverity = DiagnosticSeverity.Warning;
+  readonly defaultEnabled: boolean = true;
   enabled: boolean = true;
   settings: ServerSettings;
   problems: number;

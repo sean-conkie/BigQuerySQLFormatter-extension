@@ -105,6 +105,21 @@ Layout rules are guidelines that help developers maintain a consistent and reada
 	Rule: SQL Files Must Not Begin with Newlines or Whitespace <layout/LT13>
 	Rule: Align Equal (`=`) Sign in Comparison Blocks <layout/LT15>
 
+.. _references-rules:
+
+----------------
+References Rules
+----------------
+
+The ``references`` group and ``RF`` rule-code prefix are reserved for upcoming
+reference checks. No RF rules are currently registered, so configuring this
+group does not yet produce diagnostics or fixes.
+
+.. toctree::
+	:maxdepth: 1
+
+	References groundwork: RF01 (disabled by default) <references/RF01>
+
 .. _structure-rules:
 
 ---------------

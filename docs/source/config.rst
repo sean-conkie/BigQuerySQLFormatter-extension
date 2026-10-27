@@ -64,13 +64,20 @@ VS Code's user, workspace, or workspace-folder ``settings.json``:
       }
     }
 
-Rule keys are uppercase codes. Each rule accepts ``enabled`` (default ``true``)
+Rule keys are uppercase codes, including ``RF`` for references. Each rule accepts ``enabled`` (default ``true``
+unless its documentation says otherwise)
 and ``severity``: ``error``, ``warning``, ``information``, ``hint``, or ``off``.
 ``off`` disables evaluation and fixes just like ``enabled: false``.
 ``exclude`` disables the listed codes. ``groups`` accepts boolean toggles for
-``aliasing``, ``ambiguous``, ``capitalisation``, ``convention``, ``layout``, and
+``aliasing``, ``ambiguous``, ``capitalisation``, ``convention``, ``layout``, ``references``, and
 ``structure``. An exclusion, a disabled group, or ``severity: off`` takes
 precedence over ``enabled: true``.
+
+Rules declared disabled by default require an explicit ``"enabled": true`` in
+editor settings or ``.bqsqlformatter.json``. Severity, options, and enabling a
+group do not opt a rule in. RF01 is reserved as **Disabled by default**, but no
+RF checks are implemented yet; accepting its configuration does not add lint
+behaviour.
 
 These controls affect diagnostics, quick fixes, Fix All, and formatting. Disabled rules
 do not count toward ``bigquerySQLFormatter.maxNumberOfProblems``.
@@ -105,6 +112,11 @@ Options are per-rule only; ``groups`` remains a set of boolean toggles and
 does not supply shared option defaults. Rules without declared options accept
 only an empty ``options`` object.
 
+Option declarations also support string lists, represented in the settings
+schema as ``{"type": "array", "items": {"type": "string"}}``. Every element
+must be a string; empty lists are valid. This is groundwork for future
+word/character options, not an active RF rule option.
+
 Project configuration
 ~~~~~~~~~~~~~~~~~~~~~
 
@@ -132,6 +144,8 @@ Project values override VS Code settings field by field, including individual
 rule fields, individual ``options`` fields, and group toggles. ``exclude``
 replaces the editor's exclusion list; use ``[]`` to clear it. Omitted fields
 retain their editor values. The problem limit must be a non-negative integer.
+String-list options replace the corresponding editor list rather than extending
+it. An empty list clears an inherited list, while an omitted option retains it.
 
 Creating, editing, or deleting a config file in the workspace immediately
 revalidates open SQL files, as do VS Code setting changes. Invalid JSON, invalid

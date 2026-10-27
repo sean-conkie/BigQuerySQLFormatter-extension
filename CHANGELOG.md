@@ -11,6 +11,14 @@
   subqueries retain diagnostics, quick fixes, Fix All and formatting.
   The existing safe rules still run inside skipped blocks.
 
+### Added
+
+- Reserve the `references` rule group and `RF` rule codes in editor and project
+  settings. No reference checks are enabled or implemented yet.
+- Support rules that are disabled by default and require explicit
+  `enabled: true`. RF01 is reserved with a disabled default; exclusions,
+  disabled groups and severity `off` retain precedence.
+
 ### Fixed
 
 - Isolate unsupported query bodies from traditional SELECT lists and source-based
