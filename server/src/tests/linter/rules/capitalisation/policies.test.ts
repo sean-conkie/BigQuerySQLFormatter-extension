@@ -63,7 +63,14 @@ for (const fixture of fixtures) {
       const configuration: ServerSettings = {
         ...defaultSettings,
         rules: {
-          groups: { aliasing: false, ambiguous: false, convention: false, layout: false, structure: false },
+          groups: {
+            aliasing: false,
+            ambiguous: false,
+            convention: false,
+            layout: false,
+            structure: false,
+            references: false,
+          },
           exclude: classes.map((rule) => new rule(defaultSettings, 0).code).filter((code) => code !== fixture.code),
         },
       };
