@@ -19,6 +19,8 @@ import { type FileMap, Parser } from './parser';
 import type { StatementAST } from './parser/ast';
 import { globalTokenCache } from './parser/tokenCache';
 import { checkCancellation, yieldToEventLoop } from '../cancellation';
+import { SourceRule } from './rules/source';
+import { comparePositions, extendedQueryRanges, queryBlocks, rangesOverlap } from './parser/queryBlocks';
 
 interface Directive extends Range {
   code: string;
@@ -44,10 +46,6 @@ const extendedQuerySafeRules = new Set([
   'LT13',
 ]);
 
-function comparePositions(a: Position, b: Position): number {
-  return a.line - b.line || a.character - b.character;
-}
-
 function rangesConflict(a: Range, b: Range): boolean {
   if (comparePositions(a.start, b.start) === 0) return true;
   return comparePositions(a.start, b.end) < 0 && comparePositions(b.start, a.end) < 0;
@@ -63,6 +61,7 @@ export class Linter {
   parserRules: Rule<string | FileMap>[] = [];
   problems: number = 0;
   private readonly parser = new Parser();
+  private readonly skippedRanges = new Map<string, Range[]>();
 
   constructor(settings: ServerSettings) {
     this.settings = settings;
@@ -119,14 +118,20 @@ export class Linter {
     const diagnostics: Diagnostic[] = [];
     const cache = globalTokenCache.get(uri)!;
     const text = cache.getText();
-    const extendedQueries = Object.values(ast).filter((statement) => statement.hasExtendedQuerySyntax);
+    const skippedRanges = extendedQueryRanges(ast);
+    this.skippedRanges.set(uri, skippedRanges);
     const traditionalAst = Object.fromEntries(
-      Object.entries(ast).filter(([, statement]) => !statement.hasExtendedQuerySyntax),
+      queryBlocks(ast)
+        .filter((statement) => !statement.hasExtendedQuerySyntax)
+        .map((statement, index) => [index, statement]),
     );
     for (const rule of [...this.parserRules, ...this.regexRules]) {
       await yieldToEventLoop(token);
       if (!this.isRuleEnabled(rule)) continue;
-      const result = rule.evaluate(rule.type === RuleType.PARSER ? traditionalAst : text, uri);
+      const result = rule.evaluate(
+        rule.type === RuleType.PARSER ? (rule instanceof SourceRule ? ast : traditionalAst) : text,
+        uri,
+      );
       if (result) {
         const severity = this.settings.rules?.[rule.code as RuleCode]?.severity;
         const severities = {
@@ -140,19 +145,7 @@ export class Linter {
             .filter((diagnostic) => {
               if (rule.type !== RuleType.PARSER && !cache.isCodeRange(diagnostic.range)) return false;
               if (extendedQuerySafeRules.has(rule.code)) return true;
-              return !extendedQueries.some((statement) => {
-                const first = statement.tokens[0];
-                const last = statement.tokens[statement.tokens.length - 1];
-                if (first.lineNumber === null || last.lineNumber === null) {
-                  throw new Error('Extended query tokens have no line number');
-                }
-                const start = { line: first.lineNumber, character: first.startIndex };
-                const end = { line: last.lineNumber, character: last.endIndex };
-                return (
-                  comparePositions(diagnostic.range.start, end) <= 0 &&
-                  comparePositions(diagnostic.range.end, start) >= 0
-                );
-              });
+              return !skippedRanges.some((range) => rangesOverlap(diagnostic.range, range));
             })
             .map((diagnostic) => ({
               ...diagnostic,
@@ -170,6 +163,7 @@ export class Linter {
   }
 
   closeDocument(uri: string): void {
+    this.skippedRanges.delete(uri);
     for (const rule of [...this.parserRules, ...this.regexRules]) {
       rule.closeDocument(uri);
     }
@@ -289,9 +283,19 @@ export class Linter {
       });
     });
 
+    const protectedRanges = this.skippedRanges.get(params.textDocument.uri) ?? [];
+    const safeActions = codeActions.filter((action) => {
+      const code = String(action.diagnostics?.[0]?.code).split(':', 1)[0];
+      return (
+        extendedQuerySafeRules.has(code) ||
+        !(action.edit?.changes?.[params.textDocument.uri] ?? []).some((edit) =>
+          protectedRanges.some((range) => rangesOverlap(edit.range, range)),
+        )
+      );
+    });
     const cache = globalTokenCache.get(params.textDocument.uri);
     if (cache && cache.eol !== '\n') {
-      for (const action of codeActions) {
+      for (const action of safeActions) {
         for (const edit of action.edit?.changes?.[params.textDocument.uri] ?? []) {
           edit.newText = edit.newText.replace(/\r\n?|\n/g, cache.eol);
         }
@@ -299,7 +303,7 @@ export class Linter {
     }
 
     const editsFor = (action: CodeAction) => action.edit?.changes?.[params.textDocument.uri] ?? [];
-    const candidates = codeActions
+    const candidates = safeActions
       .filter((action) => action.kind === CodeActionKind.SourceFixAll && editsFor(action).length > 0)
       .sort((a, b) => comparePositions(editsFor(b)[0].range.start, editsFor(a)[0].range.start));
     const edits: TextEdit[] = [];
@@ -332,7 +336,7 @@ export class Linter {
           },
         ]
       : [];
-    const actions = [...combined, ...codeActions.filter((action) => action.kind === CodeActionKind.QuickFix)];
+    const actions = [...combined, ...safeActions.filter((action) => action.kind === CodeActionKind.QuickFix)];
     return actions.filter(
       (action) =>
         !params.context.only ||

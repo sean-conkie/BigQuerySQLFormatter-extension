@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Notable changes
+
+- Traditional query blocks surrounding pipe syntax, `MATCH_RECOGNIZE`,
+  `GRAPH_TABLE` or `FOR SYSTEM_TIME AS OF` are linted again. Structural rules
+  skip only the query block containing unsupported syntax and its descendants,
+  rather than the whole enclosing statement. Traditional sibling CTEs and
+  subqueries retain diagnostics, quick fixes, Fix All and formatting.
+  The existing safe rules still run inside skipped blocks.
+
 ### Added
 
 - Reserve the `references` rule group and `RF` rule codes in editor and project
@@ -9,6 +18,13 @@
 - Support rules that are disabled by default and require explicit
   `enabled: true`. RF01 is reserved with a disabled default; exclusions,
   disabled groups and severity `off` retain precedence.
+
+### Fixed
+
+- Isolate unsupported query bodies from traditional SELECT lists and source-based
+  rule context, including nested queries and incremental edits (#404, phase 1).
+- Keep structural fixes outside skipped query bodies and avoid indenting a
+  nonexistent ON clause for joins that use USING.
 
 ## 0.5.0 - 2026-10-27
 

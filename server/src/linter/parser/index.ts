@@ -15,6 +15,14 @@ import { CancellationToken } from 'vscode-languageserver';
 import { checkCancellation, yieldToEventLoop } from '../../cancellation';
 import { findToken } from './utils';
 import { TextDocument } from 'vscode-languageserver-textdocument';
+import {
+  comparePositions,
+  containsExtendedSyntax,
+  hasExtendedSyntax,
+  isCode,
+  nestedQuerySlices,
+  tokenRange,
+} from './queryBlocks';
 
 const punctuation: string[] = syntaxJson.punctuation;
 const skipTokens: string[] = syntaxJson.skipTokens;
@@ -271,19 +279,81 @@ export class Parser {
    * The method uses a recursive lookahead to handle nested structures and ensures that
    * infinite loops are avoided by using a reCheck flag.
    */
-  private async parseStatement(tokens: Token[], cancellation: CancellationToken): Promise<StatementAST> {
-    const statement = new StatementAST(tokens);
-
-    const firstCodeToken = tokens.find(
-      (token) => token.value.trim() && !token.scopes.some((scope) => scope.startsWith('comment.')),
-    );
-    statement.hasExtendedQuerySyntax =
-      firstCodeToken?.scopes.includes('keyword.from.sql') === true ||
-      tokens.some((token) =>
-        token.scopes.some((scope) =>
-          ['keyword.operator.pipe.sql', 'keyword.control.query.sql', 'keyword.control.temporal.sql'].includes(scope),
-        ),
-      );
+  private async parseStatement(
+    tokens: Token[],
+    cancellation: CancellationToken,
+    partitionQueries = false,
+  ): Promise<StatementAST> {
+    if (!partitionQueries && !containsExtendedSyntax(tokens)) {
+      return this.parseTraditionalStatement(tokens, cancellation);
+    }
+    const children = nestedQuerySlices(tokens);
+    const ownTokens: Token[] = [];
+    const queryBlocks: StatementAST[] = [];
+    let start = 0;
+    for (const child of children) {
+      ownTokens.push(...tokens.slice(start, child.start));
+      start = child.end;
+    }
+    ownTokens.push(...tokens.slice(start));
+    const extended = hasExtendedSyntax(ownTokens);
+    if (!extended) {
+      for (const child of children) {
+        queryBlocks.push(await this.parseStatement(tokens.slice(child.start, child.end), cancellation, true));
+      }
+    }
+    // Restart highlighting for the traditional block: pipe-stage scopes can otherwise
+    // affect FROM/alias scopes after a nested pipeline has closed.
+    let traditionalTokens = ownTokens;
+    if (!extended) {
+      if (ownTokens.find(isCode)?.value.toUpperCase() === 'WITH') {
+        let depth = 0;
+        const select = ownTokens.findIndex((token) => {
+          if (token.scopes.includes('punctuation.definition.section.bracket.round.begin.sql')) depth++;
+          if (token.scopes.includes('punctuation.definition.section.bracket.round.end.sql')) depth--;
+          return (
+            depth === 0 &&
+            token.value.toUpperCase() === 'SELECT' &&
+            token.scopes.some((scope) => scope.startsWith('keyword.'))
+          );
+        });
+        if (select >= 0) traditionalTokens = ownTokens.slice(select);
+      }
+      const lines = new Map<number, string>();
+      for (const token of traditionalTokens) {
+        if (token.lineNumber === null) throw new Error('Query token has no line number');
+        const prefix = (lines.get(token.lineNumber) ?? '').padEnd(token.startIndex, ' ');
+        lines.set(token.lineNumber, prefix + token.value);
+      }
+      traditionalTokens = (await this.tokenizeLines(lines, null, cancellation)).flatMap((line) => line.tokens);
+    }
+    const statement = extended
+      ? new StatementAST(tokens)
+      : await this.parseTraditionalStatement(traditionalTokens, cancellation, queryBlocks);
+    if (!extended) {
+      let depth = 0;
+      const projectionEnd = traditionalTokens.find((token) => {
+        if (token.scopes.includes('punctuation.definition.section.bracket.round.begin.sql')) depth++;
+        if (token.scopes.includes('punctuation.definition.section.bracket.round.end.sql')) depth--;
+        return (
+          depth === 0 &&
+          /^(FROM|WHERE|GROUP BY|HAVING|QUALIFY|WINDOW|ORDER BY|LIMIT|UNION|EXCEPT|INTERSECT)$/i.test(token.value) &&
+          token.scopes.some((scope) => scope.startsWith('keyword.'))
+        );
+      });
+      if (projectionEnd) {
+        const end = tokenRange([projectionEnd]).start;
+        statement.columns = statement.columns.filter(
+          (column) =>
+            column.startLine !== null &&
+            column.startIndex !== null &&
+            comparePositions({ line: column.startLine, character: column.startIndex }, end) < 0,
+        );
+      }
+    }
+    statement.sourceRange = tokenRange(tokens);
+    statement.queryBlocks = queryBlocks;
+    statement.hasExtendedQuerySyntax = extended;
     if (statement.hasExtendedQuerySyntax) {
       let depth = 0;
       const activeStages = new Map<number, StatementAST['pipeStages'][number]>();
@@ -309,9 +379,16 @@ export class Parser {
           depth--;
         }
       }
-      return statement;
     }
+    return statement;
+  }
 
+  private async parseTraditionalStatement(
+    tokens: Token[],
+    cancellation: CancellationToken,
+    queryBlocks: StatementAST[] = [],
+  ): Promise<StatementAST> {
+    const statement = new StatementAST(tokens);
     if (tokens.length === 0) {
       return statement;
     }
@@ -395,10 +472,18 @@ export class Parser {
             }
           }
 
-          const subqueryStatement = await this.parseStatement(
-            subqueryTokens.slice(1, subqueryTokens.length - 1),
-            cancellation,
-          );
+          const subqueryRange = tokenRange(subqueryTokens);
+          const isolated = queryBlocks.find((block) => {
+            const range = tokenRange(block.tokens);
+            return (
+              comparePositions(range.start, subqueryRange.start) > 0 &&
+              (parenCounter > 0 || comparePositions(range.end, subqueryRange.end) <= 0)
+            );
+          });
+          const subqueryStatement = isolated
+            ? new StatementAST(isolated.tokens)
+            : await this.parseStatement(subqueryTokens.slice(1, subqueryTokens.length - 1), cancellation);
+          if (isolated && parenCounter > 0) i = tokens.length;
 
           if (matchedRule.rule.alias === true) {
             const [matchedRules, y] = this.recursiveLookahead(

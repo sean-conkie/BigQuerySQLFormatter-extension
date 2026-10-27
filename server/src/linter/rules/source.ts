@@ -9,6 +9,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import type { FileMap } from '../parser';
 import { type DocumentCache, globalTokenCache } from '../parser/tokenCache';
 import { ParserRule } from './base';
+import { comparePositions, queryBlocks, queryRange } from '../parser/queryBlocks';
 
 export interface SourceToken {
   value: string;
@@ -50,10 +51,41 @@ export function closingBracket(tokens: SourceToken[], start: number): number {
 }
 
 export abstract class SourceRule extends ParserRule {
-  evaluate(_ast: FileMap, documentUri: string | null = null): Diagnostic[] | null {
+  protected readonly queryScoped: boolean = true;
+
+  evaluate(ast: FileMap, documentUri: string | null = null): Diagnostic[] | null {
     if (!this.enabled || documentUri === null) return null;
     const cache = globalTokenCache.get(documentUri)!;
-    const diagnostics = this.evaluateSource(sourceTokens(cache), cache, documentUri);
+    const tokens = sourceTokens(cache);
+    if (!this.queryScoped || !queryBlocks(ast).some((block) => block.hasExtendedQuerySyntax)) {
+      const diagnostics = this.evaluateSource(tokens, cache, documentUri);
+      return diagnostics.length ? diagnostics : null;
+    }
+
+    const diagnostics: Diagnostic[] = [];
+    for (const block of Object.values(ast)) {
+      if (!block.hasExtendedQuerySyntax && block.tokens.length) {
+        const range = queryRange(block);
+        const hidden = queryBlocks({ 0: block })
+          .filter((child) => child.hasExtendedQuerySyntax)
+          .map(queryRange);
+        const visible: SourceToken[] = [];
+        for (const token of tokens) {
+          if (comparePositions(token.range.start, range.start) < 0 || comparePositions(token.range.end, range.end) > 0)
+            continue;
+          const skipped = hidden.find(
+            (part) =>
+              comparePositions(token.range.start, part.start) >= 0 && comparePositions(token.range.end, part.end) <= 0,
+          );
+          if (!skipped) visible.push(token);
+          else if (visible[visible.length - 1]?.range !== skipped) {
+            // An unsupported query has an unknown projection, not an empty SELECT list.
+            visible.push({ value: '', range: skipped, literal: true });
+          }
+        }
+        diagnostics.push(...this.evaluateSource(visible, cache, documentUri));
+      }
+    }
     return diagnostics.length ? diagnostics : null;
   }
 

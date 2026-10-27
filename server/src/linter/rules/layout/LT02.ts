@@ -140,7 +140,7 @@ export class Indent extends ParserRule {
 
         this.checkIndentationError(join.startLine ?? 0, join.startIndex ?? 0, joinOffset, errors, cache!, documentUri);
 
-        if (join.on) {
+        if (join.on && join.on.tokens.length > 0) {
           const onOffset = offset - 3;
           this.checkIndentationError(
             join.on.startLine ?? 0,
