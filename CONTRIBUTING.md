@@ -85,7 +85,7 @@ extended queries. Other rules must opt into `extendedQuerySafeRules` only after
 they support the new structures. Phase 1 of #404 does not add pipe-stage clause
 models or enable additional rules inside unsupported query blocks.
 
-Mixed-query regression tests cover AST, source-based and regex rules, opaque
+Mixed-query regression tests cover AST, source-based and regular expression rules, opaque
 projection counts, incomplete queries, incremental edits, protected fix ranges,
 and idempotent formatting/Fix All with LF, CRLF and CR line endings.
 
