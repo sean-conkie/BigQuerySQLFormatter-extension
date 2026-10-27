@@ -20,11 +20,11 @@ test('committed reserved keywords match the full documented table fixture', asyn
 
 test('extracts only the reserved table, including line breaks and inline markup', async () => {
   const html = await fixture();
-  const decorated = html.replace('ALL<br>', '<code>ALL</code><br />')
+  const decorated = html.replace(/ALL\s*<br\s*\/?>/, '<code>ALL</code><br />')
     .replace('<table>', '<div><table>').replace('</table>', '</table></div>');
   const unrelated = '<table><tr><td>NOT_A_KEYWORD</td></tr></table>';
   assert.deepEqual(reservedKeywords(unrelated + decorated + unrelated), catalog.reserved);
-  assert.deepEqual(reservedKeywords(html.replaceAll('<br>', '&nbsp;')), catalog.reserved);
+  assert.deepEqual(reservedKeywords(html.replace(/<br\s*\/?>/g, '&nbsp;')), catalog.reserved);
 });
 
 test('fails explicitly when the reference section or complete table cannot be extracted', async () => {
@@ -33,8 +33,8 @@ test('fails explicitly when the reference section or complete table cannot be ex
     ['', /Missing reserved_keywords/],
     [html.replace('id="reserved_keywords"', 'id="changed"'), /Missing reserved_keywords/],
     ['<h2 id="reserved_keywords">Reserved</h2><p>No table</p>', /Expected one/],
-    [html.replace('ALL<br>', 'invalid<br>'), /Invalid or incomplete/],
-    [html.replace('ALL<br>', 'ALL<br>ALL<br>'), /Invalid or incomplete/],
+    [html.replace(/ALL\s*<br\s*\/?>/, 'invalid<br>'), /Invalid or incomplete/],
+    [html.replace(/ALL\s*<br\s*\/?>/, 'ALL<br>ALL<br>'), /Invalid or incomplete/],
     ['<h2 id="reserved_keywords">Reserved</h2><table><td>SELECT</td></table>', /Invalid or incomplete/],
     [html.replace('<table>', '<table></table><table>'), /Expected one/],
   ]) {
