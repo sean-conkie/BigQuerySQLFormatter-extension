@@ -40,7 +40,7 @@ export interface QuerySource {
 }
 
 export interface QueryClause {
-  kind: 'group' | 'order';
+  kind: 'group' | 'order' | 'having' | 'qualify';
   start: number;
   end: number;
 }
@@ -356,9 +356,11 @@ export class QueryScopeResolver {
       if (boundary || fromClause) flushSelect(i);
       if (boundary) from = false;
       if (
-        (keyword(token, 'GROUP') || keyword(token, 'ORDER')) &&
-        keyword(tokens[i + 1], 'BY') &&
-        !keyword(tokens[i + 2], 'ALL')
+        ((keyword(token, 'GROUP') || keyword(token, 'ORDER')) &&
+          keyword(tokens[i + 1], 'BY') &&
+          !keyword(tokens[i + 2], 'ALL')) ||
+        keyword(token, 'HAVING') ||
+        keyword(token, 'QUALIFY')
       ) {
         let stop = i + 2;
         while (stop < end) {
@@ -370,7 +372,14 @@ export class QueryScopeResolver {
           }
           stop++;
         }
-        scope.clauses.push({ kind: keyword(token, 'GROUP') ? 'group' : 'order', start: i, end: stop });
+        const kind = keyword(token, 'GROUP')
+          ? 'group'
+          : keyword(token, 'ORDER')
+            ? 'order'
+            : keyword(token, 'HAVING')
+              ? 'having'
+              : 'qualify';
+        scope.clauses.push({ kind, start: i, end: stop });
       }
       if (keyword(token, 'USING') && keyword(tokens[i + 1], '(')) {
         const close = closingBracket(tokens, i + 1);

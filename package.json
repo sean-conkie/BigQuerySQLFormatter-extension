@@ -74,6 +74,10 @@
                 }
               }
             },
+            "RF02": {
+              "type": "object",
+              "description": "Require source-qualified columns in multi-source queries."
+            },
             "RF04": {
               "type": "object",
               "description": "Avoid keywords as identifiers; checks unquoted aliases by default."
@@ -160,7 +164,7 @@
               },
               "additionalProperties": false
             },
-            "^(?!CP0[1-5]$|RF01$|RF04$|RF05$|RF06$)(AL|AM|CP|CV|LT|RF|ST)[0-9]{2}$": {
+            "^(?!CP0[1-5]$|RF01$|RF02$|RF04$|RF05$|RF06$)(AL|AM|CP|CV|LT|RF|ST)[0-9]{2}$": {
               "type": "object",
               "properties": {
                 "enabled": {
@@ -180,6 +184,22 @@
                 },
                 "options": {
                   "type": "object",
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            },
+            "^RF02$": {
+              "type": "object",
+              "properties": {
+                "enabled": { "type": "boolean", "default": true },
+                "severity": { "type": "string", "enum": ["error", "warning", "information", "hint", "off"], "default": "warning" },
+                "options": {
+                  "type": "object",
+                  "properties": {
+                    "ignore_words": { "type": "array", "items": { "type": "string" }, "default": [] },
+                    "subqueries_ignore_external_references": { "type": "boolean", "default": false }
+                  },
                   "additionalProperties": false
                 }
               },
