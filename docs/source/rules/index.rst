@@ -118,6 +118,7 @@ disabled by default; the other reference rules are enabled by default.
 	:maxdepth: 1
 
 	Rule: Known Source Qualifiers (disabled by default) <references/RF01>
+	Rule: Qualify Multi-Source References <references/RF02>
 	Rule: Avoid Keywords as Identifiers <references/RF04>
 	Rule: Avoid Special Characters in Identifiers <references/RF05>
 	Rule: Remove Unnecessary Backticks <references/RF06>

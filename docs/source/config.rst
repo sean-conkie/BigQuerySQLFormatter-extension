@@ -86,6 +86,11 @@ do not count toward ``bigquerySQLFormatter.maxNumberOfProblems``.
 Rule options
 ~~~~~~~~~~~~
 
+RF02 requires source-qualified columns in multi-source SELECT scopes.
+``ignore_words`` defaults to ``[]``; ``subqueries_ignore_external_references``
+defaults to ``false``. Enable the latter to count only local sources in
+correlated subqueries. Both options work in editor and project settings.
+
 Rules declare their supported option names, types, allowed values, and defaults.
 Set these in a rule's ``options`` object in either VS Code settings or a project
 file. The VS Code settings schema offers completion and validation. Currently

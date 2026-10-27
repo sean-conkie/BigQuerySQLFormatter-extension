@@ -4,6 +4,11 @@
 
 ### Notable changes
 
+- RF02 (`references.qualification`) is enabled by default and requires
+  source-qualified columns in multi-source SELECT scopes. It handles STRUCT
+  paths, USING, select aliases and UNNEST/OFFSET values, with configurable
+  ignored words and correlated-source counting. No automatic fix is offered.
+
 - RF01 (`references.from`) detects unknown source qualifiers when explicitly
   enabled. It resolves aliases, CTEs, UNNEST/OFFSET, TVFs, DML targets and outer
   scopes. It stays disabled by default because STRUCT field access can look

@@ -49,6 +49,11 @@ export const quotingOptions = {
   ignore_words: stringListOption,
 } as const satisfies OptionDefinitions;
 
+export const qualificationOptions = {
+  ignore_words: stringListOption,
+  subqueries_ignore_external_references: { type: 'boolean', default: false },
+} as const satisfies OptionDefinitions;
+
 export const capitalisationOptions = {
   capitalisation_policy: {
     type: 'string',
@@ -63,6 +68,7 @@ export const ruleOptionSchemas: Readonly<Record<string, OptionDefinitions>> = {
   CP03: capitalisationOptions,
   CP04: capitalisationOptions,
   CP05: capitalisationOptions,
+  RF02: qualificationOptions,
   RF04: keywordIdentifierOptions,
   RF05: specialCharacterOptions,
   RF06: quotingOptions,

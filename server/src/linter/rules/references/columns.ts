@@ -38,6 +38,8 @@ export function columnReferences(
       (keyword(tokens[index + 1], '=') && keyword(tokens[index + 2], '>'))
     )
       continue;
+    if (!first.literal && /^(CURRENT_DATE|CURRENT_TIME|CURRENT_DATETIME|CURRENT_TIMESTAMP)$/i.test(first.value))
+      continue;
     if (!columns.has(identifierKey(first)) || keyword(tokens[index - 1], '.') || keyword(tokens[index - 1], '@'))
       continue;
     const scope = resolver.scopeAt(index);

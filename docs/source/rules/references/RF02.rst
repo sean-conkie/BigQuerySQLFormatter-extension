@@ -1,0 +1,48 @@
+=====================================
+RF02: Qualify Multi-Source References
+=====================================
+
+RF02 (``references.qualification``) is enabled by default. In SELECT scopes
+with at least two sources, it reports unqualified columns and STRUCT field
+paths whose first part is not a visible source. For example:
+
+.. code-block:: sql
+
+    -- Ambiguous source:
+    select id, address.city from customers c join orders o on c.id = o.id;
+    -- Explicit source:
+    select c.id, c.address.city from customers c join orders o on c.id = o.id;
+
+Joins, comma joins, subqueries, TVFs and UNNEST count as sources. UNNEST value
+aliases and OFFSET aliases are not columns requiring qualification.
+JOIN USING columns and select aliases in GROUP BY, HAVING, QUALIFY and ORDER BY
+are accepted. Parameters, system variables and function-like keywords such as
+CURRENT_DATE are ignored. Unsupported extended-query statements are skipped.
+Single-source queries are handled by RF03, not RF02.
+
+Options
+-------
+
+``ignore_words`` is a case-insensitive list of column names (default ``[]``).
+``subqueries_ignore_external_references`` defaults to ``false``: distinct outer
+sources referenced inside a correlated subquery count alongside its local
+sources. Setting it to ``true`` counts only local sources. Already-qualified
+outer references are accepted with either setting.
+
+Editor settings use ``bigquerySQLFormatter.rules``; project files use ``rules``:
+
+.. code-block:: json
+
+    {
+      "rules": {
+        "RF02": {
+          "options": {
+            "ignore_words": ["tenant_id"],
+            "subqueries_ignore_external_references": true
+          }
+        }
+      }
+    }
+
+There is no quick fix: without a schema the owning source cannot be inferred.
+Standard severity, group, exclusion and ``noqa`` settings apply.
