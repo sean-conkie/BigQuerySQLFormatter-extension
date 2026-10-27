@@ -45,7 +45,9 @@ for all aliasing, ambiguous, capitalisation, convention, layout, references, and
 The `references` (RF) group checks identifier naming and usage. RF02 requires
 source-qualified columns in multi-source queries, including STRUCT field paths.
 Its `ignore_words` and `subqueries_ignore_external_references` options apply in
-editor and project settings. RF04 is enabled by default
+editor and project settings. RF03 enforces STRUCT-aware single-source consistency
+with quick fixes, Fix All and formatting; `single_table_references` accepts
+`consistent` (default), `qualified` or `unqualified`. RF04 is enabled by default
 and warns about keywords used as unquoted aliases. Quoted names are accepted by
 default; identifier policies and `ignore_words` are configurable.
 RF05 checks quoted identifiers for special characters, with exceptions for

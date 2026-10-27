@@ -4,6 +4,12 @@
 
 ### Notable changes
 
+- RF03 (`references.consistent`) is enabled by default for single-source SELECTs.
+  STRUCT-aware qualification follows the first column by default, or an explicit
+  `qualified`/`unqualified` policy. Quick fixes, Fix All and formatting preserve
+  line endings and table path spelling, excluding correlated and ambiguous
+  source-name references, wildcards and UNNEST value tables.
+
 - RF02 (`references.qualification`) is enabled by default and requires
   source-qualified columns in multi-source SELECT scopes. It handles STRUCT
   paths, USING, select aliases and UNNEST/OFFSET values, with configurable

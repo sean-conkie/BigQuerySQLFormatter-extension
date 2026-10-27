@@ -91,6 +91,11 @@ RF02 requires source-qualified columns in multi-source SELECT scopes.
 defaults to ``false``. Enable the latter to count only local sources in
 correlated subqueries. Both options work in editor and project settings.
 
+RF03 checks single-source SELECT scopes with STRUCT-aware qualification.
+``single_table_references`` accepts ``consistent`` (default), ``qualified`` or
+``unqualified`` in editor and project settings. Quick fixes, Fix All and formatting
+add or remove only the source prefix; correlated references remain unchanged.
+
 Rules declare their supported option names, types, allowed values, and defaults.
 Set these in a rule's ``options`` object in either VS Code settings or a project
 file. The VS Code settings schema offers completion and validation. Currently

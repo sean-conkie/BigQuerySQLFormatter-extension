@@ -54,6 +54,14 @@ export const qualificationOptions = {
   subqueries_ignore_external_references: { type: 'boolean', default: false },
 } as const satisfies OptionDefinitions;
 
+export const consistencyOptions = {
+  single_table_references: {
+    type: 'string',
+    enum: ['consistent', 'qualified', 'unqualified'],
+    default: 'consistent',
+  },
+} as const satisfies OptionDefinitions;
+
 export const capitalisationOptions = {
   capitalisation_policy: {
     type: 'string',
@@ -69,6 +77,7 @@ export const ruleOptionSchemas: Readonly<Record<string, OptionDefinitions>> = {
   CP04: capitalisationOptions,
   CP05: capitalisationOptions,
   RF02: qualificationOptions,
+  RF03: consistencyOptions,
   RF04: keywordIdentifierOptions,
   RF05: specialCharacterOptions,
   RF06: quotingOptions,
