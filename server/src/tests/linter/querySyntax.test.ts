@@ -46,8 +46,6 @@ const corpus = [
 |> EXTEND total + 1 AS adjusted
 |> ORDER BY adjusted DESC
 |> LIMIT 10;\n`,
-  'WITH cte AS (FROM dataset.sales |> SET amount = 1 |> DROP secret)\nSELECT * FROM cte;\n',
-  'SELECT * FROM (FROM dataset.sales |> SELECT amount) AS t;\n',
   'FROM (FROM dataset.sales |> SELECT amount) |> EXTEND amount + 1 AS adjusted;\n',
   'FROM dataset.sales |> UNION ALL (FROM dataset.other |> WHERE amount > 0) |> LIMIT 10;\n',
   "FROM dataset.sales |> /* |> DROP fake; */\n-- |> SET fake = 1;\nSELECT 'a; |> DROP secret' AS text;\n",
@@ -105,6 +103,229 @@ describe('Recent query syntax', () => {
       }
     });
   }
+
+  describe('Mixed traditional and extended query blocks', () => {
+    const uri = 'file:///mixed-query-syntax.bqsql';
+    const item = (text: string) => ({ uri, text, languageId: 'googlesql', version: 1 });
+    const code = (diagnostic: { code?: string | number }) => String(diagnostic.code).split(':', 1)[0];
+    const extendedBodies = [
+      'FROM dataset.sales |> SELECT amount',
+      'SELECT * FROM dataset.sales MATCH_RECOGNIZE (ORDER BY amount MEASURES FIRST(a.amount) AS n PATTERN (a+) DEFINE a AS amount > 0)',
+      'SELECT * FROM GRAPH_TABLE(FinGraph MATCH (a:Account) COLUMNS (a.id AS id))',
+      "SELECT * FROM dataset.sales FOR SYSTEM_TIME AS OF TIMESTAMP '2026-01-01 00:00:00+00'",
+      'FROM dataset.sales',
+    ];
+    let linter: Linter;
+
+    beforeEach(() => {
+      linter = new Linter(defaultSettings);
+    });
+    afterEach(() => {
+      linter.closeDocument(uri);
+      globalTokenCache.delete(uri);
+    });
+
+    for (const body of extendedBodies) {
+      for (const wrapper of ['CTE', 'FROM subquery', 'scalar subquery'] as const) {
+        it(`restores traditional AST, source and regex rules around ${wrapper}: ${body}`, async () => {
+          const outer = 'SELECT t.id AS value, t.other FROM dataset.sales AS t JOIN dataset.other AS u USING (id)';
+          const text =
+            wrapper === 'CTE'
+              ? `WITH cte AS (${body})\n${outer};\n`
+              : wrapper === 'FROM subquery'
+                ? `SELECT * FROM (${body}) AS t JOIN dataset.other AS u USING (id);\n`
+                : `${outer} WHERE t.id = (${body});\n`;
+          const source = TextDocument.create(uri, 'googlesql', 1, text);
+          const diagnostics = await linter.verify(item(text));
+          const codes = diagnostics.map(code);
+          expect(codes, text).to.include.members(
+            wrapper === 'FROM subquery' ? ['AM04', 'AM05', 'ST07'] : ['AL01', 'AL02', 'AM05', 'ST07'],
+          );
+          const start = text.lastIndexOf(body);
+          const end = start + body.length;
+          const safe = new Set([
+            'CP01',
+            'CP02',
+            'CP03',
+            'CP04',
+            'CP05',
+            'CV01',
+            'CV02',
+            'CV04',
+            'CV05',
+            'CV13',
+            'LT01',
+            'LT12',
+            'LT13',
+          ]);
+          for (const diagnostic of diagnostics.filter((diagnostic) => !safe.has(code(diagnostic)))) {
+            expect(
+              source.offsetAt(diagnostic.range.end) <= start || source.offsetAt(diagnostic.range.start) >= end,
+              `${code(diagnostic)} in ${text}`,
+            ).to.equal(true);
+          }
+        });
+      }
+    }
+
+    it('exposes traditional sibling and enclosing blocks without merging their select lists', async () => {
+      const text = `WITH extended AS (${extendedBodies[0]}),
+    traditional AS (SELECT t.id AS value FROM dataset.sales AS t)
+    SELECT u.id AS value FROM dataset.other AS u;\n`;
+      const ast = await new Parser().parse(item(text));
+      expect(ast[0].hasExtendedQuerySyntax).to.equal(false);
+      expect(ast[0].queryBlocks.map((block) => block.hasExtendedQuerySyntax)).to.deep.equal([true, false]);
+      expect(ast[0].columns).to.have.length(1);
+      expect(ast[0].queryBlocks[1].columns).to.have.length(1);
+      const diagnostics = await linter.verify(item(text));
+      expect(
+        diagnostics
+          .filter((diagnostic) => code(diagnostic) === 'AL02')
+          .map((diagnostic) => diagnostic.range.start.line),
+      ).to.deep.equal([2, 1]);
+      expect(diagnostics.filter((diagnostic) => code(diagnostic) === 'AL01')).to.have.length(2);
+    });
+
+    it('restores nested traditional blocks but keeps unsupported ancestors conservatively skipped', async () => {
+      const text = `SELECT * FROM (
+    WITH extended AS (${extendedBodies[0]})
+    SELECT t.id AS value FROM dataset.sales AS t
+    ) AS result;\n`;
+      const diagnostics = await linter.verify(item(text));
+      expect(
+        diagnostics
+          .filter((diagnostic) => code(diagnostic) === 'AL02')
+          .map((diagnostic) => diagnostic.range.start.line),
+      ).to.deep.equal([2]);
+      const unsupported = `FROM (SELECT t.id AS value FROM dataset.sales AS t) |> SELECT *;\n`;
+      expect(
+        (await linter.verify(item(unsupported))).filter((diagnostic) =>
+          ['AL01', 'AL02', 'AM04'].includes(code(diagnostic)),
+        ),
+      ).to.deep.equal([]);
+    });
+
+    it('does not infer a projection count from an opaque query and still checks traditional set branches', async () => {
+      for (const [text, count] of [
+        [`WITH cte AS (${extendedBodies[0]}) SELECT * FROM cte UNION ALL SELECT a, b;\n`, 0],
+        [`WITH cte AS (${extendedBodies[0]}) SELECT a UNION ALL SELECT b, c;\n`, 1],
+        [`WITH cte AS (${extendedBodies[0]}), other AS (SELECT a UNION ALL SELECT b, c) SELECT * FROM other;\n`, 1],
+      ] as const) {
+        const diagnostics = await linter.verify(item(text));
+        expect(
+          diagnostics.filter((diagnostic) => code(diagnostic) === 'AM07'),
+          text,
+        ).to.have.length(count);
+      }
+    });
+
+    it('isolates GROUP/ORDER context and preserves same-line statement boundaries', async () => {
+      const text = `WITH cte AS (SELECT x FROM dataset.sales FOR SYSTEM_TIME AS OF CURRENT_TIMESTAMP() ORDER BY 1)
+    SELECT x FROM dataset.other GROUP BY x ORDER BY 1;FROM dataset.sales |> SELECT *;SELECT * FROM dataset.other;\n`;
+      const diagnostics = await linter.verify(item(text));
+      expect(diagnostics.filter((diagnostic) => code(diagnostic) === 'AM06')).to.have.length(1);
+      expect(diagnostics.filter((diagnostic) => code(diagnostic) === 'AM04')).to.have.length(1);
+    });
+
+    it('uses the enclosing DISTINCT token rather than one inside a skipped CTE', async () => {
+      const text = `WITH cte AS (FROM dataset.sales |> SELECT DISTINCT amount)
+SELECT DISTINCT t.id FROM dataset.sales t GROUP BY t.id;\n`;
+      const diagnostics = await linter.verify(item(text));
+      expect(
+        diagnostics
+          .filter((diagnostic) => code(diagnostic) === 'AM01')
+          .map((diagnostic) => diagnostic.range.start.line),
+      ).to.deep.equal([1]);
+    });
+
+    it('rejects whole actions when any edit crosses into a skipped query body', async () => {
+      const text = `WITH cte AS (${extendedBodies[0]}) SELECT t.id FROM dataset.sales AS t;\n`;
+      const diagnostics = await linter.verify(item(text));
+      const diagnostic = diagnostics.find((diagnostic) => code(diagnostic) === 'AL01')!;
+      const rule = linter.parserRules.find((rule) => rule.code === 'AL01')!;
+      const inside = Range.create(0, text.indexOf('|>'), 0, text.indexOf('|>'));
+      for (const ranges of [[Range.create(0, 0, 0, text.length - 1)], [inside], [diagnostic.range, inside]]) {
+        rule.createCodeAction = () =>
+          [CodeActionKind.QuickFix, CodeActionKind.SourceFixAll].map((kind) => ({
+            title: 'Crossing fix',
+            kind,
+            diagnostics: [diagnostic],
+            edit: { changes: { [uri]: ranges.map((range) => ({ range, newText: '' })) } },
+          }));
+        const actions = await linter.createCodeActions({
+          textDocument: { uri },
+          range: Range.create(0, 0, 1, 0),
+          context: { diagnostics: [diagnostic] },
+        });
+        expect(actions).to.deep.equal([]);
+      }
+    });
+
+    it('handles comments, quoted fake boundaries, nested functions and unfinished subqueries', async () => {
+      for (const text of [
+        `/* leading */ WITH cte AS (/* before FROM */ ${extendedBodies[0]}) SELECT t.id AS value FROM dataset.sales AS t;\n`,
+        `SELECT COALESCE((/* comment */ ${extendedBodies[0]}), 0), '(SELECT |> fake)' FROM dataset.sales AS t;\n`,
+        `SELECT * FROM (${extendedBodies[0]}`,
+        `WITH cte AS (${extendedBodies[0]}) SELECT * FROM dataset.other WHERE EXISTS (${extendedBodies[0]}`,
+      ]) {
+        const diagnostics = await linter.verify(item(text));
+        expect(diagnostics.map(code), text).to.include(
+          text.startsWith('/*') ? 'AL02' : text.startsWith('SELECT COALESCE') ? 'AL01' : 'AM04',
+        );
+      }
+    });
+
+    it('reclassifies nested blocks after incremental edits in both directions', async () => {
+      const text = `WITH cte AS (${extendedBodies[0]}) SELECT * FROM dataset.other;\n`;
+      expect((await linter.verify(item(text))).filter((diagnostic) => code(diagnostic) === 'AM04')).to.have.length(1);
+      const traditional = 'WITH cte AS (SELECT * FROM dataset.sales) SELECT * FROM dataset.other;\n';
+      const changed = await linter.verifyChanges({
+        textDocument: { uri, version: 2 },
+        contentChanges: [{ text: traditional }],
+      });
+      expect(changed.filter((diagnostic) => code(diagnostic) === 'AM04')).to.have.length(2);
+      const restored = await linter.verifyChanges({
+        textDocument: { uri, version: 3 },
+        contentChanges: [
+          {
+            range: Range.create(0, 13, 0, 13 + 'SELECT * FROM dataset.sales'.length),
+            text: extendedBodies[0],
+          },
+        ],
+      });
+      expect(restored.filter((diagnostic) => code(diagnostic) === 'AM04')).to.have.length(1);
+      expect(globalTokenCache.get(uri)!.getText()).to.equal(text);
+    });
+
+    for (const eol of ['\n', '\r\n', '\r']) {
+      it(`formats and fixes traditional blocks idempotently without rewriting skipped bodies (${JSON.stringify(eol)})`, async () => {
+        const settings = { ...defaultSettings, rules: { groups: { capitalisation: false } } };
+        const body = 'FROM dataset.sales |> JOIN dataset.other USING (id) |> SELECT *';
+        const text = `WITH cte AS (${eol}${body}${eol})${eol}SELECT t.id AS value FROM dataset.sales AS t INNER JOIN dataset.other AS u USING (id);${eol}`;
+        const source = TextDocument.create(uri, 'googlesql', 1, text);
+        const formatted = TextDocument.applyEdits(source, await formatDocument(source, settings));
+        expect(formatted).not.to.equal(text);
+        expect(formatted).to.include(body);
+        expect(formatted).to.include('INNER JOIN');
+        expect(formatted).not.to.include('AS value');
+        expect(await formatDocument(TextDocument.create(uri, 'googlesql', 2, formatted), settings)).to.deep.equal([]);
+        const actions = await createDocumentCodeActions(source, settings, {
+          textDocument: { uri },
+          range: Range.create(0, 0, source.lineCount, 0),
+          context: { diagnostics: [], only: [sourceFixAllKind] },
+        });
+        expect(actions).to.have.length(1);
+        const fixed = TextDocument.applyEdits(source, actions[0].edit!.changes![uri]);
+        expect(fixed).to.include(body);
+        const again = await createDocumentCodeActions(TextDocument.create(uri, 'googlesql', 2, fixed), settings, {
+          textDocument: { uri },
+          range: Range.create(0, 0, source.lineCount, 0),
+          context: { diagnostics: [], only: [sourceFixAllKind] },
+        });
+        expect(again).to.deep.equal([]);
+      });
+    }
+  });
 
   it('preserves stage tokens and distinguishes nested pipelines from their enclosing stages', async () => {
     const ast = await new Parser().parse(

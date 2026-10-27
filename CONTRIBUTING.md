@@ -70,6 +70,25 @@ Regression tests cover multiline incremental edits and CRLF, directive edge
 cases, diagnostic limits, and overlapping fix-all edits while preserving
 individual quick fixes.
 
+### Extended query coverage
+
+Pipe syntax (including FROM-only queries), `MATCH_RECOGNIZE`, `GRAPH_TABLE` and
+`FOR SYSTEM_TIME AS OF` are highlighted and preserved by the parser. Structural
+rules skip the query block that directly contains unsupported syntax, together
+with its descendants, not the whole enclosing statement. Traditional enclosing
+queries, sibling CTEs and subqueries are still linted and can be fixed or formatted.
+The parser exposes isolated child queries through `StatementAST.queryBlocks`;
+`hasExtendedQuerySyntax` describes the current block, not its children.
+
+CP01-CP05, CV01, CV02, CV04, CV05, CV13, LT01, LT12 and LT13 remain safe throughout
+extended queries. Other rules must opt into `extendedQuerySafeRules` only after
+they support the new structures. Phase 1 of #404 does not add pipe-stage clause
+models or enable additional rules inside unsupported query blocks.
+
+Mixed-query regression tests cover AST, source-based and regex rules, opaque
+projection counts, incomplete queries, incremental edits, protected fix ranges,
+and idempotent formatting/Fix All with LF, CRLF and CR line endings.
+
 `npm run citest` runs server tests followed by client end-to-end tests. These
 download and launch Visual Studio Code and require a display. On headless Linux:
 

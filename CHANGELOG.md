@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased
+
+### Notable changes
+
+- Traditional query blocks surrounding pipe syntax, `MATCH_RECOGNIZE`,
+  `GRAPH_TABLE` or `FOR SYSTEM_TIME AS OF` are linted again. Structural rules
+  skip only the query block containing unsupported syntax and its descendants,
+  rather than the whole enclosing statement. Traditional sibling CTEs and
+  subqueries retain diagnostics, quick fixes, Fix All and formatting.
+  The existing safe rules still run inside skipped blocks.
+
+### Fixed
+
+- Isolate unsupported query bodies from traditional SELECT lists and source-based
+  rule context, including nested queries and incremental edits (#404, phase 1).
+- Keep structural fixes outside skipped query bodies and avoid indenting a
+  nonexistent ON clause for joins that use USING.
+
 ## 0.5.0 - 2026-10-27
 
 ### Notable changes

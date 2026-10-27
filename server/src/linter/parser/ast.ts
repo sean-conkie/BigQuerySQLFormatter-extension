@@ -2,6 +2,7 @@ import { type Token, type LineToken, joinTokenValues, excludeTokensWithMatchingS
 import { MatchedRule } from './matches';
 import { findToken, sortTokens } from './utils';
 import { StatementType, JoinType, type LogicalOperator, type ComparisonOperator } from './enums';
+import type { Range } from 'vscode-languageserver/node';
 
 // region base types
 
@@ -736,6 +737,7 @@ export class ArrayAST extends AST {
    */
   constructor(matchedRules: MatchedRule[]) {
     super();
+    if (matchedRules.length === 0) return;
     this.startLine = matchedRules[0].tokens[0].lineNumber;
     this.startIndex = matchedRules[0].tokens[0].startIndex;
     this.endIndex =
@@ -834,6 +836,8 @@ export class ObjectAST extends AST {
 export class StatementAST extends AST {
   // These queries retain their source tokens instead of using the SELECT-only clause model.
   hasExtendedQuerySyntax: boolean = false;
+  sourceRange: Range | null = null;
+  queryBlocks: StatementAST[] = [];
   pipeStages: { operator: string; depth: number; tokens: Token[] }[] = [];
   with: StatementAST | null = null;
   type: StatementType | null = StatementType.SELECT;

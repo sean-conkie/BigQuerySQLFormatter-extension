@@ -4,6 +4,7 @@ import type { DocumentCache } from '../../parser/tokenCache';
 import { keyword, SourceFixRule, type SourceToken } from '../source';
 
 export class Terminator extends SourceFixRule {
+  protected readonly queryScoped = false;
   readonly name = 'terminator';
   readonly code = 'CV06';
   readonly message = 'End statements with an attached semicolon and a newline.';
