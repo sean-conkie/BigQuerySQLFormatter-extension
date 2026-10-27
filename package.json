@@ -5,7 +5,7 @@
   "icon": "images/BigQuerySQLFormatter_transparent_128.png",
   "author": "sean-conkie",
   "license": "MIT",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/sean-conkie/BigQuerySQLFormatter-extension.git"
@@ -101,10 +101,19 @@
             "^CP0[1-5]$": {
               "type": "object",
               "properties": {
-                "enabled": { "type": "boolean", "default": true },
+                "enabled": {
+                  "type": "boolean",
+                  "default": true
+                },
                 "severity": {
                   "type": "string",
-                  "enum": ["error", "warning", "information", "hint", "off"],
+                  "enum": [
+                    "error",
+                    "warning",
+                    "information",
+                    "hint",
+                    "off"
+                  ],
                   "default": "warning"
                 },
                 "options": {
@@ -112,7 +121,11 @@
                   "properties": {
                     "capitalisation_policy": {
                       "type": "string",
-                      "enum": ["lower", "upper", "consistent"],
+                      "enum": [
+                        "lower",
+                        "upper",
+                        "consistent"
+                      ],
                       "default": "lower",
                       "description": "Token casing. Consistent follows the first matching token; a mixed-case first token selects lowercase."
                     }
