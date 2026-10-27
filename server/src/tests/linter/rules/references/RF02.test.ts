@@ -33,12 +33,14 @@ describe('RF02 multi-source qualification', () => {
     'select id;',
     'select f.*, b.* from foo f, bar b;',
     'select f.id from foo f join bar b using (id);',
+    'select id from foo f join bar b using (id);',
     'select f.id as label, count(*) as total from foo f, bar b group by label having total > 1 order by label;',
     'select f.id as label from foo f, bar b qualify label > 1;',
     'select x, pos from foo f, unnest(f.items) as x with offset as pos;',
     'select current_date, current_timestamp, @param.field, @@error.message from foo f, bar b;',
     'select bad from foo f, bar b |> select other;',
     'select id from foo f, bar b; -- noqa: RF02',
+    'select struct(f.id as field), f.* except(hidden) replace(f.id as field) from foo f, bar b;',
   ]) {
     it(`accepts excluded references: ${sql}`, async () => {
       expect((await check(sql)).names).to.deep.equal([]);

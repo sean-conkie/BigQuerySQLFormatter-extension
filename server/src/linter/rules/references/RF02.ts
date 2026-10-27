@@ -36,6 +36,7 @@ export class Qualification extends SourceRule {
       if (sources.size < 2) continue;
       for (const { parts, range } of local) {
         if (ignoredIdentifier(parts[0], ignored)) continue;
+        if (scope.usingColumns.some((token) => referenceName(token.value) === referenceName(parts[0]))) continue;
         const resolved = resolver.resolveSource(scope, parts[0]);
         if (parts.length > 1 && resolved) continue;
         if (
