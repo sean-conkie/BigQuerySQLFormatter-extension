@@ -1,0 +1,53 @@
+RF06: Remove unnecessary backticks
+=================================
+
+``references.quoting`` is enabled by default. It checks column names, field
+references, column and table aliases, and CTE names. Backticks do not change
+case sensitivity in BigQuery; they are unnecessary around ordinary identifiers.
+Double quotes denote string literals and are never changed.
+
+.. code-block:: sql
+
+   -- Before
+   select `order_id` as `id`, o.`status` from ds.orders as `o`;
+
+   -- After
+   select order_id as id, o.status from ds.orders as o;
+
+Reserved keywords at the start of a path or as standalone identifiers,
+leading digits and special characters retain their backticks. A reserved word
+after a dot, such as ``o.`` followed by a quoted ``select``, does not need them.
+UDF names are not checked.
+
+Options
+-------
+
+* ``check_table_paths``: boolean, default ``false``. Full table paths are often
+  deliberately quoted. Opt in to checking them only when all their parts are
+  valid unquoted. Dashed first parts are allowed only in FROM/TABLE contexts;
+  later parts may be reserved words. Case-sensitive project, dataset and table
+  names keep their exact text.
+* ``ignore_words``: case-insensitive string list, default ``[]``. A matching
+  identifier or path component keeps the quoted token unchanged.
+
+These options work in editor settings and in ``.bqsqlformatter.json``:
+
+.. code-block:: json
+
+   {
+     "rules": {
+       "RF06": {
+         "options": {
+           "check_table_paths": true,
+           "ignore_words": ["legacy_column"]
+         }
+       }
+     }
+   }
+
+Quick fixes, Fix All and formatting remove backticks without changing the
+identifier text. CP02 may subsequently re-case an unquoted column or alias.
+Formatting and Fix All repeat until stable, including newly exposed CP02
+diagnostics. Case-sensitive table and UDF names are not
+re-cased. Line endings are preserved. Use ``-- noqa: RF06`` to suppress both
+diagnostics and fixes.

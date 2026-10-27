@@ -4,6 +4,12 @@
 
 ### Notable changes
 
+- RF06 (`references.quoting`) is enabled by default and removes unnecessary
+  identifier backticks through quick fixes, Fix All and formatting. Table paths
+  remain quoted by default; opt in with `check_table_paths`. Reserved words,
+  leading digits and special characters keep required quoting. Text and line
+  endings are preserved; CP02 can re-case newly unquoted columns and aliases.
+
 - RF05 (`references.special_chars`) is enabled by default and checks quoted
   identifier parts for spaces and symbols. Dashed project IDs and
   INFORMATION_SCHEMA region qualifiers remain valid. Policies, spaces,
@@ -29,6 +35,9 @@
   disabled groups and severity `off` retain precedence.
 
 ### Fixed
+
+- Fix All now repeats safe fixes until stable, like formatting, so removing
+  identifier backticks and applying CP02 casing complete in one invocation.
 
 - Isolate unsupported query bodies from traditional SELECT lists and source-based
   rule context, including nested queries and incremental edits (#404, phase 1).

@@ -44,6 +44,11 @@ export const specialCharacterOptions = {
   ignore_words: stringListOption,
 } as const satisfies OptionDefinitions;
 
+export const quotingOptions = {
+  check_table_paths: { type: 'boolean', default: false },
+  ignore_words: stringListOption,
+} as const satisfies OptionDefinitions;
+
 export const capitalisationOptions = {
   capitalisation_policy: {
     type: 'string',
@@ -60,6 +65,7 @@ export const ruleOptionSchemas: Readonly<Record<string, OptionDefinitions>> = {
   CP05: capitalisationOptions,
   RF04: keywordIdentifierOptions,
   RF05: specialCharacterOptions,
+  RF06: quotingOptions,
 };
 
 export function isValidOption<T extends OptionValue>(definition: OptionDefinition<T>, value: unknown): value is T {

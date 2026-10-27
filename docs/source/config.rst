@@ -29,10 +29,11 @@ error without applying partial formatting.
 Fix All and fix on save
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Fix All combines non-overlapping fixes across the entire document into a single
-action, even when only some diagnostics are visible. Individual quick fixes are
-unchanged. Overlapping fixes can require another invocation; formatting repeats
-fixes automatically.
+Fix All combines fixes across the entire document into a single action, even
+when only some diagnostics are visible. Like formatting, it repeats safe
+non-overlapping fixes until stable, including diagnostics exposed by earlier
+fixes. Individual quick fixes are unchanged. Cycles or more than 100 passes
+report an error without applying partial fixes.
 
 As an alternative to formatting on save, add this to your ``settings.json``:
 
@@ -124,6 +125,11 @@ RF05 checks quoted identifiers with ``quoted_identifiers_policy`` (default
 ``all``), ``allow_space_in_identifier`` (default ``false``),
 ``additional_allowed_characters`` (default ``[]``) and ``ignore_words``
 (default ``[]``). Characters are treated literally, not as regular expressions.
+
+RF06 removes unnecessary identifier backticks. ``check_table_paths`` defaults
+to ``false`` to preserve deliberate full-path quoting, and ``ignore_words``
+defaults to ``[]``. Quick fixes preserve text inside the backticks; CP02 may
+re-case newly unquoted case-insensitive identifiers on a subsequent pass.
 
 Project configuration
 ~~~~~~~~~~~~~~~~~~~~~

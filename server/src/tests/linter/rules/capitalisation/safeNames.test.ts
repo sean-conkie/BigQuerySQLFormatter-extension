@@ -32,7 +32,14 @@ describe('Case-sensitive BigQuery names (#403)', () => {
     return {
       ...defaultSettings,
       rules: {
-        groups: { aliasing: false, ambiguous: false, convention: false, layout: false, structure: false },
+        groups: {
+          aliasing: false,
+          ambiguous: false,
+          convention: false,
+          layout: false,
+          structure: false,
+          references: false,
+        },
         exclude: ['CP01', 'CP04', 'CP05'],
         CP02: { options: { capitalisation_policy: policy } },
         CP03: { options: { capitalisation_policy: policy } },

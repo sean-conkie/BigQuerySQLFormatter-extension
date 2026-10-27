@@ -48,6 +48,12 @@ export async function createDocumentCodeActions(
     const request = { ...params, textDocument: { uri: snapshot.uri } };
     const all = await linter.createCodeActions({ ...request, context: { ...params.context, diagnostics } });
     const quickFixes = await linter.createCodeActions(request);
+    const fixAll = all.find((action) => action.kind === sourceFixAllKind);
+    if (fixAll) {
+      fixAll.edit = {
+        changes: { [snapshot.uri]: await formatDocument(snapshot, settings, undefined, token) },
+      };
+    }
     checkCancellation(token);
     const actions = [
       ...all.filter((action) => action.kind === sourceFixAllKind),
