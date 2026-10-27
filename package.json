@@ -223,13 +223,13 @@
             "^RF06$": {
               "type": "object",
               "properties": {
-                "enabled": { "type": "boolean", "default": true },
-                "severity": { "type": "string", "enum": ["error", "warning", "information", "hint", "off"], "default": "warning" },
+                "enabled": { "type": "boolean", "default": true, "description": "Enable unnecessary-backtick diagnostics and fixes." },
+                "severity": { "type": "string", "description": "Severity for unnecessary-backtick diagnostics; off also disables fixes.", "enum": ["error", "warning", "information", "hint", "off"], "default": "warning" },
                 "options": {
                   "type": "object",
                   "properties": {
-                    "check_table_paths": { "type": "boolean", "default": false },
-                    "ignore_words": { "type": "array", "items": { "type": "string" }, "default": [] }
+                    "check_table_paths": { "type": "boolean", "default": false, "description": "Also remove unnecessary backticks from table paths, preserving case-sensitive names." },
+                    "ignore_words": { "type": "array", "items": { "type": "string" }, "default": [], "description": "Case-insensitive identifiers or path components whose backticks should be preserved." }
                   },
                   "additionalProperties": false
                 }
