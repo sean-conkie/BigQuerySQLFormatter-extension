@@ -88,6 +88,16 @@ describe('RF03 single-source consistency', () => {
     expect((await check(text, 'unqualified')).names).to.deep.equal(['f.a']);
   });
 
+  it('only qualifies expression columns inside STRUCT, REPLACE and wildcard exclusions', async () => {
+    const text = 'select struct(a as field), t.* except(hidden) replace(b as replaced) from foo t;';
+    const document = TextDocument.create(uri, 'googlesql', 1, text);
+    const expected = 'select struct(t.a as field), t.* except(hidden) replace(t.b as replaced) from foo t;';
+    expect(TextDocument.applyEdits(document, await formatDocument(document, settings('qualified')))).to.equal(expected);
+    expect(
+      await formatDocument(TextDocument.create(uri, 'googlesql', 2, expected), settings('qualified')),
+    ).to.deep.equal([]);
+  });
+
   it('provides a quick fix and preserves comments between qualifier and column', async () => {
     const text = 'select a, f./* keep */b from foo f;';
     const { linter, diagnostics } = await check(text);
