@@ -264,7 +264,11 @@ export class QueryScopeResolver {
       } else {
         for (let j = start; j <= end; j++) {
           excluded.add(identifierKey(source[j]));
-          if (isIdentifier(source[j])) {
+          if (
+            isIdentifier(source[j]) &&
+            !['FUNCTION', 'PROCEDURE', 'SCHEMA', 'DATABASE', 'MODEL'].some((word) => keyword(token, word)) &&
+            !((relation || keyword(token, ',')) && keyword(source[end + 1], '('))
+          ) {
             tables.set(identifierKey(source[j]), {
               token: source[j],
               first: j === start,

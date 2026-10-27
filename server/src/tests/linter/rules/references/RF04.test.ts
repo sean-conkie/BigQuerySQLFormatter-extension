@@ -80,6 +80,17 @@ describe('RF04 keyword identifiers', () => {
     expect((await check('with date as (select x from ds.events) select x from date;')).names).to.include('date');
   });
 
+  it('does not classify UDF or TVF names as columns or tables', async () => {
+    expect(
+      (
+        await check('create temp function `date`(x int64) as (x); select `date`(x) from `json`(1);', {
+          unquoted_identifiers_policy: 'all',
+          quoted_identifiers_policy: 'all',
+        })
+      ).names,
+    ).to.deep.equal([]);
+  });
+
   it('supports case-insensitive ignored words and noqa', async () => {
     expect(
       (

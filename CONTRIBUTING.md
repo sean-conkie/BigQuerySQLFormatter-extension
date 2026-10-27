@@ -142,9 +142,10 @@ Run `npm run generate:keywords` with network access to refresh
 `server/src/linter/keywords.json`. Reserved words come only from the
 [official GoogleSQL lexical reserved keywords table](https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/lexical#reserved_keywords),
 not from syntax highlighting. Non-reserved words are the literal words in
-`keyword.*` grammar scopes (including scoped captures, begin/end patterns, and
-multi-word phrases), excluding the reserved set. Function and type scopes do
-not independently contribute keywords.
+`keyword.*` and `storage.type.sql` grammar scopes (including scoped captures,
+begin/end patterns, and multi-word phrases), excluding the reserved set.
+Type names such as `date`, `timestamp`, `json` and `int64` are included for RF04.
+Function scopes do not independently contribute keywords.
 
 The committed catalog contains sorted, unique lowercase `reserved` and
 `nonReserved` arrays, without timestamps. Generation does not modify the grammar.
