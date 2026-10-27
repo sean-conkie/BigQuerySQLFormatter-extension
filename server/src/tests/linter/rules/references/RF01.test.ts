@@ -2,6 +2,9 @@ import { expect } from 'chai';
 import { DiagnosticSeverity } from 'vscode-languageserver/node';
 import { Linter } from '../../../../linter/linter';
 import { globalTokenCache } from '../../../../linter/parser/tokenCache';
+import { columnReferences } from '../../../../linter/rules/references/columns';
+import { sourceTokens } from '../../../../linter/rules/source';
+import { QueryScopeResolver } from '../../../../linter/scope';
 import { defaultSettings, type RulesSettings } from '../../../../settings';
 
 describe('RF01 known source qualifiers', () => {
@@ -47,6 +50,17 @@ describe('RF01 known source qualifiers', () => {
       'o.a',
       'i.a',
     ]);
+  });
+
+  it('extracts expressions, not STRUCT/REPLACE aliases, wildcard exclusions or window names', async () => {
+    await check(
+      'select struct(a as field), t.* except(hidden) replace(b as replaced), sum(c) over win from foo t window win as (partition by d);',
+    );
+    const cache = globalTokenCache.get(uri)!;
+    const tokens = sourceTokens(cache);
+    expect(
+      columnReferences(tokens, cache, new QueryScopeResolver(tokens)).map(({ range }) => cache.getText(range)),
+    ).to.deep.equal(['a', 't.*', 'b', 'c', 'd']);
   });
 
   it('respects opt-in, severity, exclusions and group settings', async () => {

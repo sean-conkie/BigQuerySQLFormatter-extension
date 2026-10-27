@@ -1,7 +1,7 @@
 import type { Range } from 'vscode-languageserver/node';
 import type { DocumentCache } from '../../parser/tokenCache';
 import { identifierKey, isIdentifier, type QueryScopeResolver, type QueryScope } from '../../scope';
-import { keyword, type SourceToken } from '../source';
+import { closingBracket, keyword, type SourceToken } from '../source';
 import { identifiers } from './identifiers';
 
 export interface ColumnReference {
@@ -27,6 +27,17 @@ export function columnReferences(
   const result: ColumnReference[] = [];
   for (let index = 0; index < tokens.length; index++) {
     const first = tokens[index];
+    if (keyword(first, 'EXCEPT') && keyword(tokens[index + 1], '(') && !keyword(tokens[index + 2], 'SELECT')) {
+      const close = closingBracket(tokens, index + 1);
+      if (close >= 0) index = close;
+      continue;
+    }
+    if (
+      ['AS', 'OVER', 'WINDOW'].some((word) => keyword(tokens[index - 1], word)) ||
+      (keyword(tokens[index + 1], 'AS') && keyword(tokens[index + 2], '(')) ||
+      (keyword(tokens[index + 1], '=') && keyword(tokens[index + 2], '>'))
+    )
+      continue;
     if (!columns.has(identifierKey(first)) || keyword(tokens[index - 1], '.') || keyword(tokens[index - 1], '@'))
       continue;
     const scope = resolver.scopeAt(index);
