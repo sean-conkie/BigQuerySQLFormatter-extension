@@ -63,10 +63,14 @@ describe('Rule configuration', () => {
     expect(resolveOption(definition, [])).to.deep.equal([]);
   });
 
-  it('registers implemented reference rules with enabled defaults', () => {
+  it('registers reference rules with RF01 as the only opt-in default', () => {
     expect(classes.length).to.be.greaterThan(0);
     expect(referencesRules(defaultSettings, 0).map((rule) => rule.code)).to.include('RF04');
-    expect(referencesRules(defaultSettings, 0).every((rule) => rule.defaultEnabled)).to.equal(true);
+    expect(
+      referencesRules(defaultSettings, 0)
+        .filter((rule) => !rule.defaultEnabled)
+        .map((rule) => rule.code),
+    ).to.deep.equal(['RF01']);
   });
 
   it('keeps RF schema patterns, exclusions, groups and the opt-in default aligned', () => {

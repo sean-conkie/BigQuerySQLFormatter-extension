@@ -111,13 +111,13 @@ Layout rules are guidelines that help developers maintain a consistent and reada
 References Rules
 ----------------
 
-Reference rules check identifier naming and usage. RF01 remains reserved and
-disabled by default; implemented rules are enabled by default.
+Reference rules check identifier naming and usage. RF01 is
+disabled by default; the other reference rules are enabled by default.
 
 .. toctree::
 	:maxdepth: 1
 
-	References groundwork: RF01 (disabled by default) <references/RF01>
+	Rule: Known Source Qualifiers (disabled by default) <references/RF01>
 	Rule: Avoid Keywords as Identifiers <references/RF04>
 	Rule: Avoid Special Characters in Identifiers <references/RF05>
 	Rule: Remove Unnecessary Backticks <references/RF06>

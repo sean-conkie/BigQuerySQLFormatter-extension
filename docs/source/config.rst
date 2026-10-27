@@ -76,8 +76,8 @@ precedence over ``enabled: true``.
 
 Rules declared disabled by default require an explicit ``"enabled": true`` in
 editor settings or ``.bqsqlformatter.json``. Severity, options, and enabling a
-group do not opt a rule in. RF01 is reserved as **Disabled by default**;
-accepting its configuration does not add lint behaviour. Implemented reference
+group do not opt a rule in. RF01 is **Disabled by default** because STRUCT
+field access can resemble an unknown source qualifier. The other reference
 rules are enabled by default; see their individual pages for options.
 
 These controls affect diagnostics, quick fixes, Fix All, and formatting. Disabled rules

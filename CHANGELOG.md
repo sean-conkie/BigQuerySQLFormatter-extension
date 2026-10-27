@@ -4,6 +4,11 @@
 
 ### Notable changes
 
+- RF01 (`references.from`) detects unknown source qualifiers when explicitly
+  enabled. It resolves aliases, CTEs, UNNEST/OFFSET, TVFs, DML targets and outer
+  scopes. It stays disabled by default because STRUCT field access can look
+  like an unknown qualifier. No automatic fix is offered.
+
 - RF06 (`references.quoting`) is enabled by default and removes unnecessary
   identifier backticks through quick fixes, Fix All and formatting. Table paths
   remain quoted by default; opt in with `check_table_paths`. Reserved words,
@@ -31,7 +36,7 @@
 
 - Add the `references` rule group and `RF` rule codes in editor and project settings.
 - Support rules that are disabled by default and require explicit
-  `enabled: true`. RF01 is reserved with a disabled default; exclusions,
+  `enabled: true`. RF01 has a disabled default; exclusions,
   disabled groups and severity `off` retain precedence.
 
 ### Fixed
