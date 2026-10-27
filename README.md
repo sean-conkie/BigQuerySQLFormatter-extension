@@ -74,7 +74,8 @@ Configure rules in your Visual Studio Code user, workspace, or workspace-folder 
 Rules default to enabled with `warning` severity unless documented otherwise.
 An opt-in rule with a disabled default requires an explicit `"enabled": true`;
 setting a severity, options, or enabling its group is not sufficient. RF01 is
-reserved as **Disabled by default**; its check is not implemented yet.
+**Disabled by default** because schema-free checking cannot distinguish unknown
+table qualifiers from STRUCT field access. Enable it with `"RF01": { "enabled": true }`.
 Supported severities are
 `error`, `warning`, `information`, `hint`, and `off`. Disabling a rule removes
 its diagnostics and fixes, including fix-on-save. Exclusions, disabled groups,
