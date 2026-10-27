@@ -63,6 +63,26 @@ describe('RF01 known source qualifiers', () => {
     ).to.deep.equal(['a', 't.*', 'b', 'c', 'd']);
   });
 
+  it('excludes case-insensitive select aliases only in GROUP BY and ORDER BY', async () => {
+    const text =
+      'select f.address as `Address` from foo f where missing.city = 1 group by address.city order by ADDRESS.city, other.city;';
+    expect((await check(text)).names).to.deep.equal(['missing.city', 'other.city']);
+    const cache = globalTokenCache.get(uri)!;
+    const tokens = sourceTokens(cache);
+    expect(
+      columnReferences(tokens, cache, new QueryScopeResolver(tokens)).map(({ range }) => cache.getText(range)),
+    ).to.deep.equal(['f.address', 'missing.city', 'other.city']);
+  });
+
+  it('extracts join expressions without treating USING column declarations as references', async () => {
+    await check('select f.id, b.name from foo f join bar b using (`id`, name) order by b.name;');
+    const cache = globalTokenCache.get(uri)!;
+    const tokens = sourceTokens(cache);
+    expect(
+      columnReferences(tokens, cache, new QueryScopeResolver(tokens)).map(({ range }) => cache.getText(range)),
+    ).to.deep.equal(['f.id', 'b.name', 'b.name']);
+  });
+
   it('respects opt-in, severity, exclusions and group settings', async () => {
     for (const rules of [
       {},
