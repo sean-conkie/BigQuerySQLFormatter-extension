@@ -95,7 +95,7 @@ function literalExpressions(source) {
         values = [escaped === 'b' || escaped === 'B' ? '' : ' '];
       } else if (character === '^' || character === '$') {
         values = [''];
-      } else if (/[a-z_]/i.test(character)) {
+      } else if (/[a-z_0-9]/i.test(character)) {
         values = [character.toLowerCase()];
       } else if (character === '?' || character === '*' || character === '+' || character === '{') {
         throw new Error(`Unsupported keyword regex quantifier: ${source}`);
@@ -142,7 +142,8 @@ function literalExpressions(source) {
 function grammarKeywords(grammar) {
   const words = [];
   let scopedPatterns = 0;
-  const keyword = (scope) => typeof scope === 'string' && scope.split(/\s+/).some((name) => name.startsWith('keyword.'));
+  const keyword = (scope) => typeof scope === 'string' && scope.split(/\s+/).some((name) =>
+    name.startsWith('keyword.') || name === 'storage.type.sql');
   function visit(pattern) {
     for (const [field, captureField] of [['match', 'captures'], ['begin', 'beginCaptures'], ['end', 'endCaptures']]) {
       if (field !== 'match' && !pattern[field] && !pattern[captureField]) continue;
@@ -159,7 +160,7 @@ function grammarKeywords(grammar) {
       const captures = literalExpressions(pattern[field]);
       for (const index of indexes) {
         if (!captures.has(index)) throw new Error(`Missing keyword capture ${index}: ${pattern[field]}`);
-        for (const text of captures.get(index)) words.push(...(text.match(/[a-z_]+/g) || []));
+        for (const text of captures.get(index)) words.push(...(text.match(/[a-z_][a-z_0-9]*/g) || []));
       }
     }
     for (const child of pattern.patterns || []) visit(child);

@@ -20,6 +20,22 @@ export const stringListOption = {
 
 export type OptionDefinitions = Readonly<Record<string, OptionDefinition>>;
 export type CapitalisationPolicy = 'lower' | 'upper' | 'consistent';
+export type IdentifierPolicy = 'none' | 'aliases' | 'column_aliases' | 'table_aliases' | 'all';
+export const identifierPolicyOption = {
+  type: 'string',
+  enum: ['none', 'aliases', 'column_aliases', 'table_aliases', 'all'],
+  default: 'all',
+} as const satisfies OptionDefinition<IdentifierPolicy>;
+
+export const keywordIdentifierOptions = {
+  unquoted_identifiers_policy: {
+    ...identifierPolicyOption,
+    enum: ['aliases', 'column_aliases', 'table_aliases', 'all'],
+    default: 'aliases',
+  },
+  quoted_identifiers_policy: { ...identifierPolicyOption, default: 'none' },
+  ignore_words: stringListOption,
+} as const;
 
 export const capitalisationOptions = {
   capitalisation_policy: {
@@ -35,6 +51,7 @@ export const ruleOptionSchemas: Readonly<Record<string, OptionDefinitions>> = {
   CP03: capitalisationOptions,
   CP04: capitalisationOptions,
   CP05: capitalisationOptions,
+  RF04: keywordIdentifierOptions,
 };
 
 export function isValidOption<T extends OptionValue>(definition: OptionDefinition<T>, value: unknown): value is T {

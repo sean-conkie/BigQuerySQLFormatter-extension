@@ -4,6 +4,11 @@
 
 ### Notable changes
 
+- RF04 (`references.keywords`) is enabled by default and warns about keywords
+  used as unquoted aliases. Quoted names remain accepted by default. Configure
+  identifier policies and case-insensitive `ignore_words` in editor or project
+  settings. There is no automatic rename fix.
+
 - Traditional query blocks surrounding pipe syntax, `MATCH_RECOGNIZE`,
   `GRAPH_TABLE` or `FOR SYSTEM_TIME AS OF` are linted again. Structural rules
   skip only the query block containing unsupported syntax and its descendants,
@@ -13,8 +18,7 @@
 
 ### Added
 
-- Reserve the `references` rule group and `RF` rule codes in editor and project
-  settings. No reference checks are enabled or implemented yet.
+- Add the `references` rule group and `RF` rule codes in editor and project settings.
 - Support rules that are disabled by default and require explicit
   `enabled: true`. RF01 is reserved with a disabled default; exclusions,
   disabled groups and severity `off` retain precedence.

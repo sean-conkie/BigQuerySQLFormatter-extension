@@ -197,10 +197,15 @@ export class QueryScopeResolver {
     return resolved ? { kind: 'table-qualified', ...resolved } : { kind: 'struct-field' };
   }
 
-  identifierRoles(): { excluded: Set<string>; ctes: Map<string, SourceToken> } {
+  identifierRoles(): {
+    excluded: Set<string>;
+    ctes: Map<string, SourceToken>;
+    tables: Map<string, { token: SourceToken; first: boolean; dashed: boolean }>;
+  } {
     const source = this.tokens;
     const excluded = new Set<string>();
     const ctes = new Map<string, SourceToken>();
+    const tables = new Map<string, { token: SourceToken; first: boolean; dashed: boolean }>();
     // Identifier casing remains safe for extended queries even though their
     // source scopes are unsupported. Keep lexical CTE visibility available.
     for (const environment of this.cteEnvironments) {
@@ -257,10 +262,19 @@ export class QueryScopeResolver {
       ) {
         ctes.set(identifierKey(source[start]), source[start]);
       } else {
-        for (let j = start; j <= end; j++) excluded.add(identifierKey(source[j]));
+        for (let j = start; j <= end; j++) {
+          excluded.add(identifierKey(source[j]));
+          if (isIdentifier(source[j])) {
+            tables.set(identifierKey(source[j]), {
+              token: source[j],
+              first: j === start,
+              dashed: relation || keyword(token, ',') || keyword(token, 'TABLE'),
+            });
+          }
+        }
       }
     }
-    return { excluded, ctes };
+    return { excluded, ctes, tables };
   }
 
   private readRegion(start: number, end: number, parent: QueryScope | undefined, statement: ScopeStatement): void {

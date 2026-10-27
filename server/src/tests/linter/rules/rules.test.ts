@@ -11,6 +11,7 @@ import { ambiguousRules } from '../../../linter/rules/ambiguous/rules';
 import { capitalisationRules } from '../../../linter/rules/capitalisation/rules';
 import { conventionRules } from '../../../linter/rules/convention/rules';
 import { layoutRules } from '../../../linter/rules/layout/rules';
+import { referencesRules } from '../../../linter/rules/references/rules';
 import { structureRules } from '../../../linter/rules/structure/rules';
 import { defaultSettings, type ServerSettings } from '../../../settings'; // replace with your actual import
 
@@ -30,6 +31,7 @@ describe('initialiseRules', () => {
       ...capitalisationRules(settings, problems),
       ...conventionRules(settings, problems),
       ...layoutRules(settings, problems),
+      ...referencesRules(settings, problems),
       ...structureRules(settings, problems),
     ];
     const result = initialiseRules(settings, problems);
