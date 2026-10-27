@@ -4,6 +4,11 @@
 
 ### Notable changes
 
+- RF05 (`references.special_chars`) is enabled by default and checks quoted
+  identifier parts for spaces and symbols. Dashed project IDs and
+  INFORMATION_SCHEMA region qualifiers remain valid. Policies, spaces,
+  additional allowed characters and ignored words are configurable.
+
 - RF04 (`references.keywords`) is enabled by default and warns about keywords
   used as unquoted aliases. Quoted names remain accepted by default. Configure
   identifier policies and case-insensitive `ignore_words` in editor or project

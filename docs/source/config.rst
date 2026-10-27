@@ -120,6 +120,11 @@ case-insensitive exceptions. Its ``unquoted_identifiers_policy`` defaults to
 ``aliases``, ``column_aliases``, ``table_aliases`` and ``all``. Quoted identifiers
 also support ``none``. The same options work in project configuration files.
 
+RF05 checks quoted identifiers with ``quoted_identifiers_policy`` (default
+``all``), ``allow_space_in_identifier`` (default ``false``),
+``additional_allowed_characters`` (default ``[]``) and ``ignore_words``
+(default ``[]``). Characters are treated literally, not as regular expressions.
+
 Project configuration
 ~~~~~~~~~~~~~~~~~~~~~
 
