@@ -1,0 +1,42 @@
+RF05: Avoid special characters in identifiers
+============================================
+
+``references.special_chars`` is enabled by default. It checks each part of a
+backtick-quoted identifier for characters outside ``[A-Za-z0-9_]``.
+For example, prefer ``order_total`` over ```order total```.
+Dots separate path components and are not themselves special characters.
+
+Dashed project IDs in three-part table paths and ``region-xx`` qualifiers
+immediately before ``INFORMATION_SCHEMA`` are accepted. Dashes in dataset,
+table, column and alias names are still checked.
+
+Options
+-------
+
+* ``quoted_identifiers_policy``: ``all`` (default), ``aliases``,
+  ``column_aliases``, ``table_aliases`` or ``none``.
+* ``allow_space_in_identifier``: boolean, default ``false``; allows ASCII spaces.
+* ``additional_allowed_characters``: string list, default ``[]``. Each listed
+  character is literal, not a regular expression; ``["#", "-"]`` allows both.
+* ``ignore_words``: case-insensitive string list, default ``[]``. A whole
+  identifier or an individual path component may be ignored.
+
+``table_aliases`` includes CTE names. These options work in editor settings
+and in ``.bqsqlformatter.json``:
+
+.. code-block:: json
+
+   {
+     "rules": {
+       "RF05": {
+         "options": {
+           "allow_space_in_identifier": true,
+           "additional_allowed_characters": ["#"],
+           "ignore_words": ["legacy-name"]
+         }
+       }
+     }
+   }
+
+Use ``-- noqa: RF05`` to suppress a diagnostic. There is no automatic fix:
+renaming requires updating every reference.

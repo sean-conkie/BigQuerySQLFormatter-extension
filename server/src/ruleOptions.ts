@@ -37,6 +37,13 @@ export const keywordIdentifierOptions = {
   ignore_words: stringListOption,
 } as const;
 
+export const specialCharacterOptions = {
+  quoted_identifiers_policy: identifierPolicyOption,
+  allow_space_in_identifier: { type: 'boolean', default: false },
+  additional_allowed_characters: stringListOption,
+  ignore_words: stringListOption,
+} as const satisfies OptionDefinitions;
+
 export const capitalisationOptions = {
   capitalisation_policy: {
     type: 'string',
@@ -52,6 +59,7 @@ export const ruleOptionSchemas: Readonly<Record<string, OptionDefinitions>> = {
   CP04: capitalisationOptions,
   CP05: capitalisationOptions,
   RF04: keywordIdentifierOptions,
+  RF05: specialCharacterOptions,
 };
 
 export function isValidOption<T extends OptionValue>(definition: OptionDefinition<T>, value: unknown): value is T {
