@@ -117,6 +117,48 @@ If Google changes the reference layout, the generator fails explicitly rather
 than silently omitting signatures or descriptions; update its extraction logic
 and fixtures before committing refreshed data.
 
+## Refreshing keyword data
+
+Run `npm run generate:keywords` with network access to refresh
+`server/src/linter/keywords.json`. Reserved words come only from the
+[official GoogleSQL lexical reserved keywords table](https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/lexical#reserved_keywords),
+not from syntax highlighting. Non-reserved words are the literal words in
+`keyword.*` grammar scopes (including scoped captures, begin/end patterns, and
+multi-word phrases), excluding the reserved set. Function and type scopes do
+not independently contribute keywords.
+
+The committed catalog contains sorted, unique lowercase `reserved` and
+`nonReserved` arrays, without timestamps. Generation does not modify the grammar.
+Commit refreshed keyword data with any grammar change that affects keyword
+scopes; do not edit the catalog by hand. Builds and tests consume committed data
+without accessing the network.
+
+Run `node --test scripts/generate-keywords.test.cjs` after regenerating. These
+offline tests compare the entire reserved list against the documented table
+fixture in `scripts/fixtures/reserved-keywords.html`, validate grammar
+synchronization, and check deterministic output and extraction failures. If the
+upstream table or supported grammar expression syntax changes, update extraction
+and fixtures deliberately rather than accepting partial data.
+
+## Query scope resolution
+
+`server/src/linter/scope.ts` provides source-level query scopes for reference
+rules: sources and aliases, CTE visibility, select aliases, JOIN USING columns,
+and parent links for correlated subqueries. Scope token indices are half-open
+intervals into the resolver's input tokens. Resolve dotted references through
+`classifyReference`; an unknown first component is STRUCT field access, not an
+assumed table qualifier. No database schema or column existence is inferred.
+
+The resolver reports unsupported statements for pipe syntax, MATCH_RECOGNIZE,
+GRAPH_TABLE, and FOR SYSTEM_TIME AS OF. Do not opt reference rules into
+`extendedQuerySafeRules` until these constructs have scope models. Future pipe
+stages can supply additional scopes without changing reference classification.
+
+AL04 and AL05 use compatibility adapters in the same module to preserve their
+existing AST coverage, case comparisons, and diagnostic ranges. AM06 uses query
+scope clauses; CP02 uses the shared lexical identifier roles, which remain
+available for extended queries without claiming their sources are supported.
+
 ## Packaging and release
 
 Packaging type-checks and bundles the extension through the VSCE prepublish hook.

@@ -1,6 +1,7 @@
 import type { Diagnostic } from 'vscode-languageserver/node';
 import type { DocumentCache } from '../../parser/tokenCache';
 import { closingBracket, keyword, SourceRule, type SourceToken } from '../source';
+import { QueryScopeResolver } from '../../scope';
 
 type ReferenceStyle = 'explicit' | 'positional';
 
@@ -13,32 +14,24 @@ export class ColumnReferences extends SourceRule {
 
   protected evaluateSource(tokens: SourceToken[], _cache: DocumentCache, uri: string): Diagnostic[] {
     const diagnostics: Diagnostic[] = [];
-    const frames: { query: boolean; style?: ReferenceStyle }[] = [{ query: false }];
-    for (let i = 0; i < tokens.length; i++) {
-      const token = tokens[i];
-      if (keyword(token, '(') || keyword(token, '[')) frames.push({ query: false });
-      if ((keyword(token, ')') || keyword(token, ']')) && frames.length > 1) frames.pop();
-      const frame = frames[frames.length - 1];
-      if (keyword(token, 'SELECT') || keyword(token, ';')) {
-        frame.query = keyword(token, 'SELECT');
-        frame.style = undefined;
+    for (const scope of new QueryScopeResolver(tokens).scopes) {
+      let expected: ReferenceStyle | undefined;
+      for (const clause of scope.clauses) {
+        const styles = this.referenceStyles(tokens, clause.start + 2);
+        expected ??= styles[0];
+        if (styles.some((style) => style !== expected)) {
+          diagnostics.push(
+            this.createDiagnostic(
+              { start: tokens[clause.start].range.start, end: tokens[clause.start + 1].range.end },
+              uri,
+            ),
+          );
+        }
       }
-      if (
-        !frame.query ||
-        !(keyword(token, 'GROUP') || keyword(token, 'ORDER')) ||
-        !keyword(tokens[i + 1], 'BY') ||
-        keyword(tokens[i + 2], 'ALL')
-      )
-        continue;
-
-      const styles = this.referenceStyles(tokens, i + 2);
-      const expected = frame.style ?? styles[0];
-      if (styles.some((style) => style !== expected)) {
-        diagnostics.push(this.createDiagnostic({ start: token.range.start, end: tokens[i + 1].range.end }, uri));
-      }
-      frame.style = expected;
     }
-    return diagnostics;
+    return diagnostics.sort(
+      (a, b) => a.range.start.line - b.range.start.line || a.range.start.character - b.range.start.character,
+    );
   }
 
   private referenceStyles(tokens: SourceToken[], start: number): ReferenceStyle[] {

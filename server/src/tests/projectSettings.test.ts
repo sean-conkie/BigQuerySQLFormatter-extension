@@ -4,7 +4,17 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { defaultSettings, getProjectSettings, isRuleEnabled, mergeSettings, parseSettings } from '../settings';
-import { isValidOption, ruleOptionSchemas, type OptionDefinition } from '../ruleOptions';
+import {
+  isValidOption,
+  optionDefaults,
+  resolveOption,
+  ruleOptionSchemas,
+  stringListOption,
+  type OptionDefinition,
+  type OptionDefinitions,
+} from '../ruleOptions';
+import { classes, referencesRules } from '../linter/rules/references/rules';
+import { Rule } from '../linter/rules/base';
 import manifest from '../../../package.json';
 
 describe('Rule configuration', () => {
@@ -32,11 +42,88 @@ describe('Rule configuration', () => {
       [{ type: 'number', default: 2 }, 1.5, Infinity],
       [{ type: 'string', default: 'hello' }, 'world', 1],
       [{ type: 'string', enum: ['a', 'b'], default: 'a' }, 'b', 'c'],
+      [stringListOption, ['word', '_'], ['word', 1]],
+      [stringListOption, [], 'word'],
+      [stringListOption, ['word'], null],
+      [stringListOption, ['word'], {}],
     ];
     for (const [definition, valid, invalid] of cases) {
       expect(isValidOption(definition, valid)).to.equal(true);
       expect(isValidOption(definition, invalid)).to.equal(false);
     }
+  });
+
+  it('uses JSON-schema-compatible string-list definitions and independent list defaults', () => {
+    expect(stringListOption).to.deep.equal({ type: 'array', items: { type: 'string' }, default: [] });
+    const definition = { ...stringListOption, default: ['word'] };
+    const defaults = optionDefaults({ ignore_words: definition });
+    expect(defaults).to.deep.equal({ ignore_words: ['word'] });
+    expect(defaults.ignore_words).not.to.equal(definition.default);
+    expect(resolveOption(definition, 1)).to.deep.equal(['word']);
+    expect(resolveOption(definition, [])).to.deep.equal([]);
+  });
+
+  it('reserves the references registry without adding RF lint behaviour', () => {
+    expect(classes).to.deep.equal([]);
+    expect(referencesRules(defaultSettings, 0)).to.deep.equal([]);
+  });
+
+  it('keeps RF schema patterns, exclusions, groups and the opt-in default aligned', () => {
+    const schema = manifest.contributes.configuration.properties['bigquerySQLFormatter.rules'];
+    const matching = Object.entries(schema.patternProperties).filter(([pattern]) => new RegExp(pattern).test('RF01'));
+    expect(matching).to.have.length(1);
+    expect(matching[0][1]).to.have.nested.property('properties.enabled.default', false);
+    expect(schema.properties.RF01).to.have.nested.property('properties.enabled.default', false);
+    expect(schema.properties.groups.properties.references.type).to.equal('boolean');
+    expect(new RegExp(schema.properties.exclude.items.pattern).test('RF01')).to.equal(true);
+    const rules = { RF01: { enabled: true }, groups: { references: false }, exclude: ['RF02'] };
+    expect(parseSettings({ rules }).rules).to.deep.equal(rules);
+    expect(
+      mergeSettings(
+        { ...defaultSettings, rules: { RF01: { severity: 'error' }, groups: { references: true } } },
+        parseSettings({ rules }),
+      ).rules,
+    ).to.deep.equal({ ...rules, RF01: { severity: 'error', enabled: true } });
+  });
+
+  it('requires explicit enabled true for opt-in rules, preserving disabling precedence', () => {
+    class OptInRule extends Rule<string> {
+      readonly defaultEnabled = false;
+      evaluate() {
+        return null;
+      }
+    }
+    const rule = new OptInRule(defaultSettings, 0);
+    expect(rule.defaultEnabled).to.equal(false);
+    for (const config of [undefined, {}, { severity: 'error' as const }, { enabled: false }]) {
+      expect(
+        isRuleEnabled({ ...defaultSettings, rules: { RF01: config } }, 'RF01', 'references', rule.defaultEnabled),
+      ).to.equal(false);
+    }
+    const enabled = { RF01: { enabled: true } };
+    expect(isRuleEnabled({ ...defaultSettings, rules: enabled }, 'RF01', 'references', false)).to.equal(true);
+    expect(
+      isRuleEnabled({ ...defaultSettings, rules: { ...enabled, exclude: ['RF01'] } }, 'RF01', 'references', false),
+    ).to.equal(false);
+    expect(
+      isRuleEnabled(
+        { ...defaultSettings, rules: { ...enabled, groups: { references: false } } },
+        'RF01',
+        'references',
+        false,
+      ),
+    ).to.equal(false);
+    expect(
+      isRuleEnabled(
+        { ...defaultSettings, rules: { RF01: { enabled: true, severity: 'off' } } },
+        'RF01',
+        'references',
+        false,
+      ),
+    ).to.equal(false);
+    expect(
+      isRuleEnabled({ ...defaultSettings, rules: { groups: { references: true } } }, 'RF01', 'references', false),
+    ).to.equal(false);
   });
 
   it('merges individual option fields without mutating editor settings', () => {
@@ -274,5 +361,62 @@ describe('Project configuration discovery', () => {
         project,
       ).rules?.CP04?.options,
     ).to.deep.equal({ capitalisation_policy: 'lower' });
+  });
+
+  describe('String-list option groundwork', () => {
+    const schemas = ruleOptionSchemas as Record<string, OptionDefinitions>;
+    beforeEach(() => {
+      schemas.RF99 = {
+        ignore_words: { ...stringListOption, default: ['default_word'] },
+        additional_allowed_characters: stringListOption,
+      };
+    });
+    afterEach(() => {
+      delete schemas.RF99;
+    });
+
+    it('merges project list options field by field and replaces rather than concatenates arrays', async () => {
+      const editor = {
+        ...defaultSettings,
+        rules: {
+          RF99: {
+            enabled: true,
+            options: { ignore_words: ['editor_word'], additional_allowed_characters: ['_'] },
+          },
+        },
+      };
+      const configPath = join(directory, '.bqsqlformatter.json');
+      await writeFile(
+        configPath,
+        JSON.stringify({
+          rules: { RF99: { options: { ignore_words: ['project_word'] } }, groups: { references: true } },
+        }),
+      );
+      const project = await getProjectSettings(uri(join(directory, 'query.sql')), [uri(directory)]);
+      expect(mergeSettings(editor, project).rules?.RF99).to.deep.equal({
+        enabled: true,
+        options: { ignore_words: ['project_word'], additional_allowed_characters: ['_'] },
+      });
+      expect(editor.rules.RF99.options.ignore_words).to.deep.equal(['editor_word']);
+      expect(
+        mergeSettings(editor, parseSettings({ rules: { RF99: { options: { ignore_words: [] } } } })).rules?.RF99
+          ?.options,
+      ).to.deep.equal({ ignore_words: [], additional_allowed_characters: ['_'] });
+    });
+
+    it('reports invalid list elements and resets all options to declared defaults', async () => {
+      const configPath = join(directory, '.bqsqlformatter.json');
+      await writeFile(configPath, JSON.stringify({ rules: { RF99: { options: { ignore_words: ['word', 1] } } } }));
+      const errors: string[] = [];
+      const project = await getProjectSettings(uri(join(directory, 'query.sql')), [uri(directory)], (message) =>
+        errors.push(message),
+      );
+      expect(errors).to.have.length(1);
+      expect(errors[0]).to.include(configPath).and.include('rules.RF99.options.ignore_words');
+      expect(project.rules?.RF99?.options).to.deep.equal({
+        ignore_words: ['default_word'],
+        additional_allowed_characters: [],
+      });
+    });
   });
 });

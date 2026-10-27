@@ -4,11 +4,20 @@ import { classes as ambiguous } from './ambiguous/rules';
 import { classes as capitalisation } from './capitalisation/rules';
 import { classes as convention } from './convention/rules';
 import { classes as layout } from './layout/rules';
+import { classes as references } from './references/rules';
 import { classes as structure } from './structure/rules';
 import { instantiateRules, type Rule } from './base';
 import type { FileMap } from '../parser';
 
-export const ruleRegistry = [...aliasing, ...ambiguous, ...capitalisation, ...convention, ...layout, ...structure];
+export const ruleRegistry = [
+  ...aliasing,
+  ...ambiguous,
+  ...capitalisation,
+  ...convention,
+  ...layout,
+  ...references,
+  ...structure,
+];
 
 /**
  * Initialise the rules

@@ -41,7 +41,8 @@ select **GoogleSQL** as the document language to start linting.
 ## Rules
 
 See the [rule reference](https://bigquerysqlformatter.readthedocs.io/en/latest/rules/)
-for all aliasing, ambiguous, capitalisation, convention, layout, and structure rules.
+for all aliasing, ambiguous, capitalisation, convention, layout, references, and structure rules.
+The `references` (RF) group is reserved for upcoming rules; no RF checks run yet.
 The 0.4.0 rules add explicit UNION modifiers and INNER JOINs, consistent
 GROUP BY/ORDER BY references, matching set-query column counts, statement
 terminators, and CTE layout.
@@ -64,12 +65,17 @@ Configure rules in your Visual Studio Code user, workspace, or workspace-folder 
 }
 ```
 
-Rules default to enabled with `warning` severity. Supported severities are
+Rules default to enabled with `warning` severity unless documented otherwise.
+An opt-in rule with a disabled default requires an explicit `"enabled": true`;
+setting a severity, options, or enabling its group is not sufficient. RF01 is
+reserved as **Disabled by default**; its check is not implemented yet.
+Supported severities are
 `error`, `warning`, `information`, `hint`, and `off`. Disabling a rule removes
 its diagnostics and fixes, including fix-on-save. Exclusions, disabled groups,
 and `off` take precedence over an individual `enabled: true` setting.
 Group names are `aliasing`, `ambiguous`, `capitalisation`, `convention`, `layout`,
-and `structure`. Use uppercase rule codes in configuration.
+`references`, and `structure`. Use uppercase rule codes in configuration,
+including the `RF` prefix for references rules.
 
 Rules with declared style options accept an `options` object. For example:
 
@@ -88,6 +94,11 @@ and CP05 (data types) accept
 the first matching token in the file; a mixed-case first token selects
 lowercase. Strings, quoted identifiers, and comments are ignored. Group settings
 remain boolean toggles, not shared option defaults.
+
+Option declarations also support lists of strings for future word/character
+options. Lists must contain only strings; an empty list is valid. Project
+lists replace the corresponding editor list rather than being concatenated.
+No reference-rule list options are active yet.
 
 For shared project settings, create `.bqsqlformatter.json`:
 

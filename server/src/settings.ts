@@ -4,9 +4,17 @@ import { dirname, join, relative, isAbsolute, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseRuleOptions, type OptionValue } from './ruleOptions';
 
-export const ruleGroups = ['aliasing', 'ambiguous', 'capitalisation', 'convention', 'layout', 'structure'] as const;
+export const ruleGroups = [
+  'aliasing',
+  'ambiguous',
+  'capitalisation',
+  'convention',
+  'layout',
+  'references',
+  'structure',
+] as const;
 export type RuleGroup = (typeof ruleGroups)[number];
-export type RuleCode = `${'AL' | 'AM' | 'CP' | 'CV' | 'LT' | 'ST'}${number}`;
+export type RuleCode = `${'AL' | 'AM' | 'CP' | 'CV' | 'LT' | 'RF' | 'ST'}${number}`;
 export type Severity = 'error' | 'warning' | 'information' | 'hint' | 'off';
 export interface RuleConfiguration {
   enabled?: boolean;
@@ -69,7 +77,7 @@ export function parseSettings(
     if (key === 'exclude') {
       if (
         !Array.isArray(setting) ||
-        !setting.every((code) => typeof code === 'string' && /^(AL|AM|CP|CV|LT|ST)\d{2}$/.test(code))
+        !setting.every((code) => typeof code === 'string' && /^(AL|AM|CP|CV|LT|RF|ST)\d{2}$/.test(code))
       ) {
         throw new Error('rules.exclude must be an array of uppercase rule codes');
       }
@@ -85,7 +93,7 @@ export function parseSettings(
       }
       parsed.groups = groups;
     } else {
-      if (!/^(AL|AM|CP|CV|LT|ST)\d{2}$/.test(key) || !isObject(setting)) {
+      if (!/^(AL|AM|CP|CV|LT|RF|ST)\d{2}$/.test(key) || !isObject(setting)) {
         throw new Error(`Invalid rule setting: ${key}`);
       }
       const config: RuleConfiguration = {};
@@ -119,7 +127,7 @@ export function mergeSettings(base: ServerSettings, overrides: Partial<ServerSet
   if (!base.rules && !overrides.rules) return result;
   result.rules = { ...base.rules, ...overrides.rules };
   for (const key of Object.keys(overrides.rules ?? {})) {
-    if (/^(AL|AM|CP|CV|LT|ST)\d{2}$/.test(key)) {
+    if (/^(AL|AM|CP|CV|LT|RF|ST)\d{2}$/.test(key)) {
       const code = key as RuleCode;
       result.rules[code] = { ...base.rules?.[code], ...overrides.rules?.[code] };
       if (base.rules?.[code]?.options || overrides.rules?.[code]?.options) {
@@ -133,13 +141,13 @@ export function mergeSettings(base: ServerSettings, overrides: Partial<ServerSet
   return result;
 }
 
-export function isRuleEnabled(settings: ServerSettings, code: string, group: string): boolean {
+export function isRuleEnabled(settings: ServerSettings, code: string, group: string, defaultEnabled = true): boolean {
   const rules = settings.rules;
   const config = rules?.[code as RuleCode];
   return (
     rules?.groups?.[group as RuleGroup] !== false &&
     !rules?.exclude?.includes(code) &&
-    config?.enabled !== false &&
+    (config?.enabled ?? defaultEnabled) &&
     config?.severity !== 'off'
   );
 }

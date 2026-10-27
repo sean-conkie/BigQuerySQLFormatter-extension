@@ -1,10 +1,22 @@
-export type OptionValue = string | number | boolean;
+export type OptionValue = string | number | boolean | readonly string[];
 
-export interface OptionDefinition<T extends OptionValue = OptionValue> {
-  type: 'string' | 'number' | 'integer' | 'boolean';
-  enum?: readonly T[];
-  default: T;
-}
+export type OptionDefinition<T extends OptionValue = OptionValue> =
+  | {
+      type: 'string' | 'number' | 'integer' | 'boolean';
+      enum?: readonly T[];
+      default: T;
+    }
+  | {
+      type: 'array';
+      items: { readonly type: 'string' };
+      default: T & readonly string[];
+    };
+
+export const stringListOption = {
+  type: 'array',
+  items: { type: 'string' },
+  default: [],
+} as const satisfies OptionDefinition<readonly string[]>;
 
 export type OptionDefinitions = Readonly<Record<string, OptionDefinition>>;
 export type CapitalisationPolicy = 'lower' | 'upper' | 'consistent';
@@ -26,6 +38,9 @@ export const ruleOptionSchemas: Readonly<Record<string, OptionDefinitions>> = {
 };
 
 export function isValidOption<T extends OptionValue>(definition: OptionDefinition<T>, value: unknown): value is T {
+  if (definition.type === 'array') {
+    return Array.isArray(value) && value.every((item) => typeof item === 'string');
+  }
   const validType =
     definition.type === 'integer'
       ? typeof value === 'number' && Number.isInteger(value)
@@ -34,7 +49,12 @@ export function isValidOption<T extends OptionValue>(definition: OptionDefinitio
 }
 
 export function optionDefaults(definitions: OptionDefinitions): Record<string, OptionValue> {
-  return Object.fromEntries(Object.entries(definitions).map(([name, definition]) => [name, definition.default]));
+  return Object.fromEntries(
+    Object.entries(definitions).map(([name, definition]) => [
+      name,
+      Array.isArray(definition.default) ? [...definition.default] : definition.default,
+    ]),
+  );
 }
 
 export function resolveOption<T extends OptionValue>(definition: OptionDefinition<T>, value: unknown): T {
