@@ -1,5 +1,8 @@
 import { expect } from 'chai';
-import { InitializeRequest } from 'vscode-languageserver/node';
+import { rejects } from 'node:assert/strict';
+import * as path from 'node:path';
+import { cp, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { InitializeRequest, LogMessageNotification, MessageType } from 'vscode-languageserver/node';
 import { startTestServer } from './serverProcess';
 
 describe('Test language server lifecycle', function () {
@@ -83,4 +86,61 @@ describe('Test language server lifecycle', function () {
     );
     expect(result).to.be.instanceOf(Error).with.property('message', 'Timed out waiting for server diagnostics. ');
   });
+});
+
+describe('Language server startup failures', function () {
+  this.timeout(15000);
+  let directory: string;
+  let server: ReturnType<typeof startTestServer> | undefined;
+
+  beforeEach(async () => {
+    directory = await mkdtemp(path.resolve(__dirname, '../../.startup-failure-'));
+    const runtime = path.resolve(__dirname, '..');
+    await cp(runtime, directory, {
+      recursive: true,
+      filter: (source) => source !== path.join(runtime, 'tests'),
+    });
+  });
+
+  afterEach(async () => {
+    try {
+      await server?.stop();
+    } finally {
+      server = undefined;
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
+  for (const asset of ['missing WASM', 'invalid grammar']) {
+    it(`rejects initialization and logs the cause without signaling readiness for ${asset}`, async () => {
+      if (asset === 'missing WASM') {
+        await rm(path.join(directory, 'linter', 'onig.wasm'));
+      } else {
+        await writeFile(path.join(directory, 'linter', 'syntaxes', 'googlesql.tmLanguage.json'), '{');
+      }
+      server = startTestServer(path.join(directory, 'server.js'));
+      const errors: string[] = [];
+      let ready = false;
+      server.connection.onNotification(LogMessageNotification.type, (params) => {
+        if (params.type === MessageType.Error) errors.push(params.message);
+      });
+      server.connection.onNotification('bigquerySQLFormatter/ready', () => {
+        ready = true;
+      });
+      const cause = asset === 'missing WASM' ? /ENOENT.*onig\.wasm/ : /JSON/;
+      await rejects(
+        server.connection.sendRequest(InitializeRequest.type, {
+          processId: process.pid,
+          capabilities: {},
+          rootUri: null,
+        }),
+        cause,
+      );
+      expect(errors).to.have.length(1);
+      expect(errors[0])
+        .to.match(/^Language server initialization failed:/)
+        .and.to.match(cause);
+      expect(ready).to.equal(false);
+    });
+  }
 });
