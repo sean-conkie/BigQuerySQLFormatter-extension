@@ -70,6 +70,14 @@ export const capitalisationOptions = {
   } satisfies OptionDefinition<CapitalisationPolicy>,
 } as const;
 
+export const joinOrderOptions = {
+  preferred_first_table_in_join_clause: {
+    type: 'string',
+    enum: ['earlier', 'later'],
+    default: 'earlier',
+  },
+} as const satisfies OptionDefinitions;
+
 export const ruleOptionSchemas: Readonly<Record<string, OptionDefinitions>> = {
   CP01: capitalisationOptions,
   CP02: capitalisationOptions,
@@ -81,6 +89,7 @@ export const ruleOptionSchemas: Readonly<Record<string, OptionDefinitions>> = {
   RF04: keywordIdentifierOptions,
   RF05: specialCharacterOptions,
   RF06: quotingOptions,
+  ST09: joinOrderOptions,
 };
 
 export function isValidOption<T extends OptionValue>(definition: OptionDefinition<T>, value: unknown): value is T {

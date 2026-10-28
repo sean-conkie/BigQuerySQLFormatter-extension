@@ -1,0 +1,34 @@
+ST09: JOIN Condition Source Order
+================================
+
+``structure.join_condition_order`` is enabled by default. Quick fixes, Fix All
+and formatting put the earlier FROM source on the left of JOIN ON comparisons.
+This intentionally rewrites existing join conditions on format-on-save.
+
+.. code-block:: sql
+
+    -- Before
+    select foo.id from ds.foo join ds.bar on bar.id = foo.id and bar.x < foo.x;
+    -- After
+    select foo.id from ds.foo join ds.bar on foo.id = bar.id and foo.x > bar.x;
+
+Set ``preferred_first_table_in_join_clause`` to ``earlier`` (default) or
+``later`` in editor rules or the nearest ``.bqsqlformatter.json``:
+
+.. code-block:: json
+
+    { "rules": { "ST09": {
+        "options": { "preferred_first_table_in_join_clause": "later" }
+    } } }
+
+Explicit and implicit aliases, CTEs, derived tables, UNNEST and table-valued
+functions follow FROM source order. Expressions are moved as a whole only when
+each side references exactly one different local source.
+
+Equality, inequality and IS [NOT] DISTINCT FROM swap unchanged; <, >, <= and >=
+are mirrored. Operand text and spacing around the operator are preserved.
+Comments retain a diagnostic but prevent fixes.
+
+Unqualified columns, STRUCT fields, correlated references, USING, comma-join
+WHERE conditions and non-symmetric LIKE/IN/BETWEEN predicates are skipped.
+Pipe JOIN support remains separate.

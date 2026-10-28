@@ -156,4 +156,5 @@ Structure rules are guidelines that help developers maintain a consistent and lo
 	Rule: Flatten Nested CASE Expressions <structure/ST04>
 	Rule: Specify Join Keys Instead of Using `USING` <structure/ST07>
 	Rule: Do Not Use `DISTINCT` with Parentheses <structure/ST08>
+	Rule: Order JOIN Comparisons by Source <structure/ST09>
 	

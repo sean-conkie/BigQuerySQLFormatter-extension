@@ -4,6 +4,14 @@
 
 ### Notable changes
 
+- Add ST09 (`structure.join_condition_order`), **enabled by default**.
+  Quick fixes, Fix All and format-on-save reorder JOIN ON operands by FROM
+  source order and mirror inequalities. Configure
+  `preferred_first_table_in_join_clause` as `earlier` (default) or `later`,
+  or disable ST09/the structure group to opt out. Comments prevent fixes.
+- Add a shared JOIN-condition model with boolean groups, operand ranges and
+  scope-resolved source references for structure and layout rules.
+
 - Add ST04 (`structure.nested_case`), enabled by default, flattening compatible
   CASE expressions in ELSE branches through quick fixes, Fix All and formatting.
   Comments and volatile simple-CASE operands prevent automatic rewrites.
