@@ -32,6 +32,17 @@ export class SimpleCase extends SourceFixRule {
         const is = condition.length - (isNot ? 3 : 2);
         if (is <= 0 || !keyword(condition[is], 'IS') || !keyword(condition.at(-1), 'NULL')) continue;
         const value = condition.slice(0, is);
+        let nesting = 0;
+        if (
+          value.some((token) => {
+            if (keyword(token, '(') || keyword(token, '[')) nesting++;
+            if (keyword(token, ')') || keyword(token, ']')) nesting--;
+            return (
+              nesting === 0 && ['AND', 'OR', 'NOT', 'IS', 'IN', 'LIKE', 'BETWEEN'].some((word) => keyword(token, word))
+            );
+          })
+        )
+          continue;
         const matching = isNot ? result : other;
         const fallback = isNot ? other : result;
         if (!sameExpression(value, matching)) continue;

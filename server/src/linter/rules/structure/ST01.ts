@@ -1,4 +1,4 @@
-import type { ServerSettings } from '../../../settings';
+import { isRuleEnabled } from '../../../settings';
 import {
   CodeAction,
   CodeActionKind,
@@ -8,6 +8,8 @@ import {
   TextEdit,
 } from 'vscode-languageserver/node';
 import { RegexReplaceRule } from '../base';
+import { SimpleCase } from './ST02';
+import { comparePositions } from '../../parser/queryBlocks';
 
 /**
  * The ElseNull rule
@@ -27,4 +29,18 @@ export class ElseNull extends RegexReplaceRule {
   readonly ruleGroup: string = 'structure';
   readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
   readonly codeActionTitle = 'Remove redundant `else null`';
+
+  evaluate(text: string, uri: string | null = null): Diagnostic[] | null {
+    const diagnostics = super.evaluate(text, uri);
+    if (!diagnostics?.length || uri === null || !isRuleEnabled(this.settings, 'ST02', 'structure')) return diagnostics;
+    const simplifications = new SimpleCase(this.settings, this.problems).evaluate({}, uri) ?? [];
+    const remaining = diagnostics.filter(
+      ({ range }) =>
+        !simplifications.some(
+          ({ range: whole }) =>
+            comparePositions(range.start, whole.start) >= 0 && comparePositions(range.end, whole.end) <= 0,
+        ),
+    );
+    return remaining.length ? remaining : null;
+  }
 }

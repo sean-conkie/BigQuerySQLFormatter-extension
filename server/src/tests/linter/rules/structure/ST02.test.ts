@@ -74,6 +74,9 @@ describe('ST02 simple CASE', () => {
     'case when current_date is null then null else current_date end',
     'case when session_user() is null then "" else session_user() end',
     'case when `A` is null then 0 else `a` end',
+    'case when a or b is null then false else a or b end',
+    'case when a and b is null then false else a and b end',
+    'case when not a is null then false else not a end',
   ])
     it(`skips ${expression}`, async () => expect((await check(`select ${expression};`)).diagnostics).to.deep.equal([]));
   it('reports comments but never drops them', async () => {
@@ -95,6 +98,24 @@ describe('ST02 simple CASE', () => {
       const document = TextDocument.create(uri, 'googlesql', 1, source);
       expect(TextDocument.applyEdits(document, await formatDocument(document, settings()))).to.equal(expected);
     }
+  });
+  it('lets ST02 simplify the entire CASE before ST01 removes its explicit ELSE NULL', async () => {
+    const document = TextDocument.create(uri, 'googlesql', 1, 'select case when a is not null then a else null end;');
+    expect(
+      TextDocument.applyEdits(document, await formatDocument(document, settings({ ST01: { enabled: true } }))),
+    ).to.equal('select a;');
+    expect(
+      TextDocument.applyEdits(
+        document,
+        await formatDocument(
+          document,
+          settings({
+            ST01: { enabled: true },
+            ST02: { enabled: false },
+          }),
+        ),
+      ),
+    ).to.equal('select case when a is not null then a end;');
   });
   it('respects noqa, severity and group settings', async () => {
     const text = 'select case when a then true else false end;';
