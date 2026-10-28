@@ -5,7 +5,7 @@
   "icon": "images/BigQuerySQLFormatter_transparent_128.png",
   "author": "sean-conkie",
   "license": "MIT",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/sean-conkie/BigQuerySQLFormatter-extension.git"
@@ -196,13 +196,35 @@
             "^RF02$": {
               "type": "object",
               "properties": {
-                "enabled": { "type": "boolean", "default": true },
-                "severity": { "type": "string", "enum": ["error", "warning", "information", "hint", "off"], "default": "warning" },
+                "enabled": {
+                  "type": "boolean",
+                  "default": true
+                },
+                "severity": {
+                  "type": "string",
+                  "enum": [
+                    "error",
+                    "warning",
+                    "information",
+                    "hint",
+                    "off"
+                  ],
+                  "default": "warning"
+                },
                 "options": {
                   "type": "object",
                   "properties": {
-                    "ignore_words": { "type": "array", "items": { "type": "string" }, "default": [] },
-                    "subqueries_ignore_external_references": { "type": "boolean", "default": false }
+                    "ignore_words": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "default": []
+                    },
+                    "subqueries_ignore_external_references": {
+                      "type": "boolean",
+                      "default": false
+                    }
                   },
                   "additionalProperties": false
                 }
@@ -212,12 +234,33 @@
             "^RF03$": {
               "type": "object",
               "properties": {
-                "enabled": { "type": "boolean", "default": true },
-                "severity": { "type": "string", "enum": ["error", "warning", "information", "hint", "off"], "default": "warning" },
+                "enabled": {
+                  "type": "boolean",
+                  "default": true
+                },
+                "severity": {
+                  "type": "string",
+                  "enum": [
+                    "error",
+                    "warning",
+                    "information",
+                    "hint",
+                    "off"
+                  ],
+                  "default": "warning"
+                },
                 "options": {
                   "type": "object",
                   "properties": {
-                    "single_table_references": { "type": "string", "enum": ["consistent", "qualified", "unqualified"], "default": "consistent" }
+                    "single_table_references": {
+                      "type": "string",
+                      "enum": [
+                        "consistent",
+                        "qualified",
+                        "unqualified"
+                      ],
+                      "default": "consistent"
+                    }
                   },
                   "additionalProperties": false
                 }
@@ -227,14 +270,52 @@
             "^RF04$": {
               "type": "object",
               "properties": {
-                "enabled": { "type": "boolean", "default": true },
-                "severity": { "type": "string", "enum": ["error", "warning", "information", "hint", "off"], "default": "warning" },
+                "enabled": {
+                  "type": "boolean",
+                  "default": true
+                },
+                "severity": {
+                  "type": "string",
+                  "enum": [
+                    "error",
+                    "warning",
+                    "information",
+                    "hint",
+                    "off"
+                  ],
+                  "default": "warning"
+                },
                 "options": {
                   "type": "object",
                   "properties": {
-                    "unquoted_identifiers_policy": { "type": "string", "enum": ["aliases", "column_aliases", "table_aliases", "all"], "default": "aliases" },
-                    "quoted_identifiers_policy": { "type": "string", "enum": ["none", "aliases", "column_aliases", "table_aliases", "all"], "default": "none" },
-                    "ignore_words": { "type": "array", "items": { "type": "string" }, "default": [] }
+                    "unquoted_identifiers_policy": {
+                      "type": "string",
+                      "enum": [
+                        "aliases",
+                        "column_aliases",
+                        "table_aliases",
+                        "all"
+                      ],
+                      "default": "aliases"
+                    },
+                    "quoted_identifiers_policy": {
+                      "type": "string",
+                      "enum": [
+                        "none",
+                        "aliases",
+                        "column_aliases",
+                        "table_aliases",
+                        "all"
+                      ],
+                      "default": "none"
+                    },
+                    "ignore_words": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "default": []
+                    }
                   },
                   "additionalProperties": false
                 }
@@ -244,15 +325,53 @@
             "^RF05$": {
               "type": "object",
               "properties": {
-                "enabled": { "type": "boolean", "default": true },
-                "severity": { "type": "string", "enum": ["error", "warning", "information", "hint", "off"], "default": "warning" },
+                "enabled": {
+                  "type": "boolean",
+                  "default": true
+                },
+                "severity": {
+                  "type": "string",
+                  "enum": [
+                    "error",
+                    "warning",
+                    "information",
+                    "hint",
+                    "off"
+                  ],
+                  "default": "warning"
+                },
                 "options": {
                   "type": "object",
                   "properties": {
-                    "quoted_identifiers_policy": { "type": "string", "enum": ["none", "aliases", "column_aliases", "table_aliases", "all"], "default": "all" },
-                    "allow_space_in_identifier": { "type": "boolean", "default": false },
-                    "additional_allowed_characters": { "type": "array", "items": { "type": "string" }, "default": [] },
-                    "ignore_words": { "type": "array", "items": { "type": "string" }, "default": [] }
+                    "quoted_identifiers_policy": {
+                      "type": "string",
+                      "enum": [
+                        "none",
+                        "aliases",
+                        "column_aliases",
+                        "table_aliases",
+                        "all"
+                      ],
+                      "default": "all"
+                    },
+                    "allow_space_in_identifier": {
+                      "type": "boolean",
+                      "default": false
+                    },
+                    "additional_allowed_characters": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "default": []
+                    },
+                    "ignore_words": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "default": []
+                    }
                   },
                   "additionalProperties": false
                 }
@@ -262,13 +381,39 @@
             "^RF06$": {
               "type": "object",
               "properties": {
-                "enabled": { "type": "boolean", "default": true, "description": "Enable unnecessary-backtick diagnostics and fixes." },
-                "severity": { "type": "string", "description": "Severity for unnecessary-backtick diagnostics; off also disables fixes.", "enum": ["error", "warning", "information", "hint", "off"], "default": "warning" },
+                "enabled": {
+                  "type": "boolean",
+                  "default": true,
+                  "description": "Enable unnecessary-backtick diagnostics and fixes."
+                },
+                "severity": {
+                  "type": "string",
+                  "description": "Severity for unnecessary-backtick diagnostics; off also disables fixes.",
+                  "enum": [
+                    "error",
+                    "warning",
+                    "information",
+                    "hint",
+                    "off"
+                  ],
+                  "default": "warning"
+                },
                 "options": {
                   "type": "object",
                   "properties": {
-                    "check_table_paths": { "type": "boolean", "default": false, "description": "Also remove unnecessary backticks from table paths, preserving case-sensitive names." },
-                    "ignore_words": { "type": "array", "items": { "type": "string" }, "default": [], "description": "Case-insensitive identifiers or path components whose backticks should be preserved." }
+                    "check_table_paths": {
+                      "type": "boolean",
+                      "default": false,
+                      "description": "Also remove unnecessary backticks from table paths, preserving case-sensitive names."
+                    },
+                    "ignore_words": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "default": [],
+                      "description": "Case-insensitive identifiers or path components whose backticks should be preserved."
+                    }
                   },
                   "additionalProperties": false
                 }
@@ -284,7 +429,13 @@
                 },
                 "severity": {
                   "type": "string",
-                  "enum": ["error", "warning", "information", "hint", "off"],
+                  "enum": [
+                    "error",
+                    "warning",
+                    "information",
+                    "hint",
+                    "off"
+                  ],
                   "default": "warning"
                 },
                 "options": {
