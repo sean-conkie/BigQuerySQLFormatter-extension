@@ -220,6 +220,19 @@ traditional AST coverage, case comparisons and ranges; extended aliasing uses
 stage-local scopes and output lists. AM06 uses query scope clauses; CP02 uses
 the shared lexical identifier roles.
 
+`server/src/linter/joins.ts` supplements query scopes with JOIN ON ranges,
+ordered boolean terms, explicit parenthesis groups and comparison operands.
+ST09 and LT90 share this model; comparisons expose their source references
+without inferring schemas or moving correlated/ambiguous expressions.
+
+## Rule codes
+
+Use SQLFluff-compatible codes and names where an equivalent rule exists.
+Codes **90-99 in each group** are reserved for project-specific rules so they
+cannot collide with SQLFluff rules. For example, LT90
+(`layout.join_condition_parentheses`) is an opt-in project-specific style.
+Do not use LT14 for this rule: LT14 is SQLFluff's `layout.keyword_newline`.
+
 ## Packaging and release
 
 Packaging type-checks and bundles the extension through the VSCE prepublish hook.

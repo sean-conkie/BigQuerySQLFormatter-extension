@@ -4,6 +4,12 @@
 
 ### Notable changes
 
+- Add opt-in LT90 (`layout.join_condition_parentheses`), a project-specific
+  rule that wraps multiple JOIN ON conditions. Disabled by default; enable
+  explicitly with `"LT90": { "enabled": true }`. Its `condition_policy` is
+  `multiple` (default) or `mixed` for unparenthesised AND/OR mixtures only.
+  Fixes preserve comments and line endings and compose with LT02 and ST09.
+
 - Add ST09 (`structure.join_condition_order`), **enabled by default**.
   Quick fixes, Fix All and format-on-save reorder JOIN ON operands by FROM
   source order and mirror inequalities. Configure
