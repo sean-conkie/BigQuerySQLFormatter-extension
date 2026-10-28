@@ -3,6 +3,8 @@ import { CodeActionKind, DiagnosticSeverity, Range } from 'vscode-languageserver
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { createDocumentCodeActions, formatDocument } from '../../../../formatting';
 import { Linter } from '../../../../linter/linter';
+import { CaseStatementAST } from '../../../../linter/parser/ast';
+import { tokenizeSource } from '../../../../linter/rules/source';
 import { globalTokenCache } from '../../../../linter/parser/tokenCache';
 import { defaultSettings, type RulesSettings } from '../../../../settings';
 
@@ -49,6 +51,14 @@ describe('ST02 simple CASE', () => {
       'coalesce(a, case when b then 1 else 2 end)',
       'nested ELSE retained',
     ],
+    ['case when (a + b) is null then null else (A + B) end', '(a + b)', 'parenthesised expression stays atomic'],
+    ['case when a[0] is null then null else a[0] end', 'a[0]', 'array access stays atomic'],
+    ['case when `amount` is null then 0 else `amount` end', 'coalesce(`amount`, 0)', 'quoted names match exactly'],
+    [
+      'case when (a or b) is null then false else (a or b) end',
+      'coalesce((a or b), false)',
+      'explicit boolean grouping is retained',
+    ],
   ]) {
     it(`simplifies ${expression}: ${meaning}`, async () => {
       const text = `select ${expression} as label;`;
@@ -89,6 +99,52 @@ describe('ST02 simple CASE', () => {
         context: { diagnostics, only: [CodeActionKind.QuickFix] },
       }),
     ).to.deep.equal([]);
+  });
+  for (const expression of [
+    'case when a then true -- keep condition\nelse false end',
+    'case when a then true else /*keep fallback*/ false end',
+    'case when a then true else false /*keep ending*/ end',
+  ])
+    it(`withholds fixes for multiline or trailing comments: ${expression}`, async () => {
+      const text = `select ${expression} as label;`;
+      const document = TextDocument.create(uri, 'googlesql', 1, text);
+      expect((await check(text)).diagnostics).to.have.length(1);
+      expect(await formatDocument(document, settings())).to.deep.equal([]);
+    });
+  for (const [prefix, statement, expected] of [
+    ['ABS(-1), ', 'SELECT', 'NOT COALESCE(flag, false)'],
+    ['abs(-1), ', 'select', 'not coalesce(flag, false)'],
+    ['', 'SELECT', 'NOT coalesce(flag, false)'],
+  ])
+    it(`follows consistent keyword/function casing after ${statement} ${prefix || '(no function)'}`, async () => {
+      const config = settings({
+        groups: { ...settings().rules.groups, capitalisation: true },
+        CP01: { options: { capitalisation_policy: 'consistent' } },
+        CP03: { options: { capitalisation_policy: 'consistent' } },
+      });
+      const source = `${statement} ${prefix}case when flag then false else true end as label;`;
+      const document = TextDocument.create(uri, 'googlesql', 1, source);
+      const fixed = TextDocument.applyEdits(document, await formatDocument(document, config));
+      expect(fixed).to.equal(`${statement} ${prefix}${expected} ${statement === 'SELECT' ? 'AS' : 'as'} label;`);
+      expect(await formatDocument(TextDocument.create(uri, 'googlesql', 2, fixed), config)).to.deep.equal([]);
+    });
+  for (const expression of [
+    'end',
+    'case else 0 end',
+    'case when a end',
+    'case when then 1 else 0 end',
+    'case when a then else 0 end',
+    'case when a then 1 else end',
+    'case when a then 1 else 2 when b then 3 end',
+  ])
+    it(`rejects incomplete or malformed source CASE branches: ${expression}`, () => {
+      expect(CaseStatementAST.sourceExpressions(tokenizeSource(expression))).to.deep.equal([]);
+    });
+  it('does not carry incomplete CASE state across statement boundaries', () => {
+    const tokens = tokenizeSource('case when a then 1; select case when b then 2 else 3 end;');
+    const expressions = CaseStatementAST.sourceExpressions(tokens);
+    expect(expressions).to.have.length(1);
+    expect(expressions[0].branches[0].condition.map(({ value }) => value)).to.deep.equal(['b']);
   });
   it('preserves precedence when replacing atomic CASE expressions', async () => {
     for (const [source, expected] of [
