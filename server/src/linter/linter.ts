@@ -50,6 +50,7 @@ const extendedQuerySafeRules = new Set([
   'LT01',
   'LT12',
   'LT13',
+  'ST03',
 ]);
 
 function rangesConflict(a: Range, b: Range): boolean {

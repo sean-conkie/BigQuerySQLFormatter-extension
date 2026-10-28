@@ -113,6 +113,7 @@ export class QueryScopeResolver {
       if (keyword(tokens[i], '(')) ends.pop();
     }
     for (let i = 0; i < tokens.length; i++) {
+      if (keyword(tokens[i - 2], '|') && keyword(tokens[i - 1], '>')) continue;
       const ctes = readCtes(tokens, i);
       if (ctes.length) {
         this.cteEnvironments.push({
@@ -170,6 +171,21 @@ export class QueryScopeResolver {
       }
     }
     return [...definitions.values()];
+  }
+
+  unusedCtes(): CommonTableExpression[] {
+    const definitions = this.cteEnvironments.flatMap((environment) => environment.ctes);
+    const roles = this.identifierRoles().ctes;
+    const used = new Set<number>();
+    for (let i = 0; i < this.tokens.length; i++) {
+      if (!roles.has(identifierKey(this.tokens[i]))) continue;
+      if (definitions.some((cte) => cte.start === i)) continue;
+      const definition = this.visibleCteDefinitions(i).find(
+        (cte) => normalize(cte.name) === normalize(this.tokens[i].value),
+      );
+      if (definition && !(i > definition.open && i < definition.close)) used.add(definition.start);
+    }
+    return definitions.filter((cte) => !used.has(cte.start));
   }
 
   resolveSource(scope: QueryScope, name: string): { source: QuerySource; correlated: boolean } | undefined {
@@ -252,7 +268,7 @@ export class QueryScopeResolver {
       while ((keyword(source[end + 1], '.') || keyword(source[end + 1], '-')) && isIdentifier(source[end + 2]))
         end += 2;
       if (
-        (relation || keyword(token, ',')) &&
+        (relation || keyword(token, ',') || keyword(token, 'USING')) &&
         start === end &&
         !keyword(source[end + 1], '(') &&
         isCte(start, source[start].value)
