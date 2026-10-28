@@ -3,13 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 import * as path from 'node:path';
-import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
+import { cp, mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { createServer } from 'node:http';
 import { once } from 'node:events';
 
 import { runTests, runVSCodeCommand } from '@vscode/test-electron';
+import { coldStartTimeout } from './timeouts';
 
 async function waitForWorkbench(userDataDir: string): Promise<void> {
   const port = (await readFile(path.join(userDataDir, 'DevToolsActivePort'), 'utf8')).split('\n')[0];
@@ -32,7 +33,7 @@ async function waitForWorkbench(userDataDir: string): Promise<void> {
   if (pages.length !== 1) throw new Error(`Expected one test workbench, found ${pages.length}`);
 
   const socket = new WebSocket(pages[0].webSocketDebuggerUrl);
-  const signal = AbortSignal.timeout(30000);
+  const signal = AbortSignal.timeout(coldStartTimeout);
   try {
     await once(socket, 'open', { signal });
     const completed = once(socket, 'message', { signal });
@@ -76,6 +77,11 @@ async function main() {
     );
   });
   try {
+    await mkdir(path.join(userDataDir, 'User'), { recursive: true });
+    await writeFile(
+      path.join(userDataDir, 'User', 'settings.json'),
+      JSON.stringify({ 'bigquerySQLFormatter.trace.server': 'messages' }),
+    );
     readiness.listen(0, '127.0.0.1');
     await once(readiness, 'listening');
     const address = readiness.address();
@@ -132,6 +138,12 @@ async function main() {
   } catch (error) {
     const logs = path.join(testProfile, 'user', 'logs');
     if (existsSync(logs)) {
+      const retainedLogs = path.join(
+        path.resolve(process.env.BQSQL_TEST_LOG_DIR ?? '.vscode-test/logs'),
+        path.basename(testProfile),
+      );
+      await cp(logs, retainedLogs, { recursive: true });
+      console.error(`Full VS Code and language server logs retained at ${retainedLogs}`);
       for (const file of await readdir(logs, { recursive: true })) {
         if (!file.endsWith('.log')) continue;
         const lines = (await readFile(path.join(logs, file), 'utf8'))

@@ -5,11 +5,13 @@
 import * as path from 'node:path';
 import { readdir } from 'node:fs/promises';
 import Mocha from 'mocha';
+import { coldStartTimeout, testTimeout } from './timeouts';
+import { warmUp } from './helper';
 
 export async function run(): Promise<void> {
   const readinessUrl = process.env.BQSQL_TEST_WORKBENCH_URL;
   if (!readinessUrl) throw new Error('The test runner did not provide a workbench readiness URL');
-  const ready = await fetch(readinessUrl, { signal: AbortSignal.timeout(35000) });
+  const ready = await fetch(readinessUrl, { signal: AbortSignal.timeout(coldStartTimeout + 5000) });
   if (!ready.ok) throw new Error(`Test workbench is not ready: ${await ready.text()}`);
 
   // Create the mocha test
@@ -17,7 +19,8 @@ export async function run(): Promise<void> {
     ui: 'tdd',
     color: true,
   });
-  mocha.timeout(100000);
+  mocha.timeout(testTimeout);
+  mocha.suite.beforeAll('Warm up the language server and first validation', warmUp);
 
   const testsRoot = __dirname;
   const files = (await readdir(testsRoot)).filter((file) => file.endsWith('.test.js'));

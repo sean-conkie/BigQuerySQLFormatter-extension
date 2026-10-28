@@ -5,12 +5,19 @@ on:
   push:
     branches: ["main"]
   pull_request:
+  workflow_dispatch:
+    inputs:
+      macos-stability:
+        description: Run 20 consecutive macOS stable E2E jobs
+        type: boolean
+        default: false
 
 permissions:
   contents: read
 
 jobs:
   test:
+    if: ${{ !inputs.macos-stability }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
@@ -60,12 +67,14 @@ jobs:
           fail_ci_if_error: true
 
   extension:
-    name: Package and E2E (${{ matrix.os }}, VS Code ${{ matrix.vscode-version }})
+    name: Package and E2E (${{ matrix.os }}, VS Code ${{ matrix.vscode-version }}${{ inputs.macos-stability && format(', run {0}', matrix.repeat) || '' }})
     strategy:
       fail-fast: false
+      max-parallel: ${{ inputs.macos-stability && 1 || 6 }}
       matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
-        vscode-version: [stable, 1.91.0]
+        os: ${{ fromJSON(inputs.macos-stability && '["macos-latest"]' || '["macos-latest", "ubuntu-latest", "windows-latest"]') }}
+        vscode-version: ${{ fromJSON(inputs.macos-stability && '["stable"]' || '["stable", "1.91.0"]') }}
+        repeat: ${{ fromJSON(inputs.macos-stability && '[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]' || '[1]') }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     steps:
@@ -106,3 +115,12 @@ jobs:
           BQSQL_TEST_VSIX: ${{ github.workspace }}/extension.vsix
           BQSQL_TEST_VSCODE_VERSION: ${{ matrix.vscode-version }}
         run: npm run citest
+
+      - name: Upload E2E failure logs
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: e2e-logs-${{ matrix.os }}-${{ matrix.vscode-version }}-${{ matrix.repeat }}
+          path: .vscode-test/logs
+          include-hidden-files: true
+          retention-days: 7

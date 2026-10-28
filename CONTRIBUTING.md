@@ -109,6 +109,31 @@ The test runner waits for native workbench contributions, including save
 participants, through the Visual Studio Code smoke-test driver before running
 tests. Its debugging and readiness endpoints bind only to the loopback interface.
 
+The extension exports `ready(): Promise<void>`, resolved by the server's
+`bigquerySQLFormatter/ready` notification after loading the GoogleSQL grammar and
+Oniguruma WASM. The E2E helper awaits this API before opening documents. A root
+suite hook opens a fixture and awaits its first diagnostics before assertions.
+Neither language-server startup nor warm-up uses fixed sleeps.
+
+Cold-start readiness and the first validation share a 60-second budget, configurable
+with `BQSQL_TEST_COLD_START_TIMEOUT_MS`. Subsequent diagnostic waits default to
+15 seconds, configurable independently with `BQSQL_TEST_TIMEOUT_MS`. Both accept
+positive integer milliseconds. Mocha allows at least 100 seconds per test/hook
+and increases its timeout for larger overrides.
+
+Diagnostic timeouts report phase duration, time since activation, document/settings
+state and the last 80 server output lines. Tests enable server message tracing in
+their isolated profile. On failure the runner copies full VS Code logs (including
+extension-host and language-server output) to `.vscode-test/logs` before removing
+the temporary profile. Set `BQSQL_TEST_LOG_DIR` to retain logs elsewhere. CI uploads
+these logs as an `e2e-logs-*` artifact. Tests do not automatically retry.
+
+To check macOS cold-start stability, manually run the **Node.js Test** workflow
+on the branch under test with **macos-stability** enabled. This runs 20 separate
+macOS stable packaging/E2E jobs sequentially, with fresh profiles and no retries.
+Link the workflow run in the PR and confirm all 20 jobs pass before claiming
+stability verification.
+
 ## Refreshing function completions
 
 Run `npm run generate:completions` with network access to refresh the committed
