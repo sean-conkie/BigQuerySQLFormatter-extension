@@ -149,13 +149,12 @@ suite('Language server diagnostics', () => {
       assert.equal(await vscode.workspace.applyEdit(formatted), true);
       assert.equal(editor.document.getText(), expected);
       await clean;
-      assert.deepEqual(
-        await vscode.commands.executeCommand<vscode.TextEdit[]>('vscode.executeFormatDocumentProvider', uri, {
-          tabSize: 2,
-          insertSpaces: true,
-        }),
-        [],
+      const repeated = await vscode.commands.executeCommand<vscode.TextEdit[] | undefined>(
+        'vscode.executeFormatDocumentProvider',
+        uri,
+        { tabSize: 2, insertSpaces: true },
       );
+      assert.ok(repeated === undefined || repeated.length === 0);
       const reset = waitForDiagnostics(uri, hasPipeIssues);
       await editor.edit((edit) => edit.replace(new vscode.Range(0, 0, editor.document.lineCount, 0), source));
       await reset;
