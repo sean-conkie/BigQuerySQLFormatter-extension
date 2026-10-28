@@ -13,9 +13,10 @@ import { Distinct } from './ST08';
 import { Using } from './ST07';
 import { UnusedCte } from './ST03';
 import { SimpleCase } from './ST02';
+import { NestedCase } from './ST04';
 import type { FileMap } from '../../parser';
 
-export const classes = [Distinct, ElseNull, Using, UnusedCte, SimpleCase];
+export const classes = [Distinct, ElseNull, Using, UnusedCte, SimpleCase, NestedCase];
 
 export function structureRules(settings: ServerSettings, problems: number): Rule<string | FileMap>[] {
   return instantiateRules(classes, settings, problems);

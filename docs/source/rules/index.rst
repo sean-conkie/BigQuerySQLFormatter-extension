@@ -153,6 +153,7 @@ Structure rules are guidelines that help developers maintain a consistent and lo
 	Rule: Do Not Specify Redundant `ELSE NULL` in a `CASE WHEN` Statement <structure/ST01>
 	Rule: Simplify CASE Expressions <structure/ST02>
 	Rule: Remove Unused CTEs <structure/ST03>
+	Rule: Flatten Nested CASE Expressions <structure/ST04>
 	Rule: Specify Join Keys Instead of Using `USING` <structure/ST07>
 	Rule: Do Not Use `DISTINCT` with Parentheses <structure/ST08>
 	
