@@ -98,6 +98,16 @@
               "type": "object",
               "description": "Order JOIN comparisons by source order (earlier first by default)."
             },
+            "LT90": {
+              "type": "object",
+              "description": "Project-specific JOIN condition parentheses. Disabled by default.",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "default": false
+                }
+              }
+            },
             "exclude": {
               "type": "array",
               "items": {
@@ -172,7 +182,7 @@
               },
               "additionalProperties": false
             },
-            "^(?!CP0[1-5]$|RF0[1-6]$|ST09$)(AL|AM|CP|CV|LT|RF|ST)[0-9]{2}$": {
+            "^(?!CP0[1-5]$|RF0[1-6]$|ST09$|LT90$)(AL|AM|CP|CV|LT|RF|ST)[0-9]{2}$": {
               "type": "object",
               "properties": {
                 "enabled": {
@@ -225,6 +235,41 @@
                         "later"
                       ],
                       "default": "earlier"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            },
+            "^LT90$": {
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "default": false
+                },
+                "severity": {
+                  "type": "string",
+                  "enum": [
+                    "error",
+                    "warning",
+                    "information",
+                    "hint",
+                    "off"
+                  ],
+                  "default": "warning"
+                },
+                "options": {
+                  "type": "object",
+                  "properties": {
+                    "condition_policy": {
+                      "type": "string",
+                      "enum": [
+                        "multiple",
+                        "mixed"
+                      ],
+                      "default": "multiple"
                     }
                   },
                   "additionalProperties": false

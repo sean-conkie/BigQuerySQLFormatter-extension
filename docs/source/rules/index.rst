@@ -18,6 +18,8 @@ remain skipped in their own block and descendants. Enclosing traditional
 queries and sibling blocks remain checked. CP01-CP05, CV01, CV02, CV04, CV05,
 CV13, LT01, LT12 and LT13 remain safe throughout; other layout and structure
 rules are not yet enabled inside pipe queries.
+ST03 is an exception: unused CTE detection uses lexical visibility throughout
+extended queries without changing their text.
 
 .. _aliasing-rules:
 
@@ -119,6 +121,7 @@ Layout rules are guidelines that help developers maintain a consistent and reada
 	Rule: SQL Files Must End with a Single Trailing Newline <layout/LT12>
 	Rule: SQL Files Must Not Begin with Newlines or Whitespace <layout/LT13>
 	Rule: Align Equal (`=`) Sign in Comparison Blocks <layout/LT15>
+	Rule: Wrap JOIN Conditions (project-specific, disabled by default) <layout/LT90>
 
 .. _references-rules:
 

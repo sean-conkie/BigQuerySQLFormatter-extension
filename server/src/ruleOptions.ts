@@ -78,6 +78,14 @@ export const joinOrderOptions = {
   },
 } as const satisfies OptionDefinitions;
 
+export const joinParenthesesOptions = {
+  condition_policy: {
+    type: 'string',
+    enum: ['multiple', 'mixed'],
+    default: 'multiple',
+  },
+} as const satisfies OptionDefinitions;
+
 export const ruleOptionSchemas: Readonly<Record<string, OptionDefinitions>> = {
   CP01: capitalisationOptions,
   CP02: capitalisationOptions,
@@ -90,6 +98,7 @@ export const ruleOptionSchemas: Readonly<Record<string, OptionDefinitions>> = {
   RF05: specialCharacterOptions,
   RF06: quotingOptions,
   ST09: joinOrderOptions,
+  LT90: joinParenthesesOptions,
 };
 
 export function isValidOption<T extends OptionValue>(definition: OptionDefinition<T>, value: unknown): value is T {

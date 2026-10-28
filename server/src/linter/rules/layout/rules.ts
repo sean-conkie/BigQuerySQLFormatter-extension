@@ -20,6 +20,7 @@ import { UnionCheck } from './LT11';
 import { EndOfFile } from './LT12';
 import { StartOfFile } from './LT13';
 import { ComparisonOperators } from './LT15';
+import { JoinConditionParentheses } from './LT90';
 import type { FileMap } from '../../parser';
 
 export const classes = [
@@ -35,6 +36,7 @@ export const classes = [
   EndOfFile,
   StartOfFile,
   ComparisonOperators,
+  JoinConditionParentheses,
 ];
 
 export function layoutRules(settings: ServerSettings, problems: number): Rule<string | FileMap>[] {

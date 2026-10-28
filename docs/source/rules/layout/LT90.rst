@@ -1,0 +1,39 @@
+LT90: JOIN Condition Parentheses
+===============================
+
+``layout.join_condition_parentheses`` is a **project-specific** style rule
+with no SQLFluff equivalent. It is **disabled by default**. Codes 90-99 in each
+rule group are reserved for project-specific rules; LT14 instead belongs to
+SQLFluff's ``layout.keyword_newline``.
+
+Enable the rule in editor settings or the nearest ``.bqsqlformatter.json``:
+
+.. code-block:: json
+
+    { "rules": { "LT90": {
+        "enabled": true,
+        "options": { "condition_policy": "multiple" }
+    } } }
+
+``condition_policy``:
+
+* ``multiple`` (default): wrap ON expressions combining at least two
+  top-level conditions with AND/OR.
+* ``mixed``: wrap only unparenthesised top-level mixtures of AND and OR.
+  Operators inside explicit parentheses do not count as top-level mixtures.
+
+.. code-block:: sql
+
+    -- Before
+    select a.id from a join b on a.id = b.id and a.x = b.x;
+    -- After
+    select a.id from a join b on (a.id = b.id and a.x = b.x);
+
+``ON (a = b AND c = d)`` is already compliant, while
+``ON (a = b) AND (c = d)`` still needs an enclosing pair.
+Single conditions, USING, WHERE and pipe JOIN stages are not checked.
+Nested queries and CTEs are checked in their own scopes.
+
+Quick fixes, Fix All and formatting only add parentheses, preserving comments
+and line endings. LT02 and the formatter determine indentation and line breaks;
+no separate aligned style is required.
