@@ -64,7 +64,7 @@ describe('RF03 single-source consistency', () => {
     'select x, x.a from unnest([struct(1 as a)]) x;',
     'select foo, foo.foo from foo;',
     'select f.a, b from foo f, bar b;',
-    'select a, f.b from foo f |> select c;',
+    'select a, f.b from foo f |> WITH c AS (SELECT 1) |> select c;',
     'select a, f.b from foo f; -- noqa: RF03',
   ]) {
     it(`excludes unsafe or inapplicable references: ${sql}`, async () => {

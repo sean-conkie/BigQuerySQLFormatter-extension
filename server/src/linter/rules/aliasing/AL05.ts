@@ -2,6 +2,7 @@ import type { Diagnostic } from 'vscode-languageserver/node';
 import { ParserRule } from '../base';
 import type { FileMap } from '../../parser';
 import { legacyColumnReferences } from '../../scope';
+import { pipeAliasingDiagnostics } from './pipe';
 
 export class UnusedAlias extends ParserRule {
   readonly is_fix_compatible: boolean = false;
@@ -14,7 +15,7 @@ export class UnusedAlias extends ParserRule {
 
   evaluate(ast: FileMap, documentUri: string | null = null): Diagnostic[] | null {
     if (!this.enabled) return null;
-    const errors: Diagnostic[] = [];
+    const errors: Diagnostic[] = pipeAliasingDiagnostics(this, ast, documentUri);
     for (const statement of Object.values(ast)) {
       for (const column of legacyColumnReferences(statement)) {
         if (column.source !== null || column.column === null) continue;

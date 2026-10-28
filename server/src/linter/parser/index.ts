@@ -15,6 +15,9 @@ import { CancellationToken } from 'vscode-languageserver';
 import { checkCancellation, yieldToEventLoop } from '../../cancellation';
 import { findToken } from './utils';
 import { TextDocument } from 'vscode-languageserver-textdocument';
+import { sourceTokens } from '../rules/source';
+import { pipeClauses, unsupportedQuery } from './pipe';
+import { QueryScopeResolver } from '../scope';
 import {
   comparePositions,
   containsExtendedSyntax,
@@ -145,12 +148,28 @@ export class Parser {
     const tokens = [...globalTokenCache.get(textDocument.uri)!.tokens].flatMap((line) => line.tokens);
     const statements = this.splitSource(textDocument.text, tokens);
     const fileMap: FileMap = {};
+    const source = sourceTokens(globalTokenCache.get(textDocument.uri)!);
 
     for (let i = 0; i < statements.length; i++) {
       await yieldToEventLoop(token);
       const statement: MatchObj = statements[i];
 
       const s = await this.parseStatement(statements[i].tokens, token);
+      const model = (block: StatementAST) => {
+        const range = block.sourceRange ?? tokenRange(block.tokens);
+        block.sourceTokens = source.filter(
+          (part) =>
+            comparePositions(part.range.start, range.start) >= 0 && comparePositions(part.range.end, range.end) <= 0,
+        );
+        const resolver = new QueryScopeResolver(block.sourceTokens);
+        block.pipeClauses = pipeClauses(block.sourceTokens).map(
+          (stage) => resolver.scopes.find((scope) => scope.pipe?.start === stage.start && !scope.parent)?.pipe ?? stage,
+        );
+        if (block.hasExtendedQuerySyntax) block.pipeInput = resolver.scopes[0]?.sources ?? [];
+        block.hasUnsupportedQuerySyntax = unsupportedQuery(block.sourceTokens);
+        block.queryBlocks.forEach(model);
+      };
+      if (s.tokens.length && (s.hasExtendedQuerySyntax || s.queryBlocks.length)) model(s);
 
       s.statement = statement.statement;
       fileMap[i] = s;
@@ -297,10 +316,8 @@ export class Parser {
     }
     ownTokens.push(...tokens.slice(start));
     const extended = hasExtendedSyntax(ownTokens);
-    if (!extended) {
-      for (const child of children) {
-        queryBlocks.push(await this.parseStatement(tokens.slice(child.start, child.end), cancellation, true));
-      }
+    for (const child of children) {
+      queryBlocks.push(await this.parseStatement(tokens.slice(child.start, child.end), cancellation, true));
     }
     // Restart highlighting for the traditional block: pipe-stage scopes can otherwise
     // affect FROM/alias scopes after a nested pipeline has closed.

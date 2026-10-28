@@ -1,11 +1,27 @@
 # Changelog
 
+## Unreleased
+
+### Notable changes
+
+- Pipe queries and `FOR SYSTEM_TIME AS OF` now support RF01-RF06, AL01, AL02,
+  AL04, AL05, AL06, AL08, AL09, AM04, AM05, AM06 and AM07. Existing pipe SQL may
+  report new warnings and receive alias, INNER JOIN and reference fixes through
+  quick fixes, Fix All and formatting. RF01 remains disabled by default.
+- Model typed pipe clauses and stage-local name visibility, including nested
+  pipelines, output aliases, JOIN USING columns and temporal source aliases.
+  MATCH_RECOGNIZE, GRAPH_TABLE and unmodelled pipe operators remain protected,
+  without suppressing checks in enclosing queries or sibling blocks.
+- Preserve pipe placement and LF/CRLF/CR line endings. Other layout and structure
+  rules remain gated pending pipe-specific formatting support.
+
 ## 0.6.0 - 2026-10-28
 
 ### Notable changes
 
 - Five new reference rules are enabled by default, so existing SQL may report
   new warnings:
+
   - RF02 flags unqualified columns in queries that read from more than one source.
   - RF03 flags inconsistently qualified columns in single-source queries.
   - RF04 flags keywords used as unquoted aliases.
@@ -15,6 +31,7 @@
   RF03 and RF06 also apply through Fix All, format-on-save and Format Document.
   To opt out, disable individual rules or turn the group off with
   `"groups": { "references": false }`.
+
 - Rules now skip only the query block that contains pipe syntax,
   `MATCH_RECOGNIZE`, `GRAPH_TABLE` or `FOR SYSTEM_TIME AS OF`, rather than the
   whole statement. The surrounding query, sibling CTEs and subqueries are linted,

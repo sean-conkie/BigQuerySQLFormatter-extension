@@ -82,17 +82,43 @@ export function nestedQuerySlices(tokens: Token[]): { start: number; end: number
   return slices;
 }
 
-export function queryBlocks(ast: FileMap): StatementAST[] {
+export const pipeQueryRules = new Set([
+  'RF01',
+  'RF02',
+  'RF03',
+  'RF04',
+  'RF05',
+  'RF06',
+  'AL01',
+  'AL02',
+  'AL04',
+  'AL05',
+  'AL06',
+  'AL08',
+  'AL09',
+  'AM04',
+  'AM05',
+  'AM06',
+  'AM07',
+]);
+
+export function queryBlocks(ast: FileMap, supportsPipe = false): StatementAST[] {
   const visit = (statement: StatementAST): StatementAST[] => [
     statement,
-    ...(statement.hasExtendedQuerySyntax ? [] : statement.queryBlocks.flatMap(visit)),
+    ...((supportsPipe ? statement.hasUnsupportedQuerySyntax : statement.hasExtendedQuerySyntax)
+      ? []
+      : statement.queryBlocks.flatMap(visit)),
   ];
   return Object.values(ast).flatMap(visit);
 }
 
-export function extendedQueryRanges(ast: FileMap): Range[] {
-  return queryBlocks(ast).flatMap((statement) => {
-    if (!statement.hasExtendedQuerySyntax || !statement.tokens.length) return [];
+export function extendedQueryRanges(ast: FileMap, supportsPipe = false): Range[] {
+  return queryBlocks(ast, supportsPipe).flatMap((statement) => {
+    if (
+      !(supportsPipe ? statement.hasUnsupportedQuerySyntax : statement.hasExtendedQuerySyntax) ||
+      !statement.tokens.length
+    )
+      return [];
     return [tokenRange(statement.tokens)];
   });
 }

@@ -4,6 +4,21 @@ Rules
 
 These rules aim to improve the readability and maintainability of code by ensuring that aliases are used correctly and consistently throughout the project.
 
+Pipe and temporal query support
+------------------------------
+
+Pipe queries and ``FOR SYSTEM_TIME AS OF`` support RF01-RF06, AL01, AL02, AL04,
+AL05, AL06, AL08, AL09, AM04, AM05, AM06 and AM07. RF01 remains opt-in.
+Sources, output aliases and USING columns are resolved at each stage. Rules
+without an equivalent construct do not apply: for example, AL01 does not remove
+the mandatory AS in ``|> AS``, and AM04 does not flag multiplication or COUNT(*).
+
+``MATCH_RECOGNIZE``, ``GRAPH_TABLE`` and unmodelled operators such as pipe WITH
+remain skipped in their own block and descendants. Enclosing traditional
+queries and sibling blocks remain checked. CP01-CP05, CV01, CV02, CV04, CV05,
+CV13, LT01, LT12 and LT13 remain safe throughout; other layout and structure
+rules are not yet enabled inside pipe queries.
+
 .. _aliasing-rules:
 
 ----------------

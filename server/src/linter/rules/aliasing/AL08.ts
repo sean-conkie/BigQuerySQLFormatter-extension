@@ -5,6 +5,7 @@ import type { FileMap } from '../../parser';
 import { ColumnAST } from '../../parser/ast';
 import { excludeTokensWithMatchingScopes } from '../../parser/token';
 import { sortTokens } from '../../parser/utils';
+import { pipeAliasingDiagnostics } from './pipe';
 
 export class UniqueColumn extends ParserRule {
   readonly is_fix_compatible: boolean = false;
@@ -26,7 +27,7 @@ export class UniqueColumn extends ParserRule {
     if (this.enabled === false) {
       return null;
     }
-    const errors: Diagnostic[] = [];
+    const errors: Diagnostic[] = pipeAliasingDiagnostics(this, ast, documentUri);
     for (const i in ast) {
       if (!ast[i].columns) {
         continue;

@@ -37,7 +37,7 @@ describe('RF01 known source qualifiers', () => {
     'merge orders o using source s on o.id = s.id when matched then update set a = s.a;',
     'delete orders o where o.a = 1;',
     'select @p.field, @@error.message, INFORMATION_SCHEMA.TABLES;',
-    'select bad.a from foo |> select bad.b;',
+    'select bad.a from foo |> WITH c AS (SELECT 1) |> select bad.b;',
     'select bad.a from foo; -- noqa: RF01',
   ]) {
     it(`accepts visible or excluded references: ${sql}`, async () => {

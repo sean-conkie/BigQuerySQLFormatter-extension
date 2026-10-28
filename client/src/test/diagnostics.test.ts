@@ -87,6 +87,7 @@ suite('Language server diagnostics', () => {
         const code = diagnostic.code;
         return /^CP0[23]:/.test(String(typeof code === 'object' ? code.value : code));
       });
+
     try {
       await writeFile(uri.fsPath, source);
       const ready = waitForDiagnostics(uri, hasCasingDiagnostics);
@@ -116,6 +117,59 @@ suite('Language server diagnostics', () => {
       assert.ok(actions[0].edit);
       assert.equal(await vscode.workspace.applyEdit(actions[0].edit), true);
       assert.equal(editor.document.getText(), expected);
+    } finally {
+      await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
+  test('Updates pipe-stage diagnostics after edits and applies idempotent formatting and Fix All', async () => {
+    const directory = await mkdtemp(path.join(getDocPath(''), 'pipe-stages-'));
+    const uri = vscode.Uri.file(path.join(directory, 'query.bqsql'));
+    const source = 'from dataset.sales s\n|> join dataset.other o using (id)\n|> select s.amount as value;\n';
+    const expected = 'from dataset.sales s\n|> inner join dataset.other o using (id)\n|> select s.amount value;\n';
+    const hasPipeIssues = (diagnostics: readonly vscode.Diagnostic[]) =>
+      diagnostics.some((diagnostic) => {
+        const code = diagnostic.code;
+        return /^(AL02|AM05):/.test(String(typeof code === 'object' ? code.value : code));
+      });
+    try {
+      await writeFile(uri.fsPath, source);
+      const ready = waitForDiagnostics(uri, hasPipeIssues);
+      const editor = await activate(uri);
+      await ready;
+      const edits = await vscode.commands.executeCommand<vscode.TextEdit[]>(
+        'vscode.executeFormatDocumentProvider',
+        uri,
+        { tabSize: 2, insertSpaces: true },
+      );
+      const formatted = new vscode.WorkspaceEdit();
+      formatted.set(uri, edits);
+      const clean = waitForDiagnostics(uri, (diagnostics) => diagnostics.length === 0);
+      assert.equal(await vscode.workspace.applyEdit(formatted), true);
+      assert.equal(editor.document.getText(), expected);
+      await clean;
+      const repeated = await vscode.commands.executeCommand<vscode.TextEdit[] | undefined>(
+        'vscode.executeFormatDocumentProvider',
+        uri,
+        { tabSize: 2, insertSpaces: true },
+      );
+      assert.ok(repeated === undefined || repeated.length === 0);
+      const reset = waitForDiagnostics(uri, hasPipeIssues);
+      await editor.edit((edit) => edit.replace(new vscode.Range(0, 0, editor.document.lineCount, 0), source));
+      await reset;
+      const actions = await vscode.commands.executeCommand<vscode.CodeAction[]>(
+        'vscode.executeCodeActionProvider',
+        uri,
+        new vscode.Range(0, 0, editor.document.lineCount, 0),
+        'source.fixAll.bigquerySQLFormatter',
+      );
+      assert.equal(actions.length, 1);
+      assert.ok(actions[0].edit);
+      const fixed = waitForDiagnostics(uri, (diagnostics) => diagnostics.length === 0);
+      assert.equal(await vscode.workspace.applyEdit(actions[0].edit), true);
+      assert.equal(editor.document.getText(), expected);
+      await fixed;
     } finally {
       await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
       await rm(directory, { recursive: true, force: true });

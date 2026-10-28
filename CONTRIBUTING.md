@@ -72,18 +72,38 @@ individual quick fixes.
 
 ### Extended query coverage
 
-Pipe syntax (including FROM-only queries), `MATCH_RECOGNIZE`, `GRAPH_TABLE` and
-`FOR SYSTEM_TIME AS OF` are highlighted and preserved by the parser. Structural
-rules skip the query block that directly contains unsupported syntax, together
-with its descendants, not the whole enclosing statement. Traditional enclosing
-queries, sibling CTEs and subqueries are still linted and can be fixed or formatted.
-The parser exposes isolated child queries through `StatementAST.queryBlocks`;
-`hasExtendedQuerySyntax` describes the current block, not its children.
+Pipe syntax (including FROM-only queries) and `FOR SYSTEM_TIME AS OF` have
+source and scope models. `StatementAST.pipeInput` exposes input sources;
+`pipeClauses` holds typed projections, grouping items, conditions, column
+transformations, aliases, joins/TVFs, ordering/limits, set operands, pivot/unpivot,
+sampling and windows. `pipeStages` retains highlighting tokens and nesting depths.
+Child queries are modelled recursively through `queryBlocks`, with original ranges.
+Incremental edits rebuild these models.
 
-CP01-CP05, CV01, CV02, CV04, CV05, CV13, LT01, LT12 and LT13 remain safe throughout
-extended queries. Other rules must opt into `extendedQuerySafeRules` only after
-they support the new structures. Phase 1 of #404 does not add pipe-stage clause
-models or enable additional rules inside unsupported query blocks.
+The scope resolver exposes a `QueryScope` for each stage's input: JOIN adds a
+source; SELECT/AGGREGATE, CALL and set operations replace the table; AS replaces
+range variables; EXTEND preserves existing sources and adds visible output names.
+SET, DROP, RENAME and DISTINCT preserve original range variables. Temporal
+modifiers do not hide the source or its alias. No table schema is inferred.
+
+RF01-RF06, AL01, AL02, AL04, AL05, AL06, AL08, AL09, AM04, AM05, AM06 and AM07
+opt into this model through `pipeQueryRules`. RF01 still requires explicit enabling.
+Operators without an equivalent for a rule are not applicable (for example,
+AL01 must not remove the mandatory AS in `|> AS`, and AM04 ignores multiplication
+and COUNT(\*)). Other LT and ST rules remain gated pending a pipe layout policy.
+
+MATCH_RECOGNIZE, GRAPH_TABLE and unmodelled pipe operators (including pipe WITH)
+still skip their own query block and its descendants, not enclosing traditional
+queries or sibling CTEs/subqueries. `hasExtendedQuerySyntax` identifies the current
+block's extended syntax; `hasUnsupportedQuerySyntax` distinguishes syntax still
+unsupported by the phase 2 rules. A scope statement reports `unsupported` if any
+of its blocks is unsupported, but supported sibling/enclosing scopes remain available.
+
+CP01-CP05, CV01, CV02, CV04, CV05, CV13, LT01, LT12 and LT13 remain safe even
+inside unsupported blocks through `extendedQuerySafeRules`. Add rules to either
+allow-list only with corpus tests for exact diagnostics, safe quick fixes,
+Fix All and idempotent formatting. Non-opted-in fixes cannot cross protected
+query ranges, including nested blocks.
 
 Mixed-query regression tests cover AST, source-based and regular expression rules, opaque
 projection counts, incomplete queries, incremental edits, protected fix ranges,
@@ -194,15 +214,11 @@ intervals into the resolver's input tokens. Resolve dotted references through
 `classifyReference`; an unknown first component is STRUCT field access, not an
 assumed table qualifier. No database schema or column existence is inferred.
 
-The resolver reports unsupported statements for pipe syntax, MATCH_RECOGNIZE,
-GRAPH_TABLE, and FOR SYSTEM_TIME AS OF. Do not opt reference rules into
-`extendedQuerySafeRules` until these constructs have scope models. Future pipe
-stages can supply additional scopes without changing reference classification.
-
-AL04 and AL05 use compatibility adapters in the same module to preserve their
-existing AST coverage, case comparisons, and diagnostic ranges. AM06 uses query
-scope clauses; CP02 uses the shared lexical identifier roles, which remain
-available for extended queries without claiming their sources are supported.
+See [Extended query coverage](#extended-query-coverage) for stage visibility and
+unsupported-block handling. AL04 and AL05 retain compatibility adapters for
+traditional AST coverage, case comparisons and ranges; extended aliasing uses
+stage-local scopes and output lists. AM06 uses query scope clauses; CP02 uses
+the shared lexical identifier roles.
 
 ## Packaging and release
 
@@ -277,17 +293,6 @@ Structural rules use the source-token helpers in
 when incomplete SQL causes the highlighting grammar to lose scopes. Shared CTE
 navigation lives in `server/src/linter/rules/queries.ts`. Fixable source rules
 cache edits per document and diagnostic range and clear them on close.
-
-Pipe queries, pattern recognition, graph queries and temporal table references
-retain their complete source tokens in the AST. Pipe stages record their operator,
-nesting depth and tokens. Until structural rules understand these constructs,
-statements containing them are excluded from the traditional SELECT AST passed
-to rules, and their structural diagnostics/fixes are suppressed. This includes
-an enclosing traditional query when the new syntax occurs inside a CTE or subquery.
-The explicit syntax-independent rule allow-list in `server/src/linter/linter.ts`
-keeps CP01-CP05, CV01, CV02, CV04, CV05, CV13, LT01, LT12 and LT13 active. Extend that
-list only with corpus tests showing safe diagnostics and idempotent fixes.
-Statements elsewhere in the same document continue to receive all enabled checks.
 
 LF, CRLF, and CR line endings are normalized internally for consistent
 diagnostics and edit ranges. Generated quick fixes use the document's original

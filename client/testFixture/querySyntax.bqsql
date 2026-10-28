@@ -1,12 +1,12 @@
 -- Pipe queries, including a nested pipeline.
-from dataset.sales
-|> where amount > 0
-|> aggregate sum(amount) as total group by category
-|> extend total + 1 as adjusted
+from dataset.sales s
+|> where s.amount > 0
+|> aggregate sum(s.amount) total group by s.category
+|> extend total + 1 adjusted
 |> set adjusted = adjusted * 2
 |> rename adjusted as result
 |> select category, result
-|> union all (from dataset.other |> select category, result)
+|> union all (from dataset.other o |> select o.category, o.result)
 |> order by result desc
 |> limit 10;
 
@@ -26,5 +26,5 @@ select * from graph_table(
   columns (a.id as sender, b.id as recipient)
 );
 
-select amount from dataset.sales
-for system_time as of timestamp '2026-01-01 00:00:00+00';
+select s.amount from dataset.sales
+for system_time as of timestamp '2026-01-01 00:00:00+00' s;

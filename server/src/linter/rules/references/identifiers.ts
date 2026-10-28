@@ -2,6 +2,9 @@ import type { DocumentCache } from '../../parser/tokenCache';
 import { identifierKey, isIdentifier, QueryScopeResolver } from '../../scope';
 import { keyword, type SourceToken } from '../source';
 import type { IdentifierPolicy } from '../../../ruleOptions';
+import keywords from '../../keywords.json';
+
+const syntaxWords = new Set([...keywords.reserved, ...keywords.nonReserved]);
 
 export interface Identifier {
   token: SourceToken;
@@ -18,6 +21,21 @@ export function identifiers(tokens: SourceToken[], cache: DocumentCache): Identi
   const aliases = new Map<string, Identifier['role']>();
   const positions = new Map(tokens.map((token, index) => [identifierKey(token), index]));
   for (const scope of resolver.scopes) {
+    if (scope.pipe?.kind === 'alias' && scope.pipe.alias) aliases.set(identifierKey(scope.pipe.alias), 'table_alias');
+    if (scope.pipe?.kind === 'relation') {
+      if (scope.pipe.alias) aliases.set(identifierKey(scope.pipe.alias), 'table_alias');
+      const pivot = scope.pipe.pivot;
+      const unpivot = scope.pipe.unpivot;
+      for (const item of [...(pivot?.aggregates ?? []), ...(pivot?.values ?? []), ...(unpivot?.values ?? [])]) {
+        if (item.alias) aliases.set(identifierKey(item.alias), 'column_alias');
+      }
+      for (const token of [...(unpivot?.columns ?? []), ...(unpivot?.forColumn ?? [])].filter(isIdentifier)) {
+        aliases.set(identifierKey(token), 'column_alias');
+      }
+    }
+    if (scope.pipe?.kind === 'columns' && scope.pipe.operator === 'RENAME') {
+      for (const item of scope.pipe.items) if (item.alias) aliases.set(identifierKey(item.alias), 'column_alias');
+    }
     for (const token of scope.selectAliases) {
       const index = positions.get(identifierKey(token))!;
       const previous = tokens[index - 1];
@@ -71,7 +89,8 @@ export function identifiers(tokens: SourceToken[], cache: DocumentCache): Identi
                   !keyword(tokens[index + 1], '(')),
             ),
         );
-      if (!quoted && !highlighted) continue;
+      const pipeColumn = resolver.scopeAt(index)?.pipe && !syntaxWords.has(token.value.toLowerCase());
+      if (!quoted && !highlighted && !pipeColumn) continue;
     }
     result.push({
       token,

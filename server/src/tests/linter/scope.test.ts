@@ -216,10 +216,9 @@ describe('Query scope resolver', () => {
   });
 
   for (const sql of [
-    'FROM t |> SELECT id',
     'SELECT * FROM t MATCH_RECOGNIZE (PATTERN (a))',
     'SELECT * FROM GRAPH_TABLE(g MATCH (n) COLUMNS(n.id))',
-    'SELECT * FROM t FOR SYSTEM_TIME AS OF CURRENT_TIMESTAMP()',
+    'FROM t |> WITH c AS (SELECT 1)',
   ]) {
     it(`reports unsupported query syntax: ${sql}`, () => {
       const resolver = resolve(`${sql}; SELECT * FROM supported`);

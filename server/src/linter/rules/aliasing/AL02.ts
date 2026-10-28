@@ -5,12 +5,11 @@ import {
   type Diagnostic,
   DiagnosticTag,
   type TextDocumentIdentifier,
-  TextEdit,
 } from 'vscode-languageserver/node';
 import { ParserRule } from '../base';
 import type { FileMap } from '../../parser';
 import { excludeTokensWithMatchingScopes, includeTokensWithMatchingScopes } from '../../parser/token';
-import { globalTokenCache } from '../../parser/tokenCache';
+import { implicitAliasEdit, pipeAliasingDiagnostics } from './pipe';
 
 export class ColumnAlias extends ParserRule {
   readonly name: string = 'column';
@@ -35,7 +34,7 @@ export class ColumnAlias extends ParserRule {
     if (this.enabled === false) {
       return null;
     }
-    const errors: Diagnostic[] = [];
+    const errors: Diagnostic[] = pipeAliasingDiagnostics(this, ast, documentUri);
     for (const i in ast) {
       if (ast[i].columns) {
         ast[i].columns.forEach((column) => {
@@ -88,29 +87,9 @@ export class ColumnAlias extends ParserRule {
    * @returns An array of code actions that can be applied to fix the issue.
    */
   createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): CodeAction[] {
-    const cachedDocument = globalTokenCache.get(textDocument.uri);
-    const extendedRange = {
-      start: { line: diagnostic.range.start.line, character: diagnostic.range.start.character - 1 },
-      end: { line: diagnostic.range.end.line, character: diagnostic.range.end.character + 1 },
-    };
-    const text = cachedDocument?.getText(extendedRange) ?? '';
-    let startOffset = 0;
-    let endOffset = 0;
-
-    if (/ as(?: |\n)/i.test(text)) {
-      // remove the starting space
-      startOffset = 1;
-    } else if (/as /i.test(text)) {
-      // remove the ending space
-      endOffset = 1;
-    }
-
-    diagnostic.range.start.character -= startOffset;
-    diagnostic.range.end.character += endOffset;
-
     const edit = {
       changes: {
-        [textDocument.uri]: [TextEdit.replace(diagnostic.range, '')],
+        [textDocument.uri]: [implicitAliasEdit(textDocument.uri, diagnostic.range)],
       },
     };
     const actions: CodeAction[] = [];

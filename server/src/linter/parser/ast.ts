@@ -3,6 +3,9 @@ import { MatchedRule } from './matches';
 import { findToken, sortTokens } from './utils';
 import { StatementType, JoinType, type LogicalOperator, type ComparisonOperator } from './enums';
 import type { Range } from 'vscode-languageserver/node';
+import type { PipeClause } from './pipe';
+import type { SourceToken } from '../rules/source';
+import type { QuerySource } from '../scope';
 
 // region base types
 
@@ -836,6 +839,10 @@ export class ObjectAST extends AST {
 export class StatementAST extends AST {
   // These queries retain their source tokens instead of using the SELECT-only clause model.
   hasExtendedQuerySyntax: boolean = false;
+  hasUnsupportedQuerySyntax: boolean = false;
+  pipeClauses: PipeClause[] = [];
+  pipeInput: QuerySource[] = [];
+  sourceTokens: SourceToken[] = [];
   sourceRange: Range | null = null;
   queryBlocks: StatementAST[] = [];
   pipeStages: { operator: string; depth: number; tokens: Token[] }[] = [];

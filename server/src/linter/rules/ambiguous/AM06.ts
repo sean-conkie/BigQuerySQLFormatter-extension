@@ -17,12 +17,13 @@ export class ColumnReferences extends SourceRule {
     for (const scope of new QueryScopeResolver(tokens).scopes) {
       let expected: ReferenceStyle | undefined;
       for (const clause of scope.clauses) {
-        const styles = this.referenceStyles(tokens, clause.start + 2);
+        const expressionStart = clause.expressionStart ?? clause.start + 2;
+        const styles = this.referenceStyles(tokens, expressionStart, clause.end);
         expected ??= styles[0];
         if (styles.some((style) => style !== expected)) {
           diagnostics.push(
             this.createDiagnostic(
-              { start: tokens[clause.start].range.start, end: tokens[clause.start + 1].range.end },
+              { start: tokens[clause.start].range.start, end: tokens[expressionStart - 1].range.end },
               uri,
             ),
           );
@@ -34,7 +35,7 @@ export class ColumnReferences extends SourceRule {
     );
   }
 
-  private referenceStyles(tokens: SourceToken[], start: number): ReferenceStyle[] {
+  private referenceStyles(tokens: SourceToken[], start: number, end: number): ReferenceStyle[] {
     const styles: ReferenceStyle[] = [];
     let entry: SourceToken[] = [];
     const flush = () => {
@@ -66,7 +67,7 @@ export class ColumnReferences extends SourceRule {
       ')',
       ']',
     ];
-    for (let i = start; i < tokens.length; i++) {
+    for (let i = start; i < end; i++) {
       if (boundaries.some((word) => keyword(tokens[i], word))) break;
       if (keyword(tokens[i], ',')) {
         flush();

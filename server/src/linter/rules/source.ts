@@ -9,7 +9,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import type { FileMap } from '../parser';
 import { type DocumentCache, globalTokenCache } from '../parser/tokenCache';
 import { ParserRule } from './base';
-import { comparePositions, queryBlocks, queryRange } from '../parser/queryBlocks';
+import { comparePositions, pipeQueryRules, queryBlocks, queryRange } from '../parser/queryBlocks';
 
 export interface SourceToken {
   value: string;
@@ -22,13 +22,16 @@ export function keyword(token: SourceToken | undefined, value: string): boolean 
 }
 
 export function sourceTokens(cache: DocumentCache): SourceToken[] {
+  return tokenizeSource(cache.getText());
+}
+
+export function tokenizeSource(text: string): SourceToken[] {
   const result: SourceToken[] = [];
-  const text = cache.getText();
   const document = TextDocument.create('', 'googlesql', 0, text);
   // Highlighting can lose string scopes after incomplete or unsupported SQL.
   // Shield literals independently before interpreting structural punctuation.
   const pattern =
-    /(?<comment>--[^\n]*|#[^\n]*|\/\*[\s\S]*?(?:\*\/|$))|(?<literal>(?:rb|br|r|b)?(?:'''(?:\\[\s\S]|(?!''')[\s\S])*?(?:'''|$)|"""(?:\\[\s\S]|(?!""")[\s\S])*?(?:"""|$)|'(?:\\[\s\S]|''|[^'\\])*?(?:'|$)|"(?:\\[\s\S]|""|[^"\\])*?(?:"|$))|`(?:\\[\s\S]|``|[^`\\])*?(?:`|$))|[a-z_][\w$]*|\d+(?:\.\d+)?|[^\s]/gi;
+    /(?<comment>--[^\r\n]*|#[^\r\n]*|\/\*[\s\S]*?(?:\*\/|$))|(?<literal>(?:rb|br|r|b)?(?:'''(?:\\[\s\S]|(?!''')[\s\S])*?(?:'''|$)|"""(?:\\[\s\S]|(?!""")[\s\S])*?(?:"""|$)|'(?:\\[\s\S]|''|[^'\\])*?(?:'|$)|"(?:\\[\s\S]|""|[^"\\])*?(?:"|$))|`(?:\\[\s\S]|``|[^`\\])*?(?:`|$))|[a-z_][\w$]*|\d+(?:\.\d+)?|[^\s]/gi;
   for (const match of text.matchAll(pattern)) {
     if (match.groups?.comment !== undefined) continue;
     result.push({
@@ -57,18 +60,19 @@ export abstract class SourceRule extends ParserRule {
     if (!this.enabled || documentUri === null) return null;
     const cache = globalTokenCache.get(documentUri)!;
     const tokens = sourceTokens(cache);
-    if (!this.queryScoped || !queryBlocks(ast).some((block) => block.hasExtendedQuerySyntax)) {
+    const supportsPipe = pipeQueryRules.has(this.code);
+    const unsupported = (block: FileMap[number]) =>
+      supportsPipe ? block.hasUnsupportedQuerySyntax : block.hasExtendedQuerySyntax;
+    if (!this.queryScoped || !queryBlocks(ast, supportsPipe).some(unsupported)) {
       const diagnostics = this.evaluateSource(tokens, cache, documentUri);
       return diagnostics.length ? diagnostics : null;
     }
 
     const diagnostics: Diagnostic[] = [];
     for (const block of Object.values(ast)) {
-      if (!block.hasExtendedQuerySyntax && block.tokens.length) {
+      if (!unsupported(block) && block.tokens.length) {
         const range = queryRange(block);
-        const hidden = queryBlocks({ 0: block })
-          .filter((child) => child.hasExtendedQuerySyntax)
-          .map(queryRange);
+        const hidden = queryBlocks({ 0: block }, supportsPipe).filter(unsupported).map(queryRange);
         const visible: SourceToken[] = [];
         for (const token of tokens) {
           if (comparePositions(token.range.start, range.start) < 0 || comparePositions(token.range.end, range.end) > 0)
