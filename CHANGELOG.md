@@ -1,64 +1,66 @@
 # Changelog
 
-## Unreleased
+## 0.6.0 - 2026-10-28
 
 ### Notable changes
 
-- RF03 (`references.consistent`) is enabled by default for single-source SELECTs.
-  STRUCT-aware qualification follows the first column by default, or an explicit
-  `qualified`/`unqualified` policy. Quick fixes, Fix All and formatting preserve
-  line endings and table path spelling, excluding correlated and ambiguous
-  source-name references, wildcards and UNNEST value tables.
+- Five new reference rules are enabled by default, so existing SQL may report
+  new warnings:
+  - RF02 flags unqualified columns in queries that read from more than one source.
+  - RF03 flags inconsistently qualified columns in single-source queries.
+  - RF04 flags keywords used as unquoted aliases.
+  - RF05 flags spaces and special characters in backtick-quoted identifiers.
+  - RF06 flags unnecessary backticks.
 
-- RF02 (`references.qualification`) is enabled by default and requires
-  source-qualified columns in multi-source SELECT scopes. It handles STRUCT
-  paths, USING, select aliases and UNNEST/OFFSET values, with configurable
-  ignored words and correlated-source counting. No automatic fix is offered.
-
-- RF01 (`references.from`) detects unknown source qualifiers when explicitly
-  enabled. It resolves aliases, CTEs, UNNEST/OFFSET, TVFs, DML targets and outer
-  scopes. It stays disabled by default because STRUCT field access can look
-  like an unknown qualifier. No automatic fix is offered.
-
-- RF06 (`references.quoting`) is enabled by default and removes unnecessary
-  identifier backticks through quick fixes, Fix All and formatting. Table paths
-  remain quoted by default; opt in with `check_table_paths`. Reserved words,
-  leading digits and special characters keep required quoting. Text and line
-  endings are preserved; CP02 can re-case newly unquoted columns and aliases.
-
-- RF05 (`references.special_chars`) is enabled by default and checks quoted
-  identifier parts for spaces and symbols. Dashed project IDs and
-  INFORMATION_SCHEMA region qualifiers remain valid. Policies, spaces,
-  additional allowed characters and ignored words are configurable.
-
-- RF04 (`references.keywords`) is enabled by default and warns about keywords
-  used as unquoted aliases. Quoted names remain accepted by default. Configure
-  identifier policies and case-insensitive `ignore_words` in editor or project
-  settings. There is no automatic rename fix.
-
-- Traditional query blocks surrounding pipe syntax, `MATCH_RECOGNIZE`,
-  `GRAPH_TABLE` or `FOR SYSTEM_TIME AS OF` are linted again. Structural rules
-  skip only the query block containing unsupported syntax and its descendants,
-  rather than the whole enclosing statement. Traditional sibling CTEs and
-  subqueries retain diagnostics, quick fixes, Fix All and formatting.
-  The existing safe rules still run inside skipped blocks.
+  RF03 and RF06 also apply through Fix All, format-on-save and Format Document.
+  To opt out, disable individual rules or turn the group off with
+  `"groups": { "references": false }`.
+- Rules now skip only the query block that contains pipe syntax,
+  `MATCH_RECOGNIZE`, `GRAPH_TABLE` or `FOR SYSTEM_TIME AS OF`, rather than the
+  whole statement. The surrounding query, sibling CTEs and subqueries are linted,
+  fixed and formatted again, so these statements may report new warnings.
 
 ### Added
 
-- Add the `references` rule group and `RF` rule codes in editor and project settings.
-- Support rules that are disabled by default and require explicit
-  `enabled: true`. RF01 has a disabled default; exclusions,
-  disabled groups and severity `off` retain precedence.
+- Add the `references` rule group and `RF` rule codes to editor settings and
+  `.bqsqlformatter.json`.
+- Support rules that are disabled by default and need an explicit
+  `"enabled": true`. Exclusions, disabled groups and severity `off` still take
+  precedence.
+- Add RF01 (`references.from`) for qualifiers that don't match any table, alias,
+  CTE, `UNNEST`/`WITH OFFSET` alias, table-valued function, DML target or outer
+  query source. **Disabled by default**, because STRUCT field access such as
+  `address.city` can look like an unknown qualifier. No automatic fix.
+- Add RF02 (`references.qualification`) for unqualified columns in multi-source
+  queries. STRUCT paths, `USING` columns, select-list aliases and `UNNEST`/
+  `WITH OFFSET` values are handled. Options: `ignore_words` and
+  `subqueries_ignore_external_references`. No automatic fix.
+- Add RF03 (`references.consistent`) for consistent qualification in
+  single-source queries, treating dotted references as STRUCT field access unless
+  the first part is the source alias. Option `single_table_references`:
+  `consistent` (default), `qualified` or `unqualified`. Quick fixes add or remove
+  the qualifier, preserving table path spelling and line endings. Correlated and
+  ambiguous references, wildcards and `UNNEST` value tables are left unchanged.
+- Add RF04 (`references.keywords`) for keywords used as identifiers. Options:
+  `unquoted_identifiers_policy` (default `aliases`), `quoted_identifiers_policy`
+  (default `none`) and case-insensitive `ignore_words`. No automatic rename.
+- Add RF05 (`references.special_chars`) for spaces and symbols in backtick-quoted
+  identifiers. Dashed project IDs and `INFORMATION_SCHEMA` region qualifiers are
+  allowed. Options: `quoted_identifiers_policy`, `allow_space_in_identifier`,
+  `additional_allowed_characters` and `ignore_words`.
+- Add RF06 (`references.quoting`) to remove unnecessary backticks from columns,
+  field references, aliases and CTE names. Reserved words, leading digits and
+  special characters keep their backticks. Table paths are skipped unless
+  `check_table_paths` is enabled. Option: `ignore_words`.
 
 ### Fixed
 
-- Fix All now repeats safe fixes until stable, like formatting, so removing
-  identifier backticks and applying CP02 casing complete in one invocation.
-
-- Isolate unsupported query bodies from traditional SELECT lists and source-based
-  rule context, including nested queries and incremental edits (#404, phase 1).
-- Keep structural fixes outside skipped query bodies and avoid indenting a
-  nonexistent ON clause for joins that use USING.
+- Fix All now repeats safe fixes until the result is stable, like formatting,
+  so removing backticks (RF06) and re-casing the unquoted name (CP02) complete in
+  one run.
+- Keep quick fixes, Fix All and formatting out of skipped query blocks,
+  including nested queries and after incremental edits.
+- Don't add indentation for a missing `ON` clause on joins that use `USING`.
 
 ## 0.5.0 - 2026-10-27
 
