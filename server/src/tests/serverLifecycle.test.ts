@@ -56,6 +56,37 @@ describe('Language server validation queue', function () {
     }
   });
 
+  it('signals grammar readiness after initialization and validates the first opened document', async () => {
+    let readyCount = 0;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const ready = new Promise<void>((resolve, reject) => {
+      timer = setTimeout(() => reject(new Error('Language server did not signal readiness')), 5000);
+      connection.onNotification('bigquerySQLFormatter/ready', () => {
+        readyCount++;
+        resolve();
+      });
+    });
+    try {
+      await connection.sendRequest(InitializeRequest.type, {
+        processId: process.pid,
+        capabilities: {},
+        rootUri: null,
+      });
+      expect(readyCount).to.equal(0);
+      await connection.sendNotification(InitializedNotification.type, {});
+      await ready;
+      expect(readyCount).to.equal(1);
+      await connection.sendNotification(DidOpenTextDocumentNotification.type, {
+        textDocument: { uri, languageId: 'googlesql', version: 1, text: '\nselect 1;\n' },
+      });
+      expect((await nextDiagnostics()).diagnostics.map((diagnostic) => diagnostic.code)).to.deep.equal([
+        'LT13: start_of_file',
+      ]);
+    } finally {
+      clearTimeout(timer);
+    }
+  });
+
   it('advertises and serves document/range formatting and a single document-wide fix-all', async () => {
     const initialized = await connection.sendRequest(InitializeRequest.type, {
       processId: process.pid,

@@ -35,6 +35,7 @@ import { sourceFixAllKind } from './linter/linter';
 import { CompletionBuilder } from './completions';
 import { ValidationScheduler } from './validationScheduler';
 import { awaitWithCancellation, checkCancellation } from './cancellation';
+import { GrammarLoader } from './linter/grammarLoader';
 
 const connection = createConnection(ProposedFeatures.all);
 
@@ -98,7 +99,7 @@ function validateDocument(document: TextDocument, delay = 0): void {
 
 // region event handlers
 
-connection.onInitialize((params: InitializeParams) => {
+connection.onInitialize(async (params: InitializeParams) => {
   const capabilities = params.capabilities;
   workspaceUris = params.workspaceFolders?.map((folder) => folder.uri) ?? (params.rootUri ? [params.rootUri] : []);
 
@@ -131,6 +132,14 @@ connection.onInitialize((params: InitializeParams) => {
       },
     };
   }
+  connection.console.info('Loading GoogleSQL grammar and Oniguruma WASM');
+  try {
+    const grammar = await new GrammarLoader().loadGrammar('source.googlesql');
+    if (!grammar) throw new Error('GoogleSQL grammar was not found');
+  } catch (error) {
+    connection.console.error(`Language server initialization failed: ${String(error)}`);
+    throw error;
+  }
   return result;
 });
 
@@ -146,6 +155,8 @@ connection.onInitialized(() => {
       revalidateDocuments();
     });
   }
+  connection.console.info('GoogleSQL language server ready');
+  void connection.sendNotification('bigquerySQLFormatter/ready');
 });
 
 connection.onDidChangeConfiguration((change) => {

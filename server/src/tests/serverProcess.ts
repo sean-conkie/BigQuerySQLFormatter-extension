@@ -10,8 +10,8 @@ import {
   type PublishDiagnosticsParams,
 } from 'vscode-languageserver/node';
 
-export function startTestServer() {
-  const child = spawn(process.execPath, [path.join(__dirname, '../server.js'), '--stdio']);
+export function startTestServer(serverPath = path.join(__dirname, '../server.js')) {
+  const child = spawn(process.execPath, [serverPath, '--stdio']);
   const connection = createProtocolConnection(
     new StreamMessageReader(child.stdout),
     new StreamMessageWriter(child.stdin),
