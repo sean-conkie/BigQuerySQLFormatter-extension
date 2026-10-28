@@ -64,6 +64,9 @@ describe('ST03 unused CTEs', () => {
   it('keeps statements independent', async () => {
     expect((await check('with c as (select 1) select 2; select * from c;')).names).to.deep.equal(['c']);
   });
+  it('does not mistake pipe WITH bindings for CTE definitions', async () => {
+    expect((await check('from dataset.sales |> with totals as (select 1 as n);')).names).to.deep.equal([]);
+  });
   it('respects noqa, severity, exclusions and group settings', async () => {
     const text = 'with c as (select 1) select 2;';
     expect((await check(`${text} -- noqa: ST03`)).names).to.deep.equal([]);

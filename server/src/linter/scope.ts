@@ -113,6 +113,7 @@ export class QueryScopeResolver {
       if (keyword(tokens[i], '(')) ends.pop();
     }
     for (let i = 0; i < tokens.length; i++) {
+      if (keyword(tokens[i - 2], '|') && keyword(tokens[i - 1], '>')) continue;
       const ctes = readCtes(tokens, i);
       if (ctes.length) {
         this.cteEnvironments.push({
