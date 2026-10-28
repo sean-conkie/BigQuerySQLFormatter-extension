@@ -4,6 +4,10 @@
 
 ### Notable changes
 
+- Add ST04 (`structure.nested_case`), enabled by default, flattening compatible
+  CASE expressions in ELSE branches through quick fixes, Fix All and formatting.
+  Comments and volatile simple-CASE operands prevent automatic rewrites.
+
 - Add ST02 (`structure.simple_case`), enabled by default, simplifying searched
   CASE expressions to COALESCE, NOT COALESCE or the original expression.
   Comments and volatile expressions are protected.
