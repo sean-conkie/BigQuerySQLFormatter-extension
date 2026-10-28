@@ -2,6 +2,7 @@ import type { Diagnostic } from 'vscode-languageserver/node';
 import type { DocumentCache } from '../../parser/tokenCache';
 import { readCtes } from '../queries';
 import { closingBracket, keyword, SourceRule, type SourceToken } from '../source';
+import { pipeClauses, topLevel, type PipeItem } from '../../parser/pipe';
 
 export class SetColumns extends SourceRule {
   readonly is_fix_compatible = false;
@@ -26,6 +27,42 @@ export class SetColumns extends SourceRule {
         ctes.set(cte.name, cte.columns ?? count);
       }
       if (definitions.length) start = definitions[definitions.length - 1].close + 1;
+      const stages = pipeClauses(tokens, start, end);
+      if (stages.length) {
+        let count = projectionCount(start, stages[0].start, ctes);
+        const width = (items: PipeItem[]) =>
+          items.some(
+            (item) =>
+              ['*', 'ALL', 'ROLLUP', 'CUBE', 'GROUPING'].some((word) => keyword(item.expression[0], word)) ||
+              item.expression.some((token, i) => keyword(token, '*') && keyword(item.expression[i - 1], '.')),
+          )
+            ? null
+            : items.length;
+        for (const stage of stages) {
+          if (stage.kind === 'projection') {
+            const columns = stage.output !== 'columns' ? 1 : width([...stage.groupBy, ...stage.items]);
+            count =
+              stage.operator === 'EXTEND' ? (count === null || columns === null ? null : count + columns) : columns;
+          } else if (stage.kind === 'set') {
+            for (const operand of stage.operands) {
+              const first = tokens.indexOf(operand[0]);
+              const other = first < 0 ? null : analyze(first, first + operand.length, ctes);
+              if (!stage.byName && count !== null && other !== null && count !== other)
+                diagnostics.push(this.createDiagnostic(tokens[stage.start + 2].range, uri));
+            }
+          } else if (stage.kind === 'columns' && stage.operator === 'DROP' && count !== null) {
+            count -= stage.items.length;
+          } else if (
+            stage.kind === 'source' ||
+            (stage.kind === 'relation' && ['PIVOT', 'UNPIVOT'].includes(stage.operator))
+          ) {
+            count = null;
+          }
+          // WHERE, SET, RENAME, AS, ORDER/LIMIT and DISTINCT preserve width.
+          // Without a set operator AM07 is not applicable.
+        }
+        return count;
+      }
 
       const branches: [number, number][] = [];
       const operators: number[] = [];
@@ -69,6 +106,15 @@ export class SetColumns extends SourceRule {
     };
 
     const projectionCount = (start: number, end: number, ctes: Counts): number | null => {
+      if (keyword(tokens[start], 'FROM')) {
+        if (topLevel(tokens, start + 1, end).some((i) => keyword(tokens[i], 'JOIN') || keyword(tokens[i], ',')))
+          return null;
+        if (keyword(tokens[start + 1], '(')) {
+          const close = closingBracket(tokens, start + 1);
+          return close < 0 ? null : analyze(start + 2, close, ctes);
+        }
+        return ctes.get(tokens[start + 1]?.value.toLowerCase()) ?? null;
+      }
       if (keyword(tokens[start], '(')) {
         const close = closingBracket(tokens, start);
         return close < 0 ? null : analyze(start + 1, close, ctes);

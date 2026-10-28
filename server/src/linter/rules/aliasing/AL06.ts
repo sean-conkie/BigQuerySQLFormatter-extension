@@ -3,6 +3,7 @@ import type { Diagnostic } from 'vscode-languageserver/node';
 import { ParserRule } from '../base';
 import type { FileMap } from '../../parser';
 import { excludeTokensWithMatchingScopes, includeTokensWithMatchingScopes } from '../../parser/token';
+import { pipeAliasingDiagnostics } from './pipe';
 
 export class TableAlias extends ParserRule {
   readonly is_fix_compatible: boolean = false;
@@ -24,7 +25,7 @@ export class TableAlias extends ParserRule {
     if (this.enabled === false) {
       return null;
     }
-    const errors: Diagnostic[] = [];
+    const errors: Diagnostic[] = pipeAliasingDiagnostics(this, ast, documentUri);
     for (const i in ast) {
       if (ast[i].from) {
         if (ast[i].from.alias == null) {

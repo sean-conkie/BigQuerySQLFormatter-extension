@@ -44,6 +44,19 @@ export function columnReferences(
       continue;
     const scope = resolver.scopeAt(index);
     if (!scope) continue;
+    // UNPIVOT takes unqualified input column names and declares output names;
+    // neither is an expression to which a table qualifier can be added.
+    if (scope.pipe?.kind === 'relation' && scope.pipe.operator === 'UNPIVOT') continue;
+    if (
+      scope.pipe?.kind === 'relation' &&
+      scope.pipe.pivot?.forColumns.some((token) => identifierKey(token) === identifierKey(first))
+    )
+      continue;
+    if (
+      scope.pipe?.kind === 'columns' &&
+      scope.pipe.items.some((item) => identifierKey(item.expression[0]) === identifierKey(first))
+    )
+      continue;
     const path = [first];
     while (keyword(tokens[index + 1], '.') && (isIdentifier(tokens[index + 2]) || keyword(tokens[index + 2], '*'))) {
       path.push(tokens[index + 1], tokens[index + 2]);
@@ -52,8 +65,13 @@ export function columnReferences(
     const parts = path.filter((_, offset) => offset % 2 === 0).map((token) => token.value.replace(/^`|`$/g, ''));
     if (parts.some((part) => part.toUpperCase() === 'INFORMATION_SCHEMA')) continue;
     if (scope.usingColumns.some((token) => identifierKey(token) === identifierKey(first))) continue;
+    if (scope.visibleAliases?.some((token) => referenceName(token.value) === referenceName(parts[0]))) continue;
     const aliasVisible = scope.clauses.some((clause) => index >= clause.start && index < clause.end);
-    if (aliasVisible && scope.selectAliases.some((token) => referenceName(token.value) === referenceName(parts[0])))
+    if (
+      !scope.pipe &&
+      aliasVisible &&
+      scope.selectAliases.some((token) => referenceName(token.value) === referenceName(parts[0]))
+    )
       continue;
     result.push({
       scope,

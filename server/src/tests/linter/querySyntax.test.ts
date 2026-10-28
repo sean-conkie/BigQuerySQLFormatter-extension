@@ -8,6 +8,7 @@ import { StatementType } from '../../linter/parser/enums';
 import { globalTokenCache } from '../../linter/parser/tokenCache';
 import { ruleRegistry } from '../../linter/rules/rules';
 import { defaultSettings } from '../../settings';
+import { pipeQueryRules } from '../../linter/parser/queryBlocks';
 
 const operators = [
   ['WHERE', 'amount > 0'],
@@ -109,11 +110,10 @@ describe('Recent query syntax', () => {
     const item = (text: string) => ({ uri, text, languageId: 'googlesql', version: 1 });
     const code = (diagnostic: { code?: string | number }) => String(diagnostic.code).split(':', 1)[0];
     const extendedBodies = [
-      'FROM dataset.sales |> SELECT amount',
+      'FROM dataset.sales |> WITH c AS (SELECT amount)',
       'SELECT * FROM dataset.sales MATCH_RECOGNIZE (ORDER BY amount MEASURES FIRST(a.amount) AS n PATTERN (a+) DEFINE a AS amount > 0)',
       'SELECT * FROM GRAPH_TABLE(FinGraph MATCH (a:Account) COLUMNS (a.id AS id))',
-      "SELECT * FROM dataset.sales FOR SYSTEM_TIME AS OF TIMESTAMP '2026-01-01 00:00:00+00'",
-      'FROM dataset.sales',
+      'FROM dataset.sales |> FUTURE_OPERATOR amount',
     ];
     let linter: Linter;
 
@@ -197,7 +197,7 @@ describe('Recent query syntax', () => {
           .filter((diagnostic) => code(diagnostic) === 'AL02')
           .map((diagnostic) => diagnostic.range.start.line),
       ).to.deep.equal([2]);
-      const unsupported = `FROM (SELECT t.id AS value FROM dataset.sales AS t) |> SELECT *;\n`;
+      const unsupported = `FROM (SELECT t.id AS value FROM dataset.sales AS t) |> WITH c AS (SELECT 1) |> SELECT *;\n`;
       expect(
         (await linter.verify(item(unsupported))).filter((diagnostic) =>
           ['AL01', 'AL02', 'AM04'].includes(code(diagnostic)),
@@ -224,7 +224,7 @@ describe('Recent query syntax', () => {
     SELECT x FROM dataset.other GROUP BY x ORDER BY 1;FROM dataset.sales |> SELECT *;SELECT * FROM dataset.other;\n`;
       const diagnostics = await linter.verify(item(text));
       expect(diagnostics.filter((diagnostic) => code(diagnostic) === 'AM06')).to.have.length(1);
-      expect(diagnostics.filter((diagnostic) => code(diagnostic) === 'AM04')).to.have.length(1);
+      expect(diagnostics.filter((diagnostic) => code(diagnostic) === 'AM04')).to.have.length(2);
     });
 
     it('uses the enclosing DISTINCT token rather than one inside a skipped CTE', async () => {
@@ -300,7 +300,7 @@ SELECT DISTINCT t.id FROM dataset.sales t GROUP BY t.id;\n`;
     for (const eol of ['\n', '\r\n', '\r']) {
       it(`formats and fixes traditional blocks idempotently without rewriting skipped bodies (${JSON.stringify(eol)})`, async () => {
         const settings = { ...defaultSettings, rules: { groups: { capitalisation: false } } };
-        const body = 'FROM dataset.sales |> JOIN dataset.other USING (id) |> SELECT *';
+        const body = 'FROM dataset.sales |> WITH c AS (SELECT 1) |> JOIN dataset.other USING (id) |> SELECT *';
         const text = `WITH cte AS (${eol}${body}${eol})${eol}SELECT t.id AS value FROM dataset.sales AS t INNER JOIN dataset.other AS u USING (id);${eol}`;
         const source = TextDocument.create(uri, 'googlesql', 1, text);
         const formatted = TextDocument.applyEdits(source, await formatDocument(source, settings));
@@ -400,13 +400,32 @@ SELECT DISTINCT t.id FROM dataset.sales t GROUP BY t.id;\n`;
       linter.regexRules = linter.regexRules.filter((rule) => rule.code === code);
       for (const rule of [...linter.parserRules, ...linter.regexRules]) rule.enabled = true;
       try {
-        for (const text of corpus) {
+        for (const [index, text] of corpus.entries()) {
           const diagnostics = await linter.verify(item(text));
           if (code.startsWith('CP') && code !== 'CP04') {
             for (const diagnostic of diagnostics) {
               const value = globalTokenCache.get(uri)!.getText(diagnostic.range);
               expect(value, text).not.to.equal(value.toLowerCase());
             }
+          } else if (pipeQueryRules.has(code)) {
+            const counts: Record<string, Record<number, number>> = {
+              AL02: { 3: 1, 4: 1, 26: 2, 27: 1, 29: 1 },
+              AL06: Object.fromEntries(
+                corpus.map((_, i) => [
+                  i,
+                  [24, 25, 30, 31, 32].includes(i)
+                    ? 0
+                    : [12, 13, 14, 15, 16, 20, 21, 22, 27, 28, 36].includes(i)
+                      ? 2
+                      : 1,
+                ]),
+              ),
+              AM04: { 9: 1 },
+              AM05: { 12: 1 },
+              RF02: { 36: 1 },
+              RF04: { 18: 1 },
+            };
+            expect(diagnostics, `${code} corpus[${index}]: ${text}`).to.have.length(counts[code]?.[index] ?? 0);
           } else {
             expect(diagnostics, text).to.deep.equal([]);
           }
@@ -417,17 +436,20 @@ SELECT DISTINCT t.id FROM dataset.sales t GROUP BY t.id;\n`;
     });
   }
 
-  it('preserves every corpus query through formatting and Fix All, idempotently', async () => {
+  it('formats and fixes every corpus query idempotently', async function () {
+    this.timeout(15000);
     const settings = { ...defaultSettings, rules: { groups: { capitalisation: false } } };
     for (const text of corpus) {
       const source = document(text);
-      expect(await formatDocument(source, settings), text).to.deep.equal([]);
+      const formatted = TextDocument.applyEdits(source, await formatDocument(source, settings));
+      expect(await formatDocument(document(formatted), settings), text).to.deep.equal([]);
       const actions = await createDocumentCodeActions(source, settings, {
         textDocument: { uri },
         range: Range.create(0, 0, source.lineCount, 0),
         context: { diagnostics: [], only: [CodeActionKind.SourceFixAll] },
       });
-      expect(actions, text).to.deep.equal([]);
+      const fixed = actions.length ? TextDocument.applyEdits(source, actions[0].edit!.changes![uri]) : text;
+      expect(await formatDocument(document(fixed), settings), text).to.deep.equal([]);
     }
   });
 
@@ -435,7 +457,7 @@ SELECT DISTINCT t.id FROM dataset.sales t GROUP BY t.id;\n`;
     for (const eol of ['\n', '\r\n', '\r']) {
       const text = `FROM dataset.sales |> WHERE amount = NULL AND active <> FALSE  ${eol}|> SELECT 'TRUE; |> SET x = NULL' AS text; -- FALSE${eol}`;
       const source = document(text);
-      const expected = `from dataset.sales |> where amount is null and active != false${eol}|> select 'TRUE; |> SET x = NULL' as text; -- FALSE${eol}`;
+      const expected = `from dataset.sales |> where amount is null and active != false${eol}|> select 'TRUE; |> SET x = NULL' text; -- FALSE${eol}`;
       const formatted = TextDocument.applyEdits(source, await formatDocument(source, defaultSettings));
       expect(formatted).to.equal(expected);
       expect(await formatDocument(document(formatted), defaultSettings)).to.deep.equal([]);
@@ -457,7 +479,11 @@ SELECT DISTINCT t.id FROM dataset.sales t GROUP BY t.id;\n`;
       expect(diagnostics.some((diagnostic) => String(diagnostic.code).startsWith('AM04:'))).to.equal(true);
       expect(
         diagnostics
-          .filter((diagnostic) => !String(diagnostic.code).startsWith('CP01:'))
+          .filter(
+            (diagnostic) =>
+              !String(diagnostic.code).startsWith('CP01:') &&
+              !pipeQueryRules.has(String(diagnostic.code).split(':')[0]),
+          )
           .every((diagnostic) => diagnostic.range.start.character >= 19),
       ).to.equal(true);
     } finally {

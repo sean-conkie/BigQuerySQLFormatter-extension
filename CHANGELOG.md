@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased
+
+### Notable changes
+
+- Pipe queries and `FOR SYSTEM_TIME AS OF` now support RF01-RF06, AL01, AL02,
+  AL04, AL05, AL06, AL08, AL09, AM04, AM05, AM06 and AM07. Existing pipe SQL may
+  report new warnings and receive alias, INNER JOIN and reference fixes through
+  quick fixes, Fix All and formatting. RF01 remains disabled by default.
+- Model typed pipe clauses and stage-local name visibility, including nested
+  pipelines, output aliases, JOIN USING columns and temporal source aliases.
+  MATCH_RECOGNIZE, GRAPH_TABLE and unmodelled pipe operators remain protected,
+  without suppressing checks in enclosing queries or sibling blocks.
+- Preserve pipe placement and LF/CRLF/CR line endings. Other layout and structure
+  rules remain gated pending pipe-specific formatting support.
+
 ## 0.6.0 - 2026-10-28
 
 ### Notable changes

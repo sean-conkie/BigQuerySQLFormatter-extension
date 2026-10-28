@@ -12,6 +12,10 @@ import { ParserRule } from '../base';
 import type { FileMap } from '../../parser';
 import { ColumnAST } from '../../parser/ast';
 import { includeTokensWithMatchingScopes } from '../../parser/token';
+import { pipeAliasingDiagnostics } from './pipe';
+import { globalTokenCache } from '../../parser/tokenCache';
+import { sourceTokens } from '../source';
+import { comparePositions } from '../../parser/queryBlocks';
 
 export class RedundantColumnAlias extends ParserRule {
   readonly name: string = 'redundant_column_alias';
@@ -38,7 +42,7 @@ export class RedundantColumnAlias extends ParserRule {
       return null;
     }
 
-    const errors: Diagnostic[] = [];
+    const errors: Diagnostic[] = pipeAliasingDiagnostics(this, ast, documentUri);
     for (const i in ast) {
       if (!ast[i].columns) {
         continue;
@@ -85,9 +89,20 @@ export class RedundantColumnAlias extends ParserRule {
    * @returns An array of code actions that can be applied to fix the issue.
    */
   createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): CodeAction[] {
+    const cache = globalTokenCache.get(textDocument.uri);
+    const comments = cache && /\/\*|--|#/.test(cache.getText(diagnostic.range));
+    const edits = comments
+      ? sourceTokens(cache)
+          .filter(
+            (token) =>
+              comparePositions(token.range.start, diagnostic.range.start) >= 0 &&
+              comparePositions(token.range.end, diagnostic.range.end) <= 0,
+          )
+          .map((token) => TextEdit.del(token.range))
+      : [TextEdit.replace(diagnostic.range, '')];
     const edit = {
       changes: {
-        [textDocument.uri]: [TextEdit.replace(diagnostic.range, '')],
+        [textDocument.uri]: edits,
       },
     };
     const actions: CodeAction[] = [];

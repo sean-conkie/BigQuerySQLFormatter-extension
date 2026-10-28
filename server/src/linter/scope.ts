@@ -15,6 +15,7 @@ import { excludeTokensWithMatchingScopes } from './parser/token';
 import { readCtes, type CommonTableExpression } from './rules/queries';
 import { closingBracket, keyword, type SourceToken } from './rules/source';
 import keywords from './keywords.json';
+import { pipeClauses, unsupportedQuery, type PipeClause } from './parser/pipe';
 
 export const identifierKey = (token: Pick<SourceToken, 'range'>) =>
   `${token.range.start.line}:${token.range.start.character}`;
@@ -28,10 +29,11 @@ export interface CteDefinition extends CommonTableExpression {
 }
 
 export interface QuerySource {
-  kind: 'table' | 'cte' | 'subquery' | 'unnest' | 'tvf' | 'dml-target';
+  kind: 'table' | 'cte' | 'subquery' | 'unnest' | 'tvf' | 'dml-target' | 'pipe';
   path: string[];
   alias?: string;
   explicitAlias: boolean;
+  aliasToken?: SourceToken;
   offsetAlias?: string;
   start: number;
   end: number;
@@ -43,6 +45,7 @@ export interface QueryClause {
   kind: 'group' | 'order' | 'having' | 'qualify';
   start: number;
   end: number;
+  expressionStart?: number;
 }
 
 export interface QueryScope {
@@ -56,6 +59,8 @@ export interface QueryScope {
   selectAliases: SourceToken[];
   usingColumns: SourceToken[];
   clauses: QueryClause[];
+  pipe?: PipeClause;
+  visibleAliases?: SourceToken[];
 }
 
 export interface ScopeStatement {
@@ -96,6 +101,7 @@ export class QueryScopeResolver {
     recursive: boolean;
   }[] = [];
   private readonly cteDefinitions = new Map<number, CteDefinition>();
+  private readonly unsupportedRegions: { start: number; end: number }[] = [];
 
   constructor(readonly tokens: SourceToken[]) {
     const ends: number[] = [];
@@ -124,27 +130,18 @@ export class QueryScopeResolver {
         const statement: ScopeStatement = {
           start,
           end: i,
-          status: tokens
-            .slice(start, i)
-            .some(
-              (token, offset) =>
-                (['MATCH_RECOGNIZE', 'GRAPH_TABLE'].some((word) => keyword(token, word)) &&
-                  keyword(tokens[start + offset + 1], '(')) ||
-                (keyword(token, '|') && keyword(tokens[start + offset + 1], '>')) ||
-                (keyword(token, 'FOR') && keyword(tokens[start + offset + 1], 'SYSTEM_TIME')),
-            )
-            ? 'unsupported'
-            : 'supported',
+          status: 'supported',
           scopes: [],
         };
         this.statements.push(statement);
-        if (statement.status === 'supported') this.readRegion(start, i, undefined, statement);
+        this.readRegion(start, i, undefined, statement);
       }
       start = i + 1;
     }
   }
 
   scopeAt(index: number): QueryScope | undefined {
+    if (this.unsupportedRegions.some((region) => index >= region.start && index < region.end)) return undefined;
     return this.scopes
       .filter((scope) => index >= scope.start && index < scope.end)
       .sort((a, b) => a.end - a.start - (b.end - b.start))[0];
@@ -283,11 +280,21 @@ export class QueryScopeResolver {
 
   private readRegion(start: number, end: number, parent: QueryScope | undefined, statement: ScopeStatement): void {
     const tokens = this.tokens;
-    const beginsQuery = ['WITH', 'SELECT', 'UPDATE', 'DELETE', 'MERGE', 'INSERT'].some((word) =>
+    const beginsQuery = ['WITH', 'SELECT', 'FROM', 'UPDATE', 'DELETE', 'MERGE', 'INSERT'].some((word) =>
       keyword(tokens[start], word),
     );
     if (!beginsQuery) {
       this.readNested(start, end, parent, statement);
+      return;
+    }
+    if (unsupportedQuery(tokens, start, end)) {
+      statement.status = 'unsupported';
+      this.unsupportedRegions.push({ start, end });
+      return;
+    }
+    const stages = pipeClauses(tokens, start, end);
+    if (stages.length) {
+      this.readPipeline(start, parent, statement, stages);
       return;
     }
     const ctes = this.cteEnvironments.find((environment) => environment.start === start)?.ctes ?? [];
@@ -410,6 +417,110 @@ export class QueryScopeResolver {
     flushSelect(end);
   }
 
+  private readPipeline(
+    start: number,
+    parent: QueryScope | undefined,
+    statement: ScopeStatement,
+    stages: PipeClause[],
+  ): void {
+    const tokens = this.tokens;
+    const before = this.scopes.length;
+    this.readRegion(start, stages[0].start, parent, statement);
+    const input = this.scopes[before];
+    if (!input) return;
+    let sources = input.sources;
+    let aliases = input.selectAliases;
+    let using = input.usingColumns;
+    const anonymous = (stage: PipeClause): QuerySource => ({
+      kind: 'pipe',
+      path: [],
+      explicitAlias: false,
+      start: stage.start,
+      end: stage.end,
+      range: { start: tokens[stage.start].range.start, end: tokens[stage.end - 1].range.end },
+    });
+    const main = input.ctes.at(-1)?.close;
+    if (keyword(tokens[main === undefined ? start : main + 1], 'SELECT')) sources = [anonymous(stages[0])];
+    for (const stage of stages) {
+      const scope: QueryScope = {
+        kind: 'query',
+        cteBody: input.cteBody,
+        start: stage.start,
+        end: stage.end,
+        parent,
+        ctes: input.ctes,
+        sources: [...sources],
+        selectAliases: [],
+        usingColumns: [...using],
+        clauses: [],
+        pipe: stage,
+        visibleAliases: [...aliases],
+      };
+      this.scopes.push(scope);
+      statement.scopes.push(scope);
+      if (stage.kind === 'source') {
+        const source = this.readSource(stage.body, stage.end, scope, false);
+        stage.relation = source;
+        if (stage.operator === 'CALL') {
+          // A TVF replaces its input table; it is not an additional JOIN source.
+          sources = source ? [{ ...source, alias: source.aliasToken ? source.alias : undefined }] : [anonymous(stage)];
+          aliases = [];
+          using = [];
+        } else {
+          if (source) scope.sources.push(source);
+          scope.usingColumns.push(...stage.using);
+          sources = scope.sources;
+          using = scope.usingColumns;
+        }
+      } else if (stage.kind === 'alias') {
+        const alias = stage.alias?.value.replace(/^`|`$/g, '');
+        sources = [{ ...anonymous(stage), alias, aliasToken: stage.alias }];
+        aliases = [];
+      } else if (stage.kind === 'projection') {
+        const output = [...stage.groupBy, ...stage.items].flatMap((item) => {
+          const last = item.expression.at(-1);
+          return item.alias ? [item.alias] : isIdentifier(last) ? [last] : [];
+        });
+        scope.selectAliases = output;
+        if (stage.groupStart !== undefined)
+          scope.clauses.push({
+            kind: 'group',
+            start: stage.groupStart,
+            end: stage.end,
+            expressionStart: stage.groupExpressionStart,
+          });
+        if (stage.operator === 'EXTEND') aliases = [...aliases, ...output];
+        else {
+          sources = [anonymous(stage)];
+          aliases = output;
+          using = [];
+        }
+      } else if (stage.kind === 'order') {
+        scope.clauses.push({ kind: 'order', start: stage.body - 2, end: stage.end });
+      } else if (stage.kind === 'columns') {
+        if (stage.operator === 'SET')
+          aliases = [...aliases, ...stage.items.flatMap((item) => (item.expression[0] ? [item.expression[0]] : []))];
+        if (stage.operator === 'DROP' || stage.operator === 'RENAME') {
+          const targets = stage.items.map((item) => normalize(item.expression[0]?.value ?? ''));
+          aliases = aliases.filter((alias) => !targets.includes(normalize(alias.value)));
+          if (stage.operator === 'RENAME')
+            aliases.push(...stage.items.flatMap((item) => (item.alias ? [item.alias] : [])));
+        }
+      } else if (stage.kind === 'set' || (stage.kind === 'relation' && ['PIVOT', 'UNPIVOT'].includes(stage.operator))) {
+        sources = [
+          {
+            ...anonymous(stage),
+            alias: stage.kind === 'relation' ? stage.alias?.value.replace(/^`|`$/g, '') : undefined,
+          },
+        ];
+        aliases = [];
+        using = [];
+      }
+      // Children inherit precisely the input visible to this stage, never a later stage.
+      this.readNested(stage.body, stage.end, stage.kind === 'set' ? parent : scope, statement);
+    }
+  }
+
   private readNested(start: number, end: number, parent: QueryScope | undefined, statement: ScopeStatement): void {
     for (let i = start; i < end; i++) {
       if (!keyword(this.tokens[i], '(') && !keyword(this.tokens[i], '[')) continue;
@@ -449,6 +560,31 @@ export class QueryScopeResolver {
         cursor = close + 1;
       }
     }
+    if (
+      keyword(tokens[cursor], 'FOR') &&
+      keyword(tokens[cursor + 1], 'SYSTEM_TIME') &&
+      keyword(tokens[cursor + 2], 'AS') &&
+      keyword(tokens[cursor + 3], 'OF')
+    ) {
+      cursor += 4;
+      if (
+        ['TIMESTAMP', 'DATE', 'DATETIME'].some((word) => keyword(tokens[cursor], word)) &&
+        tokens[cursor + 1]?.literal
+      ) {
+        cursor += 2;
+      } else {
+        const expression = cursor;
+        if (keyword(tokens[cursor], '@')) cursor++;
+        if (isIdentifier(tokens[cursor])) {
+          cursor++;
+          while (keyword(tokens[cursor], '.') && isIdentifier(tokens[cursor + 1])) cursor += 2;
+        }
+        if (keyword(tokens[cursor], '(')) {
+          const close = closingBracket(tokens, cursor);
+          if (close >= 0 && close < end) cursor = close + 1;
+        } else if (cursor === expression && tokens[cursor]) cursor++;
+      }
+    }
     const explicitAlias = keyword(tokens[cursor], 'AS');
     if (explicitAlias) cursor++;
     const aliasToken = tokens[cursor];
@@ -476,6 +612,7 @@ export class QueryScopeResolver {
       path,
       alias,
       explicitAlias,
+      aliasToken: canBeAlias(aliasToken) ? aliasToken : undefined,
       offsetAlias,
       start,
       end: cursor,

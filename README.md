@@ -61,6 +61,20 @@ terminators, and CTE layout.
 UNION modifier checks now use **AM02** instead of **CV12**. Move any UNION-specific
 CV12 settings and `noqa` suppressions to AM02. CV12 continues checking EXCEPT and INTERSECT.
 
+### Pipe and temporal queries
+
+Pipe queries (including FROM-only inputs) and `FOR SYSTEM_TIME AS OF` support
+RF01-RF06, AL01, AL02, AL04, AL05, AL06, AL08, AL09, AM04, AM05, AM06 and AM07.
+Checks follow each stage's visible table aliases, output aliases and JOIN USING
+columns. RF01 remains disabled by default. Quick fixes, Fix All and formatting
+preserve pipe placement and line endings.
+
+`MATCH_RECOGNIZE`, `GRAPH_TABLE` and unmodelled pipe operators (such as pipe WITH)
+still skip structural checks in their own block and descendants; enclosing
+queries and sibling blocks continue to be checked. CP01-CP05, CV01, CV02, CV04,
+CV05, CV13, LT01, LT12 and LT13 remain active throughout. Other layout and
+structure rules do not yet apply inside pipe queries.
+
 ## Rule configuration
 
 Configure rules in your Visual Studio Code user, workspace, or workspace-folder settings:
