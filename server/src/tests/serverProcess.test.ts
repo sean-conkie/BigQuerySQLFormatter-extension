@@ -111,14 +111,25 @@ describe('Language server startup failures', function () {
     }
   });
 
-  for (const asset of ['missing WASM', 'invalid grammar']) {
+  for (const asset of ['missing WASM', 'invalid grammar', 'missing grammar'] as const) {
     it(`rejects initialization and logs the cause without signaling readiness for ${asset}`, async () => {
+      let serverPath = path.join(directory, 'server.js');
       if (asset === 'missing WASM') {
         await rm(path.join(directory, 'linter', 'onig.wasm'));
-      } else {
+      } else if (asset === 'invalid grammar') {
         await writeFile(path.join(directory, 'linter', 'syntaxes', 'googlesql.tmLanguage.json'), '{');
+      } else {
+        serverPath = path.join(directory, 'startup.js');
+        await writeFile(
+          serverPath,
+          [
+            "const { GrammarLoader } = require('./linter/grammarLoader');",
+            'GrammarLoader.prototype.loadGrammar = async () => null;',
+            "require('./server');",
+          ].join('\n'),
+        );
       }
-      server = startTestServer(path.join(directory, 'server.js'));
+      server = startTestServer(serverPath);
       const errors: string[] = [];
       let ready = false;
       server.connection.onNotification(LogMessageNotification.type, (params) => {
@@ -127,7 +138,12 @@ describe('Language server startup failures', function () {
       server.connection.onNotification('bigquerySQLFormatter/ready', () => {
         ready = true;
       });
-      const cause = asset === 'missing WASM' ? /ENOENT.*onig\.wasm/ : /JSON/;
+      const causes = {
+        'missing WASM': /ENOENT.*onig\.wasm/,
+        'invalid grammar': /JSON/,
+        'missing grammar': /GoogleSQL grammar was not found/,
+      };
+      const cause = causes[asset];
       await rejects(
         server.connection.sendRequest(InitializeRequest.type, {
           processId: process.pid,
