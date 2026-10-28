@@ -4,6 +4,10 @@
 
 ### Notable changes
 
+- Add ST02 (`structure.simple_case`), enabled by default, simplifying searched
+  CASE expressions to COALESCE, NOT COALESCE or the original expression.
+  Comments and volatile expressions are protected.
+
 - Add ST03 (`structure.unused_cte`), enabled by default, warning on CTEs
   without references in their visible scope, including extended query syntax.
   Unused definitions are faded in the editor; no automatic removal is offered.

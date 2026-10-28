@@ -6,6 +6,7 @@ import type { Range } from 'vscode-languageserver/node';
 import type { PipeClause } from './pipe';
 import type { SourceToken } from '../rules/source';
 import type { QuerySource } from '../scope';
+import { keyword } from '../rules/source';
 
 // region base types
 
@@ -452,14 +453,14 @@ export class CaseStatementWhenAST extends AST {
    * @param when - The matched rule representing the condition.
    * @param then - The matched rule representing the consequence.
    */
-  constructor(when: MatchedRule, then: MatchedRule) {
+  constructor(when: MatchedRule, then?: MatchedRule) {
     const tokens = [];
 
     if (when.tokens != null && when.tokens.length > 0) {
       tokens.push(...when.tokens);
     }
 
-    if (then.tokens != null && then.tokens.length > 0) {
+    if (then?.tokens != null && then.tokens.length > 0) {
       tokens.push(...then.tokens);
     }
 
@@ -467,16 +468,66 @@ export class CaseStatementWhenAST extends AST {
 
     this.when = new ComparisonGroupAST(when.matches ?? []);
     // biome-ignore lint/suspicious/noThenProperty: This models a SQL CASE THEN clause, not a promise.
-    this.then = new ColumnAST(then);
+    this.then = then ? new ColumnAST(then) : null;
   }
 }
 
 /**
  * Represents a statement in the Abstract Syntax Tree (AST).
  */
+export interface CaseExpression {
+  start: number;
+  end: number;
+  operand: SourceToken[];
+  branches: { condition: SourceToken[]; result: SourceToken[]; start: number }[];
+  otherwise?: { start: number; tokens: SourceToken[] };
+}
+
 export class CaseStatementAST extends AST {
   when: CaseStatementWhenAST[] = [];
   else: Column | null = null;
+
+  static sourceExpressions(tokens: SourceToken[]): CaseExpression[] {
+    const result: CaseExpression[] = [];
+    const stack: { start: number; parts: number[] }[] = [];
+    for (let i = 0; i < tokens.length; i++) {
+      if (keyword(tokens[i], 'CASE')) stack.push({ start: i, parts: [] });
+      else if (keyword(tokens[i], 'END')) {
+        const entry = stack.pop();
+        if (!entry || !keyword(tokens[entry.parts[0]], 'WHEN')) continue;
+        const expression: CaseExpression = {
+          start: entry.start,
+          end: i + 1,
+          operand: tokens.slice(entry.start + 1, entry.parts[0]),
+          branches: [],
+        };
+        let valid = true;
+        for (let p = 0; p < entry.parts.length; p++) {
+          const part = entry.parts[p];
+          if (keyword(tokens[part], 'ELSE')) {
+            expression.otherwise = { start: part, tokens: tokens.slice(part + 1, i) };
+            valid = p === entry.parts.length - 1 && part + 1 < i;
+            break;
+          }
+          const then = entry.parts[++p];
+          const end = entry.parts[p + 1] ?? i;
+          if (!keyword(tokens[part], 'WHEN') || !keyword(tokens[then], 'THEN') || then <= part + 1 || end <= then + 1) {
+            valid = false;
+            break;
+          }
+          expression.branches.push({
+            condition: tokens.slice(part + 1, then),
+            result: tokens.slice(then + 1, end),
+            start: part,
+          });
+        }
+        if (valid && expression.branches.length) result.push(expression);
+      } else if (['WHEN', 'THEN', 'ELSE'].some((word) => keyword(tokens[i], word))) {
+        stack.at(-1)?.parts.push(i);
+      } else if (keyword(tokens[i], ';')) stack.length = 0;
+    }
+    return result;
+  }
 
   /**
    * Constructs an instance of the class with the provided matched rule.
@@ -502,7 +553,7 @@ export class CaseStatementAST extends AST {
     }
 
     if (elseMatch) {
-      this.else = createColumn((elseMatch.matches ?? [new MatchedRule(null, [])])[0]);
+      this.else = createColumn(elseMatch.matches?.[0] ?? elseMatch);
     }
 
     if (aliasMatch) {
