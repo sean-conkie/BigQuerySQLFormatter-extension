@@ -14,9 +14,10 @@ import { Using } from './ST07';
 import { UnusedCte } from './ST03';
 import { SimpleCase } from './ST02';
 import { NestedCase } from './ST04';
+import { JoinConditionOrder } from './ST09';
 import type { FileMap } from '../../parser';
 
-export const classes = [Distinct, ElseNull, Using, UnusedCte, SimpleCase, NestedCase];
+export const classes = [Distinct, ElseNull, Using, UnusedCte, SimpleCase, NestedCase, JoinConditionOrder];
 
 export function structureRules(settings: ServerSettings, problems: number): Rule<string | FileMap>[] {
   return instantiateRules(classes, settings, problems);

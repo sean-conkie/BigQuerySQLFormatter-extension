@@ -90,7 +90,9 @@ export function identifiers(tokens: SourceToken[], cache: DocumentCache): Identi
             ),
         );
       const pipeColumn = resolver.scopeAt(index)?.pipe && !syntaxWords.has(token.value.toLowerCase());
-      if (!quoted && !highlighted && !pipeColumn) continue;
+      const scope = resolver.scopeAt(index);
+      const qualifiedColumn = scope && keyword(tokens[index + 1], '.') && resolver.resolveSource(scope, token.value);
+      if (!quoted && !highlighted && !pipeColumn && !qualifiedColumn) continue;
     }
     result.push({
       token,

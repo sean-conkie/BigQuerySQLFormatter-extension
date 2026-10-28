@@ -670,6 +670,13 @@
       "patterns": [
         {
           "captures": {
+            "1": { "name": "keyword.operator.comparison.sql" }
+          },
+          "match": "(?i)\\b(is\\s+(?:not\\s+)?distinct\\s+from)\\b",
+          "name": "meta.comparison.sql"
+        },
+        {
+          "captures": {
             "1": { "name": "keyword.from.sql" },
             "2": { "name": "keyword.join.sql" },
             "3": { "name": "punctuation.definition.string.begin.sql" },
