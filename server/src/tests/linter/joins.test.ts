@@ -58,4 +58,27 @@ describe('JOIN condition model', () => {
     expect(await model('select * from a join b using(id);')).to.deep.equal([]);
     expect(await model('from a |> join b on b.id=a.id;')).to.deep.equal([]);
   });
+  for (const text of [
+    'select a.id from a join b on',
+    'select a.id from a join b on (b.id = a.id',
+    'select a.id from a join b on [b.id, a.id',
+  ])
+    it(`does not invent a condition for incomplete input: ${text}`, async () => {
+      expect(await model(text)).to.deep.equal([]);
+    });
+  it('marks references to later JOIN sources as unsafe', async () => {
+    const conditions = await model('select a.id from a join b on c.id = a.id join c on c.id = b.id;');
+    expect(conditions).to.have.length(2);
+    expect(conditions[0].comparisons[0].left.sources[0].alias).to.equal('c');
+    expect(conditions[0].comparisons[0].left.safe).to.equal(false);
+    expect(conditions[1].comparisons[0].left.safe).to.equal(true);
+  });
+  for (const predicate of ['b.id is null', 'b.id is not null', 'b.flag is true', 'b.flag is not false'])
+    it(`keeps non-symmetric IS predicates opaque: ${predicate}`, async () => {
+      const [condition] = await model(`select a.id from a join b on ${predicate} and b.id = a.id;`);
+      expect(condition.expression.kind).to.equal('boolean');
+      expect(condition.comparisons).to.have.length(1);
+      expect(condition.comparisons[0].operator).to.equal('=');
+      expect(condition.comparisons[0].left.sources[0].alias).to.equal('b');
+    });
 });

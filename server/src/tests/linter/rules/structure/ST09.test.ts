@@ -102,6 +102,9 @@ describe('ST09 JOIN condition order', () => {
     'select a.id from a join b on b.id = (select a.id);',
     'select a.id from a join b on b.id + a.id = a.id;',
     'select a.id from a join b on not b.id = a.id;',
+    'select a.id from a join b on c.id = a.id join c on b.id = c.id;',
+    'select a.id from a join b on b.id is null;',
+    'select a.id from a join b on b.id is not null;',
     'from a |> join b on b.id=a.id;',
   ])
     it(`skips unsafe/non-comparison conditions: ${text}`, async () =>
