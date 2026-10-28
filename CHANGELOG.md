@@ -21,6 +21,7 @@
 
 - Five new reference rules are enabled by default, so existing SQL may report
   new warnings:
+
   - RF02 flags unqualified columns in queries that read from more than one source.
   - RF03 flags inconsistently qualified columns in single-source queries.
   - RF04 flags keywords used as unquoted aliases.
@@ -30,6 +31,7 @@
   RF03 and RF06 also apply through Fix All, format-on-save and Format Document.
   To opt out, disable individual rules or turn the group off with
   `"groups": { "references": false }`.
+
 - Rules now skip only the query block that contains pipe syntax,
   `MATCH_RECOGNIZE`, `GRAPH_TABLE` or `FOR SYSTEM_TIME AS OF`, rather than the
   whole statement. The surrounding query, sibling CTEs and subqueries are linted,

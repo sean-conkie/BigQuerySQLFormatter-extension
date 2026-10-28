@@ -90,7 +90,7 @@ RF01-RF06, AL01, AL02, AL04, AL05, AL06, AL08, AL09, AM04, AM05, AM06 and AM07
 opt into this model through `pipeQueryRules`. RF01 still requires explicit enabling.
 Operators without an equivalent for a rule are not applicable (for example,
 AL01 must not remove the mandatory AS in `|> AS`, and AM04 ignores multiplication
-and COUNT(*)). Other LT and ST rules remain gated pending a pipe layout policy.
+and COUNT(\*)). Other LT and ST rules remain gated pending a pipe layout policy.
 
 MATCH_RECOGNIZE, GRAPH_TABLE and unmodelled pipe operators (including pipe WITH)
 still skip their own query block and its descendants, not enclosing traditional

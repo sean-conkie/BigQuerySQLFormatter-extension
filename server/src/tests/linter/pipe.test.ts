@@ -4,6 +4,8 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { formatDocument } from '../../formatting';
 import { Linter, sourceFixAllKind } from '../../linter/linter';
 import { Parser } from '../../linter/parser';
+import { pipeClauses, pipeItems } from '../../linter/parser/pipe';
+import { implicitAliasEdit } from '../../linter/rules/aliasing/pipe';
 import { globalTokenCache } from '../../linter/parser/tokenCache';
 import { tokenizeSource } from '../../linter/rules/source';
 import { ruleRegistry } from '../../linter/rules/rules';
@@ -114,6 +116,93 @@ describe('Pipe query models and rules', () => {
     for (const block of ast.queryBlocks) {
       const token = block.sourceTokens[block.pipeClauses[0].start];
       expect(text[source.offsetAt(token.range.start)]).to.equal('|');
+    }
+  });
+
+  it('models value projections, named windows and optional limit offsets', () => {
+    const stages = pipeClauses(
+      tokenizeSource(
+        'FROM input |> SELECT AS VALUE a |> SELECT SUM(a) OVER win AS total WINDOW win AS (PARTITION BY b) |> LIMIT 10',
+      ),
+    );
+    const [value, window, limit] = stages;
+    if (value.kind !== 'projection' || window.kind !== 'projection' || limit.kind !== 'limit')
+      throw new Error('Wrong stage model');
+    expect(value.output).to.equal('value');
+    expect(value.items[0].expression.map((token) => token.value)).to.deep.equal(['a']);
+    expect(window.windows[0].expression[0].value).to.equal('win');
+    expect(window.windows[0].alias).to.equal(undefined);
+    expect(limit.limit.map((token) => token.value)).to.deep.equal(['10']);
+    expect(limit.offset).to.deep.equal([]);
+  });
+
+  it('preserves partial relation operands and rejects missing operators while editing', () => {
+    for (const operator of ['PIVOT amount', 'UNPIVOT amount', 'TABLESAMPLE SYSTEM', 'WINDOW win']) {
+      const stage = pipeClauses(tokenizeSource(`FROM input |> ${operator}`))[0];
+      if (stage.kind !== 'relation') throw new Error('Wrong relation model');
+      expect(stage.operands[0].expression[0].value).to.equal(operator.split(' ')[1]);
+      expect(stage.alias).to.equal(undefined);
+      expect(stage.pivot).to.equal(undefined);
+      expect(stage.unpivot).to.equal(undefined);
+      if (stage.sample) expect(stage.sample.size).to.deep.equal([]);
+    }
+    const stage = pipeClauses(tokenizeSource('FROM input |>'))[0];
+    expect(stage.kind).to.equal('unsupported');
+    if (stage.kind === 'unsupported') expect(stage.reason).to.equal('Incomplete pipe operator: ');
+    const items = pipeItems(tokenizeSource('a,, b,'), 0, 5);
+    expect(items.map((item) => item.expression[0].value)).to.deep.equal(['a', 'b']);
+  });
+
+  it('retains pivot output aliases in identifier checks and excludes the FOR declaration from references', async () => {
+    const text =
+      "FROM input t |> JOIN other o USING (id) |> PIVOT (SUM(t.amount) AS `total` FOR `quarter` IN ('Q1' AS `q1`)) AS `p`;";
+    expect((await check(text, ['RF02'])).names).to.deep.equal([]);
+    expect((await check(text, ['RF06'])).names).to.deep.equal(['`total`', '`quarter`', '`q1`', '`p`']);
+  });
+
+  it('keeps JOIN USING names exempt from alias qualification but checks other columns', async () => {
+    expect((await check('FROM input t |> JOIN other o USING (id) |> SELECT id, amount', ['AL05'])).names).to.deep.equal(
+      ['amount'],
+    );
+  });
+
+  it('counts explicit projections after DROP and value-table projections in set operations', async () => {
+    expect((await check('FROM input |> SELECT a, b |> DROP b |> UNION ALL (SELECT 1)', ['AM07'])).names).to.deep.equal(
+      [],
+    );
+    expect(
+      (await check('FROM input |> SELECT a, b |> DROP b |> UNION ALL (SELECT 1, 2)', ['AM07'])).names,
+    ).to.deep.equal(['UNION']);
+    expect((await check('FROM input |> SELECT AS VALUE a |> UNION ALL (SELECT 1)', ['AM07'])).names).to.deep.equal([]);
+  });
+
+  it('ignores multiplication outside projections and checks initial SELECT aliases without a FROM', async () => {
+    expect((await check('FROM input |> WHERE a * 2 > 0 |> SET a = a * 3', ['AM04'])).names).to.deep.equal([]);
+    expect((await check('SELECT 1 AS x |> EXTEND x + 1 AS y', ['AL02'])).names).to.deep.equal(['AS', 'AS']);
+  });
+
+  it('preserves temporal aliases for dotted timestamp expressions and partial expressions', () => {
+    for (const expression of ['snapshot.value', '123']) {
+      const resolver = resolve(`FROM input FOR SYSTEM_TIME AS OF ${expression} AS t |> SELECT t.a`);
+      expect(resolver.scopes[0].sources[0].alias).to.equal('t');
+      expect(resolver.scopes[1].sources[0].alias).to.equal('t');
+    }
+    const resolver = resolve('WITH c AS (SELECT 1 AS a) SELECT a FROM c |> SELECT a');
+    expect(resolver.scopes.find((scope) => scope.pipe)?.sources[0].kind).to.equal('pipe');
+    expect(resolve('FROM input |> CALL 123 |> SELECT a').scopes.at(-1)?.sources[0].kind).to.equal('pipe');
+  });
+
+  it('removes only AS and adjacent horizontal whitespace at document boundaries', async () => {
+    for (const [text, start, end, expected] of [
+      ['AS alias', 0, 2, 'alias'],
+      ['value AS', 6, 8, 'value'],
+      ['AS', 0, 2, ''],
+      ['value\nAS\nalias', 6, 8, 'value\n\nalias'],
+    ] as const) {
+      await new Parser().parse(item(text));
+      const document = TextDocument.create(uri, 'googlesql', 1, text);
+      const edit = implicitAliasEdit(uri, { start: document.positionAt(start), end: document.positionAt(end) });
+      expect(TextDocument.applyEdits(document, [edit])).to.equal(expected);
     }
   });
 
