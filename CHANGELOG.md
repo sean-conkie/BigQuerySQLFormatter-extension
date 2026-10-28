@@ -4,6 +4,10 @@
 
 ### Notable changes
 
+- Add ST03 (`structure.unused_cte`), enabled by default, warning on CTEs
+  without references in their visible scope, including extended query syntax.
+  Unused definitions are faded in the editor; no automatic removal is offered.
+
 - Pipe queries and `FOR SYSTEM_TIME AS OF` now support RF01-RF06, AL01, AL02,
   AL04, AL05, AL06, AL08, AL09, AM04, AM05, AM06 and AM07. Existing pipe SQL may
   report new warnings and receive alias, INNER JOIN and reference fixes through

@@ -1,0 +1,23 @@
+ST03: Unused CTEs
+================
+
+``structure.unused_cte`` is enabled by default with warning severity.
+The diagnostic marks the definition's name as unnecessary. No quick fix,
+Fix All edit or formatting change is offered: removing a CTE deletes code.
+
+A CTE is used when a visible reference appears in the main query, another CTE,
+a subquery, or a DML/DDL query body. Names match case-insensitively, including
+backtick-quoted names. Nested WITH definitions shadow outer definitions.
+Lexical references are retained for pipe, temporal, MATCH_RECOGNIZE and
+GRAPH_TABLE queries even where other structure rules cannot run.
+
+Recursive self-references do not count as uses. For an unused chain, only
+definitions with no references are reported, not their dependencies.
+
+.. code-block:: sql
+
+    with used as (select 1 as id),
+    unused as (select 2 as id)
+    select id from used;
+
+Only ``unused`` is reported.
