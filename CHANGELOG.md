@@ -1,45 +1,53 @@
 # Changelog
 
-## Unreleased
+## 0.7.0 - 2026-10-28
 
 ### Notable changes
 
-- Add opt-in LT90 (`layout.join_condition_parentheses`), a project-specific
-  rule that wraps multiple JOIN ON conditions. Disabled by default; enable
-  explicitly with `"LT90": { "enabled": true }`. Its `condition_policy` is
-  `multiple` (default) or `mixed` for unparenthesised AND/OR mixtures only.
-  Fixes preserve comments and line endings and compose with LT02 and ST09.
+- Four new structure rules are enabled by default, so existing SQL may report
+  new warnings: ST02, ST03, ST04 and ST09. ST02, ST04 and ST09 also apply
+  through quick fixes, Fix All, format-on-save and Format Document.
+  - **ST09 reorders existing `JOIN ... ON` conditions** so the table that
+    appears earlier in `FROM` comes first, mirroring `<`/`>` and `<=`/`>=`
+    (`on b.a = f.a and b.c < f.c` becomes `on f.a = b.a and f.c > b.c`).
+    Set `preferred_first_table_in_join_clause` to `later`, or disable ST09,
+    to opt out.
 
-- Add ST09 (`structure.join_condition_order`), **enabled by default**.
-  Quick fixes, Fix All and format-on-save reorder JOIN ON operands by FROM
-  source order and mirror inequalities. Configure
-  `preferred_first_table_in_join_clause` as `earlier` (default) or `later`,
-  or disable ST09/the structure group to opt out. Comments prevent fixes.
-- Add a shared JOIN-condition model with boolean groups, operand ranges and
-  scope-resolved source references for structure and layout rules.
+  To opt out of the whole group, use `"groups": { "structure": false }`.
+- Pipe queries (`|>`) and `FOR SYSTEM_TIME AS OF` now get RF01–RF06, AL01,
+  AL02, AL04, AL05, AL06, AL08, AL09, AM04, AM05, AM06 and AM07. Existing pipe
+  SQL may report new warnings and receive alias, `INNER JOIN` and reference
+  fixes through quick fixes, Fix All and formatting. RF01 remains disabled by
+  default. `MATCH_RECOGNIZE`, `GRAPH_TABLE` and pipe operators that aren't
+  modelled yet are still skipped, without affecting the surrounding query.
 
-- Add ST04 (`structure.nested_case`), enabled by default, flattening compatible
-  CASE expressions in ELSE branches through quick fixes, Fix All and formatting.
-  Comments and volatile simple-CASE operands prevent automatic rewrites.
+### Added
 
-- Add ST02 (`structure.simple_case`), enabled by default, simplifying searched
-  CASE expressions to COALESCE, NOT COALESCE or the original expression.
-  Comments and volatile expressions are protected.
-
-- Add ST03 (`structure.unused_cte`), enabled by default, warning on CTEs
-  without references in their visible scope, including extended query syntax.
-  Unused definitions are faded in the editor; no automatic removal is offered.
-
-- Pipe queries and `FOR SYSTEM_TIME AS OF` now support RF01-RF06, AL01, AL02,
-  AL04, AL05, AL06, AL08, AL09, AM04, AM05, AM06 and AM07. Existing pipe SQL may
-  report new warnings and receive alias, INNER JOIN and reference fixes through
-  quick fixes, Fix All and formatting. RF01 remains disabled by default.
-- Model typed pipe clauses and stage-local name visibility, including nested
-  pipelines, output aliases, JOIN USING columns and temporal source aliases.
-  MATCH_RECOGNIZE, GRAPH_TABLE and unmodelled pipe operators remain protected,
-  without suppressing checks in enclosing queries or sibling blocks.
-- Preserve pipe placement and LF/CRLF/CR line endings. Other layout and structure
-  rules remain gated pending pipe-specific formatting support.
+- Add ST02 (`structure.simple_case`) to simplify single-`WHEN` searched `CASE`
+  expressions to `COALESCE`, `NOT COALESCE` or the expression itself. Comments
+  and non-deterministic expressions prevent the rewrite.
+- Add ST03 (`structure.unused_cte`) to warn about CTEs that are never
+  referenced where they're visible, including references inside pipe syntax and
+  other new query syntax. Unused CTEs are faded in the editor; there's no
+  automatic removal.
+- Add ST04 (`structure.nested_case`) to flatten a `CASE` whose `ELSE` branch is
+  another compatible `CASE`. Comments and non-deterministic simple-`CASE`
+  operands prevent the rewrite.
+- Add ST09 (`structure.join_condition_order`) with the
+  `preferred_first_table_in_join_clause` option: `earlier` (default) or `later`.
+  Comments inside a condition prevent the fix.
+- Add LT90 (`layout.join_condition_parentheses`), a project-specific rule that
+  wraps multiple `JOIN ... ON` conditions in parentheses. **Disabled by
+  default**; enable it with `"LT90": { "enabled": true }`. Option
+  `condition_policy`: `multiple` (default) or `mixed` (only unparenthesised
+  `AND`/`OR` mixtures). Fixes keep comments and line endings and work together
+  with LT02 and ST09. Codes 90–99 in each group are reserved for
+  project-specific rules, so they never clash with SQLFluff codes.
+- Pipe-stage support: pipe clauses, which names are visible after each stage,
+  nested pipelines, output aliases, `JOIN ... USING` columns and temporal source
+  aliases are now understood by the rules. Pipe placement and LF/CRLF/CR line
+  endings are preserved; other layout and structure rules still skip pipe
+  queries.
 
 ## 0.6.0 - 2026-10-28
 
