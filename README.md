@@ -77,6 +77,12 @@ structure rules do not yet apply inside pipe queries.
 
 ## Rule configuration
 
+Formatting and Fix All retry without rules whose fixes cycle, grow text for ten
+consecutive passes, or exceed 100 passes, preserving the fixes from the remaining rules. A warning and the
+language server output list the skipped rule codes; this does not change your
+rule configuration or suppress their diagnostics. Cycles skip all participating
+rules; growth/pass limits skip rules repeatedly applying fixes in the last ten passes.
+
 Configure rules in your Visual Studio Code user, workspace, or workspace-folder settings:
 
 ```json

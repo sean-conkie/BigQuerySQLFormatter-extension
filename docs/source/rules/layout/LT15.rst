@@ -14,6 +14,12 @@ In SQL queries, when multiple equality comparisons are used in `where` clauses o
 Explanation
 -----------
 
+LT15 aligns only comparison groups whose conditions start on different lines.
+If any two conditions in a group start on the same line, the whole group is
+left unchanged, including nested groups. This also applies to groups mixing
+single-line and multiline conditions: padding an earlier operator on a shared
+line would move later operators and prevent formatting from converging.
+
 Anti-pattern: Misaligned Equal Signs in Comparison Blocks
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

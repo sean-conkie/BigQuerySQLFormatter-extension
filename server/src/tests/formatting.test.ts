@@ -1,6 +1,12 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
-import { CancellationTokenSource, CodeActionKind, LSPErrorCodes, Range } from 'vscode-languageserver/node';
+import {
+  CancellationTokenSource,
+  CodeActionKind,
+  LSPErrorCodes,
+  Range,
+  type TextEdit,
+} from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { createDocumentCodeActions, formatDocument } from '../formatting';
 import { Linter, sourceFixAllKind } from '../linter/linter';
@@ -179,47 +185,105 @@ describe('Formatting and document fixes', () => {
     expect([...globalTokenCache.keys()]).to.deep.equal(keys);
   });
 
-  for (const cycle of [true, false]) {
-    for (const operation of ['formatting', 'Fix All']) {
-      it(`reports ${cycle ? 'cycling' : 'non-converging'} fixes instead of returning partial ${operation}`, async () => {
+  for (const behavior of ['cycling', 'growing', 'changing']) {
+    for (const operation of ['formatting', 'selection', 'Fix All']) {
+      it(`recovers and reports ${behavior} rules during ${operation}`, async () => {
         const keys = [...globalTokenCache.keys()];
         let calls = 0;
-        sinon.stub(Linter.prototype, 'verify').resolves([]);
-        sinon.stub(Linter.prototype, 'createCodeActions').callsFake(async (params) => [
-          {
-            title: 'Test',
-            kind: sourceFixAllKind,
-            edit: {
-              changes: {
-                [params.textDocument.uri]: [
-                  {
-                    range: Range.create(0, 0, 0, 1),
-                    newText: cycle ? (++calls % 2 ? 'b' : 'a') : String.fromCharCode(1000 + calls++),
-                  },
-                ],
+        const warning = sinon.spy();
+        const unstable = { code: 'LT15: comparison_operators', range: Range.create(0, 0, 0, 1), message: 'Test' };
+        const stable = { code: 'CP01: keywords', range: Range.create(0, 2, 0, 3), message: 'Test' };
+        sinon
+          .stub(Linter.prototype, 'verify')
+          .callsFake(async (source) => [unstable, ...(source.text.endsWith('z') ? [stable] : [])]);
+        sinon.stub(Linter.prototype, 'createCodeActions').callsFake(async (params) => {
+          const diagnostics = params.context.diagnostics;
+          return [
+            {
+              title: 'Test',
+              kind: sourceFixAllKind,
+              diagnostics,
+              edit: {
+                changes: {
+                  [params.textDocument.uri]: diagnostics.flatMap((diagnostic) =>
+                    diagnostic === stable
+                      ? [{ range: stable.range, newText: 'Z' }]
+                      : [
+                          {
+                            range: Range.create(0, 0, 0, 1),
+                            newText:
+                              behavior === 'cycling'
+                                ? ++calls % 2
+                                  ? 'b'
+                                  : 'a'
+                                : behavior === 'growing'
+                                  ? `a${' '.repeat(++calls)}`
+                                  : String.fromCharCode(1000 + calls++),
+                          },
+                        ],
+                  ),
+                },
               },
             },
-          },
-        ]);
-        try {
-          if (operation === 'formatting') {
-            await formatDocument(document('a'), defaultSettings);
-          } else {
-            await createDocumentCodeActions(document('a'), defaultSettings, {
+          ];
+        });
+        const source = document('a z');
+        let edits: TextEdit[];
+        if (operation === 'Fix All') {
+          const actions = await createDocumentCodeActions(
+            source,
+            defaultSettings,
+            {
               textDocument: { uri },
-              range: Range.create(0, 0, 0, 1),
+              range: Range.create(0, 0, 0, 3),
               context: { diagnostics: [], only: [CodeActionKind.SourceFixAll] },
-            });
-          }
-          expect.fail('Expected convergence failure');
-        } catch (error) {
-          expect(error).to.have.property('code', LSPErrorCodes.RequestFailed);
-          expect(error)
-            .to.have.property('message')
-            .that.includes(cycle ? 'cycle' : '100 fix passes');
+            },
+            undefined,
+            warning,
+          );
+          edits = actions[0].edit!.changes![uri];
+        } else {
+          edits = await formatDocument(
+            source,
+            defaultSettings,
+            operation === 'selection' ? Range.create(0, 0, 0, 3) : undefined,
+            undefined,
+            warning,
+          );
         }
+        expect(TextDocument.applyEdits(source, edits)).to.equal('a Z');
+        expect(warning.calledOnce).to.equal(true);
+        expect(warning.firstCall.args[0]).to.include('LT15').and.not.include('CP01');
         expect([...globalTokenCache.keys()]).to.deep.equal(keys);
       });
     }
   }
+
+  it('fails explicitly if unstable fixes have no rule attribution', async () => {
+    sinon.stub(Linter.prototype, 'verify').resolves([]);
+    let calls = 0;
+    sinon.stub(Linter.prototype, 'createCodeActions').callsFake(async (params) => [
+      {
+        title: 'Unattributed fix',
+        kind: sourceFixAllKind,
+        edit: {
+          changes: {
+            [params.textDocument.uri]: [
+              {
+                range: Range.create(0, 0, 0, 1),
+                newText: ++calls % 2 ? 'b' : 'a',
+              },
+            ],
+          },
+        },
+      },
+    ]);
+    try {
+      await formatDocument(document('a'), defaultSettings);
+      expect.fail('Expected an unattributed convergence failure');
+    } catch (error) {
+      expect(error).to.have.property('code', LSPErrorCodes.RequestFailed);
+      expect(error).to.have.property('message').that.includes('rule codes');
+    }
+  });
 });

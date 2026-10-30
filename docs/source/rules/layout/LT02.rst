@@ -14,6 +14,10 @@ In SQL queries, consistent indentation of statements is essential for improving 
 Explanation
 -----------
 
+Alias alignment is skipped when multiple SELECT expressions start on the same
+line, since moving an earlier alias also moves later expressions. Incomplete
+comparison nodes and the contents of quoted literals are never indented.
+
 Anti-pattern: Inconsistent Statement Indentation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

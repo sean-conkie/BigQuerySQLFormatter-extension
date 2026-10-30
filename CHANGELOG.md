@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.7.1 - Unreleased
+
+### Fixed
+
+- Fix LT15 endlessly padding operators in single-line multi-condition JOINs.
+  Comparison groups with conditions sharing a starting line are left unchanged.
+- Formatting, Format Selection, format-on-save and Fix All now recover from
+  cycling or runaway rule fixes, reapply the remaining rules, and warn with the
+  skipped rule codes instead of failing the whole document. For cycles, all
+  rules involved in the cycle are skipped; after ten consecutive growing
+  passes or 100 total passes, rules repeatedly
+  applying fixes in the last ten passes are skipped. Unstable edits are discarded.
+- Prevent related LT02 feedback loops when aligning same-line aliases, handling
+  incomplete comparison nodes or encountering multiline string contents.
+- Avoid recursive AM07 analysis of incomplete `WITH` clauses encountered by the
+  default-rule formatting corpus.
+
 ## 0.7.0 - 2026-10-28
 
 ### Notable changes
