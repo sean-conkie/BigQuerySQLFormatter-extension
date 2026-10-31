@@ -130,7 +130,7 @@ fields with omitted mode. A unit guard forbids global `fetch` in the BigQuery
 source and checks the Node-20-compatible auth majors and Dependabot ignores.
 CI never uses Google or real credentials.
 `BQSQL_TEST_BIGQUERY_ENDPOINT` accepts only loopback HTTP URLs and switches the
-runtime to synthetic credentials; it is not a VS Code setting.
+runtime to synthetic credentials; it is not a Visual Studio Code setting.
 
 Run the focused tests after compilation:
 
@@ -146,7 +146,7 @@ linting still works and that user opt-ins cannot bypass workspace trust.
 Activation-to-language-server-readiness timing is printed by the test helper.
 
 The spike verified ADC user/key-file/impersonated credentials, token refresh,
-automatic location selection and VS Code proxy routing on 1.91 and 1.144.
+automatic location selection and Visual Studio Code proxy routing on 1.91 and 1.144.
 Remaining manual checks include workload identity and a controlled
 TLS-intercepting proxy with `http.proxyStrictSSL: false` (restore certificate
 verification afterwards). Confirm optional quota-project permissions, project/location

@@ -28,6 +28,7 @@ export class MockBigQueryServer {
   readonly requests: RecordedRequest[] = [];
   scenarios: MockScenario[] = [];
   fallback: MockScenario = 'success';
+  errorPayload?: unknown;
   private readonly server: Server;
   private readonly timers = new Set<ReturnType<typeof setTimeout>>();
   endpoint = '';
@@ -88,12 +89,16 @@ export class MockBigQueryServer {
         if (typeof scenario === 'number' || failure) {
           response.statusCode = typeof scenario === 'number' ? scenario : failure!.status;
           response.end(
-            JSON.stringify({
-              error: {
-                errors: [{ reason: failure?.reason ?? 'mockError' }],
-                message: failure?.message ?? 'PRIVATE_QUERY_OR_TOKEN',
-              },
-            }),
+            JSON.stringify(
+              this.errorPayload === undefined
+                ? {
+                    error: {
+                      errors: [{ reason: failure?.reason ?? 'mockError' }],
+                      message: failure?.message ?? 'PRIVATE_QUERY_OR_TOKEN',
+                    },
+                  }
+                : this.errorPayload,
+            ),
           );
         } else if (request.url?.includes('/jobs')) {
           response.end(

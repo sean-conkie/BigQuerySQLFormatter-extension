@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { connect, type Socket } from 'node:net';
 import { once } from 'node:events';
-import { OAuth2Client } from 'google-auth-library';
+import { GoogleAuth, OAuth2Client } from 'google-auth-library';
 import { Gaxios } from 'gaxios';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import { readFileSync, readdirSync } from 'node:fs';
@@ -103,6 +103,7 @@ describe('BigQuery foundation (offline)', function () {
       dryRun: { enabled: false, trigger: 'onSave', costPerTiB: undefined },
       schema: { enabled: false, cacheTtlMinutes: 60 },
     });
+
     for (const [key, value] of Object.entries({
       projectId: '../redirect',
       location: 'US\nTOKEN',
@@ -120,6 +121,141 @@ describe('BigQuery foundation (offline)', function () {
       );
   });
 
+  it('uses real-mode ADC discovery and caches a successful auth check without contacting Google', async () => {
+    const client = new OAuth2Client({
+      credentials: { access_token: 'PRIVATE_TOKEN', expiry_date: Date.now() + 86400000 },
+    });
+    const getClient = sinon.stub(GoogleAuth.prototype, 'getClient').resolves(client);
+    const getProject = sinon.stub(GoogleAuth.prototype, 'getProjectId').resolves('adc-project');
+    delete process.env.BQSQL_TEST_BIGQUERY_ENDPOINT;
+    try {
+      const provider = createCredentials();
+      await Promise.all([provider.check(), provider.check()]);
+      assert.equal(await provider.projectId(), 'adc-project');
+      await provider.request({ url: `${mock.endpoint}projects/adc-project/datasets` });
+      assert.equal(getClient.callCount, 1);
+      assert.equal(getProject.callCount, 1);
+      assert.equal(mock.requests[0].authorization, 'Bearer PRIVATE_TOKEN');
+    } finally {
+      getClient.restore();
+      getProject.restore();
+      process.env.BQSQL_TEST_BIGQUERY_ENDPOINT = mock.endpoint;
+    }
+  });
+
+  it('skips background authentication when disabled or untrusted and reports raw failures safely', async () => {
+    credentials.check = async () => {
+      throw new Error('PRIVATE_TOKEN');
+    };
+    trusted = false;
+    await service.checkCredentials();
+    trusted = true;
+    settings.dryRun.enabled = false;
+    settings.schema.enabled = false;
+    await service.checkCredentials();
+    assert.equal(notifications.length, 0);
+    settings.schema.enabled = true;
+    await service.checkCredentials();
+    assert.equal(notifications.length, 1);
+    assert.match(notifications[0], /application-default login/);
+    assert(!notifications[0].includes('PRIVATE_TOKEN'));
+  });
+
+  it('times out or cancels an in-flight background credential check', async () => {
+    credentials.check = () => new Promise(() => undefined);
+    settings.timeoutMs = 15;
+    await service.checkCredentials();
+    assert.match(notifications[0], /timed out/);
+    const pending = service.checkCredentials();
+    service.invalidate();
+    await pending;
+    assert.equal(notifications.length, 1);
+  });
+
+  it('rejects invalid default/target projects, unavailable ADC projects and unexpected dialog failures', async () => {
+    settings.projectId = undefined;
+    credentials.projectId = async () => 'invalid/project';
+    await assert.rejects(service.request('schema', { operation: 'datasets.list' }), { kind: 'api' });
+    credentials.projectId = async () => {
+      throw new Error('PRIVATE_TOKEN');
+    };
+    await assert.rejects(service.request('schema', { operation: 'datasets.list' }), { kind: 'auth' });
+    settings.projectId = 'test-project';
+    await assert.rejects(service.request('schema', { operation: 'datasets.list', project: 'invalid/project' }), {
+      kind: 'api',
+    });
+    host.prompt = async () => {
+      throw new Error('PRIVATE_TOKEN');
+    };
+    await assert.rejects(service.request('schema', { operation: 'datasets.list' }), { kind: 'api' });
+    assert(!notifications.join(' ').includes('PRIVATE_TOKEN'));
+    assert.equal(mock.requests.length, 0);
+  });
+
+  it('rechecks workspace trust after consent has been saved', async () => {
+    host.saveConsent = async () => {
+      trusted = false;
+    };
+    await assert.rejects(service.request('schema', { operation: 'datasets.list' }), { kind: 'disabled' });
+    assert.equal(mock.requests.length, 0);
+  });
+
+  it('reports direct REST authentication failures and cancellation before sending data', async () => {
+    const rest = new BigQueryRestClient(credentials, (metadata) => logs.push(metadata));
+    credentials.check = async () => {
+      throw new Error('PRIVATE_TOKEN');
+    };
+    await assert.rejects(
+      rest.request({ operation: 'datasets.list' }, { project: 'test-project' }, new AbortController().signal),
+      { kind: 'auth' },
+    );
+    credentials.check = () => new Promise(() => undefined);
+    for (const reason of [new BigQueryError('timeout', 'Authentication deadline'), new Error('Cancelled')]) {
+      const controller = new AbortController();
+      const pending = rest.request({ operation: 'datasets.list' }, { project: 'test-project' }, controller.signal);
+      controller.abort(reason);
+      await assert.rejects(pending, { kind: reason instanceof BigQueryError ? 'timeout' : 'cancelled' });
+    }
+    assert.equal(mock.requests.length, 0);
+    assert(!JSON.stringify(logs).includes('PRIVATE_TOKEN'));
+  });
+
+  it('classifies non-HTTP network failures without leaking their messages', async () => {
+    credentials.request = async () => {
+      throw new Error('PRIVATE_TOKEN');
+    };
+    await assert.rejects(service.request('schema', { operation: 'datasets.list' }), { kind: 'network' });
+    assert.match(notifications[0], /network/);
+    assert(!notifications[0].includes('PRIVATE_TOKEN'));
+  });
+
+  it('handles malformed error bodies and reason-only service-usage failures', async () => {
+    mock.fallback = 400;
+    for (const payload of [null, 'unexpected', {}, { error: null }, { error: { errors: ['invalid', {}] } }]) {
+      mock.errorPayload = payload;
+      await assert.rejects(service.request('schema', { operation: 'datasets.list' }), { kind: 'api', status: 400 });
+    }
+    mock.fallback = 403;
+    mock.errorPayload = { error: { errors: [{ reason: 'serviceUsageDenied' }] } };
+    await assert.rejects(service.request('schema', { operation: 'datasets.list' }), { kind: 'permission' });
+    assert.match(notifications[1], /roles\/serviceusage.serviceUsageConsumer/);
+  });
+
+  it('supports a slow successful response and dry runs with no default dataset or location', async () => {
+    mock.fallback = 'slow';
+    settings.defaultDataset = undefined;
+    const response = await service.request('dryRun', { operation: 'jobs.insert', query: 'SELECT 1' });
+    assert.deepEqual(response, { statistics: { query: { statementType: 'SELECT', totalBytesProcessed: '1234' } } });
+    assert.deepEqual(mock.requests[0].body, {
+      jobReference: { projectId: 'test-project' },
+      configuration: { dryRun: true, query: { query: 'SELECT 1', useLegacySql: false } },
+    });
+    const rest = new BigQueryRestClient(credentials, (metadata) => logs.push(metadata));
+    await assert.rejects(
+      rest.request({ operation: 'tables.list' }, { project: 'test-project' }, new AbortController().signal),
+      { kind: 'api' },
+    );
+  });
   it('never authenticates or calls BigQuery when untrusted, disabled or mismatched', async () => {
     credentials.check = async () => {
       assert.fail('Authentication must not run');

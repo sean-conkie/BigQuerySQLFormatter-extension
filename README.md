@@ -51,22 +51,23 @@ Ordinary linting, formatting and built-in function completions remain offline.
 
 ### Settings and sign-in
 
-Use VS Code user, workspace or workspace-folder settings, never
+Use Visual Studio Code user, workspace or workspace-folder settings, never
 `.bqsqlformatter.json`. BigQuery keys in that file are ignored with a warning;
-offline rule settings still apply.
+offline rule settings still apply. All settings below use the
+`bigquerySQLFormatter.bigquery.` prefix.
 
-| `bigquerySQLFormatter.bigquery.*` setting | Default | Purpose |
-| --- | --- | --- |
-| `projectId` | ADC/gcloud default | Billing project for API calls |
-| `quotaProjectId` | Unset | Optional API/quota project; no quota header by default |
-| `location` | Unset | Let BigQuery determine the location |
-| `defaultDataset` | Unset | Resolve unqualified table names |
-| `timeoutMs` | `10000` | Authentication and request deadline, including retries |
-| `dryRun.enabled` | `false` | Opt in to the dry-run feature |
-| `dryRun.trigger` | `onSave` | `onSave` or `onDemand`; used by the forthcoming feature |
-| `dryRun.costPerTiB` | Unset | Optional estimated price; no hard-coded prices |
-| `schema.enabled` | `false` | Opt in to schema lookups |
-| `schema.cacheTtlMinutes` | `60` | In-memory TTL; used by the forthcoming feature |
+| Setting                  | Default            | Purpose                                                 |
+| ------------------------ | ------------------ | ------------------------------------------------------- |
+| `projectId`              | ADC/gcloud default | Billing project for API calls                           |
+| `quotaProjectId`         | Unset              | Optional API/quota project; no quota header by default  |
+| `location`               | Unset              | Let BigQuery determine the location                     |
+| `defaultDataset`         | Unset              | Resolve unqualified table names                         |
+| `timeoutMs`              | `10000`            | Authentication and request deadline, including retries  |
+| `dryRun.enabled`         | `false`            | Opt in to the dry-run feature                           |
+| `dryRun.trigger`         | `onSave`           | `onSave` or `onDemand`; used by the forthcoming feature |
+| `dryRun.costPerTiB`      | Unset              | Optional estimated price; no hardcoded prices           |
+| `schema.enabled`         | `false`            | Opt in to schema lookups                                |
+| `schema.cacheTtlMinutes` | `60`               | In-memory TTL; used by the forthcoming feature          |
 
 Sign in using **Application Default Credentials (ADC)**:
 
@@ -77,7 +78,7 @@ gcloud auth application-default login
 Alternatively, set `GOOGLE_APPLICATION_CREDENTIALS` in the extension host's
 environment to your ADC/service-account or workload-identity configuration.
 The Node-only client uses `google-auth-library` with the BigQuery OAuth scope.
-Version 10 is retained for VS Code 1.91's Node 20 runtime; major dependency
+Version 10 is retained for Visual Studio Code 1.91's Node 20 runtime; major dependency
 updates are blocked until the compatibility work is completed.
 The extension never writes credentials or tokens to settings, workspace state,
 project files or logs; the authentication library manages tokens in memory.
@@ -101,9 +102,9 @@ the billing project, and an optional quota project is also named. It explains th
 - **Schema completions:** dataset, table and column metadata lookups through
   `datasets.list`, `tables.list` and `tables.get`; no billed metadata queries.
 
-Consent is stored only in VS Code workspace state and is isolated by workspace
+Consent is stored only in Visual Studio Code workspace state and is isolated by workspace
 folder. The modal appears again when the project or location changes, including
-changes supplied by a trusted repository's VS Code settings. Run
+changes supplied by a trusted repository's Visual Studio Code settings. Run
 **BigQuery SQL: Reset BigQuery Consent** to withdraw it and cancel active requests.
 Changing `quotaProjectId` also requires renewed consent.
 
@@ -141,11 +142,11 @@ permission. A quota-project permission error names the missing role.
 When a configured location produces BigQuery's misleading access-denied
 response, the notification includes a location-mismatch hint.
 
-Configure `http.proxy` and `http.proxyStrictSSL` in VS Code when needed.
+Configure `http.proxy` and `http.proxyStrictSSL` in Visual Studio Code when needed.
 All API calls use the auth client's `request()` (gaxios, node-fetch and Node
 HTTPS), not global `fetch`. The
 [integration spike](https://github.com/sean-conkie/BigQuerySQLFormatter-extension/issues/433)
-verified VS Code proxy routing for API and ADC token calls on 1.91 and 1.144.
+verified Visual Studio Code proxy routing for API and ADC token calls on 1.91 and 1.144.
 The underlying libraries can also use standard proxy environment variables.
 Keep certificate verification enabled. TLS-intercepting corporate proxies,
 including `http.proxyStrictSSL: false`, remain a documented manual check.

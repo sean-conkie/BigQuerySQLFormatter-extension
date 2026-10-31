@@ -12,7 +12,7 @@
 - Add the opt-in, client-only BigQuery foundation: ADC authentication,
   cancellable REST calls with timeouts and rate-limit retries, project/location
   consent, reset/retry commands, restricted settings, status UI and metadata-only
-  output. The Node runtime is lazy-loaded separately; the language server stays
+  output. The Node runtime is lazy loaded separately; the language server stays
   offline. Dry-run checks and schema-aware completions will use this foundation
   in separate features.
 - Apply the integration spike's Node-20-compatible auth/client transport,

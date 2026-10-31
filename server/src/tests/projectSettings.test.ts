@@ -389,6 +389,17 @@ describe('Project configuration discovery', function () {
     expect(warnings[0]).to.include('Ignored BigQuery settings').and.include(configPath);
   });
 
+  it('surfaces ignored BigQuery settings even when no warning callback is supplied', async () => {
+    const configPath = join(directory, '.bqsqlformatter.json');
+    await writeFile(configPath, '{"bigquery":{"schema":{"enabled":true}}}');
+    try {
+      await getProjectSettings(uri(join(directory, 'query.sql')), [uri(directory)]);
+      expect.fail('Expected an explicit warning/error without a reporting callback');
+    } catch (error) {
+      expect(String(error)).to.include('Ignored BigQuery settings').and.include(configPath);
+    }
+  });
+
   it('reports invalid project options with the file path and uses defaults over editor options', async () => {
     const configPath = join(directory, '.bqsqlformatter.json');
     await writeFile(configPath, '{"rules":{"CP04":{"options":{"capitalisation_policy":"title"}}}}');
