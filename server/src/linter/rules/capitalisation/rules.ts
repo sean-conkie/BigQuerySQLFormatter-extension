@@ -1,18 +1,14 @@
-import { Rule } from '../base';
-import { ServerSettings } from '../../../settings';
+import { instantiateRules, type Rule } from '../base';
+import type { ServerSettings } from '../../../settings';
 import { Literals } from './CP04';
-import { FileMap } from '../../parser';
+import { Keywords } from './CP01';
+import { Identifiers } from './CP02';
+import { Functions } from './CP03';
+import { Types } from './CP05';
+import type { FileMap } from '../../parser';
 
-export const classes = [Literals];
+export const classes = [Keywords, Identifiers, Functions, Literals, Types];
 
 export function capitalisationRules(settings: ServerSettings, problems: number): Rule<string | FileMap>[] {
-
-	const length: number = classes.length;
-	const rules: Rule<string | FileMap>[] = [];
-
-	for (let i = 0; i < length; i++) {
-		rules.push(new classes[i](settings, problems));
-	}
-
-	return rules;
+  return instantiateRules(classes, settings, problems);
 }

@@ -1,0 +1,50 @@
+=========================================
+RF03: Consistent Single-Source References
+=========================================
+
+RF03 (``references.consistent``) is enabled by default for SELECT scopes with
+exactly one source. It offers quick fixes, Fix All and idempotent formatting.
+
+``single_table_references`` accepts:
+
+* ``consistent`` (default): follow the first eligible column reference.
+* ``qualified``: prefix columns with the source alias.
+* ``unqualified``: remove the source alias prefix.
+
+For example, ``select a, foo.b from foo`` becomes
+``select a, b from foo`` under the default policy.
+An unaliased table path uses its final component:
+``select a from Project.Dataset.Orders`` becomes
+``select Orders.a from Project.Dataset.Orders`` under ``qualified``.
+Table path spelling and line endings are preserved.
+
+STRUCT handling
+---------------
+
+A dotted path is qualified only if its first part matches the source alias.
+Thus ``address.city`` from ``customers c`` is an unqualified STRUCT field path,
+while ``c.address.city`` is qualified. Removing qualification strips only
+``c.``, not the STRUCT path. This avoids treating every dotted expression as
+a table-qualified column.
+
+Outer-scope correlated references, wildcards, UNNEST value tables, and references
+whose column name could be confused with the source's row value are unchanged.
+Select aliases in GROUP BY, HAVING, QUALIFY and ORDER BY are excluded.
+Statements with unsupported extended query syntax are skipped.
+
+Configuration
+-------------
+
+Use ``bigquerySQLFormatter.rules`` in editor settings or ``rules`` in the nearest
+``.bqsqlformatter.json``:
+
+.. code-block:: json
+
+    {
+      "rules": {
+        "RF03": { "options": { "single_table_references": "qualified" } }
+      }
+    }
+
+Standard severity, exclusion, reference-group and ``noqa`` controls apply to
+diagnostics and fixes.

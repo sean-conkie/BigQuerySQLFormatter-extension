@@ -6,16 +6,10 @@
  * @requires Rule
  */
 
-
-import { ServerSettings } from "../../../settings";
-import { RuleType } from '../enums';
-import {
-  Diagnostic,
-  TextDocumentIdentifier,
-} from 'vscode-languageserver/node';
-import { Rule } from '../base';
-import { FileMap } from '../../parser';
-
+import type { ServerSettings } from '../../../settings';
+import type { Diagnostic, TextDocumentIdentifier } from 'vscode-languageserver/node';
+import { ParserRule } from '../base';
+import type { FileMap } from '../../parser';
 
 /**
  * The TrailingComma rule
@@ -23,24 +17,14 @@ import { FileMap } from '../../parser';
  * @extends Rule
  * @memberof Linter.Rules
  */
-export class TrailingComma extends Rule<FileMap> {
+export class TrailingComma extends ParserRule {
   readonly is_fix_compatible: boolean = false;
-  readonly name: string = "trailing_commas";
-  readonly code: string = "LT04";
-  readonly type: RuleType = RuleType.PARSER;
-  readonly message: string = "Commas should be at the end of the line.";
-  readonly relatedInformation: string = "The best practice is to place commas at the end of each line when listing columns or items.";
+  readonly name: string = 'trailing_commas';
+  readonly code: string = 'LT04';
+  readonly message: string = 'Commas should be at the end of the line.';
+  readonly relatedInformation: string =
+    'The best practice is to place commas at the end of each line when listing columns or items.';
   readonly ruleGroup: string = 'layout';
-
-  /**
-   * Creates an instance of TrailingComma.
-   * @param {ServerSettings} settings The server settings
-   * @param {number} problems The number of problems identified in the source code
-   * @memberof TrailingComma
-   */
-  constructor(settings: ServerSettings, problems: number) {
-    super(settings, problems);
-  }
 
   /**
    * Evaluates the provided Abstract Syntax Tree (AST) to identify and return diagnostics for layout issues.
@@ -51,21 +35,21 @@ export class TrailingComma extends Rule<FileMap> {
    * @returns An array of `Diagnostic` objects representing the layout issues found, or null if no issues are found or the rule is disabled.
    */
   evaluate(ast: FileMap, documentUri: string | null = null): Diagnostic[] | null {
-
     if (this.enabled === false) {
       return null;
     }
 
     const errors: Diagnostic[] = [];
     for (const i in ast) {
-
       const columns = ast[i].columns;
       if (!columns) {
         continue;
       }
 
       for (const column of columns) {
-        const filteredTokens = column.tokens.filter((token) => !token.scopes.includes("punctuation.whitespace.leading.sql"));
+        const filteredTokens = column.tokens.filter(
+          (token) => !token.scopes.includes('punctuation.whitespace.leading.sql'),
+        );
 
         // sort the tokens by linenumber then start index
         filteredTokens.sort((a, b) => {
@@ -77,22 +61,34 @@ export class TrailingComma extends Rule<FileMap> {
 
         const firstToken = filteredTokens[0];
         const lastToken = filteredTokens[filteredTokens.length - 1];
-        
+
         if ((firstToken.value ?? '') === ',' && lastToken.lineNumber! === firstToken.lineNumber!) {
-          errors.push(this.createDiagnostic({
-            start: { line: firstToken.lineNumber ?? 0, character: firstToken.startIndex ?? 0 },
-            end: { line: firstToken.lineNumber ?? 0, character: firstToken.endIndex ?? 0 }
-          }, documentUri));
+          errors.push(
+            this.createDiagnostic(
+              {
+                start: { line: firstToken.lineNumber ?? 0, character: firstToken.startIndex ?? 0 },
+                end: { line: firstToken.lineNumber ?? 0, character: firstToken.endIndex ?? 0 },
+              },
+              documentUri,
+            ),
+          );
         } else if (lastToken.value === ',' && lastToken.lineNumber! !== firstToken.lineNumber!) {
-          errors.push(this.createDiagnostic({
-            start: { line: lastToken.lineNumber ?? 0, character: lastToken.startIndex ?? 0 },
-            end: { line: lastToken.lineNumber ?? 0, character: lastToken.endIndex ?? 0 }
-          }, documentUri));
+          errors.push(
+            this.createDiagnostic(
+              {
+                start: { line: lastToken.lineNumber ?? 0, character: lastToken.startIndex ?? 0 },
+                end: { line: lastToken.lineNumber ?? 0, character: lastToken.endIndex ?? 0 },
+              },
+              documentUri,
+            ),
+          );
         }
       }
     }
 
     return errors.length > 0 ? errors : null;
   }
-  createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): null { return null; }
+  createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): null {
+    return null;
+  }
 }

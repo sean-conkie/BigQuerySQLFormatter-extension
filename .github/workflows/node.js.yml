@@ -1,43 +1,126 @@
-# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
 ---
 name: Node.js Test
 
 on:
-  pull_request:
+  push:
     branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      macos-stability:
+        description: Run 20 consecutive macOS stable E2E jobs
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
 
 jobs:
   test:
-
+    if: ${{ !inputs.macos-stability }}
     runs-on: ubuntu-latest
-
+    timeout-minutes: 15
     strategy:
       matrix:
-        node-version: [20.x, 22.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+        node-version: [22.x]
 
     steps:
       - name: Checkout Repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
 
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4.0.2
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
-      
+          cache: "npm"
+          cache-dependency-path: |
+            package-lock.json
+            client/package-lock.json
+            server/package-lock.json
+
       - name: Install Dependencies
         run: npm ci
-      
+
+      - name: Audit dependencies
+        run: |
+          npm audit --audit-level=high
+          npm audit --prefix client --audit-level=high
+          npm audit --prefix server --audit-level=high
+
+      - name: Lint and format check
+        run: npx --no-install biome ci
+
       - name: Build
         run: npm run compile
-      
-      - name: Test
-        run: npx nyc --reporter=lcov npm test
-      
+
+      - name: Test with coverage
+        run: npm run coverage
+
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v4.0.1
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: .nyc_output/**/*.json
+          files: coverage/lcov.info
+          disable_search: true
+          fail_ci_if_error: true
+
+  extension:
+    name: Package and E2E (${{ matrix.os }}, VS Code ${{ matrix.vscode-version }}${{ inputs.macos-stability && format(', run {0}', matrix.repeat) || '' }})
+    strategy:
+      fail-fast: false
+      max-parallel: ${{ inputs.macos-stability && 1 || 6 }}
+      matrix:
+        os: ${{ fromJSON(inputs.macos-stability && '["macos-latest"]' || '["macos-latest", "ubuntu-latest", "windows-latest"]') }}
+        vscode-version: ${{ fromJSON(inputs.macos-stability && '["stable"]' || '["stable", "1.91.0"]') }}
+        repeat: ${{ fromJSON(inputs.macos-stability && '[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]' || '[1]') }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Install Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 22.x
+          cache: "npm"
+          cache-dependency-path: |
+            package-lock.json
+            client/package-lock.json
+            server/package-lock.json
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Package extension
+        run: npx --no-install vsce package --no-yarn --out extension.vsix
+
+      - name: Verify packaged file list
+        run: npm run package:check
+
+      - name: E2E tests (Linux)
+        if: runner.os == 'Linux'
+        env:
+          BQSQL_TEST_VSIX: ${{ github.workspace }}/extension.vsix
+          BQSQL_TEST_VSCODE_VERSION: ${{ matrix.vscode-version }}
+        run: xvfb-run -a npm run citest
+
+      - name: E2E tests (macOS and Windows)
+        if: runner.os != 'Linux'
+        env:
+          BQSQL_TEST_VSIX: ${{ github.workspace }}/extension.vsix
+          BQSQL_TEST_VSCODE_VERSION: ${{ matrix.vscode-version }}
+        run: npm run citest
+
+      - name: Upload E2E failure logs
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: e2e-logs-${{ matrix.os }}-${{ matrix.vscode-version }}-${{ matrix.repeat }}
+          path: .vscode-test/logs
+          include-hidden-files: true
+          retention-days: 7

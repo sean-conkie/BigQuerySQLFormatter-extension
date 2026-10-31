@@ -1,5 +1,4 @@
 ---
-
 # Default state for all rules
 default: true
 
@@ -8,7 +7,9 @@ extends: null
 
 MD013:
   line_length: 120
+# Changelog releases reuse section headings such as "Added" and "Fixed".
+MD024:
+  siblings_only: true
 MD029:
   style: one_or_ordered
-MD033:
-  enabled: false
+MD033: false

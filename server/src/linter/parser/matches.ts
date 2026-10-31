@@ -1,4 +1,4 @@
-import { Token } from './token';
+import type { Token } from './token';
 import { sortTokens } from './utils';
 /**
  * An object to store the match object when splitting the source code into statements
@@ -9,13 +9,13 @@ import { sortTokens } from './utils';
  * @memberof Parser
  * @name MatchObj
  */
-export type MatchObj = { end: number, start: number, statement: string, line: number };
+export type MatchObj = { end: number; start: number; statement: string; line: number };
 
 // /**
 //  * Represents a matched rule in the parsing process.
-//  * 
+//  *
 //  * @typedef MatchedRule
-//  * 
+//  *
 //  * @property {Rule | null} rule - The rule that was matched, or null if no rule was matched.
 //  * @property {Token[]} tokens - The tokens that were matched by the rule.
 //  * @property {MatchedRule[]} [matches] - Optional nested matches if the rule contains sub-rules.
@@ -41,9 +41,9 @@ export class MatchedRule {
     this.rule = rule;
     this.tokens = tokens;
 
-		if (matches) {
-			this.matches = matches;
-		}
+    if (matches) {
+      this.matches = matches;
+    }
   }
 
   /**
@@ -80,7 +80,7 @@ export class MatchedRule {
 
 /**
  * Represents a rule used in the linter parser.
- * 
+ *
  * @typedef {Object} Rule
  * @property {string} name - The name of the rule.
  * @property {string[]} scopes - The scopes where the rule is applicable.
@@ -92,13 +92,13 @@ export class MatchedRule {
  * @property {string[] | null} end - The tokens that signify the end of the rule.
  */
 export type Rule = {
-	name: string,
-	scopes: string[],
-	type: string,
-	lookahead: number,
-	negativeLookahead: string[] | null,
-	recursive: boolean,
-	children: string[] | null,
-	end: string[] | null,
-  alias: boolean
-}
+  name: string;
+  scopes: string[];
+  type: string;
+  lookahead: number;
+  negativeLookahead: string[] | null;
+  recursive: boolean;
+  children: string[] | null;
+  end: string[] | null;
+  alias: boolean;
+};

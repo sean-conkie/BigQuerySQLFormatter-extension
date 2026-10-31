@@ -1,0 +1,22 @@
+==========================================
+Rule: Specify DISTINCT or ALL After UNION
+==========================================
+
+**Rule Code:** ``AM02``
+
+**Name:** ``union``
+
+Write ``UNION ALL`` to retain duplicates or ``UNION DISTINCT`` to remove them.
+Bare ``UNION`` is ambiguous and invalid in GoogleSQL.
+
+.. code-block:: sql
+
+    SELECT a FROM first_table
+    UNION DISTINCT
+    SELECT b FROM second_table;
+
+Comments between the operator and modifier are allowed. No automatic fix is
+offered because choosing ALL or DISTINCT changes query semantics.
+
+Since 0.4.0, UNION checks belong to AM02 rather than CV12. Move any UNION-specific
+CV12 configuration or suppression to AM02. CV12 still checks EXCEPT and INTERSECT.

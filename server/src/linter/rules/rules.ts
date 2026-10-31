@@ -1,13 +1,23 @@
-import { ServerSettings } from '../../settings';
-import { aliasRules } from './aliasing/rules';
-import { ambiguousRules } from './ambiguous/rules';
-import { capitalisationRules } from './capitalisation/rules';
-import { conventionRules } from './convention/rules';
-import { layoutRules } from './layout/rules';
-import { structureRules } from './structure/rules';
-import { Rule } from './base';
-import { FileMap } from '../parser';
+import type { ServerSettings } from '../../settings';
+import { classes as aliasing } from './aliasing/rules';
+import { classes as ambiguous } from './ambiguous/rules';
+import { classes as capitalisation } from './capitalisation/rules';
+import { classes as convention } from './convention/rules';
+import { classes as layout } from './layout/rules';
+import { classes as references } from './references/rules';
+import { classes as structure } from './structure/rules';
+import { instantiateRules, type Rule } from './base';
+import type { FileMap } from '../parser';
 
+export const ruleRegistry = [
+  ...aliasing,
+  ...ambiguous,
+  ...capitalisation,
+  ...convention,
+  ...layout,
+  ...references,
+  ...structure,
+];
 
 /**
  * Initialise the rules
@@ -18,12 +28,5 @@ import { FileMap } from '../parser';
  * @name initialiseRuls
  */
 export function initialiseRules(settings: ServerSettings, problems: number): Rule<string | FileMap>[] {
-	return [
-		...aliasRules(settings, problems),
-		...ambiguousRules(settings, problems),
-		...capitalisationRules(settings, problems),
-		...conventionRules(settings, problems),
-		...layoutRules(settings, problems),
-		...structureRules(settings, problems)
-	];
+  return instantiateRules(ruleRegistry, settings, problems);
 }

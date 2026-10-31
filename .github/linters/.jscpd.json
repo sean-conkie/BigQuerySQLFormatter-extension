@@ -1,5 +1,6 @@
 {
   "threshold": 5,
+  "mode": "weak",
   "reporters": ["html", "markdown"],
-  "ignore": ["**/node_modules/**", "**/.git/**", "**/*.md", "**/tests/**"]
+  "ignore": ["**/node_modules/**", "**/.git/**", "**/package-lock.json", "**/completions/functions.json", "**/*.md", "**/tests/**"]
 }

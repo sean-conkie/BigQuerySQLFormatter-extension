@@ -1,0 +1,30 @@
+-- Pipe queries, including a nested pipeline.
+from dataset.sales s
+|> where s.amount > 0
+|> aggregate sum(s.amount) total group by s.category
+|> extend total + 1 adjusted
+|> set adjusted = adjusted * 2
+|> rename adjusted as result
+|> select category, result
+|> union all (from dataset.other o |> select o.category, o.result)
+|> order by result desc
+|> limit 10;
+
+-- Pattern recognition.
+select * from dataset.sales
+match_recognize (
+  order by sale_date
+  measures first(low.sale_date) as start_date
+  pattern (low+ high*)
+  define low as amount < 100, high as amount >= 100
+);
+
+-- Graph and temporal queries.
+select * from graph_table(
+  fingraph
+  match (a:account)-[t:transfers]->(b:account)
+  columns (a.id as sender, b.id as recipient)
+);
+
+select s.amount from dataset.sales
+for system_time as of timestamp '2026-01-01 00:00:00+00' s;

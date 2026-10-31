@@ -1,100 +1,86 @@
-
-import { ServerSettings } from "../../../settings";
+import type { ServerSettings } from '../../../settings';
 import {
-  Diagnostic,
+  type Diagnostic,
   DiagnosticSeverity,
   DiagnosticTag,
   CodeAction,
   TextEdit,
-  TextDocumentIdentifier,
-  CodeActionKind
+  type TextDocumentIdentifier,
+  CodeActionKind,
 } from 'vscode-languageserver/node';
-import { RuleType } from '../enums';
-import { Rule } from '../base';
-import { FileMap } from '../../parser';
+import { ParserRule } from '../base';
+import type { FileMap } from '../../parser';
 import { ColumnAST } from '../../parser/ast';
 import { includeTokensWithMatchingScopes } from '../../parser/token';
+import { pipeAliasingDiagnostics } from './pipe';
+import { globalTokenCache } from '../../parser/tokenCache';
+import { sourceTokens } from '../source';
+import { comparePositions } from '../../parser/queryBlocks';
 
-
-export class RedundantColumnAlias extends Rule<FileMap>{
-  readonly name: string = "redundant_column_alias";
-  readonly code: string = "AL09";
-  readonly message: string = "Redundant column alias.";
-  readonly relatedInformation: string = "Instead of self-aliasing, you should simply reference the columns directly. This keeps the query concise and easy to understand.";
+export class RedundantColumnAlias extends ParserRule {
+  readonly name: string = 'redundant_column_alias';
+  readonly code: string = 'AL09';
+  readonly message: string = 'Redundant column alias.';
+  readonly relatedInformation: string =
+    'Instead of self-aliasing, you should simply reference the columns directly. This keeps the query concise and easy to understand.';
   readonly pattern: RegExp = / +$/gm;
   readonly severity: DiagnosticSeverity = DiagnosticSeverity.Warning;
-	readonly type: RuleType = RuleType.PARSER;
   readonly diagnosticTags: DiagnosticTag[] = [DiagnosticTag.Unnecessary];
   readonly ruleGroup: string = 'aliasing';
   readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
   readonly codeActionTitle = 'Remove redundant column alias';
 
   /**
-   * Creates an instance of RedundantColumnAlias.
-   * @param {ServerSettings} settings The server settings
-   * @param {number} problems The number of problems identified in the source code
-   * @memberof RedundantColumnAlias
-   */
-  constructor(settings: ServerSettings, problems: number) {
-      super(settings, problems);
-  }
-
-  /**
    * Evaluates the given Abstract Syntax Tree (AST) to identify redundant aliases in column definitions.
-   * 
+   *
    * @param ast - The Abstract Syntax Tree (AST) representing the SQL file structure.
    * @param documentUri - The URI of the document being evaluated, or null if not applicable.
    * @returns An array of Diagnostic objects representing the errors found, or null if no errors are found or the rule is disabled.
    */
   evaluate(ast: FileMap, documentUri: string | null = null): Diagnostic[] | null {
-
     if (this.enabled === false) {
       return null;
     }
 
-		const errors: Diagnostic[] = [];
+    const errors: Diagnostic[] = pipeAliasingDiagnostics(this, ast, documentUri);
     for (const i in ast) {
+      if (!ast[i].columns) {
+        continue;
+      }
 
-      if (!ast[i].columns) { continue; }
-
-      ast[i].columns.map((column) => {
+      ast[i].columns.forEach((column) => {
         // check if the column is ColumnAST
         if (column instanceof ColumnAST) {
-          const redundantAliasTokens = includeTokensWithMatchingScopes(
-            column.tokens,
-            [
-              'meta.column.explicit.alias.redundant.sql',
-              'meta.column.implicit.alias.redundant.sql'
-            ]);
+          const redundantAliasTokens = includeTokensWithMatchingScopes(column.tokens, [
+            'meta.column.explicit.alias.redundant.sql',
+            'meta.column.implicit.alias.redundant.sql',
+          ]);
 
           if (redundantAliasTokens.length > 0) {
-            const alias = includeTokensWithMatchingScopes(
-              column.tokens,
-              [
-                'entity.other.column.sql',
-                'entity.name.tag',
-              ]);
+            const alias = includeTokensWithMatchingScopes(column.tokens, [
+              'entity.other.column.sql',
+              'entity.name.tag',
+            ]);
 
             const range = {
               start: {
-                line: alias[0].lineNumber??0,
-                character: alias[0].endIndex??0
+                line: alias[0].lineNumber ?? 0,
+                character: alias[0].endIndex ?? 0,
               },
               end: {
-                line: alias[alias.length -1].lineNumber??0,
-                character: alias[alias.length -1].endIndex??0
-              }
+                line: alias[alias.length - 1].lineNumber ?? 0,
+                character: alias[alias.length - 1].endIndex ?? 0,
+              },
             };
             errors.push(this.createDiagnostic(range, documentUri));
-
           }
         }
       });
     }
-		
+
     return errors.length > 0 ? errors : null;
   }
-  
+
   /**
    * Creates a set of code actions to fix diagnostics.
    *
@@ -103,21 +89,26 @@ export class RedundantColumnAlias extends Rule<FileMap>{
    * @returns An array of code actions that can be applied to fix the issue.
    */
   createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): CodeAction[] {
+    const cache = globalTokenCache.get(textDocument.uri);
+    const comments = cache && /\/\*|--|#/.test(cache.getText(diagnostic.range));
+    const edits = comments
+      ? sourceTokens(cache)
+          .filter(
+            (token) =>
+              comparePositions(token.range.start, diagnostic.range.start) >= 0 &&
+              comparePositions(token.range.end, diagnostic.range.end) <= 0,
+          )
+          .map((token) => TextEdit.del(token.range))
+      : [TextEdit.replace(diagnostic.range, '')];
     const edit = {
-        changes: {
-            [textDocument.uri]: [
-                TextEdit.replace(diagnostic.range, '')
-            ]
-        }
+      changes: {
+        [textDocument.uri]: edits,
+      },
     };
     const actions: CodeAction[] = [];
-    
-    this.codeActionKind.map((kind) => {
-      const fix = CodeAction.create(
-        this.codeActionTitle,
-        edit,
-        kind
-      );
+
+    this.codeActionKind.forEach((kind) => {
+      const fix = CodeAction.create(this.codeActionTitle, edit, kind);
       fix.diagnostics = [diagnostic];
       actions.push(fix);
     });

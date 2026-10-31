@@ -1,0 +1,29 @@
+ST02: Simplify CASE Expressions
+==============================
+
+``structure.simple_case`` is enabled by default. Only searched CASE with one
+WHEN and an explicit ELSE is checked.
+
+.. list-table:: Equivalent replacements
+   :header-rows: 1
+
+   * - CASE pattern
+     - Replacement
+   * - ``when c then true else false``
+     - ``coalesce(c, false)`` (NULL conditions return false)
+   * - ``when c then false else true``
+     - ``not coalesce(c, false)`` (NULL conditions return true)
+   * - ``when x is null then y else x``
+     - ``coalesce(x, y)``
+   * - ``when x is not null then x else y``
+     - ``coalesce(x, y)``
+   * - ``when x is null then null else x`` or ``when x is not null then x else null``
+     - ``x``
+
+Expression matching ignores keyword and unquoted identifier case but preserves
+quoted identifiers and literal spelling. RAND, GENERATE_UUID, CURRENT_* and
+SESSION_USER expressions are skipped to avoid changing evaluation counts.
+Comments inside CASE allow a diagnostic but prevent fixes.
+
+Quick fixes, Fix All and formatting preserve aliases and line endings.
+CP01/CP03 apply the configured keyword/function case during iterative formatting.

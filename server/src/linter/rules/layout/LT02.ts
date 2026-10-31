@@ -6,26 +6,26 @@
  * @requires Rule
  */
 
-
-import { ServerSettings } from "../../../settings";
-import { RuleType } from '../enums';
+import type { ServerSettings } from '../../../settings';
 import {
-  CodeAction,
+  type CodeAction,
   CodeActionKind,
-  Diagnostic,
+  type Diagnostic,
   DiagnosticSeverity,
-  DocumentUri,
-  Range,
-  TextDocumentIdentifier,
-  TextEdit,
+  type DocumentUri,
+  type Range,
+  type TextDocumentIdentifier,
 } from 'vscode-languageserver/node';
-import { Rule } from '../base';
-import { FileMap } from '../../parser';
+import { ParserRule } from '../base';
+import type { FileMap } from '../../parser';
 import { findToken } from '../../parser/utils';
 import { excludeTokensWithMatchingScopes, includeTokensWithMatchingScopes } from '../../parser/token';
 import { ComparisonAST, ComparisonGroupAST } from '../../parser/ast';
+import { globalTokenCache } from '../../parser/tokenCache';
+import { comparePositions } from '../../parser/queryBlocks';
+import { sourceTokens } from '../source';
 
-type RangeCache = Map<string, number>
+type RangeCache = Map<string, number>;
 const documentCache: Map<DocumentUri, RangeCache> = new Map<DocumentUri, RangeCache>();
 
 /**
@@ -34,26 +34,16 @@ const documentCache: Map<DocumentUri, RangeCache> = new Map<DocumentUri, RangeCa
  * @extends Rule
  * @memberof Linter.Rules
  */
-export class Indent extends Rule<FileMap> {
-  readonly name: string = "indent";
-  readonly code: string = "LT02";
-  readonly type: RuleType = RuleType.PARSER;
-  readonly message: string = "Incorrect Indentation.";
-  readonly relatedInformation: string = "For improved readability and maintainability, all SQL statements should be indented consistently.";
+export class Indent extends ParserRule {
+  readonly name: string = 'indent';
+  readonly code: string = 'LT02';
+  readonly message: string = 'Incorrect Indentation.';
+  readonly relatedInformation: string =
+    'For improved readability and maintainability, all SQL statements should be indented consistently.';
   readonly ruleGroup: string = 'layout';
   readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
   readonly codeActionTitle = 'Update Indentation';
   readonly severity: DiagnosticSeverity = DiagnosticSeverity.Warning;
-
-  /**
-   * Creates an instance of IndentSelect.
-   * @param {ServerSettings} settings The server settings
-   * @param {number} problems The number of problems identified in the source code
-   * @memberof IndentSelect
-   */
-  constructor(settings: ServerSettings, problems: number) {
-    super(settings, problems);
-  }
 
   /**
    * Evaluates the provided Abstract Syntax Tree (AST) to identify and return diagnostics for layout issues.
@@ -64,58 +54,50 @@ export class Indent extends Rule<FileMap> {
    * @returns An array of `Diagnostic` objects representing the layout issues found, or null if no issues are found or the rule is disabled.
    */
   evaluate(ast: FileMap, documentUri: string | null = null): Diagnostic[] | null {
-
     if (this.enabled === false) {
       return null;
     }
 
     const errors: Diagnostic[] = [];
-    let cache = documentCache.get(documentUri!);
-    if (!cache) {
-      cache = new Map<string, number>();
-    }
+    const cache = new Map<string, number>();
 
     for (const i in ast) {
-      const offset = (ast[i].startIndex??0) + 7;
+      const offset = (ast[i].startIndex ?? 0) + 7;
       const columns = ast[i].columns;
       const aliasRanges: Range[] = [];
       const columnEndIndexes: number[] = [];
+      const columnLines = columns.map((column) => column.startLine);
+      const alignAliases = new Set(columnLines).size === columnLines.length;
       const from = ast[i].from;
       const joins = ast[i].joins;
       const where = ast[i].where;
 
-      columns.map((column) => {
-
+      columns.forEach((column) => {
         // add alias and index details for later processing
-        if (column.alias) {
+        if (alignAliases && column.alias) {
           const aliasToken = findToken(column.tokens, 'entity.name.tag');
           if (aliasToken) {
-            aliasRanges.push(
-              {
-                start: {
-                  line: aliasToken.lineNumber??0,
-                  character: aliasToken.startIndex
-                },
-                end: {
-                  line: aliasToken.lineNumber??0,
-                  character: aliasToken.endIndex
-                }
-              }
-            );
+            aliasRanges.push({
+              start: {
+                line: aliasToken.lineNumber ?? 0,
+                character: aliasToken.startIndex,
+              },
+              end: {
+                line: aliasToken.lineNumber ?? 0,
+                character: aliasToken.endIndex,
+              },
+            });
           }
         }
 
-        const columnTokens = excludeTokensWithMatchingScopes(
-          column.tokens,
-          [
-            'entity.name.tag',
-            'punctuation.whitespace.leading.sql',
-            'punctuation.whitespace.trailing.sql',
-            'punctuation.whitespace.sql',
-            'punctuation.separator.comma.sql',
-            'comment.line.double-dash.sql'
-          ]
-        );
+        const columnTokens = excludeTokensWithMatchingScopes(column.tokens, [
+          'entity.name.tag',
+          'punctuation.whitespace.leading.sql',
+          'punctuation.whitespace.trailing.sql',
+          'punctuation.whitespace.sql',
+          'punctuation.separator.comma.sql',
+          'comment.line.double-dash.sql',
+        ]);
         if (columnTokens.length > 0) {
           columnEndIndexes.push(columnTokens[columnTokens.length - 1].endIndex);
         } else {
@@ -123,34 +105,56 @@ export class Indent extends Rule<FileMap> {
         }
 
         // process leading indentation
-        this.checkIndentationError(column.startLine??0, column.startIndex??0, offset, errors, cache!, documentUri);
+        this.checkIndentationError(column.startLine ?? 0, column.startIndex ?? 0, offset, errors, cache!, documentUri);
       });
 
       const aliasIndex = Math.max(...columnEndIndexes) + 2;
 
-      aliasRanges.map((aliasRange) => this.checkIndentationError(aliasRange.start.line, aliasRange.start.character, aliasIndex, errors, cache!, documentUri));
+      aliasRanges.map((aliasRange) =>
+        this.checkIndentationError(
+          aliasRange.start.line,
+          aliasRange.start.character,
+          aliasIndex,
+          errors,
+          cache!,
+          documentUri,
+        ),
+      );
 
       if (from) {
-
         // identify the source keyword
         const fromToken = findToken(from.tokens, 'keyword.from.sql');
-        const keywordLength = (fromToken?.value.length??0) + 1;
+        const keywordLength = (fromToken?.value.length ?? 0) + 1;
         const keywordOffset = offset - keywordLength;
 
-        this.checkIndentationError(from.startLine??0, from.startIndex??0, keywordOffset, errors, cache!, documentUri);
+        this.checkIndentationError(
+          from.startLine ?? 0,
+          from.startIndex ?? 0,
+          keywordOffset,
+          errors,
+          cache!,
+          documentUri,
+        );
       }
 
-      joins.map((join) => {
+      joins.forEach((join) => {
         // find join type
         const joinParts = join.join?.split(' ');
         let joinOffset = joinParts != null && joinParts.length > 1 && joinParts[0] === 'left' ? 2 : 1;
         joinOffset = offset - (offset - joinOffset);
 
-        this.checkIndentationError(join.startLine??0, join.startIndex??0, joinOffset, errors, cache!, documentUri);
+        this.checkIndentationError(join.startLine ?? 0, join.startIndex ?? 0, joinOffset, errors, cache!, documentUri);
 
-        if (join.on) {
+        if (join.on && join.on.tokens.length > 0) {
           const onOffset = offset - 3;
-          this.checkIndentationError(join.on.startLine??0, join.on.startIndex??0, onOffset, errors, cache!, documentUri);
+          this.checkIndentationError(
+            join.on.startLine ?? 0,
+            join.on.startIndex ?? 0,
+            onOffset,
+            errors,
+            cache!,
+            documentUri,
+          );
 
           // process comparison groups
           const comparisonResults = this.processComparisons(join.on.comparisons, offset);
@@ -162,7 +166,14 @@ export class Indent extends Rule<FileMap> {
         const whereToken = findToken(where.tokens, 'keyword.where.sql');
         const whereOffset = offset - (offset - 1);
 
-        this.checkIndentationError(where.startLine??0, where.startIndex??0, whereOffset, errors, cache!, documentUri);
+        this.checkIndentationError(
+          where.startLine ?? 0,
+          where.startIndex ?? 0,
+          whereOffset,
+          errors,
+          cache!,
+          documentUri,
+        );
 
         // process comparison groups
         const comparisonResults = this.processComparisons(where.comparisons, offset);
@@ -172,9 +183,17 @@ export class Indent extends Rule<FileMap> {
 
     documentCache.set(documentUri!, cache);
 
-    return errors.length > 0 ? errors : null;
+    const document = documentUri === null ? undefined : globalTokenCache.get(documentUri);
+    const literals = document ? sourceTokens(document).filter((token) => token.literal) : [];
+    const safeErrors = errors.filter(
+      ({ range }) =>
+        !literals.some(
+          ({ range: literal }) =>
+            comparePositions(range.start, literal.end) < 0 && comparePositions(range.end, literal.start) > 0,
+        ),
+    );
+    return safeErrors.length > 0 ? safeErrors : null;
   }
-
 
   /**
    * Checks for indentation errors in the given line and character position.
@@ -193,7 +212,7 @@ export class Indent extends Rule<FileMap> {
     desiredOffset: number,
     errors: Diagnostic[],
     cache: Map<string, number>,
-    documentUri: string | null
+    documentUri: string | null,
   ): void {
     if (startCharacter !== desiredOffset) {
       const errorOffset = desiredOffset - startCharacter;
@@ -209,10 +228,7 @@ export class Indent extends Rule<FileMap> {
         },
       };
 
-      const [additionalIndentNumber, newRange] = this.createIndentErrorOutputs(
-        errorOffset,
-        errorRange
-      );
+      const [additionalIndentNumber, newRange] = this.createIndentErrorOutputs(errorOffset, errorRange);
 
       errors.push(this.createDiagnostic(newRange, documentUri));
       cache.set(this.createCacheKey(newRange), additionalIndentNumber);
@@ -232,7 +248,7 @@ export class Indent extends Rule<FileMap> {
     comparisonResults: [number, Range][],
     errors: Diagnostic[],
     cache: Map<string, number>,
-    documentUri: string | null
+    documentUri: string | null,
   ): void {
     comparisonResults.forEach(([additionalIndentNumber, newRange]) => {
       errors.push(this.createDiagnostic(newRange, documentUri));
@@ -253,35 +269,34 @@ export class Indent extends Rule<FileMap> {
    */
   private processComparisons(comparisons: (ComparisonAST | ComparisonGroupAST)[], offset: number): [number, Range][] {
     const results: [number, Range][] = [];
-    comparisons.map((comparison) => {
+    comparisons.forEach((comparison) => {
       let comparisonOffset = offset;
 
       if (comparison instanceof ComparisonAST) {
+        if (comparison.startLine == null || comparison.startIndex == null) {
+          return;
+        }
         const operator = comparison.logicalOperator;
         if (operator) {
           // adjust offset based on operator
           const operatorAdjustment = operator.toLowerCase() === 'and' ? 4 : 3;
           comparisonOffset = offset - operatorAdjustment;
         }
-        
-        if (comparison.startIndex !== comparisonOffset) {
 
-          const errorOffset = comparisonOffset - (comparison.startIndex??0);
+        if (comparison.startIndex !== comparisonOffset) {
+          const errorOffset = comparisonOffset - (comparison.startIndex ?? 0);
           const errorRange = {
             start: {
-              line: comparison.startLine??0,
-              character: comparison.startIndex??0
+              line: comparison.startLine ?? 0,
+              character: comparison.startIndex ?? 0,
             },
             end: {
-              line: comparison.startLine??0,
-              character: comparison.startIndex??0
-            }
-          }
+              line: comparison.startLine ?? 0,
+              character: comparison.startIndex ?? 0,
+            },
+          };
 
-          const [additionalIdentNumber, newRange] = this.createIndentErrorOutputs(
-            errorOffset,
-            errorRange
-          );
+          const [additionalIdentNumber, newRange] = this.createIndentErrorOutputs(errorOffset, errorRange);
 
           results.push([additionalIdentNumber, newRange]);
         }
@@ -293,39 +308,17 @@ export class Indent extends Rule<FileMap> {
     return results;
   }
 
+  closeDocument(uri: string): void {
+    documentCache.delete(uri);
+  }
+
   createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): CodeAction[] {
-    const cachedDocument = documentCache.get(textDocument.uri);
-    let text = '';
-    if (!cachedDocument) {
-      return [];
-    }
-
-    const additionalIdentNumber = cachedDocument.get(this.createCacheKey(diagnostic.range));
-    if (additionalIdentNumber == null) {
-      return [];
-    }
-
-    text = ' '.repeat(additionalIdentNumber) + text;
-  
-    const edit = {
-        changes: {
-            [textDocument.uri]: [
-                TextEdit.replace(diagnostic.range, text)
-            ]
-        }
-    };
-    const actions: CodeAction[] = [];
-    
-    this.codeActionKind.map((kind) => {
-      const fix = CodeAction.create(
-        this.codeActionTitle,
-        edit,
-        kind
-      );
-      fix.diagnostics = [diagnostic];
-      actions.push(fix);
-    });
-
-    return actions;
+    return this.createIndentCodeActions(
+      textDocument,
+      diagnostic,
+      documentCache.get(textDocument.uri)?.get(this.createCacheKey(diagnostic.range)),
+      this.codeActionKind,
+      this.codeActionTitle,
+    );
   }
 }

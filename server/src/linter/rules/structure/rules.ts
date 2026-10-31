@@ -6,23 +6,19 @@
  * @requires Rule
  */
 
-import { Rule } from '../base';
-import { ServerSettings } from '../../../settings';
+import { instantiateRules, type Rule } from '../base';
+import type { ServerSettings } from '../../../settings';
 import { ElseNull } from './ST01';
 import { Distinct } from './ST08';
 import { Using } from './ST07';
-import { FileMap } from '../../parser';
+import { UnusedCte } from './ST03';
+import { SimpleCase } from './ST02';
+import { NestedCase } from './ST04';
+import { JoinConditionOrder } from './ST09';
+import type { FileMap } from '../../parser';
 
-export const classes = [Distinct, ElseNull, Using];
+export const classes = [Distinct, ElseNull, Using, UnusedCte, SimpleCase, NestedCase, JoinConditionOrder];
 
 export function structureRules(settings: ServerSettings, problems: number): Rule<string | FileMap>[] {
-
-	const length: number = classes.length;
-	const rules: Rule<string | FileMap>[] = [];
-
-	for (let i = 0; i < length; i++) {
-		rules.push(new classes[i](settings, problems));
-	}
-
-	return rules;
+  return instantiateRules(classes, settings, problems);
 }

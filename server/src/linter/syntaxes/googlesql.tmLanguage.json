@@ -2,15 +2,21 @@
   "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
   "name": "GoogleSQL",
   "patterns": [
+    { "include": "#parameterisedTypes" },
+    { "include": "#quotedIdentifiers" },
+    { "include": "#typeArguments" },
+    { "include": "#generatedFunctions" },
     { "include": "#storage" },
     { "include": "#constants" },
     { "include": "#custom" },
     { "include": "#comments" },
+    { "include": "#querySyntax" },
     { "include": "#from" },
     { "include": "#functions" },
     { "include": "#keywords" },
     { "include": "#ddl" },
     { "include": "#dml" },
+    { "include": "#userFunctions" },
     { "include": "#columns" },
     { "include": "#strings" },
     { "include": "#params" },
@@ -20,10 +26,151 @@
     { "include": "#whitespace" }
   ],
   "repository": {
+    "generatedFunctions": {"patterns":[{"captures":{"1":{"name":"support.function.math.sql"}},"match":"(?i)(?<![\\w.])(ABS|ACOS|ACOSH|ASIN|ASINH|ATAN|ATAN2|ATANH|CEIL|CEILING|COS|COSH|DIV|EXP|FLOOR|GREATEST|IEEE_DIVIDE|IS_INF|IS_NAN|LEAST|LN|LOG|LOG10|MOD|POW|POWER|RAND|RANGE_BUCKET|ROUND|SAFE_DIVIDE|SIGN|SIN|SINH|SQRT|TAN|TANH|TRUNC)(?=\\s*\\()","name":"meta.function.sql"},{"captures":{"1":{"name":"support.function.aead.sql"}},"match":"(?i)(?<![\\w.])(AEAD\\.DECRYPT_BYTES|AEAD\\.DECRYPT_STRING|AEAD\\.ENCRYPT)(?=\\s*\\()","name":"meta.function.sql"},{"captures":{"1":{"name":"support.function.builtin.sql"}},"match":"(?i)(?<![\\w.])(AGG|AI\\.AGG|AI\\.CAUSAL_EFFECT|AI\\.CHUNK_DOCUMENT|AI\\.CLASSIFY|AI\\.COUNT_TOKENS|AI\\.DETECT_ANOMALIES|AI\\.EMBED|AI\\.EVALUATE|AI\\.FORECAST|AI\\.GENERATE|AI\\.GENERATE_BOOL|AI\\.GENERATE_DOUBLE|AI\\.GENERATE_EMBEDDING|AI\\.GENERATE_INT|AI\\.GENERATE_TABLE|AI\\.GENERATE_TEXT|AI\\.IF|AI\\.KEY_DRIVERS|AI\\.PREDICT|AI\\.SCORE|AI\\.SEARCH|AI\\.SIMILARITY|AI\\.TRANSLATE|APPENDS|ARRAY|ARRAY_FIRST|ARRAY_LAST|ARRAY_SLICE|BAG_OF_WORDS|BOOL|CBRT|CHANGES|COLLATE|CONTAINS_SUBSTR|COSINE_DISTANCE|COT|COTH|CSC|CSCH|DATE_BUCKET|DATETIME_BUCKET|DESTINATION_NODE_ID|DETERMINISTIC_DECRYPT_BYTES|DETERMINISTIC_DECRYPT_STRING|DETERMINISTIC_ENCRYPT|DLP_DETERMINISTIC_DECRYPT|DLP_DETERMINISTIC_ENCRYPT|DLP_KEY_CHAIN|EDGES|EDIT_DISTANCE|ELEMENT_ID|EUCLIDEAN_DISTANCE|EXTERNAL_OBJECT_TRANSFORM|FLOAT64|GAP_FILL|GENERATE_RANGE_ARRAY|GROUPING|INT64|IS_ACYCLIC|IS_SIMPLE|IS_TRAIL|JSON_ARRAY|JSON_ARRAY_APPEND|JSON_ARRAY_INSERT|JSON_EXTRACT|JSON_EXTRACT_ARRAY|JSON_EXTRACT_SCALAR|JSON_EXTRACT_STRING_ARRAY|JSON_FLATTEN|JSON_KEYS|JSON_OBJECT|JSON_REMOVE|JSON_SET|JSON_STRIP_NULLS|JSON_TYPE|JUSTIFY_DAYS|JUSTIFY_HOURS|JUSTIFY_INTERVAL|KEYS\\.KEYSET_CHAIN|KEYS\\.KEYSET_LENGTH|KEYS\\.NEW_WRAPPED_KEYSET|KEYS\\.REWRAP_KEYSET|KEYS\\.ROTATE_WRAPPED_KEYSET|KLL_QUANTILES\\.EXTRACT_FLOAT64|KLL_QUANTILES\\.EXTRACT_INT64|KLL_QUANTILES\\.EXTRACT_POINT_FLOAT64|KLL_QUANTILES\\.EXTRACT_POINT_INT64|KLL_QUANTILES\\.INIT_FLOAT64|KLL_QUANTILES\\.INIT_INT64|KLL_QUANTILES\\.MERGE_FLOAT64|KLL_QUANTILES\\.MERGE_INT64|KLL_QUANTILES\\.MERGE_PARTIAL|KLL_QUANTILES\\.MERGE_POINT_FLOAT64|KLL_QUANTILES\\.MERGE_POINT_INT64|LABELS|LAX_BOOL|LAX_FLOAT64|LAX_INT64|LAX_STRING|MAKE_INTERVAL|MAX_BY|MIN_BY|ML\\.ADVANCED_WEIGHTS|ML\\.ANNOTATE_IMAGE|ML\\.ARIMA_COEFFICIENTS|ML\\.ARIMA_EVALUATE|ML\\.BAG_OF_WORDS|ML\\.BUCKETIZE|ML\\.CENTROIDS|ML\\.CONVERT_COLOR_SPACE|ML\\.CONVERT_IMAGE_TYPE|ML\\.CORRELATION|ML\\.DECODE_IMAGE|ML\\.DESCRIBE_DATA|ML\\.DETECT_ANOMALIES|ML\\.DETECT_CHANGE_POINTS|ML\\.DISTANCE|ML\\.ENTITY_FEATURES_AT_TIME|ML\\.EXPLAIN_FORECAST|ML\\.EXPLAIN_PREDICT|ML\\.FEATURE_CROSS|ML\\.FEATURE_IMPORTANCE|ML\\.FEATURES_AT_TIME|ML\\.FORECAST|ML\\.GENERATE_EMBEDDING|ML\\.GENERATE_TEXT|ML\\.GET_INSIGHTS|ML\\.GLOBAL_EXPLAIN|ML\\.HASH_BUCKETIZE|ML\\.HOLIDAY_INFO|ML\\.IMPUTER|ML\\.LABEL_ENCODER|ML\\.LP_NORM|ML\\.MAX_ABS_SCALER|ML\\.METRICS|ML\\.MIN_MAX_SCALER|ML\\.MULTI_HOT_ENCODER|ML\\.NGRAMS|ML\\.NORMALIZER|ML\\.ONE_HOT_ENCODER|ML\\.POLYNOMIAL_EXPAND|ML\\.PRINCIPAL_COMPONENT_INFO|ML\\.PRINCIPAL_COMPONENTS|ML\\.PROCESS_DOCUMENT|ML\\.QUANTILE_BUCKETIZE|ML\\.RECOMMEND|ML\\.RECONSTRUCTION_LOSS|ML\\.RESIZE_IMAGE|ML\\.ROBUST_SCALER|ML\\.SEASONALITY|ML\\.STANDARD_SCALER|ML\\.TF_IDF|ML\\.TFDV_DESCRIBE|ML\\.TFDV_VALIDATE|ML\\.TRANSCRIBE|ML\\.TRANSFORM|ML\\.TRANSLATE|ML\\.TREND|ML\\.TRIAL_INFO|ML\\.UNDERSTAND_TEXT|ML\\.VALIDATE_DATA_DRIFT|ML\\.VALIDATE_DATA_SKEW|NODES|OBJ\\.FETCH_METADATA|OBJ\\.GET_ACCESS_URL|OBJ\\.GET_READ_URL|OBJ\\.LIST|OBJ\\.MAKE_REF|PARSE_JSON|PATH_FIRST|PATH_LAST|PATH_LENGTH|RANGE|RANGE_CONTAINS|RANGE_END|RANGE_INTERSECT|RANGE_OVERLAPS|RANGE_SESSIONIZE|RANGE_START|S2_CELLIDFROMPOINT|S2_COVERINGCELLIDS|SAFE_ADD|SAFE_MULTIPLY|SAFE_NEGATE|SAFE_SUBTRACT|SEARCH|SEC|SECH|SOURCE_NODE_ID|ST_ANGLE|ST_AZIMUTH|ST_BOUNDINGBOX|ST_BUFFER|ST_BUFFERWITHTOLERANCE|ST_EXTENT|ST_EXTERIORRING|ST_GEOMETRYTYPE|ST_HAUSDORFFDISTANCE|ST_HAUSDORFFDWITHIN|ST_INTERIORRINGS|ST_ISCLOSED|ST_ISRING|ST_LINEINTERPOLATEPOINT|ST_LINELOCATEPOINT|ST_LINESUBSTRING|ST_NUMGEOMETRIES|ST_REGIONSTATS|TEXT_ANALYZE|TF_IDF|TIMESTAMP_BUCKET|TO_JSON|TYPEOF|VECTOR_INDEX\\.STATISTICS|VECTOR_SEARCH)(?=\\s*\\()","name":"meta.function.sql"},{"captures":{"1":{"name":"support.function.aggregate.sql"}},"match":"(?i)(?<![\\w.])(ANY_VALUE|APPROX_COUNT_DISTINCT|APPROX_QUANTILES|APPROX_TOP_COUNT|APPROX_TOP_SUM|ARRAY_AGG|ARRAY_CONCAT_AGG|AVG|BIT_AND|BIT_OR|BIT_XOR|CORR|COUNT|COUNTIF|COVAR_POP|COVAR_SAMP|HLL_COUNT\\.EXTRACT|HLL_COUNT\\.INIT|HLL_COUNT\\.MERGE|HLL_COUNT\\.MERGE_PARTIAL|LOGICAL_AND|LOGICAL_OR|MAX|MIN|STDDEV|STDDEV_POP|STDDEV_SAMP|STRING_AGG|SUM|VAR_POP|VAR_SAMP|VARIANCE)(?=\\s*\\()","name":"meta.function.sql"},{"captures":{"1":{"name":"support.function.aggregate.sql.array"}},"match":"(?i)(?<![\\w.])(ARRAY_CONCAT|ARRAY_LENGTH|ARRAY_REVERSE|ARRAY_TO_STRING|GENERATE_ARRAY|GENERATE_DATE_ARRAY|GENERATE_TIMESTAMP_ARRAY)(?=\\s*\\()","name":"meta.function.sql"},{"captures":{"1":{"name":"support.function.string.sql"}},"match":"(?i)(?<![\\w.])(ASCII|BYTE_LENGTH|CHAR_LENGTH|CHARACTER_LENGTH|CHR|CODE_POINTS_TO_BYTES|CODE_POINTS_TO_STRING|CONCAT|ENDS_WITH|FORMAT|FROM_BASE32|FROM_BASE64|FROM_HEX|INITCAP|INSTR|LENGTH|LOWER|LPAD|LTRIM|NORMALIZE|NORMALIZE_AND_CASEFOLD|OCTET_LENGTH|REGEXP_CONTAINS|REGEXP_EXTRACT|REGEXP_EXTRACT_ALL|REGEXP_INSTR|REGEXP_REPLACE|REGEXP_SUBSTR|REPEAT|REPLACE|REVERSE|RPAD|RTRIM|SAFE_CONVERT_BYTES_TO_STRING|SOUNDEX|SPLIT|STARTS_WITH|STRPOS|SUBSTR|SUBSTRING|TO_BASE32|TO_BASE64|TO_CODE_POINTS|TO_HEX|TRANSLATE|TRIM|UNICODE|UPPER)(?=\\s*\\()","name":"meta.function.sql"},{"captures":{"1":{"name":"support.function.window.sql"}},"match":"(?i)(?<![\\w.])(BIT_COUNT|CUME_DIST|DENSE_RANK|FIRST_VALUE|LAG|LAST_VALUE|LEAD|NTH_VALUE|NTILE|PERCENT_RANK|PERCENTILE_CONT|PERCENTILE_DISC|RANK|ROW_NUMBER)(?=\\s*\\()","name":"meta.function.sql"},{"captures":{"1":{"name":"support.function.cast.sql"}},"match":"(?i)(?<![\\w.])(CAST|PARSE_BIGNUMERIC|PARSE_NUMERIC|SAFE_CAST)(?=\\s*\\()","name":"meta.function.sql"},{"captures":{"1":{"name":"support.function.scalar.sql"}},"match":"(?i)(?<![\\w.])(CURRENT_DATE|CURRENT_DATETIME|CURRENT_TIME|CURRENT_TIMESTAMP|EXTRACT|SESSION_USER)(?=\\s*\\()","name":"meta.function.sql"},{"captures":{"1":{"name":"support.function.date.sql"}},"match":"(?i)(?<![\\w.])(DATE|DATE_ADD|DATE_DIFF|DATE_FROM_UNIX_DATE|DATE_SUB|DATE_TRUNC|DATETIME|DATETIME_ADD|DATETIME_DIFF|DATETIME_SUB|DATETIME_TRUNC|FORMAT_DATE|FORMAT_DATETIME|FORMAT_TIME|FORMAT_TIMESTAMP|LAST_DAY|PARSE_DATE|PARSE_DATETIME|PARSE_TIME|PARSE_TIMESTAMP|STRING|TIME|TIME_ADD|TIME_DIFF|TIME_SUB|TIME_TRUNC|TIMESTAMP|TIMESTAMP_ADD|TIMESTAMP_DIFF|TIMESTAMP_MICROS|TIMESTAMP_MILLIS|TIMESTAMP_SECONDS|TIMESTAMP_SUB|TIMESTAMP_TRUNC|UNIX_DATE|UNIX_MICROS|UNIX_MILLIS|UNIX_SECONDS)(?=\\s*\\()","name":"meta.function.sql"},{"captures":{"1":{"name":"support.function.debug.sql"}},"match":"(?i)(?<![\\w.])(ERROR)(?=\\s*\\()","name":"meta.function.sql"},{"captures":{"1":{"name":"support.function.federated.sql"}},"match":"(?i)(?<![\\w.])(EXTERNAL_QUERY)(?=\\s*\\()","name":"meta.function.sql"},{"captures":{"1":{"name":"support.function.string.hash.sql"}},"match":"(?i)(?<![\\w.])(FARM_FINGERPRINT|MD5|SHA1|SHA256|SHA512)(?=\\s*\\()","name":"meta.function.sql"},{"captures":{"1":{"name":"support.function.utility.sql"}},"match":"(?i)(?<![\\w.])(GENERATE_UUID)(?=\\s*\\()","name":"meta.function.sql"},{"captures":{"1":{"name":"support.function.json.sql"}},"match":"(?i)(?<![\\w.])(JSON_QUERY|JSON_QUERY_ARRAY|JSON_VALUE|JSON_VALUE_ARRAY|TO_JSON_STRING)(?=\\s*\\()","name":"meta.function.sql"},{"captures":{"1":{"name":"support.function.keys.sql"}},"match":"(?i)(?<![\\w.])(KEYS\\.ADD_KEY_FROM_RAW_BYTES|KEYS\\.KEYSET_FROM_JSON|KEYS\\.KEYSET_TO_JSON|KEYS\\.NEW_KEYSET|KEYS\\.ROTATE_KEYSET)(?=\\s*\\()","name":"meta.function.sql"},{"captures":{"1":{"name":"support.function.string.param.sql"}},"match":"(?i)(?<![\\w.])(LEFT|RIGHT)(?=\\s*\\()","name":"meta.function.sql"},{"captures":{"1":{"name":"support.function.ml.sql"}},"match":"(?i)(?<![\\w.])(ML\\.CONFUSION_MATRIX|ML\\.EVALUATE|ML\\.FEATURE_INFO|ML\\.PREDICT|ML\\.ROC_CURVE|ML\\.TRAINING_INFO|ML\\.WEIGHTS)(?=\\s*\\()","name":"meta.function.sql"},{"captures":{"1":{"name":"support.function.net.sql"}},"match":"(?i)(?<![\\w.])(NET\\.HOST|NET\\.IP_FROM_STRING|NET\\.IP_NET_MASK|NET\\.IP_TO_STRING|NET\\.IP_TRUNC|NET\\.IPV4_FROM_INT64|NET\\.IPV4_TO_INT64|NET\\.PUBLIC_SUFFIX|NET\\.REG_DOMAIN|NET\\.SAFE_IP_FROM_STRING)(?=\\s*\\()","name":"meta.function.sql"},{"captures":{"1":{"name":"support.function.gis.sql"}},"match":"(?i)(?<![\\w.])(ST_AREA|ST_ASBINARY|ST_ASGEOJSON|ST_ASTEXT|ST_BOUNDARY|ST_CENTROID|ST_CENTROID_AGG|ST_CLOSESTPOINT|ST_CLUSTERDBSCAN|ST_CONTAINS|ST_CONVEXHULL|ST_COVEREDBY|ST_COVERS|ST_DIFFERENCE|ST_DIMENSION|ST_DISJOINT|ST_DISTANCE|ST_DUMP|ST_DWITHIN|ST_ENDPOINT|ST_EQUALS|ST_GEOGFROM|ST_GEOGFROMGEOJSON|ST_GEOGFROMTEXT|ST_GEOGFROMWKB|ST_GEOGPOINT|ST_GEOGPOINTFROMGEOHASH|ST_GEOHASH|ST_INTERSECTION|ST_INTERSECTS|ST_INTERSECTSBOX|ST_ISCOLLECTION|ST_ISEMPTY|ST_LENGTH|ST_MAKELINE|ST_MAKEPOLYGON|ST_MAKEPOLYGONORIENTED|ST_MAXDISTANCE|ST_NPOINTS|ST_NUMPOINTS|ST_PERIMETER|ST_POINTN|ST_SIMPLIFY|ST_SNAPTOGRID|ST_STARTPOINT|ST_TOUCHES|ST_UNION|ST_UNION_AGG|ST_WITHIN|ST_X|ST_Y)(?=\\s*\\()","name":"meta.function.sql"}]},
+    "querySyntax": {
+      "patterns": [
+        {
+          "begin": "\\|>",
+          "beginCaptures": {
+            "0": { "name": "keyword.operator.pipe.sql" }
+          },
+          "end": "(?i)\\b(aggregate|extend|set|drop|rename|as|select|where|order\\s+by|by|limit|(?:(?:inner|cross|(?:left|right|full)(?:\\s+outer)?)\\s+)?join|call|pivot|unpivot|tablesample|union|intersect|except|distinct|with)\\b|(?=\\bmatch_recognize\\b|[;()|])",
+          "endCaptures": {
+            "1": { "name": "keyword.control.pipe.sql" }
+          },
+          "name": "meta.pipe.sql",
+          "patterns": [
+            { "include": "#comments" },
+            {
+              "match": "(?i)\\b(order|inner|cross|left|right|full|outer)\\b",
+              "name": "keyword.control.pipe.sql"
+            }
+          ]
+        },
+        {
+          "begin": "(?i)\\b(for)\\b(?=[ \\t]*(?:system_time\\b|--|#|/\\*|$))",
+          "beginCaptures": {
+            "1": { "name": "keyword.control.temporal.sql" }
+          },
+          "end": "(?i)\\b(of)\\b|(?=[;|])",
+          "endCaptures": {
+            "1": { "name": "keyword.control.temporal.sql" }
+          },
+          "name": "meta.temporal.sql",
+          "patterns": [
+            { "include": "#comments" },
+            {
+              "match": "(?i)\\b(system_time|as)\\b",
+              "name": "keyword.control.temporal.sql"
+            }
+          ]
+        },
+        {
+          "begin": "(?i)\\b(match_recognize)\\s*(\\()",
+          "beginCaptures": {
+            "1": { "name": "keyword.control.query.sql" },
+            "2": { "name": "punctuation.definition.section.bracket.round.begin.sql" }
+          },
+          "end": "\\)",
+          "endCaptures": {
+            "0": { "name": "punctuation.definition.section.bracket.round.end.sql" }
+          },
+          "name": "meta.match_recognize.sql",
+          "patterns": [
+            {
+              "match": "(?i)\\b(first|last|match_number|classifier)(?=\\s*\\()",
+              "name": "support.function.match.sql"
+            },
+            {
+              "match": "(?i)\\b(measures|after\\s+match\\s+skip|past\\s+last\\s+row|to\\s+next\\s+row|pattern|define|symbols|options)\\b",
+              "name": "keyword.control.match.sql"
+            },
+            { "include": "$self" }
+          ]
+        },
+        {
+          "begin": "(?i)\\b(graph_table)\\s*(\\()",
+          "beginCaptures": {
+            "1": { "name": "keyword.control.query.sql" },
+            "2": { "name": "punctuation.definition.section.bracket.round.begin.sql" }
+          },
+          "end": "\\)",
+          "endCaptures": {
+            "0": { "name": "punctuation.definition.section.bracket.round.end.sql" }
+          },
+          "name": "meta.graph.sql",
+          "patterns": [
+            {
+              "match": "(?i)\\b(match|columns|is|label|properties|property|any|shortest|all|walk|trail|simple|acyclic|path|paths|return|next|filter|let|order\\s+by|limit|offset|group\\s+by|having|where)\\b",
+              "name": "keyword.control.graph.sql"
+            },
+            { "include": "$self" }
+          ]
+        },
+        {
+          "match": "(?i)\\b(match_recognize|graph_table)\\b",
+          "name": "keyword.control.query.sql"
+        }
+      ]
+    },
+    "quotedIdentifiers": {
+      "begin": "`",
+      "end": "(?<!\\\\)`",
+      "name": "meta.identifier.quoted.sql"
+    },
+    "parameterisedTypes": {
+      "patterns": [
+        {
+          "match": "(?i)(?:(?<=[,(<])|^)\\s*(?:((?!(?:select|as|default|return)\\b)[A-Za-z_][\\w]*)|(`[^`]+`))\\s+(string|bytes)(?=\\s*\\()",
+          "captures": {
+            "1": { "name": "entity.other.column.sql" },
+            "2": { "name": "meta.identifier.quoted.sql" },
+            "3": { "name": "storage.type.sql" }
+          }
+        },
+        {
+          "match": "(?i)\\b(as|returns)\\s+(string|bytes)(?=\\s*\\()",
+          "captures": {
+            "1": { "name": "keyword.as.sql" },
+            "2": { "name": "storage.type.sql" }
+          }
+        },
+        {
+          "match": "(?i)\\b(declare)\\s+([A-Za-z_][\\w]*)\\s+(string|bytes)(?=\\s*\\()",
+          "captures": {
+            "1": { "name": "keyword.procedure.sql" },
+            "2": { "name": "entity.other.column.sql" },
+            "3": { "name": "storage.type.sql" }
+          }
+        }
+      ]
+    },
+    "typeArguments": {
+      "begin": "(?i)\\b(array|struct|range)\\s*(<)",
+      "beginCaptures": {
+        "1": { "name": "storage.type.sql" },
+        "2": { "name": "keyword.operator.comparison.sql" }
+      },
+      "end": ">",
+      "endCaptures": {
+        "0": { "name": "keyword.operator.comparison.sql" }
+      },
+      "patterns": [
+        { "include": "#comments" },
+        { "include": "#parameterisedTypes" },
+        { "include": "#quotedIdentifiers" },
+        { "include": "#typeArguments" },
+        {
+          "match": "(?i)\\b(string|bytes)\\b",
+          "name": "storage.type.sql"
+        },
+        { "include": "$self" }
+      ]
+    },
     "storage": {
       "patterns": [
         {
-          "match": "(?i)\\b(array|boolean|bytes|date(?!\\s*\\()|datetime(?!\\s*\\()|geography|numeric|decimal|bignumeric|bigdecimal|float|float64|int64|int|smallint|integer|bigint|tinyint|byteint|bool|record|any\\s+type|string(?!\\s*\\()|struct|time(?!\\s*\\(|\\s+as\\s+of|\\s+zone)|timestamp(?!\\s*\\())\\b",
+          "match": "(?i)\\b(array|boolean|bytes|date(?!\\s*\\()|datetime(?!\\s*\\()|geography|json|range(?=\\s*<)|numeric|decimal|bignumeric|bigdecimal|float|float64|int64|int|smallint|integer|bigint|tinyint|byteint|bool|record|any\\s+type|string(?!\\s*\\()|struct(?!\\s*\\()|time(?!\\s*\\(|\\s+as\\s+of|\\s+zone)|timestamp(?!\\s*\\())\\b",
           "name": "storage.type.sql"
         }
       ]
@@ -59,15 +206,15 @@
     "whitespace": {
       "patterns": [
         {
-          "match": "^(?: |\\t)*",
+          "match": "^(?: |\\t)+",
           "name": "punctuation.whitespace.leading.sql"
         },
         {
-          "match": "(?: |\\t)*$",
+          "match": "(?: |\\t)+$",
           "name": "punctuation.whitespace.trailing.sql"
         },
         {
-          "match": "(?: |\\t)*",
+          "match": "(?: |\\t)+",
           "name": "punctuation.whitespace.sql"
         }
       ]
@@ -262,6 +409,18 @@
     },
     "strings": {
       "patterns": [
+        {
+          "begin": "'''",
+          "end": "'''",
+          "name": "string.quoted.single.sql",
+          "patterns": [{ "include": "#string_escape" }]
+        },
+        {
+          "begin": "\"\"\"",
+          "end": "\"\"\"",
+          "name": "string.quoted.double.sql",
+          "patterns": [{ "include": "#string_escape" }]
+        },
         {
           "captures": {
             "1": {
@@ -464,7 +623,7 @@
             "8": { "name": "punctuation.definition.string.end.sql" },
             "9": { "name": "keyword.ddl.as.sql" }
           },
-          "match": "(?i:)^\\s*(create(?:\\s+or\\s+replace)?(?:\\s+temporary|\\s+temp)?|drop|alter)\\s+(schema|table(?:\\s+function)?|view|materialized\\s+view|(?:external|snapshot)\\s+table|model|function|procedure|column)\\b(?:\\s+(if(?:\\s+not)?\\s+exists)\\b)?(?:\\s+(`?)(?:([\\w_]+)\\.)?(?:([\\w_]+)\\.([\\w_]+)(`?)))(?:\\s+(as))?",
+          "match": "(?i)\\b(create(?:\\s+or\\s+replace)?(?:\\s+temporary|\\s+temp)?|drop|alter)\\s+(schema|table(?:\\s+function)?|view|materialized\\s+view|(?:external|snapshot)\\s+table|model|function|procedure|column)\\b(?:\\s+(if(?:\\s+not)?\\s+exists)\\b)?\\s+(`?)(?:(?:([\\w_]+)\\.)?([\\w_]+)\\.)?([\\w_]+)(`?)(?:\\s+(as))?",
           "name": "meta.ddl.sql"
         },
         {
@@ -511,6 +670,13 @@
       "patterns": [
         {
           "captures": {
+            "1": { "name": "keyword.operator.comparison.sql" }
+          },
+          "match": "(?i)\\b(is\\s+(?:not\\s+)?distinct\\s+from)\\b",
+          "name": "meta.comparison.sql"
+        },
+        {
+          "captures": {
             "1": { "name": "keyword.from.sql" },
             "2": { "name": "keyword.join.sql" },
             "3": { "name": "punctuation.definition.string.begin.sql" },
@@ -521,7 +687,7 @@
             "8": { "name": "keyword.as.sql" },
             "9": { "name": "entity.name.alias.sql" }
           },
-          "match": "(?i)(?:(from|update)|((?:(?:(?:inner|cross|(?:left|right|full)(?:\\s+outer)?)\\s+)join)))(?:\\s+(`?)(?:([\\w_]+)\\.)?(?:([\\w_]+)\\.([\\w_]+))(`?)(?:\\s+(?:(as)\\s+)?([\\w_]+))?)",
+          "match": "(?i)(?:(from|update)|((?:(?:(?:inner|cross|(?:left|right|full)(?:\\s+outer)?)\\s+)join)))(?:\\s+(`?)(?:([\\w_]+)\\.)?(?:([\\w_]+)\\.([\\w_]+))(`?)(?![\\w.]|\\s*\\()(?:\\s+(?:(as)\\s+)?((?!(?:for|match_recognize|graph_table)\\b)[\\w_]+))?)",
           "name": "meta.source.sql"
         },
         {
@@ -764,6 +930,15 @@
         {
           "match": "(?i)\\b(as)\\b",
           "name": "keyword.as.sql"
+        }
+      ]
+    },
+    "userFunctions": {
+      "patterns": [
+        {
+          "captures": { "1": { "name": "support.function.builtin.sql" } },
+          "match": "(?<![\\w.`@])([A-Za-z_][\\w]*(?:\\.[A-Za-z_][\\w]*)*)(?=\\s*\\()",
+          "name": "meta.function.sql"
         }
       ]
     },

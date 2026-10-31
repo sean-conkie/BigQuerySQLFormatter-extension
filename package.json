@@ -5,7 +5,7 @@
   "icon": "images/BigQuerySQLFormatter_transparent_128.png",
   "author": "sean-conkie",
   "license": "MIT",
-  "version": "0.2.2",
+  "version": "0.7.1",
   "repository": {
     "type": "git",
     "url": "https://github.com/sean-conkie/BigQuerySQLFormatter-extension.git"
@@ -23,13 +23,9 @@
     "sql"
   ],
   "engines": {
-    "vscode": "^1.75.0"
+    "vscode": "^1.91.0"
   },
-  "activationEvents": [
-    "onLanguage:sql",
-    "onLanguage:sql-biqquery"
-  ],
-  "main": "./client/out/extension",
+  "main": "./dist/extension.js",
   "contributes": {
     "configuration": {
       "type": "object",
@@ -37,9 +33,504 @@
       "properties": {
         "bigquerySQLFormatter.maxNumberOfProblems": {
           "scope": "resource",
-          "type": "number",
+          "type": "integer",
+          "minimum": 0,
           "default": 100,
           "description": "Controls the maximum number of problems produced by the server."
+        },
+        "bigquerySQLFormatter.rules": {
+          "scope": "resource",
+          "type": "object",
+          "default": {},
+          "description": "Per-rule configuration. Set enabled, severity, and supported options; exclude lists disabled codes, and groups toggles rule families. The nearest .bqsqlformatter.json overrides individual fields.",
+          "properties": {
+            "CP01": {
+              "type": "object",
+              "description": "Keyword capitalisation."
+            },
+            "CP02": {
+              "type": "object",
+              "description": "Case-insensitive identifier capitalisation: columns, fields, aliases and visible CTE names. Project, dataset and table names are preserved."
+            },
+            "CP03": {
+              "type": "object",
+              "description": "Catalogued built-in function capitalisation, including namespaces and SAFE. prefixes. User-defined functions and unknown calls are preserved."
+            },
+            "CP04": {
+              "type": "object",
+              "description": "Boolean/null literal capitalisation."
+            },
+            "CP05": {
+              "type": "object",
+              "description": "Data type capitalisation, including parameterised and nested types."
+            },
+            "RF01": {
+              "type": "object",
+              "description": "Unknown source qualifiers. Disabled by default because STRUCT fields can resemble table-qualified references.",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "default": false
+                }
+              }
+            },
+            "RF02": {
+              "type": "object",
+              "description": "Require source-qualified columns in multi-source queries."
+            },
+            "RF03": {
+              "type": "object",
+              "description": "Use consistent, STRUCT-aware column qualification in single-source queries."
+            },
+            "RF04": {
+              "type": "object",
+              "description": "Avoid keywords as identifiers; checks unquoted aliases by default."
+            },
+            "RF05": {
+              "type": "object",
+              "description": "Avoid special characters in backtick-quoted identifiers."
+            },
+            "RF06": {
+              "type": "object",
+              "description": "Remove unnecessary backticks; table paths are skipped by default."
+            },
+            "ST09": {
+              "type": "object",
+              "description": "Order JOIN comparisons by source order (earlier first by default)."
+            },
+            "LT90": {
+              "type": "object",
+              "description": "Project-specific JOIN condition parentheses. Disabled by default.",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "default": false
+                }
+              }
+            },
+            "exclude": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^(AL|AM|CP|CV|LT|RF|ST)[0-9]{2}$"
+              },
+              "description": "Rule codes to disable."
+            },
+            "groups": {
+              "type": "object",
+              "properties": {
+                "aliasing": {
+                  "type": "boolean"
+                },
+                "ambiguous": {
+                  "type": "boolean"
+                },
+                "capitalisation": {
+                  "type": "boolean"
+                },
+                "convention": {
+                  "type": "boolean"
+                },
+                "layout": {
+                  "type": "boolean"
+                },
+                "references": {
+                  "type": "boolean"
+                },
+                "structure": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "patternProperties": {
+            "^CP0[1-5]$": {
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "default": true
+                },
+                "severity": {
+                  "type": "string",
+                  "enum": [
+                    "error",
+                    "warning",
+                    "information",
+                    "hint",
+                    "off"
+                  ],
+                  "default": "warning"
+                },
+                "options": {
+                  "type": "object",
+                  "properties": {
+                    "capitalisation_policy": {
+                      "type": "string",
+                      "enum": [
+                        "lower",
+                        "upper",
+                        "consistent"
+                      ],
+                      "default": "lower",
+                      "description": "Token casing. Consistent follows the first matching token; a mixed-case first token selects lowercase."
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            },
+            "^(?!CP0[1-5]$|RF0[1-6]$|ST09$|LT90$)(AL|AM|CP|CV|LT|RF|ST)[0-9]{2}$": {
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "default": true
+                },
+                "severity": {
+                  "type": "string",
+                  "enum": [
+                    "error",
+                    "warning",
+                    "information",
+                    "hint",
+                    "off"
+                  ],
+                  "default": "warning"
+                },
+                "options": {
+                  "type": "object",
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            },
+            "^ST09$": {
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "default": true
+                },
+                "severity": {
+                  "type": "string",
+                  "enum": [
+                    "error",
+                    "warning",
+                    "information",
+                    "hint",
+                    "off"
+                  ],
+                  "default": "warning"
+                },
+                "options": {
+                  "type": "object",
+                  "properties": {
+                    "preferred_first_table_in_join_clause": {
+                      "type": "string",
+                      "enum": [
+                        "earlier",
+                        "later"
+                      ],
+                      "default": "earlier"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            },
+            "^LT90$": {
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "default": false
+                },
+                "severity": {
+                  "type": "string",
+                  "enum": [
+                    "error",
+                    "warning",
+                    "information",
+                    "hint",
+                    "off"
+                  ],
+                  "default": "warning"
+                },
+                "options": {
+                  "type": "object",
+                  "properties": {
+                    "condition_policy": {
+                      "type": "string",
+                      "enum": [
+                        "multiple",
+                        "mixed"
+                      ],
+                      "default": "multiple"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            },
+            "^RF02$": {
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "default": true
+                },
+                "severity": {
+                  "type": "string",
+                  "enum": [
+                    "error",
+                    "warning",
+                    "information",
+                    "hint",
+                    "off"
+                  ],
+                  "default": "warning"
+                },
+                "options": {
+                  "type": "object",
+                  "properties": {
+                    "ignore_words": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "default": []
+                    },
+                    "subqueries_ignore_external_references": {
+                      "type": "boolean",
+                      "default": false
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            },
+            "^RF03$": {
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "default": true
+                },
+                "severity": {
+                  "type": "string",
+                  "enum": [
+                    "error",
+                    "warning",
+                    "information",
+                    "hint",
+                    "off"
+                  ],
+                  "default": "warning"
+                },
+                "options": {
+                  "type": "object",
+                  "properties": {
+                    "single_table_references": {
+                      "type": "string",
+                      "enum": [
+                        "consistent",
+                        "qualified",
+                        "unqualified"
+                      ],
+                      "default": "consistent"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            },
+            "^RF04$": {
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "default": true
+                },
+                "severity": {
+                  "type": "string",
+                  "enum": [
+                    "error",
+                    "warning",
+                    "information",
+                    "hint",
+                    "off"
+                  ],
+                  "default": "warning"
+                },
+                "options": {
+                  "type": "object",
+                  "properties": {
+                    "unquoted_identifiers_policy": {
+                      "type": "string",
+                      "enum": [
+                        "aliases",
+                        "column_aliases",
+                        "table_aliases",
+                        "all"
+                      ],
+                      "default": "aliases"
+                    },
+                    "quoted_identifiers_policy": {
+                      "type": "string",
+                      "enum": [
+                        "none",
+                        "aliases",
+                        "column_aliases",
+                        "table_aliases",
+                        "all"
+                      ],
+                      "default": "none"
+                    },
+                    "ignore_words": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "default": []
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            },
+            "^RF05$": {
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "default": true
+                },
+                "severity": {
+                  "type": "string",
+                  "enum": [
+                    "error",
+                    "warning",
+                    "information",
+                    "hint",
+                    "off"
+                  ],
+                  "default": "warning"
+                },
+                "options": {
+                  "type": "object",
+                  "properties": {
+                    "quoted_identifiers_policy": {
+                      "type": "string",
+                      "enum": [
+                        "none",
+                        "aliases",
+                        "column_aliases",
+                        "table_aliases",
+                        "all"
+                      ],
+                      "default": "all"
+                    },
+                    "allow_space_in_identifier": {
+                      "type": "boolean",
+                      "default": false
+                    },
+                    "additional_allowed_characters": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "default": []
+                    },
+                    "ignore_words": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "default": []
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            },
+            "^RF06$": {
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "default": true,
+                  "description": "Enable unnecessary-backtick diagnostics and fixes."
+                },
+                "severity": {
+                  "type": "string",
+                  "description": "Severity for unnecessary-backtick diagnostics; off also disables fixes.",
+                  "enum": [
+                    "error",
+                    "warning",
+                    "information",
+                    "hint",
+                    "off"
+                  ],
+                  "default": "warning"
+                },
+                "options": {
+                  "type": "object",
+                  "properties": {
+                    "check_table_paths": {
+                      "type": "boolean",
+                      "default": false,
+                      "description": "Also remove unnecessary backticks from table paths, preserving case-sensitive names."
+                    },
+                    "ignore_words": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "default": [],
+                      "description": "Case-insensitive identifiers or path components whose backticks should be preserved."
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            },
+            "^RF01$": {
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "default": false
+                },
+                "severity": {
+                  "type": "string",
+                  "enum": [
+                    "error",
+                    "warning",
+                    "information",
+                    "hint",
+                    "off"
+                  ],
+                  "default": "warning"
+                },
+                "options": {
+                  "type": "object",
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
         },
         "bigquerySQLFormatter.trace.server": {
           "scope": "window",
@@ -62,9 +553,6 @@
           "GoogleSQL"
         ],
         "extensions": [
-          ".sql",
-          ".ddl",
-          ".dml",
           ".bqsql",
           ".bqddl",
           ".bqdml"
@@ -76,11 +564,12 @@
       {
         "language": "googlesql",
         "scopeName": "source.googlesql",
-        "path": "./server/src/linter/syntaxes/googlesql.tmLanguage.json"
+        "path": "./dist/syntaxes/googlesql.tmLanguage.json"
       }
     ],
     "configurationDefaults": {
       "[googlesql]": {
+        "editor.defaultFormatter": "sean-conkie.bigquerysqlformatter",
         "editor.tabSize": 2,
         "editor.insertSpaces": true
       }
@@ -88,32 +577,42 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "compile": "tsc -b",
-    "watch": "tsc -b -w",
-    "lint": "eslint ./client/src ./server/src --ext .ts,.tsx",
-    "postinstall": "cd client && npm install && cd ../server && npm install && cd ..",
-    "test": "mocha ./server/out/tests/*.test.js ./server/out/tests/**/*.test.js ./server/out/tests/**/**/*.test.js ./server/out/tests/**/**/**/*.test.js --rescursive",
-    "citest": "mocha ./server/out/tests/**/*.test.js ./server/out/tests/**/**/*.test.js ./server/out/tests/**/**/**/*.test.js --rescursive && node ./client/out/test/runTest",
+    "compile": "tsc -b && node scripts/build.cjs",
+    "generate:completions": "node scripts/generate-completions.cjs",
+    "generate:keywords": "node scripts/generate-keywords.cjs",
+    "watch": "node scripts/build.cjs --watch",
+    "lint": "biome check",
+    "lint:fix": "biome check --write",
+    "format": "biome format --write",
+    "package:check": "node scripts/check-package.cjs",
+    "postinstall": "npm ci --prefix client && npm ci --prefix server",
+    "test": "node --test scripts/generate-completions.test.cjs scripts/generate-keywords.test.cjs && mocha \"server/out/tests/**/*.test.js\"",
+    "coverage": "nyc --check-coverage --branches 80 --reporter=lcov --reporter=text-summary npm test",
+    "citest": "npm test && node ./client/out/test/runTest",
     "deploy": "vsce publish --no-yarn"
   },
+  "overrides": {
+    "@azure/identity@4.14.0": {
+      "@azure/msal-node": "^7.1.1"
+    }
+  },
   "devDependencies": {
+    "@biomejs/biome": "2.6.2",
     "@types/chai": "^4.3.12",
-    "@types/mocha": "^10.0.9",
-    "@types/node": "^22.10.5",
-    "@types/sinon": "^17.0.3",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^22.20.5",
+    "@types/sinon": "^22.0.1",
     "@types/sinon-chai": "^3.2.12",
-    "@typescript-eslint/eslint-plugin": "^8.46.2",
-    "@typescript-eslint/parser": "^8.19.1",
-    "@vscode/test-cli": "^0.0.10",
-    "@vscode/test-electron": "^2.4.0",
-    "@vscode/vsce": "^3.6.0",
+    "@vscode/test-electron": "^3.1.0",
+    "@vscode/vsce": "^4.0.0",
     "chai": "^4.4.1",
-    "eslint": "^9.27.0",
-    "mocha": "^11.5.0",
-    "nyc": "^17.0.0",
-    "sinon": "^20.0.0",
+    "cheerio": "1.2.0",
+    "esbuild": "^0.28.2",
+    "mocha": "^12.0.3",
+    "nyc": "^18.0.0",
+    "sinon": "^22.1.0",
     "sinon-chai": "^3.7.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.6.3"
+    "typescript": "^5.9.3"
   }
 }

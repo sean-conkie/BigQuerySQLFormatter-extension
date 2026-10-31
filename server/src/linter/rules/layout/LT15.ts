@@ -6,22 +6,21 @@
  * @requires Rule
  */
 
-
-import { ServerSettings } from "../../../settings";
-import { RuleType } from '../enums';
+import type { ServerSettings } from '../../../settings';
 import {
-  CodeAction,
+  type CodeAction,
   CodeActionKind,
-  Diagnostic, DocumentUri, Range,
-  TextDocumentIdentifier,
-  TextEdit
+  type Diagnostic,
+  type DocumentUri,
+  Range,
+  type TextDocumentIdentifier,
 } from 'vscode-languageserver/node';
-import { Rule } from '../base';
-import { FileMap } from '../../parser';
+import { ParserRule } from '../base';
+import type { FileMap } from '../../parser';
 import { ComparisonAST, ComparisonGroupAST } from '../../parser/ast';
-import { Token } from '../../parser/token';
+import type { Token } from '../../parser/token';
 
-type RangeCache = Map<string, number>
+type RangeCache = Map<string, number>;
 const documentCache: Map<DocumentUri, RangeCache> = new Map<DocumentUri, RangeCache>();
 
 /**
@@ -30,25 +29,15 @@ const documentCache: Map<DocumentUri, RangeCache> = new Map<DocumentUri, RangeCa
  * @extends Rule
  * @memberof Linter.Rules
  */
-export class ComparisonOperators extends Rule<FileMap> {
-  readonly name: string = "comparison_operators";
-  readonly code: string = "LT15";
-  readonly type: RuleType = RuleType.PARSER;
-  readonly message: string = "Align equal sign in comparison blocks.";
-  readonly relatedInformation: string = "When the equal (`=`) signs in a `WHERE` clause or join conditions are misaligned across multiple rows, it reduces the readability and consistency of the query.";
+export class ComparisonOperators extends ParserRule {
+  readonly name: string = 'comparison_operators';
+  readonly code: string = 'LT15';
+  readonly message: string = 'Align equal sign in comparison blocks.';
+  readonly relatedInformation: string =
+    'When the equal (`=`) signs in a `WHERE` clause or join conditions are misaligned across multiple rows, it reduces the readability and consistency of the query.';
   readonly ruleGroup: string = 'layout';
   readonly codeActionKind: CodeActionKind[] = [CodeActionKind.SourceFixAll, CodeActionKind.QuickFix];
   readonly codeActionTitle = 'Format comparison operators';
-
-  /**
-   * Creates an instance of ComparisonOperators.
-   * @param {ServerSettings} settings The server settings
-   * @param {number} problems The number of problems identified in the source code
-   * @memberof ComparisonOperators
-   */
-  constructor(settings: ServerSettings, problems: number) {
-    super(settings, problems);
-  }
 
   /**
    * Evaluates the provided Abstract Syntax Tree (AST) to identify and return diagnostics for layout issues.
@@ -59,14 +48,13 @@ export class ComparisonOperators extends Rule<FileMap> {
    * @returns An array of `Diagnostic` objects representing the layout issues found, or null if no issues are found or the rule is disabled.
    */
   evaluate(ast: FileMap, documentUri: string | null = null): Diagnostic[] | null {
-
     if (this.enabled === false) {
       return null;
     }
 
+    documentCache.delete(documentUri!);
     const errors: Diagnostic[] = [];
     for (const i in ast) {
-
       const where = ast[i].where;
 
       if (where instanceof ComparisonGroupAST && where.comparisons.length > 1) {
@@ -78,27 +66,30 @@ export class ComparisonOperators extends Rule<FileMap> {
         continue;
       }
 
-      joins.map((join) => {
+      joins.forEach((join) => {
         if (join.on instanceof ComparisonGroupAST) {
           errors.push(...this.processComparisonGroup(join.on, documentUri));
         }
       });
-
     }
 
     return errors.length > 0 ? errors : null;
   }
 
   private processComparisonGroup(comparison: ComparisonGroupAST, documentUri: string | null = null): Diagnostic[] {
+    const lines = comparison.comparisons.map((comp) => comp.startLine);
+    if (new Set(lines).size !== lines.length) {
+      return [];
+    }
+
     const errors: Diagnostic[] = [];
     const operators: Token[] = [];
     const operatorIndexes: number[] = [];
-    
+
     for (const comp of comparison.comparisons) {
       if (comp instanceof ComparisonGroupAST && comp.comparisons.length > 1) {
         errors.push(...this.processComparisonGroup(comp, documentUri));
       } else if (comp instanceof ComparisonAST) {
-
         const operator = comp.operator;
         if (operator == null) {
           continue;
@@ -106,7 +97,7 @@ export class ComparisonOperators extends Rule<FileMap> {
         // find all the operators
         const operatorToken = comp.tokens.filter((token) => token.value === operator)[0];
         if (comp.left != null) {
-          operatorIndexes.push(comp.left.endIndex??0);
+          operatorIndexes.push(comp.left.endIndex ?? 0);
         }
         operators.push(operatorToken);
       }
@@ -118,7 +109,7 @@ export class ComparisonOperators extends Rule<FileMap> {
     }
 
     const requiredIndex = Math.max(...operatorIndexes) + 2;
-    operators.map((operator) => {
+    operators.forEach((operator) => {
       // adjust the startIndex to account for gte & lte & neq
       // we want the '=' to line up so add 1 to the index
       let operatorStartIndex = operator.startIndex;
@@ -130,25 +121,24 @@ export class ComparisonOperators extends Rule<FileMap> {
         const errorRange = {
           start: {
             line: operator.lineNumber!,
-            character: operator.startIndex
+            character: operator.startIndex,
           },
           end: {
             line: operator.lineNumber!,
-            character: operator.startIndex
-          }
-        }
+            character: operator.startIndex,
+          },
+        };
         const [additionalIdentNumber, newRange] = this.createIndentErrorOutputs(errorOffset, errorRange);
         errors.push(this.createDiagnostic(newRange, documentUri));
         cache!.set(this.createCacheKey(newRange), additionalIdentNumber);
       }
-
     });
 
     documentCache.set(documentUri!, cache);
 
     return errors;
   }
-  
+
   /**
    * Creates a set of code actions to fix diagnostics.
    *
@@ -156,39 +146,17 @@ export class ComparisonOperators extends Rule<FileMap> {
    * @param diagnostic - The diagnostic information about the issue to be fixed.
    * @returns An array of code actions that can be applied to fix the issue.
    */
+  closeDocument(uri: string): void {
+    documentCache.delete(uri);
+  }
+
   createCodeAction(textDocument: TextDocumentIdentifier, diagnostic: Diagnostic): CodeAction[] {
-    const cachedDocument = documentCache.get(textDocument.uri);
-    let text = '';
-    if (!cachedDocument) {
-      return [];
-    }
-
-    const additionalIdentNumber = cachedDocument.get(this.createCacheKey(diagnostic.range));
-    if (additionalIdentNumber == null) {
-      return [];
-    }
-
-    text = ' '.repeat(additionalIdentNumber) + text;
-  
-    const edit = {
-        changes: {
-            [textDocument.uri]: [
-                TextEdit.replace(diagnostic.range, text)
-            ]
-        }
-    };
-    const actions: CodeAction[] = [];
-    
-    this.codeActionKind.map((kind) => {
-      const fix = CodeAction.create(
-        this.codeActionTitle,
-        edit,
-        kind
-      );
-      fix.diagnostics = [diagnostic];
-      actions.push(fix);
-    });
-
-    return actions;
+    return this.createIndentCodeActions(
+      textDocument,
+      diagnostic,
+      documentCache.get(textDocument.uri)?.get(this.createCacheKey(diagnostic.range)),
+      this.codeActionKind,
+      this.codeActionTitle,
+    );
   }
 }

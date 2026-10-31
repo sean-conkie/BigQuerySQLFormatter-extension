@@ -6,12 +6,9 @@
  * @requires Rule
  */
 
-
-import { ServerSettings } from "../../../settings";
-import {
-  Diagnostic,
-} from 'vscode-languageserver/node';
-import { Rule } from '../base';
+import type { ServerSettings } from '../../../settings';
+import type { Diagnostic } from 'vscode-languageserver/node';
+import { RegexRule } from '../base';
 
 /**
  * The UnionCheck rule
@@ -19,54 +16,24 @@ import { Rule } from '../base';
  * @extends Rule
  * @memberof Linter.Rules
  */
-export class UnionCheck extends Rule<string> {
+export class UnionCheck extends RegexRule {
+  readonly rangeGroups = ['target', 'continuation'];
   readonly is_fix_compatible: boolean = false;
-  readonly name: string = "union_checks";
-  readonly code: string = "LT11";
-  readonly message: string = "Union operators should be surrounded by newlines.";
-  readonly pattern: RegExp = /\S( *union +(?:all|distinct)) *|\n( *union (?:all|distinct) +)\S/gmi;
-  readonly relatedInformation: string = "The `UNION` operator should be placed on a separate line, surrounded by newlines before and after.";
+  readonly name: string = 'union_checks';
+  readonly code: string = 'LT11';
+  readonly message: string = 'Union operators should be surrounded by newlines.';
+  readonly pattern: RegExp =
+    /\S(?<target> *union +(?:all|distinct)) *|\n(?<continuation> *union (?:all|distinct) +)\S/gim;
+  readonly relatedInformation: string =
+    'The `UNION` operator should be placed on a separate line, surrounded by newlines before and after.';
   readonly ruleGroup: string = 'layout';
 
-  /**
-   * Creates an instance of UnionCheck.
-   * @param {ServerSettings} settings The server settings
-   * @param {number} problems The number of problems identified in the source code
-   * @memberof UnionCheck
-   */
-  constructor(settings: ServerSettings, problems: number) {
-    super(settings, problems);
-  }
-
-  /**
-   * Evaluates the given test string against a pattern and returns diagnostics if the pattern matches.
-   *
-   * @param test - The string to be tested against the pattern.
-   * @param documentUri - The URI of the document being evaluated, or null if not applicable.
-   * @returns An array of `Diagnostic` objects if the pattern matches, or null otherwise.
-   */
-  evaluate(test: string, documentUri: string | null = null): Diagnostic[] | null {
-
-    if (this.enabled === false) {
-      return null;
-    }
-
-    if (this.pattern.test(test)) {
-      return this.evaluateRegexPatterns(test, documentUri);
-    }
-
-    return null;
-
-  }
-
   matches(test: string): number {
-
     let noOfMatches: number = 0;
     const matches = test.matchAll(this.pattern);
     for (const match of matches) {
       noOfMatches++;
     }
     return noOfMatches;
-
   }
 }

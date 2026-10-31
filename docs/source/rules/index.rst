@@ -4,6 +4,23 @@ Rules
 
 These rules aim to improve the readability and maintainability of code by ensuring that aliases are used correctly and consistently throughout the project.
 
+Pipe and temporal query support
+------------------------------
+
+Pipe queries and ``FOR SYSTEM_TIME AS OF`` support RF01-RF06, AL01, AL02, AL04,
+AL05, AL06, AL08, AL09, AM04, AM05, AM06 and AM07. RF01 remains opt-in.
+Sources, output aliases and USING columns are resolved at each stage. Rules
+without an equivalent construct do not apply: for example, AL01 does not remove
+the mandatory AS in ``|> AS``, and AM04 does not flag multiplication or COUNT(*).
+
+``MATCH_RECOGNIZE``, ``GRAPH_TABLE`` and unmodelled operators such as pipe WITH
+remain skipped in their own block and descendants. Enclosing traditional
+queries and sibling blocks remain checked. CP01-CP05, CV01, CV02, CV04, CV05,
+CV13, LT01, LT12 and LT13 remain safe throughout; other layout and structure
+rules are not yet enabled inside pipe queries.
+ST03 is an exception: unused CTE detection uses lexical visibility throughout
+extended queries without changing their text.
+
 .. _aliasing-rules:
 
 ----------------
@@ -17,6 +34,7 @@ Aliasing rules are guidelines that help developers avoid common pitfalls when us
 
 	Rule: Always Use Implicit Aliases When Referencing Tables <aliasing/AL01>
 	Rule: Do Not Use Explicit Aliasing (`AS`) When Aliasing Columns <aliasing/AL02>
+	Rule: Table Aliases Should Be Unique <aliasing/AL04>
 	Rule: All Columns Should Have a Table Alias <aliasing/AL05>
 	Rule: Tables Must Use an Alias <aliasing/AL06>
 	Rule: Column Names in the Query Should Be Unique <aliasing/AL08>
@@ -34,7 +52,11 @@ Ambiguous rules are guidelines that help developers avoid ambiguity and improve 
 	:maxdepth: 1
 
 	Rule: Do Not Use `DISTINCT` with `GROUP BY` <ambiguous/AM01>
+	Rule: Specify DISTINCT or ALL After UNION <ambiguous/AM02>
 	Rule: Avoid Using `select *` <ambiguous/AM04>
+	Rule: Use Explicit INNER JOIN <ambiguous/AM05>
+	Rule: Use Consistent GROUP BY/ORDER BY References <ambiguous/AM06>
+	Rule: Set Queries Must Select Matching Columns <ambiguous/AM07>
 
 .. _capitalisation-rules:
 
@@ -47,7 +69,11 @@ Capitalisation rules are guidelines that help developers maintain consistent cas
 .. toctree::
 	:maxdepth: 1
 
+	Rule: Consistent Keyword Capitalisation <capitalisation/CP01>
+	Rule: Consistent Identifier Capitalisation <capitalisation/CP02>
+	Rule: Consistent Function Capitalisation <capitalisation/CP03>
 	Rule: Use Lowercase for Literal `null`/`true`/`false` Values <capitalisation/CP04>
+	Rule: Consistent Data Type Capitalisation <capitalisation/CP05>
 
 .. _convention-rules:
 
@@ -67,8 +93,9 @@ By applying convention rules, teams can create a more collaborative and coherent
 	Rule: Select Statements Should Not Include a Trailing Comma <convention/CV03>
 	Rule: Use `count(1)` to Express “Count Number of Rows” <convention/CV04>
 	Rule: Comparisons with `NULL` Should Use `IS` or `IS NOT` <convention/CV05>
+	Rule: End Statements with a Semicolon and Newline <convention/CV06>
 	Rule: Use LEFT join Instead of RIGHT join <convention/CV08>
-	Rule: `UNION` and `EXCEPT` Must Be Followed by `ALL` or `DISTINCT` <convention/CV12>
+	Rule: EXCEPT and INTERSECT Must Be Followed by DISTINCT <convention/CV12>
 	Rule: Use Spaces for Indentation, Not Tabs <convention/CV13>
 
 .. _layout-rules:
@@ -86,12 +113,34 @@ Layout rules are guidelines that help developers maintain a consistent and reada
 	Rule: Columns Should Be Indented Consistently <layout/LT02>
 	Rule: Place Commas at the End of the Line <layout/LT04>
 	Rule: Function Names Must Be Immediately Followed by Parentheses <layout/LT06>
+	Rule: Put Multiline CTE Closing Brackets on a New Line <layout/LT07>
+	Rule: Add a Blank Line After Each CTE <layout/LT08>
 	Rule: Select Targets Should Be on Separate Lines <layout/LT09>
 	Rule: select Modifiers Must Be on the Same Line as select <layout/LT10>
 	Rule: UNION Operators Should Be Surrounded by Newlines <layout/LT11>
 	Rule: SQL Files Must End with a Single Trailing Newline <layout/LT12>
 	Rule: SQL Files Must Not Begin with Newlines or Whitespace <layout/LT13>
 	Rule: Align Equal (`=`) Sign in Comparison Blocks <layout/LT15>
+	Rule: Wrap JOIN Conditions (project-specific, disabled by default) <layout/LT90>
+
+.. _references-rules:
+
+----------------
+References Rules
+----------------
+
+Reference rules check identifier naming and usage. RF01 is
+disabled by default; the other reference rules are enabled by default.
+
+.. toctree::
+	:maxdepth: 1
+
+	Rule: Known Source Qualifiers (disabled by default) <references/RF01>
+	Rule: Qualify Multi-Source References <references/RF02>
+	Rule: Consistent Single-Source References <references/RF03>
+	Rule: Avoid Keywords as Identifiers <references/RF04>
+	Rule: Avoid Special Characters in Identifiers <references/RF05>
+	Rule: Remove Unnecessary Backticks <references/RF06>
 
 .. _structure-rules:
 
@@ -105,6 +154,10 @@ Structure rules are guidelines that help developers maintain a consistent and lo
 	:maxdepth: 1
 
 	Rule: Do Not Specify Redundant `ELSE NULL` in a `CASE WHEN` Statement <structure/ST01>
+	Rule: Simplify CASE Expressions <structure/ST02>
+	Rule: Remove Unused CTEs <structure/ST03>
+	Rule: Flatten Nested CASE Expressions <structure/ST04>
 	Rule: Specify Join Keys Instead of Using `USING` <structure/ST07>
 	Rule: Do Not Use `DISTINCT` with Parentheses <structure/ST08>
+	Rule: Order JOIN Comparisons by Source <structure/ST09>
 	

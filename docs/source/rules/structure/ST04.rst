@@ -1,0 +1,30 @@
+ST04: Flatten Nested CASE Expressions
+====================================
+
+``structure.nested_case`` is enabled by default. An ELSE branch containing only
+another CASE, optionally parenthesised, can be merged into its enclosing CASE:
+
+.. code-block:: sql
+
+    case when species = 'Cat' then 'Meow'
+         else case when species = 'Dog' then 'Woof' else 'Unknown' end
+    end
+
+becomes:
+
+.. code-block:: sql
+
+    case when species = 'Cat' then 'Meow'
+         when species = 'Dog' then 'Woof' else 'Unknown'
+    end
+
+Both CASE expressions must be searched CASE, or simple CASE with token-matching
+operands. Mixed forms, different operands and volatile simple operands (RAND,
+GENERATE_UUID, CURRENT_* and SESSION_USER) are skipped.
+An inner CASE without ELSE produces a flattened CASE without ELSE.
+THEN branches are not flattened.
+
+Comments inside either CASE retain the diagnostic but prevent fixes.
+Quick fixes re-indent inner branches to the outer WHEN level without changing
+multiline literal contents or line endings. LT02 handles subsequent indentation;
+iterative Fix All and formatting flatten repeated nesting until stable.

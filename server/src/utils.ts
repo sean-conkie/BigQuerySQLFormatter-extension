@@ -5,16 +5,20 @@
 
 /**
  * Merge two arrays into a single array of unique items
- * @param a 
- * @param b 
- * @param predicate 
+ * @param a
+ * @param b
+ * @param predicate
  * @returns Unique array of items from A and B
  */
-export function mergeArrayToUnique (a: any, b: any, predicate = (a: any, b: any) => a === b): any[] {
-	const c = [...a]; // copy to avoid side effects
-	// add all items from B to copy C if they're not already present
-	b.forEach((bItem: any) => (c.some((cItem) => predicate(bItem, cItem)) ? null : c.push(bItem)));
-	return c;
+export function mergeArrayToUnique(a: any, b: any, predicate = (a: any, b: any) => a === b): any[] {
+  const c = [...a]; // copy to avoid side effects
+  // add all items from B to copy C if they're not already present
+  b.forEach((bItem: any) => {
+    if (!c.some((cItem) => predicate(bItem, cItem))) {
+      c.push(bItem);
+    }
+  });
+  return c;
 }
 
 /**
@@ -24,17 +28,18 @@ export function mergeArrayToUnique (a: any, b: any, predicate = (a: any, b: any)
  * @returns An array of integers.
  */
 export function range(start: number, end: number): number[] {
-	if (start > end) {
-			throw new Error("Start value must be less than or equal to end value.");
-	}
-	const result: number[] = [];
-	for (let i = start; i < end; i++) {
-			result.push(i);
-	}
-	return result;
+  if (start > end) {
+    throw new Error('Start value must be less than or equal to end value.');
+  }
+  const result: number[] = [];
+  for (let i = start; i < end; i++) {
+    result.push(i);
+  }
+  return result;
 }
 
-const isWordChar = (char: string) : boolean => /[a-zA-Z0-9_]/.test(char);
+const isWordChar = (char: string, qualified: boolean): boolean =>
+  /[a-zA-Z0-9_]/.test(char) || (qualified && char === '.');
 
 /**
  * Finds the word in a string at a given position.
@@ -43,7 +48,7 @@ const isWordChar = (char: string) : boolean => /[a-zA-Z0-9_]/.test(char);
  * @param {number} pos - The index position in the text.
  * @returns {string|null} - The word at the given position or null if none found.
  */
-export function getWordAt(text: string, pos: number): string | null {
+export function getWordAt(text: string, pos: number, qualified = false): string | null {
   if (pos < 0 || pos >= text.length) {
     return null;
   }
@@ -57,12 +62,12 @@ export function getWordAt(text: string, pos: number): string | null {
   let end = pos;
 
   // Expand start position backward
-  while (start > 0 && isWordChar(text.charAt(start - 1))) {
+  while (start > 0 && isWordChar(text.charAt(start - 1), qualified)) {
     start--;
   }
 
   // Expand end position forward
-  while (end < text.length && isWordChar(text.charAt(end))) {
+  while (end < text.length && isWordChar(text.charAt(end), qualified)) {
     end++;
   }
 

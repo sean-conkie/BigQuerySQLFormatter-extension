@@ -1,0 +1,47 @@
+=============================
+RF01: Known Source Qualifiers
+=============================
+
+**Disabled by default**
+
+RF01 (``references.from``) reports dotted references whose first part is not
+a source in the current or an enclosing query scope. Table aliases, implicit
+aliases (``proj.ds.orders`` becomes ``orders``), CTE sources, subqueries,
+UNNEST/OFFSET aliases, table-valued functions and DML targets are recognized.
+Correlated references and known-source wildcards are accepted. Parameters,
+system variables and INFORMATION_SCHEMA paths are ignored. Statements using
+unsupported extended query syntax are skipped.
+
+Without a schema, ``address.city`` could be a STRUCT column rather than an
+unknown table qualifier. RF01 therefore remains off by default, like SQLFluff's
+BigQuery rule. Enable it only when STRUCT fields are consistently prefixed by
+their source (``c.address.city``), or your queries do not use STRUCT columns.
+
+For example, ``select vee.a from foo`` is reported; use
+``select foo.a from foo`` instead. There is no quick fix because the intended
+source cannot be inferred.
+
+Rules declared disabled by default require explicit opt-in in VS Code settings:
+
+.. code-block:: json
+
+    {
+      "bigquerySQLFormatter.rules": {
+        "RF01": { "enabled": true }
+      }
+    }
+
+The equivalent project-file setting is:
+
+.. code-block:: json
+
+    {
+      "rules": {
+        "RF01": { "enabled": true }
+      }
+    }
+
+Setting severity or options, or enabling the ``references`` group, does not
+enable an opt-in rule. Exclusions, ``groups.references: false`` and
+``severity: off`` still take precedence over ``enabled: true``.
+RF01 does not declare any options.
