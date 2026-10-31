@@ -24,6 +24,7 @@
 - Four new structure rules are enabled by default, so existing SQL may report
   new warnings: ST02, ST03, ST04 and ST09. ST02, ST04 and ST09 also apply
   through quick fixes, Fix All, format-on-save and Format Document.
+
   - **ST09 reorders existing `JOIN ... ON` conditions** so the table that
     appears earlier in `FROM` comes first, mirroring `<`/`>` and `<=`/`>=`
     (`on b.a = f.a and b.c < f.c` becomes `on f.a = b.a and f.c > b.c`).
@@ -31,6 +32,7 @@
     to opt out.
 
   To opt out of the whole group, use `"groups": { "structure": false }`.
+
 - Pipe queries (`|>`) and `FOR SYSTEM_TIME AS OF` now get RF01–RF06, AL01,
   AL02, AL04, AL05, AL06, AL08, AL09, AM04, AM05, AM06 and AM07. Existing pipe
   SQL may report new warnings and receive alias, `INNER JOIN` and reference

@@ -9,6 +9,18 @@ import { mkdtemp, writeFile, rm } from 'node:fs/promises';
 import * as path from 'node:path';
 import { getDocUri, getDocPath, activate, waitForDiagnostics } from './helper';
 
+async function applyFixAll(document: vscode.TextDocument): Promise<void> {
+  const actions = await vscode.commands.executeCommand<vscode.CodeAction[]>(
+    'vscode.executeCodeActionProvider',
+    document.uri,
+    new vscode.Range(0, 0, document.lineCount, 0),
+    'source.fixAll.bigquerySQLFormatter',
+  );
+  assert.equal(actions.length, 1);
+  assert.ok(actions[0].edit);
+  assert.equal(await vscode.workspace.applyEdit(actions[0].edit), true);
+}
+
 suite('Language server diagnostics', () => {
   const docUri = getDocUri('diagnostics.bqsql');
 
@@ -107,15 +119,7 @@ suite('Language server diagnostics', () => {
       const reset = waitForDiagnostics(uri, hasCasingDiagnostics);
       await editor.edit((edit) => edit.replace(new vscode.Range(0, 0, editor.document.lineCount, 0), source));
       await reset;
-      const actions = await vscode.commands.executeCommand<vscode.CodeAction[]>(
-        'vscode.executeCodeActionProvider',
-        uri,
-        new vscode.Range(0, 0, editor.document.lineCount, 0),
-        'source.fixAll.bigquerySQLFormatter',
-      );
-      assert.equal(actions.length, 1);
-      assert.ok(actions[0].edit);
-      assert.equal(await vscode.workspace.applyEdit(actions[0].edit), true);
+      await applyFixAll(editor.document);
       assert.equal(editor.document.getText(), expected);
     } finally {
       await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
@@ -136,15 +140,7 @@ suite('Language server diagnostics', () => {
       for (const operation of ['document', 'selection', 'Fix All']) {
         await editor.edit((edit) => edit.replace(new vscode.Range(0, 0, editor.document.lineCount, 0), source));
         if (operation === 'Fix All') {
-          const actions = await vscode.commands.executeCommand<vscode.CodeAction[]>(
-            'vscode.executeCodeActionProvider',
-            uri,
-            new vscode.Range(0, 0, editor.document.lineCount, 0),
-            'source.fixAll.bigquerySQLFormatter',
-          );
-          assert.equal(actions.length, 1);
-          assert.ok(actions[0].edit);
-          assert.equal(await vscode.workspace.applyEdit(actions[0].edit), true);
+          await applyFixAll(editor.document);
         } else {
           const options = { tabSize: 2, insertSpaces: true };
           const edits = await vscode.commands.executeCommand<vscode.TextEdit[]>(
@@ -205,16 +201,8 @@ suite('Language server diagnostics', () => {
       const reset = waitForDiagnostics(uri, hasPipeIssues);
       await editor.edit((edit) => edit.replace(new vscode.Range(0, 0, editor.document.lineCount, 0), source));
       await reset;
-      const actions = await vscode.commands.executeCommand<vscode.CodeAction[]>(
-        'vscode.executeCodeActionProvider',
-        uri,
-        new vscode.Range(0, 0, editor.document.lineCount, 0),
-        'source.fixAll.bigquerySQLFormatter',
-      );
-      assert.equal(actions.length, 1);
-      assert.ok(actions[0].edit);
       const fixed = waitForDiagnostics(uri, (diagnostics) => diagnostics.length === 0);
-      assert.equal(await vscode.workspace.applyEdit(actions[0].edit), true);
+      await applyFixAll(editor.document);
       assert.equal(editor.document.getText(), expected);
       await fixed;
     } finally {
