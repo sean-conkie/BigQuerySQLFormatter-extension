@@ -70,6 +70,9 @@ Regression tests cover multiline incremental edits and CRLF, directive edge
 cases, diagnostic limits, and overlapping fix-all edits while preserving
 individual quick fixes.
 
+Filesystem-backed server suites allow 15 seconds for tests and hooks. Temporary
+directory cleanup awaits pending creation, including when setup times out.
+
 ### Extended query coverage
 
 Pipe syntax (including FROM-only queries) and `FOR SYSTEM_TIME AS OF` have
