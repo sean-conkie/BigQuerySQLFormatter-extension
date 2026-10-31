@@ -1,23 +1,25 @@
 # Changelog
 
-## 0.7.1 - Unreleased
+## 0.7.1 - 2026-10-31
 
 ### Fixed
 
-- Fix LT15 endlessly padding operators in single-line multi-condition JOINs.
-  Comparison groups with conditions sharing a starting line are left unchanged.
-- Formatting, Format Selection, format-on-save and Fix All now recover from
-  cycling or runaway rule fixes, reapply the remaining rules, and warn with the
-  skipped rule codes instead of failing the whole document. For cycles, all
-  rules involved in the cycle are skipped; after ten consecutive growing
-  passes or 100 total passes, rules repeatedly
-  applying fixes in the last ten passes are skipped. Unstable edits are discarded.
-- Prevent related LT02 feedback loops when aligning same-line aliases, handling
-  incomplete comparison nodes or encountering multiline string contents.
-- Avoid recursive AM07 analysis of incomplete `WITH` clauses encountered by the
-  default-rule formatting corpus.
+- Fix Format Document, Format Selection, format-on-save and Fix All failing for
+  the whole file when a single-line `JOIN ... ON` has more than one condition
+  (for example `inner join b on f.a = b.a and f.c = b.c`). LT15 kept adding
+  spaces before the comparison operators and never settled. LT15 now leaves
+  comparison groups unchanged when their conditions start on the same line.
+- If rule fixes conflict or never settle, formatting and Fix All now skip only
+  the rules involved, apply the remaining fixes, and show a warning naming the
+  skipped rules, instead of failing the whole document. Rules in a fix cycle are
+  skipped; after ten consecutive passes that grow the text, or 100 passes in
+  total, the rules still making changes are skipped. Settings and diagnostics
+  are unaffected.
+- Fix LT02 fix loops with aliases on the same line, incomplete comparisons and
+  multiline string contents.
+- Stop AM07 from repeatedly re-analysing an incomplete `WITH` clause.
 
-## 0.7.0 - 2026-10-28
+## 0.7.0 - 2026-10-29
 
 ### Notable changes
 
