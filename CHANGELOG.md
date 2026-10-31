@@ -1,5 +1,26 @@
 # Changelog
 
+## Unreleased
+
+### Notable changes
+
+- The extension now runs in Restricted Mode with offline linting and formatting.
+  BigQuery integration remains disabled in untrusted workspaces.
+
+### Added
+
+- Add the opt-in, client-only BigQuery foundation: ADC authentication,
+  cancellable REST calls with timeouts and rate-limit retries, project/location
+  consent, reset/retry commands, restricted settings, status UI and metadata-only
+  output. The Node runtime is lazy loaded separately; the language server stays
+  offline. Dry-run checks and schema-aware completions will use this foundation
+  in separate features.
+- Apply the integration spike's Node-20-compatible auth/client transport,
+  cached background credential check, optional quota-project setting, and
+  actionable quota-project and location-mismatch hints.
+- Ignore BigQuery keys in `.bqsqlformatter.json` with a warning without discarding
+  valid offline rule settings.
+
 ## 0.7.1 - 2026-10-31
 
 ### Fixed

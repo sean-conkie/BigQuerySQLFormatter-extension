@@ -60,7 +60,7 @@ without requiring permission to post pull request comments.
 
 ## Testing
 
-`npm test` runs server unit tests after compilation. `npm run coverage` also
+`npm test` runs server and BigQuery client unit tests after compilation. `npm run coverage` also
 generates `coverage/lcov.info` and fails if overall branch coverage falls below
 80%. CI uploads coverage to Codecov using `CODECOV_TOKEN`. Fork pull requests use
 public-repository tokenless uploads; configure the token as a Dependabot secret
@@ -118,6 +118,40 @@ download and launch Visual Studio Code and require a display. On headless Linux:
 ```sh
 xvfb-run -a npm run citest
 ```
+
+### BigQuery foundation tests
+
+The client-only BigQuery runtime is a separate `dist/bigquery.js` bundle.
+Offline unit tests use `client/src/test/bigquery/mockServer.ts` for dry runs,
+dataset/table metadata, authentication failures, rate limits, network failures,
+timeouts, optional quota headers, quota/location errors and proxy routing.
+Fixtures also include SELECT/SCRIPT responses, pagination and nested RECORD
+fields with omitted mode. A unit guard forbids global `fetch` in the BigQuery
+source and checks the Node-20-compatible auth majors and Dependabot ignores.
+CI never uses Google or real credentials.
+`BQSQL_TEST_BIGQUERY_ENDPOINT` accepts only loopback HTTP URLs and switches the
+runtime to synthetic credentials; it is not a Visual Studio Code setting.
+
+Run the focused tests after compilation:
+
+```sh
+npx --no-install mocha client/out/test/bigquery/unit.test.js server/out/tests/projectSettings.test.js
+node client/out/test/runTest
+BQSQL_TEST_UNTRUSTED=1 node client/out/test/runTest
+```
+
+Extension-host tests exercise lazy loading, the real settings/consent adapter,
+mock REST requests and cancellation. The untrusted run also verifies that
+linting still works and that user opt-ins cannot bypass workspace trust.
+Activation-to-language-server-readiness timing is printed by the test helper.
+
+The spike verified ADC user/key-file/impersonated credentials, token refresh,
+automatic location selection and Visual Studio Code proxy routing on 1.91 and 1.144.
+Remaining manual checks include workload identity and a controlled
+TLS-intercepting proxy with `http.proxyStrictSSL: false` (restore certificate
+verification afterwards). Confirm optional quota-project permissions, project/location
+consent changes and reset cancellation, and inspect the BigQuery output channel
+for metadata only. Do not retain query text, schema contents or tokens in reports.
 
 Packaging and end-to-end CI run on Linux, macOS, and Windows. End-to-end CI covers
 both Visual Studio Code 1.91.0 and stable. Set `BQSQL_TEST_VSCODE_VERSION=1.91.0` to run the

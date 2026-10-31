@@ -116,6 +116,22 @@ jobs:
           BQSQL_TEST_VSCODE_VERSION: ${{ matrix.vscode-version }}
         run: npm run citest
 
+      - name: Restricted Mode E2E tests (Linux)
+        if: runner.os == 'Linux'
+        env:
+          BQSQL_TEST_VSIX: ${{ github.workspace }}/extension.vsix
+          BQSQL_TEST_VSCODE_VERSION: ${{ matrix.vscode-version }}
+          BQSQL_TEST_UNTRUSTED: "1"
+        run: xvfb-run -a node ./client/out/test/runTest
+
+      - name: Restricted Mode E2E tests (macOS and Windows)
+        if: runner.os != 'Linux'
+        env:
+          BQSQL_TEST_VSIX: ${{ github.workspace }}/extension.vsix
+          BQSQL_TEST_VSCODE_VERSION: ${{ matrix.vscode-version }}
+          BQSQL_TEST_UNTRUSTED: "1"
+        run: node ./client/out/test/runTest
+
       - name: Upload E2E failure logs
         if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

@@ -1,5 +1,6 @@
 const assert = require('node:assert/strict');
 const path = require('node:path');
+const { readFileSync } = require('node:fs');
 const { listFiles, PackageManager } = require('@vscode/vsce');
 
 async function main() {
@@ -19,6 +20,7 @@ async function main() {
   for (const required of [
     'CHANGELOG.md',
     'dist/extension.js',
+    'dist/bigquery.js',
     'dist/server.js',
     'dist/syntaxes/googlesql.tmLanguage.json',
     'dist/onig.wasm',
@@ -27,6 +29,10 @@ async function main() {
     'language-configuration.json',
   ]) {
     assert(files.includes(required), `Missing runtime file: ${required}`);
+  }
+  const notices = readFileSync(path.resolve(__dirname, '../dist/ThirdPartyNotices.txt'), 'utf8');
+  for (const dependency of ['google-auth-library', 'gaxios', 'https-proxy-agent']) {
+    assert(notices.includes(`${dependency}@`), `Missing BigQuery dependency notice: ${dependency}`);
   }
   console.log(`Verified ${files.length} packaged files: no development content and all required runtime assets present.`);
 }
