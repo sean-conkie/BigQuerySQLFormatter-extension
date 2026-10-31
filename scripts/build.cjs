@@ -33,7 +33,13 @@ function writeNotices(metafile) {
     const licenses = readdirSync(absolute, { withFileTypes: true })
       .filter((entry) => entry.isFile() && /^(?:licen[sc]e|notice|third[-_ ]party)/i.test(entry.name))
       .map((entry) => readFileSync(path.join(absolute, entry.name), 'utf8'));
-    if (licenses.length === 0) throw new Error(`Missing license notices for ${name}`);
+    if (licenses.length === 0) {
+      const readme = path.join(absolute, 'README.md');
+      const content = readFileSync(readme, 'utf8');
+      const embeddedLicense = /(?:^|\n)License\r?\n-+\r?\n([\s\S]*?)(?:\n\[[^\]]+\]:|$)/i.exec(content)?.[1];
+      if (!embeddedLicense) throw new Error(`Missing license notices for ${name}`);
+      licenses.push(embeddedLicense.trim());
+    }
     return `${name}@${version}\n${licenses.join('\n')}`;
   });
   writeFileSync(path.join(root, 'dist/ThirdPartyNotices.txt'), notices.join('\n\n--------------------\n\n'));
@@ -45,6 +51,7 @@ async function main() {
     absWorkingDir: root,
     entryPoints: {
       extension: 'client/src/extension.ts',
+      bigquery: 'client/src/bigquery/index.ts',
       server: 'server/src/server.ts',
     },
     outdir: 'dist',
@@ -66,6 +73,14 @@ async function main() {
         }));
         build.onEnd((result) => {
           if (result.errors.length === 0) {
+            for (const [output, metadata] of Object.entries(result.metafile.outputs)) {
+              if (!/dist\/(?:extension|server)\.js$/.test(output)) continue;
+              const forbidden = Object.keys(metadata.inputs).filter((input) =>
+                /client\/src\/bigquery\/(?:index|rest|service|settings)\.ts$/.test(input) ||
+                /node_modules\/(?:google-auth-library|gaxios|https-proxy-agent)\//.test(input)
+              );
+              if (forbidden.length > 0) throw new Error(`BigQuery runtime must remain isolated from ${output}: ${forbidden.join(', ')}`);
+            }
             copyAssets();
             writeNotices(result.metafile);
           }

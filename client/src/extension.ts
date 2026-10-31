@@ -13,15 +13,18 @@ import {
   type ServerOptions,
   TransportKind,
 } from 'vscode-languageclient/node';
+import { registerBigQuery, type BigQueryApi } from './bigquery/loader';
 
 let client: LanguageClient;
 
 export interface ExtensionApi {
   ready(): Promise<void>;
   serverLog(): readonly string[];
+  bigquery: BigQueryApi;
 }
 
 export function activate(context: ExtensionContext): ExtensionApi {
+  const bigquery = registerBigQuery(context);
   // The server is implemented in node
   const serverModule = context.asAbsolutePath(path.join('dist', 'server.js'));
 
@@ -99,7 +102,7 @@ export function activate(context: ExtensionContext): ExtensionApi {
   });
   const started = Promise.all([client.start(), ready]).then(() => undefined);
   void started.catch((error) => client.error('Language server startup failed', error, true));
-  return { ready: () => started, serverLog: () => logs.slice() };
+  return { ready: () => started, serverLog: () => logs.slice(), bigquery };
 }
 
 export function deactivate(): Thenable<void> | undefined {
