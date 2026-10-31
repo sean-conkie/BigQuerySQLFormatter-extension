@@ -36,8 +36,11 @@ import { CompletionBuilder } from './completions';
 import { ValidationScheduler } from './validationScheduler';
 import { awaitWithCancellation, checkCancellation } from './cancellation';
 import { GrammarLoader } from './linter/grammarLoader';
+import { tokenizeSource } from './linter/rules/source';
 
 const connection = createConnection(ProposedFeatures.all);
+
+connection.onRequest('bigquerySQLFormatter/sourceTokens', ({ text }: { text: string }) => tokenizeSource(text));
 
 let hasConfigurationCapability = false;
 let hasWorkspaceFolderCapability = false;

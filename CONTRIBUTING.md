@@ -135,7 +135,7 @@ runtime to synthetic credentials; it is not a Visual Studio Code setting.
 Run the focused tests after compilation:
 
 ```sh
-npx --no-install mocha client/out/test/bigquery/unit.test.js server/out/tests/projectSettings.test.js
+npx --no-install mocha "client/out/test/bigquery/*.test.js" server/out/tests/projectSettings.test.js server/out/tests/serverProcess.test.js
 node client/out/test/runTest
 BQSQL_TEST_UNTRUSTED=1 node client/out/test/runTest
 ```

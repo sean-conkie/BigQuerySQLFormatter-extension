@@ -39,6 +39,7 @@
         "bigquerySQLFormatter.bigquery.dryRun.enabled",
         "bigquerySQLFormatter.bigquery.dryRun.trigger",
         "bigquerySQLFormatter.bigquery.dryRun.costPerTiB",
+        "bigquerySQLFormatter.bigquery.dryRun.parameters",
         "bigquerySQLFormatter.bigquery.schema.enabled",
         "bigquerySQLFormatter.bigquery.schema.cacheTtlMinutes"
       ]
@@ -46,6 +47,8 @@
   },
   "contributes": {
     "commands": [
+      { "command": "bigquerySQLFormatter.bigquery.dryRunFile", "title": "BigQuery SQL: Dry Run Current File" },
+      { "command": "bigquerySQLFormatter.bigquery.dryRunSelection", "title": "BigQuery SQL: Dry Run Selection" },
       { "command": "bigquerySQLFormatter.bigquery.resetConsent", "title": "BigQuery SQL: Reset BigQuery Consent" },
       { "command": "bigquerySQLFormatter.bigquery.retry", "title": "BigQuery SQL: Retry BigQuery Connection" },
       { "command": "bigquerySQLFormatter.bigquery.actions", "title": "BigQuery SQL: BigQuery Actions" }
@@ -97,13 +100,28 @@
           "type": "string",
           "enum": ["onSave", "onDemand"],
           "default": "onSave",
-          "description": "Trigger for the forthcoming dry-run feature."
+          "description": "Run dry runs on save, or only through the dry-run commands."
         },
         "bigquerySQLFormatter.bigquery.dryRun.costPerTiB": {
           "scope": "resource",
-          "type": "number",
+          "type": ["number", "null"],
+          "default": null,
           "minimum": 0,
-          "description": "Optional price per TiB for the forthcoming dry-run cost estimate. No built-in price."
+          "description": "Optional price per TiB for the dry-run cost estimate. No built-in price or currency."
+        },
+        "bigquerySQLFormatter.bigquery.dryRun.parameters": {
+          "scope": "resource",
+          "type": "object",
+          "description": "Optional named scalar query parameters. Each name requires a BigQuery type and value. Unspecified parameters are assumed NULL. Query parameter values are sent to Google.",
+          "additionalProperties": {
+            "type": "object",
+            "required": ["type", "value"],
+            "properties": {
+              "type": { "type": "string" },
+              "value": { "type": ["string", "number", "boolean", "null"] }
+            },
+            "additionalProperties": false
+          }
         },
         "bigquerySQLFormatter.bigquery.schema.enabled": {
           "scope": "resource",
@@ -673,7 +691,7 @@
     "format": "biome format --write",
     "package:check": "node scripts/check-package.cjs",
     "postinstall": "npm ci --prefix client && npm ci --prefix server",
-    "test": "node --test scripts/generate-completions.test.cjs scripts/generate-keywords.test.cjs && mocha \"server/out/tests/**/*.test.js\" \"client/out/test/bigquery/unit.test.js\"",
+    "test": "node --test scripts/generate-completions.test.cjs scripts/generate-keywords.test.cjs && mocha \"server/out/tests/**/*.test.js\" \"client/out/test/bigquery/*.test.js\"",
     "coverage": "nyc --check-coverage --branches 80 --reporter=lcov --reporter=text-summary npm test",
     "citest": "npm test && node ./client/out/test/runTest",
     "deploy": "vsce publish --no-yarn"

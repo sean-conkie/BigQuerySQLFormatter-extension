@@ -9,12 +9,15 @@
 
 ### Added
 
+- Add opt-in BigQuery dry runs on save or demand for whole files and selections,
+  isolated syntax/schema/permission diagnostics cleared on edit, cancellable
+  requests, byte and optional cost estimates, script limitations, referenced-table
+  tooltips, named scalar parameter settings and template skipping.
 - Add the opt-in, client-only BigQuery foundation: ADC authentication,
   cancellable REST calls with timeouts and rate-limit retries, project/location
   consent, reset/retry commands, restricted settings, status UI and metadata-only
   output. The Node runtime is lazy loaded separately; the language server stays
-  offline. Dry-run checks and schema-aware completions will use this foundation
-  in separate features.
+  offline. Schema-aware completions will use this foundation in a separate feature.
 - Apply the integration spike's Node-20-compatible auth/client transport,
   cached background credential check, optional quota-project setting, and
   actionable quota-project and location-mismatch hints.

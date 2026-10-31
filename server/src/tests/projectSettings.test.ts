@@ -24,7 +24,7 @@ describe('Rule configuration', () => {
     const keys = Object.keys(manifest.contributes.configuration.properties).filter((key) =>
       key.startsWith('bigquerySQLFormatter.bigquery.'),
     );
-    expect(keys).to.have.length(10);
+    expect(keys).to.have.length(11);
     expect(trust.restrictedConfigurations).to.have.members(keys);
     expect(keys.some((key) => /endpoint|url/i.test(key))).to.equal(false);
     expect(
@@ -33,6 +33,12 @@ describe('Rule configuration', () => {
     expect(
       manifest.contributes.configuration.properties['bigquerySQLFormatter.bigquery.schema.enabled'].default,
     ).to.equal(false);
+    expect(
+      manifest.contributes.configuration.properties['bigquerySQLFormatter.bigquery.dryRun.costPerTiB'].default,
+    ).to.equal(null);
+    expect(
+      manifest.contributes.configuration.properties['bigquerySQLFormatter.bigquery.dryRun.parameters'].scope,
+    ).to.equal('resource');
   });
   it('keeps contributed option schemas aligned with rule declarations', () => {
     const schema = manifest.contributes.configuration.properties['bigquerySQLFormatter.rules'];

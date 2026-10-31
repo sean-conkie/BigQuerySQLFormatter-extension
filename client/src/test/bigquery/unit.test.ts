@@ -19,6 +19,7 @@ import {
 import { BigQueryService, type BigQueryHost } from '../../bigquery/service';
 import { parseBigQuerySettings, type BigQuerySettings } from '../../bigquery/settings';
 import { MockBigQueryServer } from './mockServer';
+import { dryRunResult } from '../../bigquery/dryRun';
 
 describe('BigQuery foundation (offline)', function () {
   this.timeout(15000);
@@ -367,6 +368,7 @@ describe('BigQuery foundation (offline)', function () {
         fields: [{ name: 'record_column', type: 'RECORD', fields: [{ name: 'nested_column', type: 'STRING' }] }],
       },
     });
+
     await service.request('schema', { operation: 'tables.list', pageToken: 'next-table-page' });
     assert.match(mock.requests[mock.requests.length - 1].url, /pageToken=next-table-page/);
     mock.fallback = 'invalidQuery';
@@ -400,6 +402,69 @@ describe('BigQuery foundation (offline)', function () {
     service.invalidate();
     await service.request('schema', { operation: 'datasets.list' });
     assert.equal(prompts.length, 6);
+  });
+
+  it('sends declared scalar parameters and preserves the first query error without logging it', async () => {
+    const parameters = { name: { type: 'STRING', value: 'PRIVATE_PARAMETER' }, count: { type: 'INT64', value: 3 } };
+    await service.request('dryRun', { operation: 'jobs.insert', query: 'SELECT @name, @count', parameters });
+    assert.deepEqual(mock.requests[0].body, {
+      jobReference: { projectId: 'test-project' },
+      configuration: {
+        dryRun: true,
+        query: {
+          query: 'SELECT @name, @count',
+          useLegacySql: false,
+          parameterMode: 'NAMED',
+          queryParameters: [
+            { name: 'name', parameterType: { type: 'STRING' }, parameterValue: { value: 'PRIVATE_PARAMETER' } },
+            { name: 'count', parameterType: { type: 'INT64' }, parameterValue: { value: '3' } },
+          ],
+          defaultDataset: { projectId: 'test-project', datasetId: 'test_dataset' },
+        },
+      },
+    });
+    mock.fallback = 'invalidQuery';
+    await assert.rejects(service.request('dryRun', { operation: 'jobs.insert', query: 'SELECT nope' }), {
+      queryMessage: 'Unrecognized name: PRIVATE_QUERY at [2:8]',
+    });
+    mock.fallback = 'success';
+    mock.jobPayload = { status: { errorResult: { message: 'first at [1:2]' }, errors: [{ message: 'second' }] } };
+    await assert.rejects(service.request('dryRun', { operation: 'jobs.insert', query: 'SELECT nope' }), {
+      queryMessage: 'first at [1:2]',
+    });
+    assert(!JSON.stringify(logs).includes('PRIVATE_'));
+    assert(!notifications.join(' ').includes('PRIVATE_'));
+  });
+
+  it('validates DDL/DML using only dry-run requests and displays their returned estimates', async () => {
+    for (const [query, statementType] of [
+      ['CREATE SCHEMA dataset', 'CREATE_SCHEMA'],
+      ['CREATE TABLE dataset.table AS SELECT 1 AS n', 'CREATE_TABLE_AS_SELECT'],
+      ['CREATE VIEW dataset.view AS SELECT 1 AS n', 'CREATE_VIEW'],
+      ['CREATE TEMP FUNCTION f(n INT64) AS (n); SELECT f(1)', 'SCRIPT'],
+      ['INSERT INTO dataset.table SELECT 1', 'INSERT'],
+      ['UPDATE dataset.table SET n = 1 WHERE TRUE', 'UPDATE'],
+      ['DELETE FROM dataset.table WHERE TRUE', 'DELETE'],
+      ['MERGE dataset.table t USING dataset.other s ON t.n = s.n WHEN MATCHED THEN DELETE', 'MERGE'],
+    ]) {
+      mock.jobPayload = { statistics: { totalBytesProcessed: '8192', query: { statementType } } };
+      const response = await service.request('dryRun', { operation: 'jobs.insert', query });
+      const request = mock.requests[mock.requests.length - 1];
+      assert.equal(request.method, 'POST');
+      assert.deepEqual(request.body, {
+        jobReference: { projectId: 'test-project' },
+        configuration: {
+          dryRun: true,
+          query: {
+            query,
+            useLegacySql: false,
+            defaultDataset: { projectId: 'test-project', datasetId: 'test_dataset' },
+          },
+        },
+      });
+      assert.match(dryRunResult(response, false).label, /≈ 8.19 KB processed/);
+    }
+    assert.equal(mock.requests.length, 8);
   });
 
   it('names a cross-project schema lookup and billing project in consent', async () => {
