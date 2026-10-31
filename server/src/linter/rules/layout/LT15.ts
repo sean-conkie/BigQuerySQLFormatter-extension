@@ -77,6 +77,11 @@ export class ComparisonOperators extends ParserRule {
   }
 
   private processComparisonGroup(comparison: ComparisonGroupAST, documentUri: string | null = null): Diagnostic[] {
+    const lines = comparison.comparisons.map((comp) => comp.startLine);
+    if (new Set(lines).size !== lines.length) {
+      return [];
+    }
+
     const errors: Diagnostic[] = [];
     const operators: Token[] = [];
     const operatorIndexes: number[] = [];

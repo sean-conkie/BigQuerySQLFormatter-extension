@@ -57,6 +57,11 @@ function reportConfigurationError(message: string): void {
   void connection.sendNotification(ShowMessageNotification.type, { type: MessageType.Error, message });
 }
 
+function reportFormattingWarning(message: string): void {
+  connection.console.warn(message);
+  void connection.sendNotification(ShowMessageNotification.type, { type: MessageType.Warning, message });
+}
+
 async function settingsForDocument(uri: string): Promise<ServerSettings> {
   try {
     return await getDocumentSettings(
@@ -216,7 +221,7 @@ connection.onCodeAction(async (params: CodeActionParams, token): Promise<CodeAct
   const document = documents.get(params.textDocument.uri);
   if (!document) return [];
   const version = document.version;
-  const actions = await createDocumentCodeActions(document, settings, params, token);
+  const actions = await createDocumentCodeActions(document, settings, params, token, reportFormattingWarning);
   ensureCurrentDocument(document, version);
   return actions;
 });
@@ -234,7 +239,7 @@ async function formatting(uri: string, range: Range | undefined, token: Cancella
   const document = documents.get(uri);
   if (!document) return [];
   const version = document.version;
-  const edits = await formatDocument(document, settings, range, token);
+  const edits = await formatDocument(document, settings, range, token, reportFormattingWarning);
   ensureCurrentDocument(document, version);
   return edits;
 }

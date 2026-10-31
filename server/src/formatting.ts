@@ -17,6 +17,8 @@ import { checkCancellation } from './cancellation';
 
 let nextRequest = 0;
 
+type ReportFormattingWarning = (message: string) => void;
+
 async function withIsolatedLinter<T>(
   document: TextDocument,
   settings: ServerSettings,
@@ -39,6 +41,7 @@ export async function createDocumentCodeActions(
   settings: ServerSettings,
   params: CodeActionParams,
   token: CancellationToken = CancellationToken.None,
+  reportWarning: ReportFormattingWarning = console.warn,
 ): Promise<CodeAction[]> {
   return withIsolatedLinter(document, settings, async (linter, snapshot) => {
     const diagnostics = await linter.verify(
@@ -51,7 +54,7 @@ export async function createDocumentCodeActions(
     const fixAll = all.find((action) => action.kind === sourceFixAllKind);
     if (fixAll) {
       fixAll.edit = {
-        changes: { [snapshot.uri]: await formatDocument(snapshot, settings, undefined, token) },
+        changes: { [snapshot.uri]: await formatDocument(snapshot, settings, undefined, token, reportWarning) },
       };
     }
     checkCancellation(token);
@@ -78,6 +81,7 @@ export async function formatDocument(
   settings: ServerSettings,
   range?: Range,
   token: CancellationToken = CancellationToken.None,
+  reportWarning: ReportFormattingWarning = console.warn,
 ): Promise<TextEdit[]> {
   return withIsolatedLinter(document, settings, async (linter, snapshot) => {
     const original = document.getText();
@@ -86,8 +90,11 @@ export async function formatDocument(
     const replacementRange = { start: document.positionAt(start), end: document.positionAt(originalEnd) };
     let end = originalEnd;
     let current = snapshot;
-    const seen = new Set<string>([original]);
-    for (let pass = 0; pass < 100; pass++) {
+    const seen = new Map<string, number>([[original, 0]]);
+    const appliedRules: string[][] = [];
+    const skippedRules = new Set<string>();
+    let growingPasses = 0;
+    while (true) {
       checkCancellation(token);
       const diagnostics: Diagnostic[] = await linter.verify(
         { uri: current.uri, languageId: current.languageId, version: current.version, text: current.getText() },
@@ -98,7 +105,12 @@ export async function formatDocument(
         {
           textDocument: { uri: current.uri },
           range: selection,
-          context: { diagnostics, only: [sourceFixAllKind] },
+          context: {
+            diagnostics: diagnostics.filter(
+              (diagnostic) => !skippedRules.has(String(diagnostic.code).split(':', 1)[0]),
+            ),
+            only: [sourceFixAllKind],
+          },
         },
         selection,
       );
@@ -106,17 +118,47 @@ export async function formatDocument(
       const edits = actions[0]?.edit?.changes?.[current.uri] ?? [];
       const text = TextDocument.applyEdits(current, edits);
       if (text === current.getText()) {
+        if (skippedRules.size > 0) {
+          reportWarning(
+            `BigQuery SQL Formatter skipped non-converging rules: ${[...skippedRules].sort().join(', ')}. Other fixes were applied.`,
+          );
+        }
         return text === original ? [] : [{ range: replacementRange, newText: text.slice(start, end) }];
       }
-      if (seen.has(text)) {
-        throw new ResponseError(LSPErrorCodes.RequestFailed, 'BigQuery SQL formatting fixes did not converge (cycle).');
+      appliedRules.push([
+        ...new Set(actions[0]?.diagnostics?.map((diagnostic) => String(diagnostic.code).split(':', 1)[0]) ?? []),
+      ]);
+      growingPasses = text.length > current.getText().length ? growingPasses + 1 : 0;
+      const cycleStart = seen.get(text);
+      if (cycleStart !== undefined || growingPasses === 10 || appliedRules.length === 100) {
+        const recent = appliedRules.slice(cycleStart ?? -10);
+        const involved = new Set(
+          recent
+            .flat()
+            .filter((code) => cycleStart !== undefined || recent.filter((codes) => codes.includes(code)).length > 1),
+        );
+        const newRules = [...involved].filter((code) => !skippedRules.has(code));
+        if (newRules.length === 0) {
+          throw new ResponseError(
+            LSPErrorCodes.RequestFailed,
+            'BigQuery SQL formatting did not converge; fixes did not identify their rule codes.',
+          );
+        }
+        for (const code of newRules) skippedRules.add(code);
+        // Discard unstable edits, then reapply the remaining rules from the original selection.
+        current = snapshot;
+        end = originalEnd;
+        seen.clear();
+        seen.set(original, 0);
+        appliedRules.length = 0;
+        growingPasses = 0;
+        continue;
       }
-      seen.add(text);
+      seen.set(text, appliedRules.length);
       for (const edit of edits) {
         end += edit.newText.length - (current.offsetAt(edit.range.end) - current.offsetAt(edit.range.start));
       }
       current = TextDocument.create(current.uri, current.languageId, current.version + 1, text);
     }
-    throw new ResponseError(LSPErrorCodes.RequestFailed, 'BigQuery SQL formatting exceeded 100 fix passes.');
   });
 }

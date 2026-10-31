@@ -21,6 +21,9 @@ import type { FileMap } from '../../parser';
 import { findToken } from '../../parser/utils';
 import { excludeTokensWithMatchingScopes, includeTokensWithMatchingScopes } from '../../parser/token';
 import { ComparisonAST, ComparisonGroupAST } from '../../parser/ast';
+import { globalTokenCache } from '../../parser/tokenCache';
+import { comparePositions } from '../../parser/queryBlocks';
+import { sourceTokens } from '../source';
 
 type RangeCache = Map<string, number>;
 const documentCache: Map<DocumentUri, RangeCache> = new Map<DocumentUri, RangeCache>();
@@ -63,13 +66,15 @@ export class Indent extends ParserRule {
       const columns = ast[i].columns;
       const aliasRanges: Range[] = [];
       const columnEndIndexes: number[] = [];
+      const columnLines = columns.map((column) => column.startLine);
+      const alignAliases = new Set(columnLines).size === columnLines.length;
       const from = ast[i].from;
       const joins = ast[i].joins;
       const where = ast[i].where;
 
       columns.forEach((column) => {
         // add alias and index details for later processing
-        if (column.alias) {
+        if (alignAliases && column.alias) {
           const aliasToken = findToken(column.tokens, 'entity.name.tag');
           if (aliasToken) {
             aliasRanges.push({
@@ -178,7 +183,16 @@ export class Indent extends ParserRule {
 
     documentCache.set(documentUri!, cache);
 
-    return errors.length > 0 ? errors : null;
+    const document = documentUri === null ? undefined : globalTokenCache.get(documentUri);
+    const literals = document ? sourceTokens(document).filter((token) => token.literal) : [];
+    const safeErrors = errors.filter(
+      ({ range }) =>
+        !literals.some(
+          ({ range: literal }) =>
+            comparePositions(range.start, literal.end) < 0 && comparePositions(range.end, literal.start) > 0,
+        ),
+    );
+    return safeErrors.length > 0 ? safeErrors : null;
   }
 
   /**
@@ -259,6 +273,9 @@ export class Indent extends ParserRule {
       let comparisonOffset = offset;
 
       if (comparison instanceof ComparisonAST) {
+        if (comparison.startLine == null || comparison.startIndex == null) {
+          return;
+        }
         const operator = comparison.logicalOperator;
         if (operator) {
           // adjust offset based on operator

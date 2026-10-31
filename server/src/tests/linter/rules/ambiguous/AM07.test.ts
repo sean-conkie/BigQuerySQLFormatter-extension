@@ -7,6 +7,10 @@ describe('AM07 set column counts', () => {
   const uri = 'am07.bqsql';
   afterEach(() => globalTokenCache.delete(uri));
   for (const [text, count] of [
+    ['WITH', 0],
+    ['WITH AS (SELECT 1)', 0],
+    ['WITH cte', 0],
+    ['WITH cte AS SELECT 1', 0],
     ['SELECT a UNION ALL SELECT b, c', 1],
     ['SELECT a, b UNION SELECT c, d', 0],
     ['SELECT a UNION ALL SELECT b, c UNION ALL SELECT d, e, f', 2],

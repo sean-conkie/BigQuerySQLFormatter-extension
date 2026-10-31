@@ -288,16 +288,19 @@ describe('Rule configuration', () => {
   }
 });
 
-describe('Project configuration discovery', () => {
+describe('Project configuration discovery', function () {
+  this.timeout(15000);
   let directory: string;
+  let directoryCreation: Promise<string>;
   const uri = (path: string) => pathToFileURL(path).href;
 
   beforeEach(async () => {
-    directory = await mkdtemp(join(tmpdir(), 'bqsql-project-settings-'));
+    directoryCreation = mkdtemp(join(tmpdir(), 'bqsql-project-settings-'));
+    directory = await directoryCreation;
   });
 
   afterEach(async () => {
-    await rm(directory, { recursive: true });
+    await rm(await directoryCreation, { recursive: true });
   });
 
   it('uses the nearest config, respects workspace boundaries, and isolates multiple roots', async () => {

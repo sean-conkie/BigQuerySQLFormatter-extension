@@ -9,6 +9,18 @@ import { mkdtemp, writeFile, rm } from 'node:fs/promises';
 import * as path from 'node:path';
 import { getDocUri, getDocPath, activate, waitForDiagnostics } from './helper';
 
+async function applyFixAll(document: vscode.TextDocument): Promise<void> {
+  const actions = await vscode.commands.executeCommand<vscode.CodeAction[]>(
+    'vscode.executeCodeActionProvider',
+    document.uri,
+    new vscode.Range(0, 0, document.lineCount, 0),
+    'source.fixAll.bigquerySQLFormatter',
+  );
+  assert.equal(actions.length, 1);
+  assert.ok(actions[0].edit);
+  assert.equal(await vscode.workspace.applyEdit(actions[0].edit), true);
+}
+
 suite('Language server diagnostics', () => {
   const docUri = getDocUri('diagnostics.bqsql');
 
@@ -107,16 +119,47 @@ suite('Language server diagnostics', () => {
       const reset = waitForDiagnostics(uri, hasCasingDiagnostics);
       await editor.edit((edit) => edit.replace(new vscode.Range(0, 0, editor.document.lineCount, 0), source));
       await reset;
-      const actions = await vscode.commands.executeCommand<vscode.CodeAction[]>(
-        'vscode.executeCodeActionProvider',
-        uri,
-        new vscode.Range(0, 0, editor.document.lineCount, 0),
-        'source.fixAll.bigquerySQLFormatter',
-      );
-      assert.equal(actions.length, 1);
-      assert.ok(actions[0].edit);
-      assert.equal(await vscode.workspace.applyEdit(actions[0].edit), true);
+      await applyFixAll(editor.document);
       assert.equal(editor.document.getText(), expected);
+    } finally {
+      await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
+  test('Formats single-line multi-condition JOINs through document, selection and Fix All providers', async () => {
+    const directory = await mkdtemp(path.join(getDocPath(''), 'join-convergence-'));
+    const uri = vscode.Uri.file(path.join(directory, 'query.bqsql'));
+    const source = 'select f.a from ds.foo as f\njoin ds.bar as b on b.a = f.a and b.c < f.c;\n';
+    const expected = 'select f.a from ds.foo f\n inner join ds.bar b on f.a = b.a and f.c > b.c;\n';
+    try {
+      await writeFile(uri.fsPath, source);
+      const ready = waitForDiagnostics(uri, (diagnostics) => diagnostics.length > 0);
+      const editor = await activate(uri);
+      await ready;
+      for (const operation of ['document', 'selection', 'Fix All']) {
+        await editor.edit((edit) => edit.replace(new vscode.Range(0, 0, editor.document.lineCount, 0), source));
+        if (operation === 'Fix All') {
+          await applyFixAll(editor.document);
+        } else {
+          const options = { tabSize: 2, insertSpaces: true };
+          const edits = await vscode.commands.executeCommand<vscode.TextEdit[]>(
+            operation === 'document' ? 'vscode.executeFormatDocumentProvider' : 'vscode.executeFormatRangeProvider',
+            uri,
+            ...(operation === 'document' ? [options] : [new vscode.Range(0, 0, editor.document.lineCount, 0), options]),
+          );
+          const edit = new vscode.WorkspaceEdit();
+          edit.set(uri, edits);
+          assert.equal(await vscode.workspace.applyEdit(edit), true);
+        }
+        assert.equal(editor.document.getText(), expected, operation);
+        const repeated = await vscode.commands.executeCommand<vscode.TextEdit[] | undefined>(
+          'vscode.executeFormatDocumentProvider',
+          uri,
+          { tabSize: 2, insertSpaces: true },
+        );
+        assert.ok(!repeated || repeated.length === 0);
+      }
     } finally {
       await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
       await rm(directory, { recursive: true, force: true });
@@ -158,16 +201,8 @@ suite('Language server diagnostics', () => {
       const reset = waitForDiagnostics(uri, hasPipeIssues);
       await editor.edit((edit) => edit.replace(new vscode.Range(0, 0, editor.document.lineCount, 0), source));
       await reset;
-      const actions = await vscode.commands.executeCommand<vscode.CodeAction[]>(
-        'vscode.executeCodeActionProvider',
-        uri,
-        new vscode.Range(0, 0, editor.document.lineCount, 0),
-        'source.fixAll.bigquerySQLFormatter',
-      );
-      assert.equal(actions.length, 1);
-      assert.ok(actions[0].edit);
       const fixed = waitForDiagnostics(uri, (diagnostics) => diagnostics.length === 0);
-      assert.equal(await vscode.workspace.applyEdit(actions[0].edit), true);
+      await applyFixAll(editor.document);
       assert.equal(editor.document.getText(), expected);
       await fixed;
     } finally {
@@ -230,13 +265,15 @@ suite('Language server diagnostics', () => {
       );
       assert.ok(!second || second.length === 0);
       await settings.update('formatOnSave', true, vscode.ConfigurationTarget.Global, true);
+      const joinSource = 'select f.a from ds.foo as f\njoin ds.bar as b on b.a = f.a and b.c < f.c;\n';
+      const joinExpected = 'select f.a from ds.foo f\n inner join ds.bar b on f.a = b.a and f.c > b.c;\n';
       const formatInputReady = waitForDiagnostics(
         uri,
         (diagnostics) => hasRule(diagnostics, 'CP04'),
         'format-on-save input',
       );
       await editor.edit((edit) =>
-        edit.replace(new vscode.Range(0, 0, editor.document.lineCount, 0), 'select a = NULL;\nselect b = NULL;\n'),
+        edit.replace(new vscode.Range(0, 0, editor.document.lineCount, 0), `select a = NULL;\n${joinSource}`),
       );
       await formatInputReady;
       assert.equal(editor.document.isDirty, true, 'format-on-save input must be dirty');
@@ -248,7 +285,7 @@ suite('Language server diagnostics', () => {
       );
       assert.equal(await editor.document.save(), true);
       await formattedOnSave;
-      assert.equal(editor.document.getText(), 'select a is null;\nselect b is null;\n', 'format-on-save output');
+      assert.equal(editor.document.getText(), `select a is null;\n${joinExpected}`, 'format-on-save output');
       await settings.update('formatOnSave', false, vscode.ConfigurationTarget.Global, true);
       await settings.update(
         'codeActionsOnSave',
@@ -258,13 +295,13 @@ suite('Language server diagnostics', () => {
       );
       const fixInputReady = waitForDiagnostics(uri, (diagnostics) => hasRule(diagnostics, 'CV05'), 'fix-on-save input');
       await editor.edit((edit) =>
-        edit.replace(new vscode.Range(0, 0, editor.document.lineCount, 0), 'select a = null;\nselect b = null;\n'),
+        edit.replace(new vscode.Range(0, 0, editor.document.lineCount, 0), `select a = null;\n${joinSource}`),
       );
       await fixInputReady;
       const fixedOnSave = waitForDiagnostics(uri, (diagnostics) => !hasRule(diagnostics, 'CV05'), 'fix-on-save result');
       assert.equal(await editor.document.save(), true);
       await fixedOnSave;
-      assert.equal(editor.document.getText(), 'select a is null;\nselect b is null;\n', 'Fix All on save output');
+      assert.equal(editor.document.getText(), `select a is null;\n${joinExpected}`, 'Fix All on save output');
     } finally {
       await settings.update('formatOnSave', original, vscode.ConfigurationTarget.Global, true);
       await settings.update('codeActionsOnSave', originalActions, vscode.ConfigurationTarget.Global, true);

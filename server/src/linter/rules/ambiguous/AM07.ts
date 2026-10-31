@@ -27,6 +27,7 @@ export class SetColumns extends SourceRule {
         ctes.set(cte.name, cte.columns ?? count);
       }
       if (definitions.length) start = definitions[definitions.length - 1].close + 1;
+      if (keyword(tokens[start], 'WITH')) return null;
       const stages = pipeClauses(tokens, start, end);
       if (stages.length) {
         let count = projectionCount(start, stages[0].start, ctes);
