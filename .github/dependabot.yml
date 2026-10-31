@@ -16,6 +16,15 @@ updates:
           - "minor"
           - "patch"
     ignore:
+      - dependency-name: "google-auth-library"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "gaxios"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "gcp-metadata"
+        update-types:
+          - "version-update:semver-major"
       - dependency-name: "@types/node"
         update-types:
           - "version-update:semver-major"

@@ -23,8 +23,11 @@ export async function waitForServer(): Promise<void> {
   try {
     await Promise.race([
       (async () => {
+        const started = performance.now();
+        const cold = !ext.isActive;
         api = await ext.activate();
         await api.ready();
+        if (cold) console.log(`BigQuery activation to server ready: ${(performance.now() - started).toFixed(1)}ms`);
       })(),
       new Promise<never>((_resolve, reject) => {
         timer = setTimeout(() => {

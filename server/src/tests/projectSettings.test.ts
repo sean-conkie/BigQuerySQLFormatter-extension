@@ -18,6 +18,22 @@ import { Rule } from '../linter/rules/base';
 import manifest from '../../../package.json';
 
 describe('Rule configuration', () => {
+  it('restricts every BigQuery setting while allowing offline features in untrusted workspaces', () => {
+    const trust = manifest.capabilities.untrustedWorkspaces;
+    expect(trust.supported).to.equal('limited');
+    const keys = Object.keys(manifest.contributes.configuration.properties).filter((key) =>
+      key.startsWith('bigquerySQLFormatter.bigquery.'),
+    );
+    expect(keys).to.have.length(10);
+    expect(trust.restrictedConfigurations).to.have.members(keys);
+    expect(keys.some((key) => /endpoint|url/i.test(key))).to.equal(false);
+    expect(
+      manifest.contributes.configuration.properties['bigquerySQLFormatter.bigquery.dryRun.enabled'].default,
+    ).to.equal(false);
+    expect(
+      manifest.contributes.configuration.properties['bigquerySQLFormatter.bigquery.schema.enabled'].default,
+    ).to.equal(false);
+  });
   it('keeps contributed option schemas aligned with rule declarations', () => {
     const schema = manifest.contributes.configuration.properties['bigquerySQLFormatter.rules'];
     const properties: Record<string, unknown> = schema.properties;
@@ -350,6 +366,27 @@ describe('Project configuration discovery', function () {
     } catch (error) {
       expect(error).to.have.property('code', 'EISDIR');
     }
+  });
+
+  it('ignores BigQuery project-file keys with a warning while retaining offline rule settings', async () => {
+    const configPath = join(directory, '.bqsqlformatter.json');
+    await writeFile(
+      configPath,
+      JSON.stringify({
+        bigquery: { projectId: 'repository-project', dryRun: { enabled: true } },
+        'bigquery.schema.enabled': true,
+        'bigquerySQLFormatter.bigquery.projectId': 'redirected-project',
+        rules: { CV05: { enabled: false } },
+        maxNumberOfProblems: 20,
+      }),
+    );
+    const warnings: string[] = [];
+    const settings = await getProjectSettings(uri(join(directory, 'query.sql')), [uri(directory)], (message) =>
+      warnings.push(message),
+    );
+    expect(settings).to.deep.equal({ rules: { CV05: { enabled: false } }, maxNumberOfProblems: 20 });
+    expect(warnings).to.have.length(1);
+    expect(warnings[0]).to.include('Ignored BigQuery settings').and.include(configPath);
   });
 
   it('reports invalid project options with the file path and uses defaults over editor options', async () => {

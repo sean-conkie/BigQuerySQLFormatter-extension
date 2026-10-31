@@ -26,11 +26,98 @@
     "vscode": "^1.91.0"
   },
   "main": "./dist/extension.js",
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "Linting and formatting work in Restricted Mode; BigQuery integration is disabled.",
+      "restrictedConfigurations": [
+        "bigquerySQLFormatter.bigquery.projectId",
+        "bigquerySQLFormatter.bigquery.quotaProjectId",
+        "bigquerySQLFormatter.bigquery.location",
+        "bigquerySQLFormatter.bigquery.defaultDataset",
+        "bigquerySQLFormatter.bigquery.timeoutMs",
+        "bigquerySQLFormatter.bigquery.dryRun.enabled",
+        "bigquerySQLFormatter.bigquery.dryRun.trigger",
+        "bigquerySQLFormatter.bigquery.dryRun.costPerTiB",
+        "bigquerySQLFormatter.bigquery.schema.enabled",
+        "bigquerySQLFormatter.bigquery.schema.cacheTtlMinutes"
+      ]
+    }
+  },
   "contributes": {
+    "commands": [
+      { "command": "bigquerySQLFormatter.bigquery.resetConsent", "title": "BigQuery SQL: Reset BigQuery Consent" },
+      { "command": "bigquerySQLFormatter.bigquery.retry", "title": "BigQuery SQL: Retry BigQuery Connection" },
+      { "command": "bigquerySQLFormatter.bigquery.actions", "title": "BigQuery SQL: BigQuery Actions" }
+    ],
     "configuration": {
       "type": "object",
       "title": "BigQuerySQLFormatter",
       "properties": {
+        "bigquerySQLFormatter.bigquery.quotaProjectId": {
+          "scope": "window",
+          "type": "string",
+          "default": "",
+          "description": "Optional quota project sent as x-goog-user-project. Empty sends no header. Requires serviceusage.services.use on that project and new consent."
+        },
+        "bigquerySQLFormatter.bigquery.projectId": {
+          "scope": "resource",
+          "type": "string",
+          "default": "",
+          "description": "Billing project for BigQuery API calls. Empty uses the ADC/gcloud default. Changes require new consent."
+        },
+        "bigquerySQLFormatter.bigquery.location": {
+          "scope": "resource",
+          "type": "string",
+          "default": "",
+          "description": "BigQuery location. Empty lets BigQuery determine it; changes require new consent."
+        },
+        "bigquerySQLFormatter.bigquery.defaultDataset": {
+          "scope": "resource",
+          "type": "string",
+          "default": "",
+          "description": "Default dataset for unqualified table names. Empty leaves it unset."
+        },
+        "bigquerySQLFormatter.bigquery.timeoutMs": {
+          "scope": "resource",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647,
+          "default": 10000,
+          "description": "BigQuery request timeout in milliseconds, including authentication and retries."
+        },
+        "bigquerySQLFormatter.bigquery.dryRun.enabled": {
+          "scope": "resource",
+          "type": "boolean",
+          "default": false,
+          "description": "Opt in to BigQuery dry runs. Requires workspace trust and consent. Query text is sent to Google."
+        },
+        "bigquerySQLFormatter.bigquery.dryRun.trigger": {
+          "scope": "resource",
+          "type": "string",
+          "enum": ["onSave", "onDemand"],
+          "default": "onSave",
+          "description": "Trigger for the forthcoming dry-run feature."
+        },
+        "bigquerySQLFormatter.bigquery.dryRun.costPerTiB": {
+          "scope": "resource",
+          "type": "number",
+          "minimum": 0,
+          "description": "Optional price per TiB for the forthcoming dry-run cost estimate. No built-in price."
+        },
+        "bigquerySQLFormatter.bigquery.schema.enabled": {
+          "scope": "resource",
+          "type": "boolean",
+          "default": false,
+          "description": "Opt in to schema lookups. Requires workspace trust and consent. Dataset, table and column metadata is requested from Google."
+        },
+        "bigquerySQLFormatter.bigquery.schema.cacheTtlMinutes": {
+          "scope": "resource",
+          "type": "number",
+          "minimum": 0,
+          "default": 60,
+          "description": "In-memory cache lifetime for the forthcoming schema-completion feature."
+        },
         "bigquerySQLFormatter.maxNumberOfProblems": {
           "scope": "resource",
           "type": "integer",
@@ -586,7 +673,7 @@
     "format": "biome format --write",
     "package:check": "node scripts/check-package.cjs",
     "postinstall": "npm ci --prefix client && npm ci --prefix server",
-    "test": "node --test scripts/generate-completions.test.cjs scripts/generate-keywords.test.cjs && mocha \"server/out/tests/**/*.test.js\"",
+    "test": "node --test scripts/generate-completions.test.cjs scripts/generate-keywords.test.cjs && mocha \"server/out/tests/**/*.test.js\" \"client/out/test/bigquery/unit.test.js\"",
     "coverage": "nyc --check-coverage --branches 80 --reporter=lcov --reporter=text-summary npm test",
     "citest": "npm test && node ./client/out/test/runTest",
     "deploy": "vsce publish --no-yarn"

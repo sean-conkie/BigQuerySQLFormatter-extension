@@ -180,6 +180,17 @@ export async function getProjectSettings(
     }
     try {
       const value: unknown = JSON.parse(content);
+      if (isObject(value)) {
+        const blocked = Object.keys(value).filter(
+          (key) => key === 'bigquery' || key.startsWith('bigquery.') || key.startsWith('bigquerySQLFormatter.bigquery'),
+        );
+        if (blocked.length > 0) {
+          const message = `Ignored BigQuery settings in ${configPath}: use VS Code settings, workspace trust and consent instead.`;
+          if (reportOptionError) reportOptionError(message);
+          else throw new Error(message);
+          for (const key of blocked) delete value[key];
+        }
+      }
       if (
         !isObject(value) ||
         Object.keys(value).some((key) => !['rules', 'maxNumberOfProblems', '$schema'].includes(key))

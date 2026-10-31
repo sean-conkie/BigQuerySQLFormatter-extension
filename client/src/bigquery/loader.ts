@@ -1,0 +1,120 @@
+import { commands, workspace, window, Uri, type ExtensionContext } from 'vscode';
+import type { BigQueryIntegration } from './index';
+import type { BigQueryFeature } from './settings';
+import type { BigQueryRequest } from './rest';
+
+export interface BigQueryApi {
+  request(
+    feature: BigQueryFeature,
+    request: BigQueryRequest,
+    resource?: string,
+    signal?: AbortSignal,
+  ): Promise<unknown>;
+  setResult(resource: string, result: string): void;
+}
+
+export function registerBigQuery(context: ExtensionContext): BigQueryApi {
+  let integration: BigQueryIntegration | undefined;
+  let disabledReported = false;
+  let consentUpdate: Promise<void> = Promise.resolve();
+  const enabled = (resource?: string) => {
+    const config = workspace.getConfiguration(
+      'bigquerySQLFormatter.bigquery',
+      resource ? Uri.parse(resource) : window.activeTextEditor?.document.uri,
+    );
+    return config.get('dryRun.enabled') === true || config.get('schema.enabled') === true;
+  };
+  const load = () => {
+    if (!integration) {
+      const module: typeof import('./index') = require(context.asAbsolutePath('dist/bigquery.js'));
+      integration = module.initialize(context);
+    }
+    return integration;
+  };
+  const refresh = () => {
+    disabledReported = false;
+    integration?.dispose();
+    integration = undefined;
+    if (enabled() || workspace.workspaceFolders?.some((folder) => enabled(folder.uri.toString()))) {
+      try {
+        load();
+      } catch {
+        // Do not expose dependency errors that can contain credential or proxy details.
+        void window.showErrorMessage(
+          'BigQuery integration could not start. Check the BigQuery and HTTP proxy settings.',
+        );
+      }
+    }
+  };
+  context.subscriptions.push(
+    { dispose: () => integration?.dispose() },
+    workspace.onDidGrantWorkspaceTrust(refresh),
+    window.onDidChangeActiveTextEditor(() => {
+      if (!integration && enabled()) refresh();
+    }),
+    workspace.onDidChangeConfiguration((event) => {
+      if (
+        event.affectsConfiguration('bigquerySQLFormatter.bigquery.projectId') ||
+        event.affectsConfiguration('bigquerySQLFormatter.bigquery.quotaProjectId') ||
+        event.affectsConfiguration('bigquerySQLFormatter.bigquery.location')
+      ) {
+        integration?.dispose();
+        integration = undefined;
+        consentUpdate = Promise.resolve(
+          context.workspaceState.update('bigquerySQLFormatter.bigquery.consent', undefined),
+        );
+        void consentUpdate.then(refresh, () => {
+          void window.showErrorMessage(
+            'BigQuery consent could not be cleared. Reset BigQuery Consent before retrying.',
+          );
+        });
+      } else if (event.affectsConfiguration('bigquerySQLFormatter.bigquery') || event.affectsConfiguration('http')) {
+        refresh();
+      }
+    }),
+    commands.registerCommand('bigquerySQLFormatter.bigquery.resetConsent', async () => {
+      integration?.dispose();
+      integration = undefined;
+      consentUpdate = Promise.resolve(
+        context.workspaceState.update('bigquerySQLFormatter.bigquery.consent', undefined),
+      );
+      await consentUpdate;
+      refresh();
+      void window.showInformationMessage(
+        'BigQuery consent reset. The next BigQuery request will ask for consent again.',
+      );
+    }),
+    commands.registerCommand('bigquerySQLFormatter.bigquery.retry', async () => {
+      await consentUpdate;
+      if (enabled()) load().retry();
+      else void window.showInformationMessage('Enable a BigQuery feature in settings before retrying.');
+    }),
+    commands.registerCommand('bigquerySQLFormatter.bigquery.actions', async () => {
+      const action = await window.showQuickPick(
+        ['Retry BigQuery Connection', 'Reset BigQuery Consent', 'Open BigQuery Output', 'Open BigQuery Settings'],
+        { title: 'BigQuery SQL' },
+      );
+      if (action === 'Retry BigQuery Connection') await commands.executeCommand('bigquerySQLFormatter.bigquery.retry');
+      else if (action === 'Reset BigQuery Consent')
+        await commands.executeCommand('bigquerySQLFormatter.bigquery.resetConsent');
+      else if (action === 'Open BigQuery Output') integration?.showOutput();
+      else if (action === 'Open BigQuery Settings')
+        await commands.executeCommand('workbench.action.openSettings', 'bigquerySQLFormatter.bigquery');
+    }),
+  );
+  refresh();
+  return {
+    request: async (feature, request, resource, signal) => {
+      if (!workspace.isTrusted || !enabled(resource)) {
+        if (!disabledReported) {
+          disabledReported = true;
+          void window.showWarningMessage('BigQuery integration is disabled or the workspace is untrusted.');
+        }
+        throw new Error('BigQuery integration is disabled or the workspace is untrusted.');
+      }
+      await consentUpdate;
+      return load().request(feature, request, resource, signal);
+    },
+    setResult: (resource, result) => integration?.setResult(resource, result),
+  };
+}

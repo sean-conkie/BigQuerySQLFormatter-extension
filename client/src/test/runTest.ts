@@ -8,8 +8,9 @@ import { existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { createServer } from 'node:http';
 import { once } from 'node:events';
+import { spawn } from 'node:child_process';
 
-import { runTests, runVSCodeCommand } from '@vscode/test-electron';
+import { downloadAndUnzipVSCode, runTests, runVSCodeCommand } from '@vscode/test-electron';
 import { coldStartTimeout } from './timeouts';
 
 async function waitForWorkbench(userDataDir: string): Promise<void> {
@@ -80,7 +81,11 @@ async function main() {
     await mkdir(path.join(userDataDir, 'User'), { recursive: true });
     await writeFile(
       path.join(userDataDir, 'User', 'settings.json'),
-      JSON.stringify({ 'bigquerySQLFormatter.trace.server': 'messages' }),
+      JSON.stringify({
+        'bigquerySQLFormatter.trace.server': 'messages',
+        'security.workspace.trust.startupPrompt': 'never',
+        ...(process.env.BQSQL_TEST_UNTRUSTED === '1' ? { 'security.workspace.trust.enabled': true } : {}),
+      }),
     );
     readiness.listen(0, '127.0.0.1');
     await once(readiness, 'listening');
@@ -118,15 +123,18 @@ async function main() {
     const extensionTestsPath = path.resolve(__dirname, './index');
 
     // Download VS Code, unzip it and run the integration test
-    await runTests({
+    const options = {
       version,
       extensionDevelopmentPath,
       extensionTestsPath,
-      extensionTestsEnv: { BQSQL_TEST_WORKBENCH_URL: `http://127.0.0.1:${address.port}` },
+      extensionTestsEnv: {
+        BQSQL_TEST_WORKBENCH_URL: `http://127.0.0.1:${address.port}`,
+        BQSQL_TEST_UNTRUSTED: process.env.BQSQL_TEST_UNTRUSTED ?? '0',
+      },
       launchArgs: [
         path.resolve(__dirname, '../../testFixture'),
         '--disable-extensions',
-        '--disable-workspace-trust',
+        ...(process.env.BQSQL_TEST_UNTRUSTED === '1' ? [] : ['--disable-workspace-trust']),
         '--enable-smoke-test-driver',
         '--remote-debugging-port=0',
         '--remote-debugging-address=127.0.0.1',
@@ -134,7 +142,30 @@ async function main() {
         `--user-data-dir=${path.join(testProfile, 'user')}`,
         `--extensions-dir=${path.join(testProfile, 'extensions')}`,
       ],
-    });
+    };
+    if (process.env.BQSQL_TEST_UNTRUSTED === '1') {
+      // runTests always adds --disable-workspace-trust, so launch this case directly.
+      const executable = await downloadAndUnzipVSCode({ version });
+      const child = spawn(
+        executable,
+        [
+          ...options.launchArgs,
+          '--no-sandbox',
+          '--disable-gpu-sandbox',
+          '--disable-updates',
+          '--skip-welcome',
+          '--skip-release-notes',
+          '--no-cached-data',
+          `--extensionDevelopmentPath=${extensionDevelopmentPath}`,
+          `--extensionTestsPath=${extensionTestsPath}`,
+        ],
+        { env: { ...process.env, ...options.extensionTestsEnv }, stdio: 'inherit' },
+      );
+      const [code, signal] = await once(child, 'exit');
+      if (code !== 0) throw new Error(`Untrusted extension-host tests exited with ${code ?? signal}`);
+    } else {
+      await runTests(options);
+    }
   } catch (error) {
     const logs = path.join(testProfile, 'user', 'logs');
     if (existsSync(logs)) {
