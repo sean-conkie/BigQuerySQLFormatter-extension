@@ -1,3 +1,9 @@
-# Claude Code Guidance
+# Claude Code guidance
 
-Use root `AGENTS.md` and the closest module `AGENTS.md` as the repository guidance. They own task routing, boundaries, verification and safety. Read only task-relevant `.agents/skills/` and `docs/` references.
+@AGENTS.md
+
+When working in `client/` or `server/`, also follow that module's `AGENTS.md`;
+the `CLAUDE.md` files there import it. Skills are in `.agents/skills/`, exposed
+to Claude Code through the `.claude/skills` symlink.
+On Windows, enable Git symlinks (`core.symlinks`) when cloning, or the
+symlink is checked out as a plain file and Claude Code won't find the skills.

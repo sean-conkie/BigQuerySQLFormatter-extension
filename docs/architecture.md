@@ -31,7 +31,8 @@ server (`server/`), bundled with esbuild into `dist/`.
 
 Documentation: `README.md` is the Marketplace page (user-facing only),
 `CONTRIBUTING.md` holds contributor detail, `docs/source/` is the Sphinx user
-documentation (one page per rule), and `docs/*.md` are these agent guides.
+documentation (one page per rule), and `docs/*.md` are these agent guides,
+alongside the `AGENTS.md` files and the workflows in `.agents/skills/`.
 
 ## Runtime flow
 
