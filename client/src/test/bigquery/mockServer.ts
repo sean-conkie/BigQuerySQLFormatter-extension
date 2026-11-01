@@ -14,6 +14,7 @@ export type MockScenario =
   | 'serviceUsageDenied'
   | 'script'
   | 'nestedSchema'
+  | 'schema'
   | number;
 
 export interface RecordedRequest {
@@ -101,6 +102,58 @@ export class MockBigQueryServer {
                 : this.errorPayload,
             ),
           );
+        } else if (scenario === 'schema') {
+          const url = new URL(request.url!, this.endpoint);
+          const next = url.searchParams.has('pageToken');
+          const reference = { projectId: 'test-project', datasetId: 'test_dataset' };
+          if (/\/tables\/[^/]+$/.test(url.pathname)) {
+            response.end(
+              JSON.stringify({
+                type: 'VIEW',
+                description: 'Orders view',
+                numRows: '123',
+                numBytes: '456',
+                lastModifiedTime: '0',
+                timePartitioning: { type: 'DAY', field: 'Date' },
+                clustering: { fields: ['CustomerID'] },
+                schema: {
+                  fields: [
+                    { name: 'CustomerID', type: 'STRING', description: 'Customer identifier' },
+                    {
+                      name: 'Address',
+                      type: 'RECORD',
+                      mode: 'REPEATED',
+                      fields: [{ name: 'City', type: 'RECORD', fields: [{ name: 'Name', type: 'STRING' }] }],
+                    },
+                  ],
+                },
+              }),
+            );
+          } else if (url.pathname.endsWith('/tables')) {
+            response.end(
+              JSON.stringify({
+                tables: [
+                  {
+                    tableReference: { ...reference, tableId: next ? '2024 Sales' : 'Orders' },
+                    type: next ? 'EXTERNAL' : 'VIEW',
+                  },
+                ],
+                ...(next ? {} : { nextPageToken: 'tables-page-2' }),
+              }),
+            );
+          } else {
+            response.end(
+              JSON.stringify({
+                datasets: [
+                  {
+                    datasetReference: { ...reference, datasetId: next ? 'Archive' : 'test_dataset' },
+                    location: next ? 'US' : 'EU',
+                  },
+                ],
+                ...(next ? {} : { nextPageToken: 'datasets-page-2' }),
+              }),
+            );
+          }
         } else if (request.url?.includes('/jobs')) {
           response.end(
             JSON.stringify(

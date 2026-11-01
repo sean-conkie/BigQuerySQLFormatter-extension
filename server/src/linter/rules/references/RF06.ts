@@ -1,13 +1,9 @@
 import { type Diagnostic, TextEdit } from 'vscode-languageserver/node';
-import keywords from '../../keywords.json';
+import { canUnquoteIdentifier } from '../../quoting';
 import type { DocumentCache } from '../../parser/tokenCache';
 import { quotingOptions, resolveOption } from '../../../ruleOptions';
 import { SourceFixRule, type SourceToken } from '../source';
 import { identifiers, ignoredIdentifier } from './identifiers';
-
-const reserved = new Set(keywords.reserved);
-const unquoted = /^[a-z_][a-z0-9_]*$/i;
-const dashed = /^[a-z_][a-z0-9_]*(?:-(?:[a-z_][a-z0-9_]*|[0-9]+))*$/i;
 
 export class Quoting extends SourceFixRule {
   readonly name = 'quoting';
@@ -30,9 +26,11 @@ export class Quoting extends SourceFixRule {
         return parts.every(
           (part, index) =>
             !ignoredIdentifier(part, ignored) &&
-            (unquoted.test(part) ||
-              (role === 'table' && first && index === 0 && identifier.dashed && dashed.test(part))) &&
-            (!(first && index === 0) || !reserved.has(part.toLowerCase())),
+            canUnquoteIdentifier(
+              part,
+              first && index === 0,
+              role === 'table' && first && index === 0 && identifier.dashed,
+            ),
         );
       })
       .map(({ token, name }) => this.diagnosticWithFix(token.range, uri, [TextEdit.replace(token.range, name)]));

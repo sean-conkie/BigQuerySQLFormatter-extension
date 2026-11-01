@@ -3,6 +3,7 @@ import type { BigQueryIntegration } from './index';
 import type { BigQueryFeature } from './settings';
 import type { BigQueryRequest } from './rest';
 import type { TokenizeSql } from './dryRun';
+import type { SchemaRequest, SchemaResponse } from '../../../shared/schema';
 
 export interface BigQueryApi {
   request(
@@ -12,6 +13,7 @@ export interface BigQueryApi {
     signal?: AbortSignal,
   ): Promise<unknown>;
   setResult(resource: string, result: string): void;
+  schema(request: SchemaRequest, signal?: AbortSignal): Promise<SchemaResponse>;
 }
 
 export function registerBigQuery(context: ExtensionContext, tokenize: TokenizeSql): BigQueryApi {
@@ -97,6 +99,7 @@ export function registerBigQuery(context: ExtensionContext, tokenize: TokenizeSq
           'Dry Run Selection',
           'Retry BigQuery Connection',
           'Reset BigQuery Consent',
+          'Refresh Schema Cache',
           'Open BigQuery Output',
           'Open BigQuery Settings',
         ],
@@ -110,8 +113,14 @@ export function registerBigQuery(context: ExtensionContext, tokenize: TokenizeSq
       else if (action === 'Reset BigQuery Consent')
         await commands.executeCommand('bigquerySQLFormatter.bigquery.resetConsent');
       else if (action === 'Open BigQuery Output') integration?.showOutput();
+      else if (action === 'Refresh Schema Cache')
+        await commands.executeCommand('bigquerySQLFormatter.bigquery.refreshSchema');
       else if (action === 'Open BigQuery Settings')
         await commands.executeCommand('workbench.action.openSettings', 'bigquerySQLFormatter.bigquery');
+    }),
+    commands.registerCommand('bigquerySQLFormatter.bigquery.refreshSchema', () => {
+      integration?.refreshSchema();
+      void window.showInformationMessage('BigQuery schema cache cleared. Metadata will reload on the next lookup.');
     }),
   );
   for (const [command, selection] of [
@@ -140,6 +149,12 @@ export function registerBigQuery(context: ExtensionContext, tokenize: TokenizeSq
   }
   refresh();
   return {
+    schema: async (request, signal) => {
+      const config = workspace.getConfiguration('bigquerySQLFormatter.bigquery', Uri.parse(request.resource));
+      if (!workspace.isTrusted || config.get('schema.enabled') !== true) return { unavailable: true, entries: [] };
+      await consentUpdate;
+      return load().schema(request, signal);
+    },
     request: async (feature, request, resource, signal) => {
       if (!workspace.isTrusted || !enabled(resource)) {
         if (!disabledReported) {

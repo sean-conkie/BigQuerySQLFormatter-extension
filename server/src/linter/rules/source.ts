@@ -25,14 +25,28 @@ export function sourceTokens(cache: DocumentCache): SourceToken[] {
   return tokenizeSource(cache.getText());
 }
 
+const sourcePattern =
+  /(?<comment>--[^\r\n]*|#[^\r\n]*|\/\*[\s\S]*?(?:\*\/|$))|(?<literal>(?:rb|br|r|b)?(?:'''(?:\\[\s\S]|(?!''')[\s\S])*?(?:'''|$)|"""(?:\\[\s\S]|(?!""")[\s\S])*?(?:"""|$)|'(?:\\[\s\S]|''|[^'\\])*?(?:'|$)|"(?:\\[\s\S]|""|[^"\\])*?(?:"|$))|`(?:\\[\s\S]|``|[^`\\])*?(?:`|$))|[a-z_][\w$]*|\d+(?:\.\d+)?|[^\s]/gi;
+
+export function schemaPositionAllowed(text: string, offset: number): boolean {
+  for (const match of text.matchAll(sourcePattern)) {
+    if (match.index > offset) break;
+    const end = match.index + match[0].length;
+    if (offset > end) continue;
+    if (match.groups?.comment !== undefined) {
+      if (offset < end || !match[0].endsWith('*/')) return false;
+    }
+    if (match.groups?.literal !== undefined && !match[0].startsWith('`')) return false;
+  }
+  return true;
+}
+
 export function tokenizeSource(text: string): SourceToken[] {
   const result: SourceToken[] = [];
   const document = TextDocument.create('', 'googlesql', 0, text);
   // Highlighting can lose string scopes after incomplete or unsupported SQL.
   // Shield literals independently before interpreting structural punctuation.
-  const pattern =
-    /(?<comment>--[^\r\n]*|#[^\r\n]*|\/\*[\s\S]*?(?:\*\/|$))|(?<literal>(?:rb|br|r|b)?(?:'''(?:\\[\s\S]|(?!''')[\s\S])*?(?:'''|$)|"""(?:\\[\s\S]|(?!""")[\s\S])*?(?:"""|$)|'(?:\\[\s\S]|''|[^'\\])*?(?:'|$)|"(?:\\[\s\S]|""|[^"\\])*?(?:"|$))|`(?:\\[\s\S]|``|[^`\\])*?(?:`|$))|[a-z_][\w$]*|\d+(?:\.\d+)?|[^\s]/gi;
-  for (const match of text.matchAll(pattern)) {
+  for (const match of text.matchAll(sourcePattern)) {
     if (match.groups?.comment !== undefined) continue;
     result.push({
       value: match[0],

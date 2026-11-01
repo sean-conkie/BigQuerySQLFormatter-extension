@@ -20,6 +20,198 @@ import { BigQueryService, type BigQueryHost } from '../../bigquery/service';
 import { parseBigQuerySettings, type BigQuerySettings } from '../../bigquery/settings';
 import { MockBigQueryServer } from './mockServer';
 import { dryRunResult } from '../../bigquery/dryRun';
+import { SchemaCache, parseMetadata } from '../../bigquery/schema';
+import type { SchemaRequest } from '../../../../shared/schema';
+
+describe('Schema cache scheduling', () => {
+  it('returns pending within its wait budget and shares fetches despite caller cancellation', async () => {
+    let finish: (value: unknown) => void;
+    let calls = 0;
+    const cache = new SchemaCache(
+      {
+        scope: (resource) => resource,
+        request: async () => {
+          calls++;
+          return new Promise((resolve) => {
+            finish = resolve;
+          });
+        },
+        authorized: () => true,
+        report: (failure) => {
+          if (failure.kind !== 'cancelled') throw failure;
+        },
+      },
+      10,
+    );
+    const request = { resource: 'file:///a.sql', table: 'Orders', dataset: 'Analytics' };
+    try {
+      const start = performance.now();
+      const first = await cache.lookup(request, 60);
+      assert.equal(first.pending, true);
+      assert.ok(performance.now() - start < 500, 'pending response exceeded 500 ms');
+      assert.equal(calls, 1);
+      const controller = new AbortController();
+      const waiting = cache.lookup(request, 60, controller.signal);
+      controller.abort(new BigQueryError('cancelled', 'Caller cancelled'));
+      await assert.rejects(waiting, /Caller cancelled/);
+      assert.equal(calls, 1);
+      finish!({ schema: { fields: [{ name: 'Column', type: 'STRING' }] } });
+      const ready = await cache.lookup(request, 60);
+      assert.equal(ready.pending, false);
+      assert.equal(ready.entries[0].fields[0].name, 'Column');
+      assert.equal(calls, 1);
+    } finally {
+      cache.clear();
+    }
+  });
+
+  it('limits requests independently per project and releases queued requests when refreshed', async () => {
+    const active = new Map<string, number>();
+    const maximum = new Map<string, number>();
+    const releases: (() => void)[] = [];
+    const cache = new SchemaCache(
+      {
+        scope: (resource) => resource,
+        request: async (request, _resource, signal) => {
+          const project = 'project' in request ? request.project : '';
+          active.set(project, (active.get(project) ?? 0) + 1);
+          maximum.set(project, Math.max(maximum.get(project) ?? 0, active.get(project)));
+          try {
+            return await new Promise((resolve, reject) => {
+              releases.push(() => resolve({ schema: { fields: [] } }));
+              signal.addEventListener('abort', () => reject(signal.reason), { once: true });
+            });
+          } finally {
+            active.set(project, active.get(project) - 1);
+          }
+        },
+        authorized: () => true,
+        report: (failure) => {
+          assert.equal(failure.kind, 'cancelled');
+        },
+      },
+      0,
+      2,
+    );
+    try {
+      await Promise.all(
+        Array.from({ length: 12 }, (_value, index) =>
+          cache.lookup(
+            {
+              resource: 'file:///a.sql',
+              project: index < 6 ? 'first-project' : 'second-project',
+              dataset: 'Analytics',
+              table: `Table${index}`,
+            },
+            60,
+          ),
+        ),
+      );
+      assert.equal(maximum.get('first-project'), 2);
+      assert.equal(maximum.get('second-project'), 2);
+      releases.shift()!();
+      releases.shift()!();
+      await new Promise<void>((resolve) => setImmediate(resolve));
+      assert.equal(maximum.get('first-project'), 2);
+      cache.clear();
+      await new Promise<void>((resolve) => setImmediate(resolve));
+      assert.equal(active.get('first-project'), 0);
+      assert.equal(active.get('second-project'), 0);
+      const next = cache.lookup(
+        { resource: 'file:///a.sql', project: 'first-project', dataset: 'Analytics', table: 'New' },
+        60,
+      );
+      await new Promise<void>((resolve) => setImmediate(resolve));
+      assert.equal(active.get('first-project'), 1);
+      releases.at(-1)!();
+      await next;
+    } finally {
+      cache.clear();
+    }
+  });
+
+  it('validates metadata shapes and nested fields rather than returning success-shaped defaults', () => {
+    const table = { resource: '', table: 'Orders' };
+    for (const value of [
+      null,
+      [],
+      { schema: [] },
+      { schema: { fields: {} } },
+      { schema: { fields: [{ name: 'Bad' }] } },
+    ])
+      assert.throws(() => parseMetadata(value, table), /Invalid BigQuery/);
+    assert.throws(() => parseMetadata({ datasets: {} }, { resource: '' }), /metadata list/);
+    assert.throws(() => parseMetadata({ tables: [{}] }, { resource: '', dataset: 'Analytics' }), /metadata response/);
+    assert.deepEqual(parseMetadata({}, { resource: '' }), { entries: [], nextPage: undefined });
+    assert.deepEqual(parseMetadata({ schema: {} }, table).entries[0].fields, []);
+    assert.deepEqual(parseMetadata({ type: 'EXTERNAL' }, table).entries[0].fields, []);
+  });
+
+  it('reports unexpected fetch failures safely and keeps failed lookups unavailable', async () => {
+    const errors: BigQueryError[] = [];
+    let calls = 0;
+    const cache = new SchemaCache({
+      scope: (resource) => resource,
+      request: async () => {
+        calls++;
+        throw new Error('PRIVATE_METADATA_OR_CREDENTIAL');
+      },
+      authorized: () => true,
+      report: (error) => errors.push(error),
+    });
+    try {
+      const request = { resource: 'file:///schema.sql', table: 'Orders', dataset: 'Analytics' };
+      assert.deepEqual(await cache.lookup(request, 60), { entries: [], unavailable: true });
+      assert.deepEqual(await cache.lookup(request, 60), { entries: [], unavailable: true });
+      assert.equal(calls, 1);
+      assert.equal(errors.length, 1);
+      assert.equal(errors[0].kind, 'api');
+      assert.ok(!errors[0].message.includes('PRIVATE'));
+    } finally {
+      cache.clear();
+    }
+  });
+
+  it('removes cancelled queued fetches before an active request releases its slot', async () => {
+    let finish: (value: unknown) => void;
+    let calls = 0;
+    const errors: BigQueryError[] = [];
+    const cache = new SchemaCache(
+      {
+        scope: (resource) => resource,
+        request: async () => {
+          calls++;
+          return new Promise((resolve) => {
+            finish = resolve;
+          });
+        },
+        authorized: () => true,
+        report: (error) => errors.push(error),
+      },
+      0,
+      1,
+    );
+    try {
+      const request = { resource: 'file:///schema.sql', project: 'test-project', dataset: 'Analytics', table: 'First' };
+      await cache.lookup(request, 60);
+      await cache.lookup({ ...request, table: 'Queued' }, 60);
+      assert.equal(calls, 1);
+      cache.clear();
+      await new Promise<void>((resolve) => setImmediate(resolve));
+      assert.equal(errors.length, 1);
+      assert.equal(errors[0].kind, 'cancelled');
+      finish!({ schema: { fields: [] } });
+      await new Promise<void>((resolve) => setImmediate(resolve));
+      const next = cache.lookup({ ...request, table: 'Next' }, 60);
+      await new Promise<void>((resolve) => setImmediate(resolve));
+      assert.equal(calls, 2);
+      finish!({ schema: { fields: [] } });
+      assert.equal((await next).unavailable, undefined);
+    } finally {
+      cache.clear();
+    }
+  });
+});
 
 describe('BigQuery foundation (offline)', function () {
   this.timeout(15000);
@@ -120,6 +312,124 @@ describe('BigQuery foundation (offline)', function () {
         () => parseBigQuerySettings((candidate) => (candidate === key ? value : undefined)),
         /Invalid BigQuery setting/,
       );
+  });
+
+  it('caches paginated REST metadata lazily, normalizes modes, refreshes and expires TTL entries', async () => {
+    mock.fallback = 'schema';
+    const resource = 'file:///schema.bqsql';
+    await service.request('schema', { operation: 'datasets.list' }, resource);
+    mock.requests.length = 0;
+    const cache = new SchemaCache({
+      scope: (resource) => host.scope(resource),
+      request: (request, resource, signal) => service.request('schema', request, resource, signal),
+      authorized: (request) => service.schemaAuthorized(request.project, request.resource),
+      report: (failure, resource) => service.report(failure, resource),
+    });
+    const request = { resource };
+    try {
+      const first = await cache.lookup(request, 60);
+      assert.equal(first.entries[0].location, 'EU');
+      assert.equal(first.pending, true);
+      assert.equal(mock.requests.length, 1);
+      assert.match(mock.requests[0].url, /maxResults=50/);
+      const second = await cache.lookup(request, 60);
+      assert.deepEqual(
+        second.entries.map((entry) => entry.name),
+        ['test_dataset', 'Archive'],
+      );
+      assert.equal(second.pending, false);
+      assert.match(mock.requests[1].url, /pageToken=datasets-page-2/);
+      await cache.lookup(request, 60);
+      assert.equal(mock.requests.length, 2);
+      const tables = { resource, dataset: 'test_dataset' };
+      assert.equal((await cache.lookup(tables, 60)).pending, true);
+      assert.deepEqual(
+        (await cache.lookup(tables, 60)).entries.map((entry) => entry.name),
+        ['Orders', '2024 Sales'],
+      );
+      const table = { ...tables, table: 'Orders' };
+      const schema = await cache.lookup(table, 60);
+      assert.equal(schema.entries[0].fields[0].mode, 'NULLABLE');
+      assert.equal(schema.entries[0].fields[1].mode, 'REPEATED');
+      assert.equal(schema.entries[0].fields[1].fields[0].fields[0].mode, 'NULLABLE');
+      assert.equal(schema.entries[0].numRows, '123');
+      assert.deepEqual(schema.entries[0].clustering, ['CustomerID']);
+      assert.ok(schema.entries[0].partitioning?.includes('DAY'));
+      assert.equal(mock.requests.length, 5);
+      const start = performance.now();
+      for (let i = 0; i < 100; i++) await cache.lookup(table, 60);
+      console.log(
+        `Schema client cache latency (100 lookups): mean=${((performance.now() - start) / 100).toFixed(3)}ms`,
+      );
+      assert.equal(mock.requests.length, 5);
+      cache.clear();
+      await cache.lookup(table, 0);
+      await cache.lookup(table, 0);
+      assert.equal(mock.requests.length, 7);
+      assert.ok(
+        mock.requests.every((request) => request.method === 'GET' && !request.url.includes('/jobs') && !request.body),
+      );
+      assert.ok(!JSON.stringify(logs).includes('CustomerID'));
+    } finally {
+      cache.clear();
+    }
+  });
+
+  it('never exposes cached metadata after consent invalidation, disabling or loss of trust', async () => {
+    const resource = 'file:///schema.bqsql';
+    await service.request('schema', { operation: 'datasets.list' }, resource);
+    const cache = new SchemaCache({
+      scope: (resource) => host.scope(resource),
+      request: (request, resource, signal) => service.request('schema', request, resource, signal),
+      authorized: (request) => service.schemaAuthorized(request.project, request.resource),
+      report: (failure, resource) => service.report(failure, resource),
+    });
+    const request = { resource, dataset: 'test_dataset', table: 'test_table' };
+    try {
+      assert.equal((await cache.lookup(request, 60)).entries.length, 1);
+      consent.clear();
+      assert.equal((await cache.lookup(request, 60)).unavailable, true);
+      trusted = false;
+      assert.equal((await cache.lookup(request, 60)).unavailable, true);
+      trusted = true;
+      settings.schema.enabled = false;
+      assert.equal((await cache.lookup(request, 60)).unavailable, true);
+      settings.schema.enabled = true;
+      service.invalidate();
+      assert.equal((await cache.lookup(request, 60)).unavailable, true);
+    } finally {
+      cache.clear();
+    }
+  });
+
+  it('returns unavailable immediately while awaiting consent and suppresses repeated API errors', async () => {
+    let allow: (value: boolean) => void;
+    host.prompt = () =>
+      new Promise<boolean>((resolve) => {
+        allow = resolve;
+      });
+    const resource = 'file:///schema.bqsql';
+    const cache = new SchemaCache({
+      scope: (resource) => host.scope(resource),
+      request: (request, resource, signal) => service.request('schema', request, resource, signal),
+      authorized: (request) => service.schemaAuthorized(request.project, request.resource),
+      report: (failure, resource) => service.report(failure, resource),
+    });
+    try {
+      assert.deepEqual(await cache.lookup({ resource }, 60), { unavailable: true, entries: [] });
+      await new Promise<void>((resolve) => setImmediate(resolve));
+      assert.equal(mock.requests.length, 0);
+      allow!(true);
+      await new Promise<void>((resolve) => setTimeout(resolve, 30));
+      mock.fallback = 'accessDenied';
+      const request = { resource, dataset: 'test_dataset', table: 'Denied' };
+      assert.equal((await cache.lookup(request, 60)).unavailable, true);
+      assert.equal((await cache.lookup(request, 60)).unavailable, true);
+      assert.equal(notifications.length, 1);
+      assert.equal(mock.requests.length, 2);
+    } finally {
+      cache.clear();
+    }
   });
 
   it('uses real-mode ADC discovery and caches a successful auth check without contacting Google', async () => {
@@ -497,6 +807,53 @@ describe('BigQuery foundation (offline)', function () {
     assert.deepEqual(prompts, [['schema-project', undefined, 'test-project']]);
     assert.equal(logs[0].project, 'schema-project');
     assert.equal(mock.requests[0].quotaProject, undefined);
+  });
+
+  it('keeps target-project consents independent and shares cache entries across consented workspace documents', async () => {
+    host.scope = (resource) => (resource?.includes('/other-workspace/') ? 'other-workspace' : 'workspace');
+    mock.fallback = 'schema';
+    const resource = 'file:///workspace/a.bqsql';
+    for (const project of ['test-project', 'schema-project'])
+      await service.request(
+        'schema',
+        {
+          operation: 'tables.get',
+          project,
+          dataset: 'test_dataset',
+          table: 'Orders',
+        },
+        resource,
+      );
+    assert.equal(prompts.length, 2);
+    assert.equal(consent.size, 2);
+    assert.equal(service.schemaAuthorized('test-project', resource), true);
+    assert.equal(service.schemaAuthorized('schema-project', resource), true);
+    mock.requests.length = 0;
+    const cache = new SchemaCache({
+      scope: (resource) => host.scope(resource),
+      request: (request, resource, signal) => service.request('schema', request, resource, signal),
+      authorized: (request) => service.schemaAuthorized(request.project, request.resource),
+      report: (failure, resource) => service.report(failure, resource),
+    });
+    try {
+      const request = { resource, dataset: 'test_dataset', table: 'Orders' };
+      for (const project of ['test-project', 'schema-project'])
+        assert.equal((await cache.lookup({ ...request, project }, 60)).entries[0].fields[0].name, 'CustomerID');
+      assert.equal(mock.requests.length, 2);
+      for (const project of ['test-project', 'schema-project'])
+        assert.equal(
+          (await cache.lookup({ ...request, project, resource: 'file:///workspace/b.bqsql' }, 60)).entries.length,
+          1,
+        );
+      assert.equal(mock.requests.length, 2);
+      assert.equal(prompts.length, 2);
+      consent.delete(JSON.stringify(['workspace', 'schema-project']));
+      assert.equal((await cache.lookup({ ...request, project: 'schema-project' }, 60)).unavailable, true);
+      assert.equal((await cache.lookup({ ...request, project: 'test-project' }, 60)).entries.length, 1);
+      assert.equal(service.schemaAuthorized('test-project', 'file:///other-workspace/a.bqsql'), false);
+    } finally {
+      cache.clear();
+    }
   });
 
   it('does not repeat declined consent until an explicit retry', async () => {

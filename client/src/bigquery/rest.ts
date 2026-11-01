@@ -220,7 +220,8 @@ export class BigQueryRestClient {
     let status: RequestMetadata['status'] = 'api';
     try {
       const component = (value: string | undefined, name: string) => {
-        if (!value || !/^[a-zA-Z0-9_.:-]+$/.test(value)) throw new BigQueryError('api', `Invalid BigQuery ${name}.`);
+        const valid = name === 'table' ? /^[\p{L}\p{M}\p{N}\p{Pc}\p{Pd}\p{Zs}]+$/u : /^[a-zA-Z0-9_.:-]+$/;
+        if (!value || !valid.test(value)) throw new BigQueryError('api', `Invalid BigQuery ${name}.`);
         return encodeURIComponent(value);
       };
       const project = component(
@@ -229,6 +230,7 @@ export class BigQueryRestClient {
       );
       let path = `projects/${project}/`;
       const params: Record<string, string> = {};
+      if (request.operation === 'datasets.list' || request.operation === 'tables.list') params.maxResults = '50';
       if ('pageToken' in request && request.pageToken) params.pageToken = request.pageToken;
       if (request.operation === 'jobs.insert') path += 'jobs';
       else if (request.operation === 'datasets.list') path += 'datasets';

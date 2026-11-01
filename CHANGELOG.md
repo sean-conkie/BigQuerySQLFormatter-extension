@@ -17,7 +17,12 @@
   cancellable REST calls with timeouts and rate-limit retries, project/location
   consent, reset/retry commands, restricted settings, status UI and metadata-only
   output. The Node runtime is lazy loaded separately; the language server stays
-  offline. Schema-aware completions will use this foundation in a separate feature.
+  offline.
+- Add opt-in schema-aware dataset, table, column and nested STRUCT completions
+  and metadata hover, using only unbilled REST metadata calls. Includes lazy
+  pagination, in-memory TTL caching, Refresh Schema Cache, incomplete completion
+  lists while loading, and cancellation. Names preserve exact case and use only
+  required backticks; CP02's existing casing warnings remain unchanged.
 - Apply the integration spike's Node-20-compatible auth/client transport,
   cached background credential check, optional quota-project setting, and
   actionable quota-project and location-mismatch hints.

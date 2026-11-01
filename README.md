@@ -42,9 +42,8 @@ select **GoogleSQL** as the document language to start linting.
 
 BigQuery access is **off by default**. Opt-in dry runs validate syntax, tables,
 columns and permissions, and show estimated bytes processed without executing
-or billing the query. Schema-aware completions
-([#340](https://github.com/sean-conkie/BigQuerySQLFormatter-extension/issues/340))
-are a separate, forthcoming feature.
+or billing the query. Opt in to schema-aware completions and hover with
+`bigquerySQLFormatter.bigquery.schema.enabled`.
 Ordinary linting, formatting and built-in function completions remain offline.
 
 ### Settings and sign-in
@@ -66,7 +65,39 @@ offline rule settings still apply. All settings below use the
 | `dryRun.costPerTiB`      | Unset              | Optional estimated price; no hardcoded prices          |
 | `dryRun.parameters`      | Unset              | Named scalar parameters, each with a type and value    |
 | `schema.enabled`         | `false`            | Opt in to schema lookups                               |
-| `schema.cacheTtlMinutes` | `60`               | In-memory TTL; used by the forthcoming feature         |
+| `schema.cacheTtlMinutes` | `60`               | In-memory metadata TTL in minutes                      |
+
+### Schema completions and hover
+
+After consent in a trusted workspace, schema completion suggests datasets and
+tables after `FROM`, `JOIN` and DML targets; qualified paths (including backticks)
+suggest datasets or tables. A single qualifier matching a dataset in the default
+project is treated as a dataset; otherwise it is treated as an explicit project.
+Columns come from sources visible in the current query scope, including correlated
+queries, source aliases, nested STRUCT fields, and pipe stages. CTEs and subqueries
+offer only statically named output columns, never guessed wildcard schemas.
+
+Names retain their exact case, with backticks only where GoogleSQL requires them.
+**CP02 is unchanged:** a mixed-case column such as `CustomerID` can still produce
+its default casing warning. This does not make the SQL invalid; configure CP02's
+severity or disable it if exact column casing is preferred.
+
+Dataset details include location. Hover describes tables/views (type, description,
+row count, bytes, partitioning, clustering and modification time when returned)
+and columns (type, mode, nested fields and description). Function hover is unchanged.
+
+Only `datasets.list`, `tables.list` and `tables.get` are used: no jobs, billed
+queries, `INFORMATION_SCHEMA`, or project enumeration. Metadata is fetched lazily,
+in pages of 50, with at most four requests per project. In-memory cache entries
+expire after `schema.cacheTtlMinutes`; **BigQuery SQL: Refresh Schema Cache**
+clears them immediately. Cache entries are shared across documents in the same
+workspace consent scope, never across unconsented workspaces. Cross-project
+consents are independent, so a query using multiple approved projects does not
+re-prompt on every keystroke. Nothing is persisted to disk. Each completion waits at
+most 500 ms per lookup, then marks its list incomplete while authorized fetches
+finish in the background. Cancellation stops waiting without cancelling a fetch
+shared by other completions. No schema lookups occur inside comments or strings.
+Disabled, untrusted, declined or unavailable lookups fall back to offline functions.
 
 Sign in using **Application Default Credentials (ADC)**:
 

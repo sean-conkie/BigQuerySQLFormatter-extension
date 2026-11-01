@@ -76,7 +76,7 @@ async function main() {
             for (const [output, metadata] of Object.entries(result.metafile.outputs)) {
               if (!/dist\/(?:extension|server)\.js$/.test(output)) continue;
               const forbidden = Object.keys(metadata.inputs).filter((input) =>
-                /client\/src\/bigquery\/(?:index|rest|service|settings)\.ts$/.test(input) ||
+                /client\/src\/bigquery\/(?:index|rest|service|settings|schema)\.ts$/.test(input) ||
                 /node_modules\/(?:google-auth-library|gaxios|https-proxy-agent)\//.test(input)
               );
               if (forbidden.length > 0) throw new Error(`BigQuery runtime must remain isolated from ${output}: ${forbidden.join(', ')}`);

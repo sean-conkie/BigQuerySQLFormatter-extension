@@ -103,7 +103,10 @@ export class QueryScopeResolver {
   private readonly cteDefinitions = new Map<number, CteDefinition>();
   private readonly unsupportedRegions: { start: number; end: number }[] = [];
 
-  constructor(readonly tokens: SourceToken[]) {
+  constructor(
+    readonly tokens: SourceToken[],
+    private readonly allowIncomplete = false,
+  ) {
     const ends: number[] = [];
     const containers = new Map<number, number>();
     for (let i = tokens.length - 1; i >= 0; i--) {
@@ -300,15 +303,28 @@ export class QueryScopeResolver {
       keyword(tokens[start], word),
     );
     if (!beginsQuery) {
+      if (keyword(tokens[start], 'CREATE')) {
+        const as = tokens.findIndex(
+          (token, index) =>
+            index > start &&
+            index < end &&
+            keyword(token, 'AS') &&
+            (keyword(tokens[index + 1], 'SELECT') || keyword(tokens[index + 1], 'WITH')),
+        );
+        if (as >= 0) {
+          this.readRegion(as + 1, end, parent, statement);
+          return;
+        }
+      }
       this.readNested(start, end, parent, statement);
       return;
     }
-    if (unsupportedQuery(tokens, start, end)) {
+    if (unsupportedQuery(tokens, start, end, this.allowIncomplete)) {
       statement.status = 'unsupported';
       this.unsupportedRegions.push({ start, end });
       return;
     }
-    const stages = pipeClauses(tokens, start, end);
+    const stages = pipeClauses(tokens, start, end, this.allowIncomplete);
     if (stages.length) {
       this.readPipeline(start, parent, statement, stages);
       return;

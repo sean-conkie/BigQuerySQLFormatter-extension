@@ -14,6 +14,7 @@ import {
   TransportKind,
 } from 'vscode-languageclient/node';
 import { registerBigQuery, type BigQueryApi } from './bigquery/loader';
+import type { SchemaRequest } from '../../shared/schema';
 
 let client: LanguageClient;
 
@@ -89,6 +90,7 @@ export function activate(context: ExtensionContext): ExtensionApi {
     dispose: () => output.dispose(),
   };
   const clientOptions: LanguageClientOptions = {
+    initializationOptions: { schemaProvider: true },
     documentSelector: [{ scheme: 'file', language: 'googlesql' }],
     synchronize: {
       fileEvents: configWatcher,
@@ -99,6 +101,14 @@ export function activate(context: ExtensionContext): ExtensionApi {
 
   // Create the language client and start the client.
   client = new LanguageClient('bigquerySQLFormatter', 'BigQuery Server', serverOptions, clientOptions);
+  context.subscriptions.push(
+    client.onRequest('bigquerySQLFormatter/schema', (request: SchemaRequest, token) => {
+      const controller = new AbortController();
+      const cancellation = token.onCancellationRequested(() => controller.abort());
+      if (token.isCancellationRequested) controller.abort();
+      return bigquery.schema(request, controller.signal).finally(() => cancellation.dispose());
+    }),
+  );
 
   const ready = new Promise<void>((resolve) => {
     context.subscriptions.push(client.onNotification('bigquerySQLFormatter/ready', () => resolve()));

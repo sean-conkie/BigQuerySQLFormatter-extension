@@ -51,7 +51,8 @@
       { "command": "bigquerySQLFormatter.bigquery.dryRunSelection", "title": "BigQuery SQL: Dry Run Selection" },
       { "command": "bigquerySQLFormatter.bigquery.resetConsent", "title": "BigQuery SQL: Reset BigQuery Consent" },
       { "command": "bigquerySQLFormatter.bigquery.retry", "title": "BigQuery SQL: Retry BigQuery Connection" },
-      { "command": "bigquerySQLFormatter.bigquery.actions", "title": "BigQuery SQL: BigQuery Actions" }
+      { "command": "bigquerySQLFormatter.bigquery.actions", "title": "BigQuery SQL: BigQuery Actions" },
+      { "command": "bigquerySQLFormatter.bigquery.refreshSchema", "title": "BigQuery SQL: Refresh Schema Cache" }
     ],
     "configuration": {
       "type": "object",
@@ -134,7 +135,7 @@
           "type": "number",
           "minimum": 0,
           "default": 60,
-          "description": "In-memory cache lifetime for the forthcoming schema-completion feature."
+          "description": "In-memory schema metadata cache lifetime in minutes. Refresh Schema Cache clears it immediately."
         },
         "bigquerySQLFormatter.maxNumberOfProblems": {
           "scope": "resource",

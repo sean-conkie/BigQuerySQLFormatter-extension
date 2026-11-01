@@ -18,6 +18,7 @@ export class BigQueryService {
   private readonly prompts = new Map<string, Promise<boolean>>();
   private readonly declined = new Set<string>();
   private disposed = false;
+  private readonly schemaAuthorizations = new Map<string, { identity: string; scope: string }>();
 
   constructor(
     private readonly host: BigQueryHost,
@@ -31,6 +32,7 @@ export class BigQueryService {
     this.prompts.clear();
     this.declined.clear();
     this.notifications.clear();
+    this.schemaAuthorizations.clear();
   }
 
   retry(): void {
@@ -75,7 +77,7 @@ export class BigQueryService {
     }
   }
 
-  private report(failure: BigQueryError, resource?: string, project?: string): void {
+  report(failure: BigQueryError, resource?: string, project?: string): void {
     if (failure.kind === 'cancelled') return;
     this.host.status(project, failure.kind === 'auth' ? 'Not signed in' : failure.message);
     const key = `${this.host.scope(resource)}:${failure.kind}`;
@@ -83,6 +85,17 @@ export class BigQueryService {
       this.notifications.add(key);
       this.host.notify(failure.message);
     }
+  }
+
+  schemaAuthorized(project: string | undefined, resource: string): boolean {
+    const authorization = this.schemaAuthorizations.get(JSON.stringify([this.host.scope(resource), project]));
+    return (
+      !this.disposed &&
+      this.host.trusted() &&
+      this.host.settings(resource).schema.enabled &&
+      authorization !== undefined &&
+      authorization.identity === this.host.consent(authorization.scope)
+    );
   }
 
   dispose(): void {
@@ -149,8 +162,9 @@ export class BigQueryService {
         settings.quotaProjectId ?? null,
       ]);
       const scope = this.host.scope(resource);
-      const promptKey = `${scope}:${identity}`;
-      if (this.host.consent(scope) !== identity) {
+      const consentScope = targetProject === project ? scope : JSON.stringify([scope, targetProject]);
+      const promptKey = `${consentScope}:${identity}`;
+      if (this.host.consent(consentScope) !== identity) {
         if (this.declined.has(promptKey))
           throw new BigQueryError(
             'consent',
@@ -167,7 +181,7 @@ export class BigQueryService {
                 settings.quotaProjectId,
               );
               if (generation.aborted || this.disposed || !this.host.trusted()) return false;
-              if (accepted) await this.host.saveConsent(scope, identity);
+              if (accepted) await this.host.saveConsent(consentScope, identity);
               else this.declined.add(promptKey);
               return accepted;
             } finally {
@@ -182,6 +196,11 @@ export class BigQueryService {
       signal.throwIfAborted();
       if (!this.host.trusted())
         throw new BigQueryError('disabled', 'BigQuery integration requires a trusted workspace.');
+      if (feature === 'schema')
+        this.schemaAuthorizations.set(JSON.stringify([scope, 'project' in request ? request.project : undefined]), {
+          identity,
+          scope: consentScope,
+        });
       timer = setTimeout(
         () =>
           local.abort(
