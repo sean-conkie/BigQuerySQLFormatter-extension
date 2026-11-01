@@ -143,6 +143,73 @@ describe('Schema cache scheduling', () => {
     assert.throws(() => parseMetadata({ datasets: {} }, { resource: '' }), /metadata list/);
     assert.throws(() => parseMetadata({ tables: [{}] }, { resource: '', dataset: 'Analytics' }), /metadata response/);
     assert.deepEqual(parseMetadata({}, { resource: '' }), { entries: [], nextPage: undefined });
+    assert.deepEqual(parseMetadata({ schema: {} }, table).entries[0].fields, []);
+    assert.deepEqual(parseMetadata({ type: 'EXTERNAL' }, table).entries[0].fields, []);
+  });
+
+  it('reports unexpected fetch failures safely and keeps failed lookups unavailable', async () => {
+    const errors: BigQueryError[] = [];
+    let calls = 0;
+    const cache = new SchemaCache({
+      scope: (resource) => resource,
+      request: async () => {
+        calls++;
+        throw new Error('PRIVATE_METADATA_OR_CREDENTIAL');
+      },
+      authorized: () => true,
+      report: (error) => errors.push(error),
+    });
+    try {
+      const request = { resource: 'file:///schema.sql', table: 'Orders', dataset: 'Analytics' };
+      assert.deepEqual(await cache.lookup(request, 60), { entries: [], unavailable: true });
+      assert.deepEqual(await cache.lookup(request, 60), { entries: [], unavailable: true });
+      assert.equal(calls, 1);
+      assert.equal(errors.length, 1);
+      assert.equal(errors[0].kind, 'api');
+      assert.ok(!errors[0].message.includes('PRIVATE'));
+    } finally {
+      cache.clear();
+    }
+  });
+
+  it('removes cancelled queued fetches before an active request releases its slot', async () => {
+    let finish: (value: unknown) => void;
+    let calls = 0;
+    const errors: BigQueryError[] = [];
+    const cache = new SchemaCache(
+      {
+        scope: (resource) => resource,
+        request: async () => {
+          calls++;
+          return new Promise((resolve) => {
+            finish = resolve;
+          });
+        },
+        authorized: () => true,
+        report: (error) => errors.push(error),
+      },
+      0,
+      1,
+    );
+    try {
+      const request = { resource: 'file:///schema.sql', project: 'test-project', dataset: 'Analytics', table: 'First' };
+      await cache.lookup(request, 60);
+      await cache.lookup({ ...request, table: 'Queued' }, 60);
+      assert.equal(calls, 1);
+      cache.clear();
+      await new Promise<void>((resolve) => setImmediate(resolve));
+      assert.equal(errors.length, 1);
+      assert.equal(errors[0].kind, 'cancelled');
+      finish!({ schema: { fields: [] } });
+      await new Promise<void>((resolve) => setImmediate(resolve));
+      const next = cache.lookup({ ...request, table: 'Next' }, 60);
+      await new Promise<void>((resolve) => setImmediate(resolve));
+      assert.equal(calls, 2);
+      finish!({ schema: { fields: [] } });
+      assert.equal((await next).unavailable, undefined);
+    } finally {
+      cache.clear();
+    }
   });
 });
 

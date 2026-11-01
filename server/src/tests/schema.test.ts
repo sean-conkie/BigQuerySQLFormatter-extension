@@ -1,4 +1,8 @@
 import assert from 'node:assert/strict';
+import * as path from 'node:path';
+import { mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
   CancellationToken,
   CancellationTokenSource,
@@ -10,7 +14,7 @@ import {
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type { SchemaRequest, SchemaResponse } from '../../../shared/schema';
 import { SchemaBuilder } from '../completions/schema';
-import { quoteIdentifierPath } from '../linter/quoting';
+import { canUnquoteIdentifier, quoteIdentifierPath } from '../linter/quoting';
 import { tokenizeSource, schemaPositionAllowed } from '../linter/rules/source';
 import { QueryScopeResolver } from '../linter/scope';
 import { startTestServer } from './serverProcess';
@@ -40,11 +44,13 @@ describe('Schema completion and hover', () => {
     ],
   };
   let disabled: boolean;
+  let metadataUnavailable: boolean;
   let pending: boolean;
   const provider = async (request: SchemaRequest): Promise<SchemaResponse> => {
     requests.push(request);
     if (disabled) return { unavailable: true, entries: [] };
     if (request.contextOnly) return { entries: [], defaultDataset: 'Analytics', projectId: 'default-project' };
+    if (metadataUnavailable) return { unavailable: true, entries: [] };
     if (request.table)
       return {
         pending,
@@ -76,6 +82,7 @@ describe('Schema completion and hover', () => {
   beforeEach(() => {
     requests.length = 0;
     disabled = false;
+    metadataUnavailable = false;
     pending = false;
   });
   afterEach(() => globalTokenCache.delete('file:///schema.bqsql'));
@@ -83,11 +90,17 @@ describe('Schema completion and hover', () => {
   describe('Schema LSP protocol', function () {
     this.timeout(10000);
     let server: ReturnType<typeof startTestServer>;
-    beforeEach(() => {
+    let directory: string;
+    beforeEach(async () => {
+      directory = await mkdtemp(path.join(tmpdir(), 'bqsql-schema-protocol-'));
       server = startTestServer();
     });
     afterEach(async () => {
-      await server.stop();
+      try {
+        await server.stop();
+      } finally {
+        await rm(directory, { recursive: true, force: true });
+      }
     });
 
     it('returns incomplete lists while pending and exact function fallback when unavailable', async () => {
@@ -103,7 +116,8 @@ describe('Schema completion and hover', () => {
         capabilities: {},
         initializationOptions: { schemaProvider: true },
       });
-      const uri = 'file:///schema-process.bqsql';
+      const uri = pathToFileURL(path.join(directory, 'schema-process.bqsql')).href;
+      assert.equal(fileURLToPath(uri), path.join(directory, 'schema-process.bqsql'));
       const text = 'SELECT AB FROM ds.Orders';
       await server.connection.sendNotification('textDocument/didOpen', {
         textDocument: { uri, languageId: 'googlesql', version: 1, text },
@@ -142,7 +156,8 @@ describe('Schema completion and hover', () => {
         capabilities: {},
         initializationOptions: { schemaProvider: true },
       });
-      const uri = 'file:///schema-cancel.bqsql';
+      const uri = pathToFileURL(path.join(directory, 'schema-cancel.bqsql')).href;
+      assert.equal(fileURLToPath(uri), path.join(directory, 'schema-cancel.bqsql'));
       await server.connection.sendNotification('textDocument/didOpen', {
         textDocument: { uri, languageId: 'googlesql', version: 1, text: 'SELECT x FROM ds.Orders' },
       });
@@ -166,11 +181,11 @@ describe('Schema completion and hover', () => {
     });
   });
 
-  function build(sql: string) {
+  function build(sql: string, schemaProvider = provider) {
     const offset = sql.indexOf('¦');
     assert.ok(offset >= 0);
     const document = TextDocument.create('file:///schema.bqsql', 'googlesql', 1, sql.replace('¦', ''));
-    return { builder: new SchemaBuilder(document, provider), document, position: document.positionAt(offset) };
+    return { builder: new SchemaBuilder(document, schemaProvider), document, position: document.positionAt(offset) };
   }
 
   async function complete(sql: string): Promise<CompletionList> {
@@ -316,6 +331,145 @@ describe('Schema completion and hover', () => {
     assert.equal((await complete('SELECT u.¦ FROM UNNEST([1, 2]) u')).items.length, 0);
   });
 
+  it('does not guess outputs of unsupported subqueries or incomplete table names', async () => {
+    const unsupported = await complete(
+      'SELECT s.¦ FROM (SELECT * FROM Analytics.Orders MATCH_RECOGNIZE (PATTERN (a))) s',
+    );
+    assert.deepEqual(unsupported.items, []);
+    assert.deepEqual((await complete('SELECT ¦ FROM ``')).items, []);
+    assert.ok(requests.every((request) => request.contextOnly));
+  });
+
+  it('isolates CTE body sources from the surrounding query', async () => {
+    const result = await complete('WITH x AS (SELECT ¦ FROM Analytics.Inner) SELECT * FROM Analytics.Outer');
+    assert.ok(result.items.some((item) => item.label === 'CustomerID'));
+    assert.deepEqual(
+      requests.filter((request) => request.table).map((request) => request.table),
+      ['Inner'],
+    );
+  });
+
+  it('completes static pipe outputs without a relation alias', async () => {
+    const result = await complete('FROM Analytics.Orders |> SELECT CustomerID AS Derived |> WHERE ¦');
+    assert.deepEqual(
+      result.items.map((item) => item.label),
+      ['Derived'],
+    );
+    assert.ok(requests.every((request) => request.contextOnly));
+  });
+
+  it('does not suggest nested fields on a scalar column', async () => {
+    assert.deepEqual((await complete('SELECT o.CustomerID.¦ FROM Analytics.Orders o')).items, []);
+  });
+
+  it('completes and hovers select-list aliases in ORDER BY', async () => {
+    const result = await complete('SELECT CustomerID AS Derived FROM Analytics.Orders ORDER BY De¦rived');
+    assert.deepEqual(
+      result.items.map((item) => item.label),
+      ['Derived'],
+    );
+    const { builder, position } = build('SELECT CustomerID AS Derived FROM Analytics.Orders ORDER BY De¦rived');
+    const hover = await builder.hover(position, CancellationToken.None);
+    assert.ok(hover && typeof hover.contents === 'object' && 'value' in hover.contents);
+    assert.ok(hover.contents.value.includes('Output column'));
+    assert.ok(
+      !(await complete('SELECT CustomerID AS Derived FROM Analytics.Orders WHERE De¦rived')).items.some(
+        (item) => item.label === 'Derived',
+      ),
+    );
+  });
+
+  it('uses the configured or previously referenced project without listing the default project', async () => {
+    for (const sql of [
+      'SELECT * FROM default-project.¦',
+      'SELECT * FROM other-project.Analytics.Orders; SELECT * FROM other-project.¦',
+    ]) {
+      requests.length = 0;
+      const result = await complete(sql);
+      assert.ok(result.items.some((item) => item.label === 'Analytics'));
+      assert.equal(requests.length, 2);
+      assert.ok(requests[1].project);
+    }
+  });
+
+  it('waits for pending dataset pagination instead of guessing that a qualifier is a project', async () => {
+    pending = true;
+    const result = await complete('SELECT * FROM Unknown.¦');
+    assert.equal(result.isIncomplete, true);
+    assert.deepEqual(result.items, []);
+    assert.ok(!requests.some((request) => request.project === 'Unknown'));
+  });
+
+  it('recognizes the configured default dataset even when datasets.list does not include it', async () => {
+    const { builder, position } = build('SELECT * FROM Analytics.¦', async (request) => {
+      const response = await provider(request);
+      return !request.contextOnly && !request.dataset ? { ...response, entries: [] } : response;
+    });
+    const result = await builder.completions(position, CancellationToken.None);
+    assert.ok(result?.items.some((item) => item.label === 'Orders'));
+    assert.ok(!requests.some((request) => request.project === 'Analytics'));
+  });
+
+  it('uses table completion details when tables.list omits type', async () => {
+    const { builder, position } = build('SELECT * FROM Analytics.¦', async (request) => {
+      const response = await provider(request);
+      return request.dataset ? { ...response, entries: [{ name: 'Undescribed' }] } : response;
+    });
+    const result = await builder.completions(position, CancellationToken.None);
+    assert.equal(result?.items[0].detail, 'TABLE');
+  });
+
+  it('falls back when metadata becomes unavailable after the feature-context check', async () => {
+    metadataUnavailable = true;
+    const completion = build('SELECT ¦ FROM Analytics.Orders');
+    assert.equal(await completion.builder.completions(completion.position, CancellationToken.None), undefined);
+    const hover = build('SELECT * FROM Analytics.Or¦ders');
+    assert.equal(await hover.builder.hover(hover.position, CancellationToken.None), null);
+  });
+
+  it('does not request metadata for an empty document or a date literal keyword', async () => {
+    const empty = build('¦');
+    assert.equal(await empty.builder.completions(empty.position, CancellationToken.None), undefined);
+    assert.equal(await empty.builder.hover(empty.position, CancellationToken.None), null);
+    assert.ok(requests.every((request) => request.contextOnly));
+    requests.length = 0;
+    const date = build("SELECT DA¦TE'2024-01-01'");
+    assert.equal(await date.builder.hover(date.position, CancellationToken.None), null);
+    assert.deepEqual(requests, []);
+  });
+
+  it('does not treat relation aliases or CTE references as physical table hover', async () => {
+    for (const sql of ['SELECT * FROM Analytics.Orders ¦o', 'WITH x AS (SELECT 1 AS Derived) SELECT * FROM ¦x']) {
+      const { builder, position } = build(sql);
+      assert.equal(await builder.hover(position, CancellationToken.None), null);
+    }
+  });
+
+  it('hovers DML targets and unqualified tables through the default dataset', async () => {
+    for (const sql of ['UPDATE Analytics.Or¦ders SET CustomerID = 1', 'SELECT * FROM Or¦ders']) {
+      const { builder, position } = build(sql);
+      const hover = await builder.hover(position, CancellationToken.None);
+      assert.ok(hover && typeof hover.contents === 'object' && 'value' in hover.contents);
+      assert.ok(hover.contents.value.includes('Orders view'));
+    }
+    assert.ok(requests.some((request) => request.table === 'Orders' && request.dataset === undefined));
+  });
+
+  it('displays an invalid metadata modification timestamp without throwing', async () => {
+    const { builder, position } = build('SELECT * FROM Analytics.Or¦ders', async (request) => {
+      const response = await provider(request);
+      return request.table
+        ? {
+            ...response,
+            entries: response.entries.map((entry) => ({ ...entry, lastModifiedTime: 'unknown-time' })),
+          }
+        : response;
+    });
+    const hover = await builder.hover(position, CancellationToken.None);
+    assert.ok(hover && typeof hover.contents === 'object' && 'value' in hover.contents);
+    assert.ok(hover.contents.value.includes('unknown-time'));
+  });
+
   it('tracks static pipe projections and aliases without guessing schemas', async () => {
     const result = await complete('FROM Analytics.Orders |> SELECT CustomerID AS Derived |> AS p |> SELECT p.¦');
     assert.deepEqual(
@@ -397,6 +551,9 @@ describe('Schema completion and hover', () => {
   });
 
   it('shares minimal quoting rules with RF06', () => {
+    assert.equal(canUnquoteIdentifier('CustomerID'), true);
+    assert.equal(canUnquoteIdentifier('select'), false);
+    assert.equal(quoteIdentifierPath(['CustomerID']), 'CustomerID');
     for (const [parts, allowDash, expected] of [
       [['CustomerID'], false, 'CustomerID'],
       [['select'], false, '`select`'],
