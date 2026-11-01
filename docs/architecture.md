@@ -9,9 +9,10 @@ See also [local development](local-development.md) and [testing](testing.md).
 
 ## Components
 
-The extension is a VS Code language client (`client/`) and an LSP language
+The extension is a Visual Studio Code language client (`client/`) and an LSP language
 server (`server/`), bundled with esbuild into `dist/`.
 
+<!-- prettier-ignore -->
 | Path | Responsibility |
 | --- | --- |
 | `client/src/extension.ts` | Activation; starts `dist/server.js` (IPC); watches `.bqsqlformatter.json`; `ready()` |
@@ -59,9 +60,9 @@ Changes must preserve these; most have dedicated tests.
 
 - **Offline server.** No network access or credentials in `server/`. BigQuery
   code stays in `client/src/bigquery/`, uses the auth client's `request()` (never
-  global `fetch`, which bypasses VS Code's proxy on 1.91), and is lazy-loaded.
-- **Minimum runtime.** VS Code 1.91 runs Node 20.9 in the extension host. Don't
-  use newer VS Code APIs (`@types/vscode` is pinned to 1.91.0) or dependencies
+  global `fetch`, which bypasses Visual Studio Code's proxy on 1.91), and is lazy loaded.
+- **Minimum runtime.** Visual Studio Code 1.91 runs Node 20.9 in the extension host. Don't
+  use newer Visual Studio Code APIs (`@types/vscode` is pinned to 1.91.0) or dependencies
   that need a newer Node; `google-auth-library` stays on major 10 (#435).
 - **Settings trust.** `bigquerySQLFormatter.bigquery.*` settings are never read
   from `.bqsqlformatter.json` and are listed in `restrictedConfigurations`.
@@ -86,14 +87,15 @@ Changes must preserve these; most have dedicated tests.
 
 ## Where a change goes
 
+<!-- prettier-ignore -->
 | Change | Touch |
 | --- | --- |
 | New or changed rule | Rule file and group `rules.ts`; tests; `docs/source/rules/` page and index; `CHANGELOG.md` |
 | Rule option | `ruleOptions.ts` and `ruleOptionSchemas`; matching explicit rule schema in `package.json` |
-| Editor setting | `package.json` schema; `server/src/settings.ts` (or `client/src/bigquery/settings.ts`); README |
+| Editor setting | `package.json` schema; `server/src/settings.ts` (or `client/src/bigquery/settings.ts`); `README.md` |
 | Parser or grammar | `server/src/linter/parser/`, `syntaxes/`; regenerate keywords if keyword scopes change |
 | Formatting or Fix All | `server/src/formatting.ts`; rule fix code |
-| BigQuery integration | `client/src/bigquery/`; mock server tests; README "BigQuery integration" section |
+| BigQuery integration | `client/src/bigquery/`; mock server tests; `README.md` "BigQuery integration" section |
 | New LSP message | Both `client/src/extension.ts` and `server/src/server.ts`; end-to-end test |
 | Packaging | `scripts/build.cjs`, `.vscodeignore`, `scripts/check-package.cjs` |
 
