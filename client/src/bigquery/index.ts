@@ -14,6 +14,8 @@ import { BigQueryError, BigQueryRestClient, createCredentials, type BigQueryRequ
 import { parseBigQuerySettings, type BigQueryFeature, type BigQuerySettings } from './settings';
 import { BigQueryService } from './service';
 import { dryRunResult, errorOffsets, queryFeatures, type TokenizeSql } from './dryRun';
+import { SchemaCache } from './schema';
+import type { SchemaRequest, SchemaResponse } from '../../../shared/schema';
 
 export interface BigQueryIntegration {
   request(
@@ -24,6 +26,8 @@ export interface BigQueryIntegration {
   ): Promise<unknown>;
   setResult(resource: string, result: string): void;
   dryRun(document: TextDocument, selection?: Range): Promise<void>;
+  schema(request: SchemaRequest, signal?: AbortSignal): Promise<SchemaResponse>;
+  refreshSchema(): void;
   retry(): void;
   showOutput(): void;
   dispose(): void;
@@ -77,6 +81,14 @@ export function initialize(context: ExtensionContext, tokenize: TokenizeSql): Bi
     status.show();
   };
   const credentials = createCredentials();
+  const scope = (resource?: string) => {
+    const uri = resource ? Uri.parse(resource) : activeResource();
+    return (
+      (uri && workspace.getWorkspaceFolder(uri)?.uri.toString()) ??
+      workspace.workspaceFile?.toString() ??
+      'empty-workspace'
+    );
+  };
   const rest = new BigQueryRestClient(credentials, (metadata) => output.appendLine(JSON.stringify(metadata)));
   const output = window.createOutputChannel('BigQuery SQL Formatter: BigQuery');
   const status = window.createStatusBarItem(StatusBarAlignment.Right, 100);
@@ -87,14 +99,7 @@ export function initialize(context: ExtensionContext, tokenize: TokenizeSql): Bi
     {
       trusted: () => workspace.isTrusted,
       settings,
-      scope: (resource) => {
-        const uri = resource ? Uri.parse(resource) : activeResource();
-        return (
-          (uri && workspace.getWorkspaceFolder(uri)?.uri.toString()) ??
-          workspace.workspaceFile?.toString() ??
-          'empty-workspace'
-        );
-      },
+      scope,
       consent: (scope) => context.workspaceState.get<Record<string, string>>(consentKey, {})[scope],
       saveConsent: async (scope, identity) => {
         const consent = { ...context.workspaceState.get<Record<string, string>>(consentKey, {}) };
@@ -219,15 +224,41 @@ export function initialize(context: ExtensionContext, tokenize: TokenizeSql): Bi
       void window.showWarningMessage('Invalid BigQuery settings. Check dry-run settings before saving again.');
     }
   });
+  const schema = new SchemaCache({
+    scope,
+    request: (request, resource, signal) => service.request('schema', request, resource, signal),
+    authorized: (request) => service.schemaAuthorized(request.project, request.resource),
+    report: (error, resource) => service.report(error, resource),
+  });
   render();
   void service.checkCredentials();
   return {
     request: (feature, request, resource, signal) => service.request(feature, request, resource, signal),
     setResult,
     dryRun,
-    retry: () => service.retry(),
+    schema: async (request, signal) => {
+      const config = settings(request.resource);
+      if (!workspace.isTrusted || !config.schema.enabled) return { unavailable: true, entries: [] };
+      if (request.contextOnly)
+        return { entries: [], defaultDataset: config.defaultDataset, projectId: config.projectId };
+      return {
+        ...(await schema.lookup(
+          { ...request, project: request.project ?? config.projectId },
+          config.schema.cacheTtlMinutes,
+          signal,
+        )),
+        defaultDataset: config.defaultDataset,
+        projectId: config.projectId,
+      };
+    },
+    refreshSchema: () => schema.clear(),
+    retry: () => {
+      schema.clear();
+      service.retry();
+    },
     showOutput: () => output.show(),
     dispose: () => {
+      schema.clear();
       service.dispose();
       for (const controller of pending.values()) controller.abort();
       pending.clear();

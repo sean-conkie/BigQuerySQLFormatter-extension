@@ -110,7 +110,12 @@ export function pipeItems(tokens: SourceToken[], start: number, end: number, lit
   return items;
 }
 
-export function pipeClauses(tokens: SourceToken[], start = 0, end = tokens.length): PipeClause[] {
+export function pipeClauses(
+  tokens: SourceToken[],
+  start = 0,
+  end = tokens.length,
+  allowIncomplete = false,
+): PipeClause[] {
   if (keyword(tokens[end - 1], ';')) end--;
   const separators = topLevel(tokens, start, end).filter((i) => keyword(tokens[i], '|') && keyword(tokens[i + 1], '>'));
   return separators.map((position, index): PipeClause => {
@@ -125,7 +130,7 @@ export function pipeClauses(tokens: SourceToken[], start = 0, end = tokens.lengt
       body++;
     }
     const stage = { operator, start: position, body, end: stop };
-    if (body >= stop && operator !== 'DISTINCT') {
+    if (body >= stop && operator !== 'DISTINCT' && !(allowIncomplete && index === separators.length - 1)) {
       return { ...stage, kind: 'unsupported', reason: `Incomplete pipe operator: ${operator}` };
     }
     const indices = topLevel(tokens, body, stop);
@@ -228,10 +233,15 @@ export function pipeClauses(tokens: SourceToken[], start = 0, end = tokens.lengt
   });
 }
 
-export function unsupportedQuery(tokens: SourceToken[], start = 0, end = tokens.length): boolean {
+export function unsupportedQuery(
+  tokens: SourceToken[],
+  start = 0,
+  end = tokens.length,
+  allowIncomplete = false,
+): boolean {
   return (
     topLevel(tokens, start, end).some(
       (i) => ['MATCH_RECOGNIZE', 'GRAPH_TABLE'].some((word) => keyword(tokens[i], word)) && keyword(tokens[i + 1], '('),
-    ) || pipeClauses(tokens, start, end).some((stage) => stage.kind === 'unsupported')
+    ) || pipeClauses(tokens, start, end, allowIncomplete).some((stage) => stage.kind === 'unsupported')
   );
 }

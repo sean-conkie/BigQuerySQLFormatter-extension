@@ -26,6 +26,102 @@ suite('BigQuery integration extension host', () => {
     await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
   });
 
+  test('completes and hovers cached schema through the LSP client against the REST mock', async () => {
+    const mock = new MockBigQueryServer();
+    mock.fallback = 'schema';
+    await mock.start();
+    const originalEndpoint = process.env.BQSQL_TEST_BIGQUERY_ENDPOINT;
+    process.env.BQSQL_TEST_BIGQUERY_ENDPOINT = mock.endpoint;
+    const directory = await mkdtemp(path.join(tmpdir(), 'bqsql-schema-'));
+    const uri = vscode.Uri.file(path.join(directory, 'schema.bqsql'));
+    const config = vscode.workspace.getConfiguration('bigquerySQLFormatter.bigquery');
+    const extension = vscode.extensions.getExtension<ExtensionApi>('sean-conkie.bigquerysqlformatter')!;
+    const runtimeVscode: typeof vscode = createRequire(
+      realpathSync(path.join(extension.extensionPath, 'dist', 'bigquery.js')),
+    )('vscode');
+    const prompt = sinon.stub(runtimeVscode.window, 'showInformationMessage');
+    prompt.callsFake(
+      async <T extends string | vscode.MessageItem>(
+        _message: string,
+        _options?: vscode.MessageOptions | T,
+        ...items: T[]
+      ): Promise<T | undefined> => items.find((item) => item === 'Allow'),
+    );
+    try {
+      await config.update('projectId', 'test-project', vscode.ConfigurationTarget.Global);
+      await config.update('defaultDataset', 'test_dataset', vscode.ConfigurationTarget.Global);
+      await config.update('schema.enabled', true, vscode.ConfigurationTarget.Global);
+      await writeFile(uri.fsPath, 'SELECT o. FROM test_dataset.Orders o');
+      await activate(uri);
+      const api = await extension.activate();
+      await api.ready();
+      const position = new vscode.Position(0, 9);
+      const complete = () =>
+        vscode.commands.executeCommand<vscode.CompletionList>('vscode.executeCompletionItemProvider', uri, position);
+      if (!vscode.workspace.isTrusted) {
+        const result = await complete();
+        assert.ok(!result.items.some((item) => item.label === 'CustomerID'));
+        assert.equal(mock.requests.length, 0);
+        assert.equal(prompt.callCount, 0);
+        return;
+      }
+      let result: vscode.CompletionList;
+      const deadline = Date.now() + 10000;
+      do {
+        result = await complete();
+        if (result.items.some((item) => item.label === 'CustomerID')) break;
+        await new Promise<void>((resolve) => setTimeout(resolve, 50));
+      } while (Date.now() < deadline);
+      const item = result.items.find((item) => item.label === 'CustomerID');
+      assert.ok(item, 'Schema completions did not appear after consent');
+      assert.equal(item.insertText, 'o.CustomerID');
+      assert.ok(prompt.calledOnce);
+      const requestsBefore = mock.requests.length;
+      const latencies: number[] = [];
+      for (let i = 0; i < 30; i++) {
+        const start = performance.now();
+        const cached = await complete();
+        assert.ok(cached.items.some((item) => item.label === 'CustomerID'));
+        latencies.push(performance.now() - start);
+      }
+      latencies.sort((a, b) => a - b);
+      console.log(
+        `Schema cached LSP completion latency (30 runs): median=${latencies[15].toFixed(2)}ms p95=${latencies[28].toFixed(2)}ms`,
+      );
+      assert.equal(mock.requests.length, requestsBefore);
+      const hover = await vscode.commands.executeCommand<vscode.Hover[]>(
+        'vscode.executeHoverProvider',
+        uri,
+        new vscode.Position(0, 30),
+      );
+      assert.ok(
+        hover.some((entry) =>
+          entry.contents.some(
+            (content) => typeof content === 'object' && 'value' in content && content.value.includes('Orders view'),
+          ),
+        ),
+      );
+      await vscode.commands.executeCommand('bigquerySQLFormatter.bigquery.refreshSchema');
+      await complete();
+      assert.ok(mock.requests.length > requestsBefore);
+      assert.ok(
+        mock.requests.every((request) => request.method === 'GET' && !request.body && !request.url.includes('/jobs')),
+      );
+    } finally {
+      prompt.restore();
+      await config.update('schema.enabled', undefined, vscode.ConfigurationTarget.Global);
+      await config.update('projectId', undefined, vscode.ConfigurationTarget.Global);
+      await config.update('defaultDataset', undefined, vscode.ConfigurationTarget.Global);
+      await vscode.commands.executeCommand('bigquerySQLFormatter.bigquery.resetConsent');
+      await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
+      await mock.close();
+      await rm(path.join(directory, 'schema.bqsql'), { force: true });
+      await rm(directory, { recursive: true, force: true });
+      if (originalEndpoint === undefined) delete process.env.BQSQL_TEST_BIGQUERY_ENDPOINT;
+      else process.env.BQSQL_TEST_BIGQUERY_ENDPOINT = originalEndpoint;
+    }
+  });
+
   test('wires opt-in settings, consent, transport, cancellation and reset without contacting Google', async () => {
     const mock = new MockBigQueryServer();
     await mock.start();

@@ -4,6 +4,7 @@ import {
   type InitializeParams,
   DidChangeConfigurationNotification,
   type CompletionItem,
+  type CompletionList,
   type TextDocumentPositionParams,
   TextDocumentSyncKind,
   type InitializeResult,
@@ -33,6 +34,8 @@ import { closeTextDocument, validateTextDocument } from './validate';
 import { createDocumentCodeActions, formatDocument } from './formatting';
 import { sourceFixAllKind } from './linter/linter';
 import { CompletionBuilder } from './completions';
+import { SchemaBuilder, type SchemaProvider } from './completions/schema';
+import type { SchemaResponse } from '../../shared/schema';
 import { ValidationScheduler } from './validationScheduler';
 import { awaitWithCancellation, checkCancellation } from './cancellation';
 import { GrammarLoader } from './linter/grammarLoader';
@@ -45,6 +48,7 @@ connection.onRequest('bigquerySQLFormatter/sourceTokens', ({ text }: { text: str
 let hasConfigurationCapability = false;
 let hasWorkspaceFolderCapability = false;
 let hasDiagnosticRelatedInformationCapability = false;
+let hasSchemaProvider = false;
 let globalSettings: ServerSettings = defaultSettings;
 let workspaceUris: string[] = [];
 const documents = new Map<string, TextDocument>();
@@ -109,6 +113,7 @@ function validateDocument(document: TextDocument, delay = 0): void {
 
 connection.onInitialize(async (params: InitializeParams) => {
   const capabilities = params.capabilities;
+  hasSchemaProvider = params.initializationOptions?.schemaProvider === true;
   workspaceUris = params.workspaceFolders?.map((folder) => folder.uri) ?? (params.rootUri ? [params.rootUri] : []);
 
   // Does the client support the `workspace/configuration` request?
@@ -250,14 +255,30 @@ async function formatting(uri: string, range: Range | undefined, token: Cancella
 connection.onDocumentFormatting((params, token) => formatting(params.textDocument.uri, undefined, token));
 connection.onDocumentRangeFormatting((params, token) => formatting(params.textDocument.uri, params.range, token));
 
-connection.onCompletion((params: TextDocumentPositionParams): CompletionItem[] => {
-  const completionBuilder = new CompletionBuilder(params.textDocument.uri);
-  return completionBuilder.getCompletions(params);
-});
+const schemaProvider: SchemaProvider = (request, token) =>
+  connection.sendRequest<SchemaResponse>('bigquerySQLFormatter/schema', request, token);
 
-connection.onHover((params: HoverParams): Hover | null => {
+connection.onCompletion(
+  async (params: TextDocumentPositionParams, token): Promise<CompletionItem[] | CompletionList> => {
+    checkCancellation(token);
+    const completionBuilder = new CompletionBuilder(params.textDocument.uri);
+    const functions = completionBuilder.getCompletions(params);
+    const document = documents.get(params.textDocument.uri);
+    if (!document || !hasSchemaProvider) return functions;
+    const schema = await new SchemaBuilder(document, schemaProvider).completions(params.position, token);
+    return schema ? { isIncomplete: schema.isIncomplete, items: [...schema.items, ...functions] } : functions;
+  },
+);
+
+connection.onHover(async (params: HoverParams, token): Promise<Hover | null> => {
+  checkCancellation(token);
   const completionBuilder = new CompletionBuilder(params.textDocument.uri);
-  return completionBuilder.getHover(params);
+  const functions = completionBuilder.getHover(params);
+  if (functions) return functions;
+  const document = documents.get(params.textDocument.uri);
+  return document && hasSchemaProvider
+    ? new SchemaBuilder(document, schemaProvider).hover(params.position, token)
+    : null;
 });
 
 connection.listen();

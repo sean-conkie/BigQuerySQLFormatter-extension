@@ -122,6 +122,12 @@ xvfb-run -a npm run citest
 ### BigQuery foundation tests
 
 The client-only BigQuery runtime is a separate `dist/bigquery.js` bundle.
+Schema tests use the shared scope resolver and the REST mock, including lazy
+pagination, consent-safe caching, TTL/refresh, nested fields, bounded concurrency
+and cancellation. `server/src/tests/schema.test.ts` covers completion contexts,
+hover and the server-to-client schema protocol; the extension-host suite exercises
+the complete LSP flow and reports warmed cached completion latency. CP02 remains
+schema-free: exact-case mixed-case column completions may still receive its warning.
 Offline unit tests use `client/src/test/bigquery/mockServer.ts` for dry runs,
 dataset/table metadata, authentication failures, rate limits, network failures,
 timeouts, optional quota headers, quota/location errors and proxy routing.

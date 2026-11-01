@@ -24,7 +24,7 @@ server (`server/`), bundled with esbuild into `dist/`.
 | `server/src/linter/scope.ts`, `joins.ts` | Query scopes (sources, aliases, CTEs, pipe stages) and the JOIN ON model |
 | `server/src/linter/rules/<group>/<CODE>.ts` | Rules, registered in the group's `rules.ts` and in `rules/rules.ts` |
 | `server/src/formatting.ts` | Format Document/Selection and Fix All (repeat fixes until stable, with recovery) |
-| `server/src/completions/` | Function completion and hover from the generated `functions.json` |
+| `server/src/completions/` | Function completion and hover from `functions.json`; optional schema metadata supplied by the client |
 | `server/src/linter/syntaxes/` | GoogleSQL TextMate grammar; Oniguruma Wasm is copied into `dist/` |
 | `scripts/` | esbuild build, package check, duplication check, completion and keyword generators |
 | `package.json` | Manifest: settings schema (including rule-option schemas), `capabilities.untrustedWorkspaces` |
@@ -47,8 +47,11 @@ alongside the `AGENTS.md` files and the workflows in `.agents/skills/`.
    file watcher) revalidate open documents. Closing a document clears its
    diagnostics and caches.
 
-`bigquerySQLFormatter/ready` is currently the only custom LSP message. The
-BigQuery features run entirely in the client; the server makes no network calls.
+Custom LSP messages include `bigquerySQLFormatter/ready`,
+`bigquerySQLFormatter/sourceTokens` for client dry-run analysis, and
+`bigquerySQLFormatter/schema` for client-supplied schema metadata. BigQuery
+authentication and REST calls run entirely in the client; the server makes no
+network calls.
 
 ## Invariants
 

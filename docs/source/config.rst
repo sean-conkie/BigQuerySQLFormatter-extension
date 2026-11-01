@@ -2,6 +2,32 @@
 Configuration
 =============
 
+BigQuery schema metadata
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Set ``bigquerySQLFormatter.bigquery.schema.enabled`` to ``true`` in VS Code user,
+workspace or workspace-folder settings, not ``.bqsqlformatter.json``. This opt-in
+feature needs workspace trust, ADC credentials and project/location consent.
+``bigquery.projectId`` selects the default project (otherwise ADC's default);
+``bigquery.defaultDataset`` resolves unqualified tables. Other projects are
+requested only when explicitly named in SQL.
+
+Schema completions and hover use unbilled REST metadata, never queries or
+``INFORMATION_SCHEMA``. Lists load lazily in pages of 50; up to four requests run
+per project. ``bigquerySQLFormatter.bigquery.schema.cacheTtlMinutes`` defaults to
+60. The cache is memory-only. **BigQuery SQL: Refresh Schema Cache** clears it.
+Entries are shared within the consented workspace scope; each target project has
+independent consent, including queries that join tables across projects.
+Lists remain incomplete while metadata loads; disabled or unavailable lookups
+preserve function completions. Strings and comments never initiate lookups.
+
+Datasets show location; table hover includes available descriptions, row counts,
+size, partitioning, clustering and modification time. Columns show descriptions,
+type, mode (omitted API modes mean NULLABLE), and nested fields. Completion respects
+query scope and source aliases. CTE/subquery output names are static only.
+Exact name case is preserved with minimal backticks. CP02 is unchanged and may
+warn for mixed-case columns; configure its severity or disable it if desired.
+
 Formatting
 ~~~~~~~~~~
 
