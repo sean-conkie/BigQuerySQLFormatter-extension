@@ -158,14 +158,21 @@ suite('BigQuery integration extension host', () => {
         (items) => items.some((item) => item.source !== 'BigQuery dry run'),
         'offline lint',
       );
-      await replace('-- selection prefix\n    SELECT 1;\nSELECT nope');
-      assert.equal(dryDiagnostics().length, 0);
-      editor.selection = new vscode.Selection(1, 4, 2, 11);
-      await vscode.commands.executeCommand('bigquerySQLFormatter.bigquery.dryRunSelection');
-      assert.deepEqual(dryDiagnostics()[0].range.start, new vscode.Position(2, 7));
-      assert.equal(mock.requests.length, 3);
-      const selectionBody = mock.requests[2].body as { configuration: { query: { query: string } } };
-      assert.equal(selectionBody.configuration.query.query, 'SELECT 1;\nSELECT nope');
+      for (const eol of [vscode.EndOfLine.LF, vscode.EndOfLine.CRLF]) {
+        assert(await editor.edit((edit) => edit.setEndOfLine(eol)));
+        await replace('-- selection prefix\n    SELECT 1;\nSELECT nope');
+        assert.equal(dryDiagnostics().length, 0);
+        editor.selection = new vscode.Selection(1, 4, 2, 11);
+        const beforeSelection = mock.requests.length;
+        await vscode.commands.executeCommand('bigquerySQLFormatter.bigquery.dryRunSelection');
+        assert.deepEqual(dryDiagnostics()[0].range.start, new vscode.Position(2, 7));
+        assert.equal(mock.requests.length, beforeSelection + 1);
+        const selectionBody = mock.requests[beforeSelection].body as { configuration: { query: { query: string } } };
+        assert.equal(
+          selectionBody.configuration.query.query,
+          `SELECT 1;${eol === vscode.EndOfLine.CRLF ? '\r\n' : '\n'}SELECT nope`,
+        );
+      }
       mock.fallback = 'notFound';
       await replace('SELECT * FROM `test-project.test_dataset.PRIVATE_SCHEMA_COLUMN`');
       await run();

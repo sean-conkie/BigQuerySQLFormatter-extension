@@ -405,7 +405,12 @@ describe('BigQuery foundation (offline)', function () {
   });
 
   it('sends declared scalar parameters and preserves the first query error without logging it', async () => {
-    const parameters = { name: { type: 'STRING', value: 'PRIVATE_PARAMETER' }, count: { type: 'INT64', value: 3 } };
+    const parameters = {
+      name: { type: 'STRING', value: 'PRIVATE_PARAMETER' },
+      count: { type: 'INT64', value: 3 },
+      nullable: { type: 'STRING', value: null },
+      flag: { type: 'BOOL', value: false },
+    };
     await service.request('dryRun', { operation: 'jobs.insert', query: 'SELECT @name, @count', parameters });
     assert.deepEqual(mock.requests[0].body, {
       jobReference: { projectId: 'test-project' },
@@ -418,6 +423,8 @@ describe('BigQuery foundation (offline)', function () {
           queryParameters: [
             { name: 'name', parameterType: { type: 'STRING' }, parameterValue: { value: 'PRIVATE_PARAMETER' } },
             { name: 'count', parameterType: { type: 'INT64' }, parameterValue: { value: '3' } },
+            { name: 'nullable', parameterType: { type: 'STRING' }, parameterValue: { value: null } },
+            { name: 'flag', parameterType: { type: 'BOOL' }, parameterValue: { value: 'false' } },
           ],
           defaultDataset: { projectId: 'test-project', datasetId: 'test_dataset' },
         },
@@ -434,6 +441,24 @@ describe('BigQuery foundation (offline)', function () {
     });
     assert(!JSON.stringify(logs).includes('PRIVATE_'));
     assert(!notifications.join(' ').includes('PRIVATE_'));
+  });
+
+  it('does not interpret malformed job status objects as query errors', async () => {
+    for (const response of [
+      [],
+      { status: null },
+      { status: 'invalid' },
+      { status: {} },
+      { status: { errorResult: null } },
+      { status: { errorResult: {} } },
+      { status: { errorResult: { message: 42 } } },
+    ]) {
+      mock.jobPayload = response;
+      assert.deepEqual(
+        await service.request('dryRun', { operation: 'jobs.insert', query: 'SELECT 1', parameters: {} }),
+        response,
+      );
+    }
   });
 
   it('validates DDL/DML using only dry-run requests and displays their returned estimates', async () => {

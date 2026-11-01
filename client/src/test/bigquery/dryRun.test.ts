@@ -93,4 +93,41 @@ describe('BigQuery dry-run results and settings', () => {
     first.range.start.line = 1;
     assert.deepEqual(errorOffsets(query, 'No position', [first]), [12, 30]);
   });
+
+  it('rejects malformed API results and invalid referenced tables rather than displaying success', () => {
+    for (const response of [
+      null,
+      [],
+      'invalid',
+      { statistics: null },
+      { statistics: { query: [] } },
+      { statistics: { totalBytesProcessed: '9'.repeat(309) } },
+    ])
+      assert.throws(() => dryRunResult(response, false), /invalid bytes/);
+    for (const table of [null, [], {}, { projectId: 'p', datasetId: 'd', tableId: 1 }])
+      assert.throws(
+        () =>
+          dryRunResult(
+            {
+              statistics: { totalBytesProcessed: '1234', query: { referencedTables: [table] } },
+            },
+            false,
+          ),
+        /invalid referenced table/,
+      );
+  });
+
+  it('uses the first statement line when a position-less error has no matching table', () => {
+    assert.deepEqual(errorOffsets('SELECT 1', 'No position', []), [0, 8]);
+    assert.deepEqual(errorOffsets('SELECT 1', 'Not found: Table project:dataset.missing', tokens(['SELECT'])), [0, 8]);
+    assert.deepEqual(errorOffsets('SELECT 1', 'at [0:0]', []), [0, 1]);
+  });
+
+  it('handles incomplete parameters and distinguishes spaced braces from template delimiters', () => {
+    assert.equal(queryFeatures(tokens(['@']), {}).assumedNull, true);
+    const spaced = tokens(['{', '{']);
+    spaced[1].range.start.character++;
+    spaced[1].range.end.character++;
+    assert.equal(queryFeatures(spaced).templated, false);
+  });
 });

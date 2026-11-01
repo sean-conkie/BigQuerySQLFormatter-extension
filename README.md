@@ -54,19 +54,19 @@ Use Visual Studio Code user, workspace or workspace-folder settings, never
 offline rule settings still apply. All settings below use the
 `bigquerySQLFormatter.bigquery.` prefix.
 
-| Setting                  | Default            | Purpose                                                 |
-| ------------------------ | ------------------ | ------------------------------------------------------- |
-| `projectId`              | ADC/gcloud default | Billing project for API calls                           |
-| `quotaProjectId`         | Unset              | Optional API/quota project; no quota header by default  |
-| `location`               | Unset              | Let BigQuery determine the location                     |
-| `defaultDataset`         | Unset              | Resolve unqualified table names                         |
-| `timeoutMs`              | `10000`            | Authentication and request deadline, including retries  |
-| `dryRun.enabled`         | `false`            | Opt in to the dry-run feature                           |
-| `dryRun.trigger`         | `onSave`           | On save, or commands only with `onDemand`               |
-| `dryRun.costPerTiB`      | Unset              | Optional estimated price; no hardcoded prices           |
-| `dryRun.parameters`      | Unset              | Named scalar parameters, each with a type and value     |
-| `schema.enabled`         | `false`            | Opt in to schema lookups                                |
-| `schema.cacheTtlMinutes` | `60`               | In-memory TTL; used by the forthcoming feature          |
+| Setting                  | Default            | Purpose                                                |
+| ------------------------ | ------------------ | ------------------------------------------------------ |
+| `projectId`              | ADC/gcloud default | Billing project for API calls                          |
+| `quotaProjectId`         | Unset              | Optional API/quota project; no quota header by default |
+| `location`               | Unset              | Let BigQuery determine the location                    |
+| `defaultDataset`         | Unset              | Resolve unqualified table names                        |
+| `timeoutMs`              | `10000`            | Authentication and request deadline, including retries |
+| `dryRun.enabled`         | `false`            | Opt in to the dry-run feature                          |
+| `dryRun.trigger`         | `onSave`           | On save, or commands only with `onDemand`              |
+| `dryRun.costPerTiB`      | Unset              | Optional estimated price; no hardcoded prices          |
+| `dryRun.parameters`      | Unset              | Named scalar parameters, each with a type and value    |
+| `schema.enabled`         | `false`            | Opt in to schema lookups                               |
+| `schema.cacheTtlMinutes` | `60`               | In-memory TTL; used by the forthcoming feature         |
 
 Sign in using **Application Default Credentials (ADC)**:
 
@@ -135,7 +135,7 @@ permissions. Script estimates exclude statements inside IF/LOOP/BEGIN blocks;
 these can be reported as zero. Estimates are not a billing guarantee.
 
 The status bar shows estimated bytes and, when `dryRun.costPerTiB` is set, an
-estimated cost in your price's currency. No currency or price is built in.
+estimated cost in your price's currency. There is no built-in currency or price.
 Referenced table paths appear in the tooltip; historical `@timestamp` suffixes
 are removed.
 
