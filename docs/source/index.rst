@@ -20,4 +20,5 @@ This extension is particularly useful for developers and data analysts who frequ
    :hidden:
 
    config
+   bigquery
    rules/index

@@ -1,6 +1,7 @@
 import { GoogleAuth, OAuth2Client, type AnyAuthClient } from 'google-auth-library';
 import { GaxiosError, type GaxiosOptions, type GaxiosResponse } from 'gaxios';
 import { setTimeout as delay } from 'node:timers/promises';
+import type { QueryParameter } from './settings';
 
 export class BigQueryError extends Error {
   constructor(
@@ -17,6 +18,7 @@ export class BigQueryError extends Error {
       | 'consent',
     message: string,
     public readonly status?: number,
+    public readonly queryMessage?: string,
   ) {
     super(message);
     this.name = 'BigQueryError';
@@ -66,7 +68,7 @@ export function createCredentials(): Credentials {
 }
 
 export type BigQueryRequest =
-  | { operation: 'jobs.insert'; query: string }
+  | { operation: 'jobs.insert'; query: string; parameters?: Record<string, QueryParameter> }
   | { operation: 'datasets.list'; project?: string; pageToken?: string }
   | { operation: 'tables.list'; project?: string; dataset?: string; pageToken?: string }
   | { operation: 'tables.get'; project?: string; dataset?: string; table: string };
@@ -156,17 +158,24 @@ function classify(error: unknown, signal: AbortSignal, context: RequestContext):
       'permission',
       `BigQuery permission denied. Check the project and your IAM permissions.${context.location && details.reasons.includes('accessDenied') && details.message.includes('or perhaps it does not exist') ? ' BigQuery also reports location mismatches as access denied. Check bigquerySQLFormatter.bigquery.location and that all referenced datasets are in the same region.' : ''}`,
       status,
+      details.message,
     );
   if (status === 404)
     return new BigQueryError(
       'notFound',
       'BigQuery project, dataset, table or location was not found. Check your settings.',
       status,
+      details.message,
     );
   if (rateLimited(error)) return new BigQueryError('rateLimit', 'BigQuery rate limit reached. Wait and retry.', status);
   if (!status)
     return new BigQueryError('network', 'BigQuery network request failed. Check your connection and proxy settings.');
-  return new BigQueryError('api', `BigQuery API request failed (HTTP ${status}). Check the request and retry.`, status);
+  return new BigQueryError(
+    'api',
+    `BigQuery API request failed (HTTP ${status}). Check the request and retry.`,
+    status,
+    status === 400 ? details.message : undefined,
+  );
 }
 
 function errorDetails(error: GaxiosError): { reasons: string[]; message: string } {
@@ -256,6 +265,16 @@ export class BigQueryRestClient {
             query: {
               query: request.query,
               useLegacySql: false,
+              ...(request.parameters && Object.keys(request.parameters).length
+                ? {
+                    parameterMode: 'NAMED',
+                    queryParameters: Object.entries(request.parameters).map(([name, parameter]) => ({
+                      name,
+                      parameterType: { type: parameter.type },
+                      parameterValue: { value: parameter.value === null ? null : String(parameter.value) },
+                    })),
+                  }
+                : {}),
               ...(context.defaultDataset
                 ? { defaultDataset: { projectId: context.project, datasetId: context.defaultDataset } }
                 : {}),
@@ -268,6 +287,22 @@ export class BigQueryRestClient {
           signal.throwIfAborted();
           const response = await this.credentials.request(options);
           status = response.status;
+          if (request.operation === 'jobs.insert') {
+            const data = response.data;
+            if (typeof data === 'object' && data !== null && 'status' in data) {
+              const jobStatus = data.status;
+              if (typeof jobStatus === 'object' && jobStatus !== null && 'errorResult' in jobStatus) {
+                const failure = jobStatus.errorResult;
+                if (
+                  typeof failure === 'object' &&
+                  failure !== null &&
+                  'message' in failure &&
+                  typeof failure.message === 'string'
+                )
+                  throw new BigQueryError('api', 'BigQuery dry run validation failed.', 400, failure.message);
+              }
+            }
+          }
           return response.data;
         } catch (error) {
           if (

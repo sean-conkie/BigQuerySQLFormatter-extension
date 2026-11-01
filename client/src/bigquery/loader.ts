@@ -2,6 +2,7 @@ import { commands, workspace, window, Uri, type ExtensionContext } from 'vscode'
 import type { BigQueryIntegration } from './index';
 import type { BigQueryFeature } from './settings';
 import type { BigQueryRequest } from './rest';
+import type { TokenizeSql } from './dryRun';
 
 export interface BigQueryApi {
   request(
@@ -13,7 +14,7 @@ export interface BigQueryApi {
   setResult(resource: string, result: string): void;
 }
 
-export function registerBigQuery(context: ExtensionContext): BigQueryApi {
+export function registerBigQuery(context: ExtensionContext, tokenize: TokenizeSql): BigQueryApi {
   let integration: BigQueryIntegration | undefined;
   let disabledReported = false;
   let consentUpdate: Promise<void> = Promise.resolve();
@@ -27,7 +28,7 @@ export function registerBigQuery(context: ExtensionContext): BigQueryApi {
   const load = () => {
     if (!integration) {
       const module: typeof import('./index') = require(context.asAbsolutePath('dist/bigquery.js'));
-      integration = module.initialize(context);
+      integration = module.initialize(context, tokenize);
     }
     return integration;
   };
@@ -91,10 +92,21 @@ export function registerBigQuery(context: ExtensionContext): BigQueryApi {
     }),
     commands.registerCommand('bigquerySQLFormatter.bigquery.actions', async () => {
       const action = await window.showQuickPick(
-        ['Retry BigQuery Connection', 'Reset BigQuery Consent', 'Open BigQuery Output', 'Open BigQuery Settings'],
+        [
+          'Dry Run Current File',
+          'Dry Run Selection',
+          'Retry BigQuery Connection',
+          'Reset BigQuery Consent',
+          'Open BigQuery Output',
+          'Open BigQuery Settings',
+        ],
         { title: 'BigQuery SQL' },
       );
-      if (action === 'Retry BigQuery Connection') await commands.executeCommand('bigquerySQLFormatter.bigquery.retry');
+      if (action === 'Dry Run Current File') await commands.executeCommand('bigquerySQLFormatter.bigquery.dryRunFile');
+      else if (action === 'Dry Run Selection')
+        await commands.executeCommand('bigquerySQLFormatter.bigquery.dryRunSelection');
+      else if (action === 'Retry BigQuery Connection')
+        await commands.executeCommand('bigquerySQLFormatter.bigquery.retry');
       else if (action === 'Reset BigQuery Consent')
         await commands.executeCommand('bigquerySQLFormatter.bigquery.resetConsent');
       else if (action === 'Open BigQuery Output') integration?.showOutput();
@@ -102,6 +114,30 @@ export function registerBigQuery(context: ExtensionContext): BigQueryApi {
         await commands.executeCommand('workbench.action.openSettings', 'bigquerySQLFormatter.bigquery');
     }),
   );
+  for (const [command, selection] of [
+    ['bigquerySQLFormatter.bigquery.dryRunFile', false],
+    ['bigquerySQLFormatter.bigquery.dryRunSelection', true],
+  ] as const) {
+    context.subscriptions.push(
+      commands.registerCommand(command, async () => {
+        const editor = window.activeTextEditor;
+        if (editor?.document.languageId !== 'googlesql' || editor.document.uri.scheme !== 'file') {
+          void window.showWarningMessage('Open a GoogleSQL file before running a BigQuery dry run.');
+          return;
+        }
+        if (!workspace.isTrusted || !enabled(editor.document.uri.toString())) {
+          void window.showWarningMessage('Enable BigQuery dry runs in a trusted workspace first.');
+          return;
+        }
+        if (selection && editor.selection.isEmpty) {
+          void window.showWarningMessage('Select SQL before running a BigQuery selection dry run.');
+          return;
+        }
+        await consentUpdate;
+        await load().dryRun(editor.document, selection ? editor.selection : undefined);
+      }),
+    );
+  }
   refresh();
   return {
     request: async (feature, request, resource, signal) => {

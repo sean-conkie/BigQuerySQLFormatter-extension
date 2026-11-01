@@ -40,13 +40,11 @@ select **GoogleSQL** as the document language to start linting.
 
 ## BigQuery integration
 
-BigQuery access is **off by default**. This release provides the shared
-authentication, REST, consent and status foundation; automatic dry-run checks
-([#15](https://github.com/sean-conkie/BigQuerySQLFormatter-extension/issues/15))
-and schema-aware completions
+BigQuery access is **off by default**. Opt-in dry runs validate syntax, tables,
+columns and permissions, and show estimated bytes processed without executing
+or billing the query. Schema-aware completions
 ([#340](https://github.com/sean-conkie/BigQuerySQLFormatter-extension/issues/340))
-are separate, forthcoming features. Enabling their settings currently initializes
-the foundation and status UI, but does not automatically send requests.
+are a separate, forthcoming feature.
 Ordinary linting, formatting and built-in function completions remain offline.
 
 ### Settings and sign-in
@@ -56,18 +54,19 @@ Use Visual Studio Code user, workspace or workspace-folder settings, never
 offline rule settings still apply. All settings below use the
 `bigquerySQLFormatter.bigquery.` prefix.
 
-| Setting                  | Default            | Purpose                                                 |
-| ------------------------ | ------------------ | ------------------------------------------------------- |
-| `projectId`              | ADC/gcloud default | Billing project for API calls                           |
-| `quotaProjectId`         | Unset              | Optional API/quota project; no quota header by default  |
-| `location`               | Unset              | Let BigQuery determine the location                     |
-| `defaultDataset`         | Unset              | Resolve unqualified table names                         |
-| `timeoutMs`              | `10000`            | Authentication and request deadline, including retries  |
-| `dryRun.enabled`         | `false`            | Opt in to the dry-run feature                           |
-| `dryRun.trigger`         | `onSave`           | `onSave` or `onDemand`; used by the forthcoming feature |
-| `dryRun.costPerTiB`      | Unset              | Optional estimated price; no hardcoded prices           |
-| `schema.enabled`         | `false`            | Opt in to schema lookups                                |
-| `schema.cacheTtlMinutes` | `60`               | In-memory TTL; used by the forthcoming feature          |
+| Setting                  | Default            | Purpose                                                |
+| ------------------------ | ------------------ | ------------------------------------------------------ |
+| `projectId`              | ADC/gcloud default | Billing project for API calls                          |
+| `quotaProjectId`         | Unset              | Optional API/quota project; no quota header by default |
+| `location`               | Unset              | Let BigQuery determine the location                    |
+| `defaultDataset`         | Unset              | Resolve unqualified table names                        |
+| `timeoutMs`              | `10000`            | Authentication and request deadline, including retries |
+| `dryRun.enabled`         | `false`            | Opt in to the dry-run feature                          |
+| `dryRun.trigger`         | `onSave`           | On save, or commands only with `onDemand`              |
+| `dryRun.costPerTiB`      | Unset              | Optional estimated price; no hardcoded prices          |
+| `dryRun.parameters`      | Unset              | Named scalar parameters, each with a type and value    |
+| `schema.enabled`         | `false`            | Opt in to schema lookups                               |
+| `schema.cacheTtlMinutes` | `60`               | In-memory TTL; used by the forthcoming feature         |
 
 Sign in using **Application Default Credentials (ADC)**:
 
@@ -98,7 +97,7 @@ Before the first BigQuery API call, a modal names the project and location
 the billing project, and an optional quota project is also named. It explains the data sent:
 
 - **Dry runs:** query text, sent to `jobs.insert` with `dryRun: true`; queries
-  are not executed by this foundation.
+  are not executed. Configured parameter values are also sent.
 - **Schema completions:** dataset, table and column metadata lookups through
   `datasets.list`, `tables.list` and `tables.get`; no billed metadata queries.
 
@@ -113,10 +112,64 @@ access is disabled in untrusted workspaces, even if a user setting enables it.
 The BigQuery settings are declared restricted configurations.
 
 When either feature is enabled, the status bar shows sign-in state, the active
-project and results supplied by the feature. Click it for retry, reset consent,
-output and settings actions. **BigQuery SQL Formatter: BigQuery** logs only
+project and the latest result for the active file. Click it to dry-run the current
+file. **BigQuery SQL: BigQuery Actions** offers selection runs, retry, reset consent,
+output and settings. **BigQuery SQL Formatter: BigQuery** logs only
 operation, project, location, duration and status. It never logs query text,
 schema content, API error bodies or tokens.
+
+### Dry runs
+
+Enable `bigquerySQLFormatter.bigquery.dryRun.enabled` in a trusted workspace.
+By default, saving a GoogleSQL file runs a dry run after consent. Set
+`dryRun.trigger` to `onDemand` for commands only:
+
+- **BigQuery SQL: Dry Run Current File**
+- **BigQuery SQL: Dry Run Selection** (requires a non-empty selection)
+
+Each run sends the whole file or selection in one `jobs.insert` request with
+`dryRun: true` and `useLegacySql: false`. Scripts are never split into statements:
+`DECLARE`, `SET`, temporary tables/functions and `BEGIN ... END` retain their context.
+DDL/DML are validated without creating or modifying data, but still check write
+permissions. Script estimates exclude statements inside IF/LOOP/BEGIN blocks;
+these can be reported as zero. Estimates are not a billing guarantee.
+
+The status bar shows estimated bytes and, when `dryRun.costPerTiB` is set, an
+estimated cost in your price's currency. There is no built-in currency or price.
+Referenced table paths appear in the tooltip; historical `@timestamp` suffixes
+are removed.
+
+BigQuery reports **one error at a time: fix and re-run**. Errors have source
+`BigQuery dry run` in Problems, separate from offline lint diagnostics, `noqa`,
+Fix All and the problem limit. Selection positions are offset back into the file.
+Position-less table/permission errors highlight the first matching table path,
+otherwise the first statement's line. Editing or closing a file clears results
+and cancels its pending request. New runs cancel older runs for that file;
+configuration changes and consent reset also cancel requests and clear results.
+
+Undeclared `@name` and `?` parameters are assumed untyped NULL by BigQuery.
+The status bar warns that estimates may be low; `@@system` variables, strings
+and comments do not count as parameters. Supply named scalar values when needed:
+
+```json
+{
+  "bigquerySQLFormatter.bigquery.dryRun.parameters": {
+    "name": { "type": "STRING", "value": "example" },
+    "limit": { "type": "INT64", "value": "100" }
+  }
+}
+```
+
+Every configured parameter requires a type and explicit value (including an
+explicit `null` if intended); ARRAY/STRUCT and declared positional parameters
+are not supported. Keep precision-sensitive numbers as strings.
+`LIMIT value should not be NULL` diagnostics point to this setting.
+Dataform/dbt templates (`{{ ... }}`, `{% ... %}`, `${...}`, and SQLX config/JS
+blocks) are skipped with a status note, including when a selection is requested.
+These checks are token-based so template-like text in SQL strings/comments is safe.
+
+See the [dry-run guide](https://bigquerysqlformatter.readthedocs.io/en/latest/bigquery/)
+for details.
 
 ### Permissions and proxies
 

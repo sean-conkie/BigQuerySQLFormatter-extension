@@ -17,6 +17,31 @@ describe('Test language server lifecycle', function () {
     await server.stop();
   });
 
+  it('exposes source tokens for offline dry-run analysis, shielding comments and strings', async () => {
+    await server.connection.sendRequest(InitializeRequest.type, {
+      processId: process.pid,
+      capabilities: {},
+      rootUri: null,
+    });
+    const tokens = await server.connection.sendRequest<{ value: string; literal: boolean }[]>(
+      'bigquerySQLFormatter/sourceTokens',
+      { text: `-- @ignored {{ template }}\nSELECT @name, @@project_id, ?, """@literal \${notTemplate}"""` },
+    );
+    expect(tokens.map((token) => token.value)).to.deep.equal([
+      'SELECT',
+      '@',
+      'name',
+      ',',
+      '@',
+      '@',
+      'project_id',
+      ',',
+      '?',
+      ',',
+      `"""@literal \${notTemplate}"""`,
+    ]);
+    expect(tokens[tokens.length - 1].literal).to.equal(true);
+  });
   it('waits for the child to close and destroys its streams during teardown', async () => {
     await server.connection.sendRequest(InitializeRequest.type, {
       processId: process.pid,

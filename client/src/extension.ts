@@ -24,7 +24,10 @@ export interface ExtensionApi {
 }
 
 export function activate(context: ExtensionContext): ExtensionApi {
-  const bigquery = registerBigQuery(context);
+  const bigquery = registerBigQuery(context, async (text) => {
+    await started;
+    return client.sendRequest('bigquerySQLFormatter/sourceTokens', { text });
+  });
   // The server is implemented in node
   const serverModule = context.asAbsolutePath(path.join('dist', 'server.js'));
 

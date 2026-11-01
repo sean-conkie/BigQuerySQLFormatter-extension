@@ -29,6 +29,7 @@ export class MockBigQueryServer {
   scenarios: MockScenario[] = [];
   fallback: MockScenario = 'success';
   errorPayload?: unknown;
+  jobPayload?: unknown;
   private readonly server: Server;
   private readonly timers = new Set<ReturnType<typeof setTimeout>>();
   endpoint = '';
@@ -102,14 +103,16 @@ export class MockBigQueryServer {
           );
         } else if (request.url?.includes('/jobs')) {
           response.end(
-            JSON.stringify({
-              statistics: {
-                query: {
-                  statementType: scenario === 'script' ? 'SCRIPT' : 'SELECT',
-                  totalBytesProcessed: scenario === 'script' ? '0' : '1234',
+            JSON.stringify(
+              this.jobPayload ?? {
+                statistics: {
+                  query: {
+                    statementType: scenario === 'script' ? 'SCRIPT' : 'SELECT',
+                    totalBytesProcessed: scenario === 'script' ? '0' : '1234',
+                  },
                 },
               },
-            }),
+            ),
           );
         } else if (request.url?.match(/\/tables\/[^?]+/)) {
           response.end(
