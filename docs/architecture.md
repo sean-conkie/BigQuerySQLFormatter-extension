@@ -24,7 +24,7 @@ server (`server/`), bundled with esbuild into `dist/`.
 | `server/src/linter/scope.ts`, `joins.ts` | Query scopes (sources, aliases, CTEs, pipe stages) and the JOIN ON model |
 | `server/src/linter/rules/<group>/<CODE>.ts` | Rules, registered in the group's `rules.ts` and in `rules/rules.ts` |
 | `server/src/formatting.ts` | Format Document/Selection and Fix All (repeat fixes until stable, with recovery) |
-| `server/src/completions/` | Function completion and hover from `functions.json`; optional schema metadata supplied by the client |
+| `server/src/completions/` | Function catalog and client-supplied schema metadata for completion and hover |
 | `server/src/linter/syntaxes/` | GoogleSQL TextMate grammar; Oniguruma Wasm is copied into `dist/` |
 | `scripts/` | esbuild build, package check, duplication check, completion and keyword generators |
 | `package.json` | Manifest: settings schema (including rule-option schemas), `capabilities.untrustedWorkspaces` |
