@@ -94,10 +94,12 @@ clears them immediately. Cache entries are shared across documents in the same
 workspace consent scope, never across unconsented workspaces. Cross-project
 consents are independent, so a query using multiple approved projects does not
 re-prompt on every keystroke. Nothing is persisted to disk. Each completion waits at
-most 500 ms per lookup, then marks its list incomplete while authorized fetches
-finish in the background. Cancellation stops waiting without cancelling a fetch
-shared by other completions. No schema lookups occur inside comments or strings.
-Disabled, untrusted, declined or unavailable lookups fall back to offline functions.
+most 500 ms per lookup, then marks its list incomplete while fetches, or a consent
+prompt, finish in the background; keep typing (or press `Ctrl+Space`) to see the
+results. Cancellation stops waiting without cancelling a fetch shared by other
+completions. No schema lookups occur inside comments or strings. Disabled,
+untrusted, declined or unavailable lookups fall back to offline functions. Failed
+lookups are retried after 30 seconds, or straight away with **Refresh Schema Cache**.
 
 Sign in using **Application Default Credentials (ADC)**:
 

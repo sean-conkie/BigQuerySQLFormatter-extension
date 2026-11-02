@@ -50,6 +50,8 @@ function describe(entry: SchemaEntry | SchemaField): string {
 interface PathContext {
   parts: string[];
   prefix: string;
+  /** The qualifier exactly as typed before the prefix, including any opening backtick. */
+  qualifier: string;
   range: Range;
   start: number;
   index: number;
@@ -117,6 +119,7 @@ export class SchemaBuilder {
     return {
       parts,
       prefix,
+      qualifier: raw.slice(0, raw.length - prefix.length),
       start,
       index,
       scope,
@@ -150,6 +153,9 @@ export class SchemaBuilder {
               .filter(Boolean)
               .join(' - '),
       documentation: { kind: 'markdown', value: describe(entry) },
+      // The edit replaces the whole path, and editors filter by the text from the
+      // range start, so filter on what the user typed rather than the label.
+      filterText: `${context.qualifier}${entry.name}`,
       insertText: quoteIdentifierPath(path, context.allowDash),
       textEdit: { range: context.range, newText: quoteIdentifierPath(path, context.allowDash) },
     };

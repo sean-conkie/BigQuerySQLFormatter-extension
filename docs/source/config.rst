@@ -18,8 +18,9 @@ per project. ``bigquerySQLFormatter.bigquery.schema.cacheTtlMinutes`` defaults t
 60. The cache is memory-only. **BigQuery SQL: Refresh Schema Cache** clears it.
 Entries are shared within the consented workspace scope; each target project has
 independent consent, including queries that join tables across projects.
-Lists remain incomplete while metadata loads; disabled or unavailable lookups
-preserve function completions. Strings and comments never initiate lookups.
+Lists remain incomplete while metadata loads or a consent prompt is open;
+disabled or unavailable lookups preserve function completions. Failed lookups
+are retried after 30 seconds. Strings and comments never initiate lookups.
 
 Datasets show location; table hover includes available descriptions, row counts,
 size, partitioning, clustering and modification time. Columns show descriptions,

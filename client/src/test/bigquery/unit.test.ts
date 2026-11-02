@@ -172,6 +172,41 @@ describe('Schema cache scheduling', () => {
     }
   });
 
+  it('retries a failed lookup after a short back-off instead of the full cache TTL', async () => {
+    let fail = true;
+    let calls = 0;
+    const cache = new SchemaCache(
+      {
+        scope: (resource) => resource,
+        request: async () => {
+          calls++;
+          if (fail) throw new BigQueryError('auth', 'Sign in required.');
+          return { tables: [{ tableReference: { tableId: 'Orders' }, type: 'TABLE' }] };
+        },
+        authorized: () => true,
+        report: () => undefined,
+      },
+      500,
+      4,
+      20,
+    );
+    try {
+      const request = { resource: 'file:///schema.sql', dataset: 'Analytics' };
+      assert.equal((await cache.lookup(request, 60)).unavailable, true);
+      fail = false;
+      assert.equal((await cache.lookup(request, 60)).unavailable, true);
+      assert.equal(calls, 1);
+      await new Promise<void>((resolve) => setTimeout(resolve, 40));
+      assert.deepEqual(
+        (await cache.lookup(request, 60)).entries.map((entry) => entry.name),
+        ['Orders'],
+      );
+      assert.equal(calls, 2);
+    } finally {
+      cache.clear();
+    }
+  });
+
   it('removes cancelled queued fetches before an active request releases its slot', async () => {
     let finish: (value: unknown) => void;
     let calls = 0;
@@ -402,7 +437,7 @@ describe('BigQuery foundation (offline)', function () {
     }
   });
 
-  it('returns unavailable immediately while awaiting consent and suppresses repeated API errors', async () => {
+  it('returns pending without metadata while awaiting consent and suppresses repeated API errors', async () => {
     let allow: (value: boolean) => void;
     host.prompt = () =>
       new Promise<boolean>((resolve) => {
@@ -416,17 +451,41 @@ describe('BigQuery foundation (offline)', function () {
       report: (failure, resource) => service.report(failure, resource),
     });
     try {
-      assert.deepEqual(await cache.lookup({ resource }, 60), { unavailable: true, entries: [] });
+      assert.deepEqual(await cache.lookup({ resource }, 60), { pending: true, entries: [] });
       await new Promise<void>((resolve) => setImmediate(resolve));
       assert.equal(mock.requests.length, 0);
       allow!(true);
       await new Promise<void>((resolve) => setTimeout(resolve, 30));
+      // Consent now granted: the first page is cached and the lookup fetches the next page.
+      assert.equal((await cache.lookup({ resource }, 60)).entries.length, 1);
       mock.fallback = 'accessDenied';
       const request = { resource, dataset: 'test_dataset', table: 'Denied' };
       assert.equal((await cache.lookup(request, 60)).unavailable, true);
       assert.equal((await cache.lookup(request, 60)).unavailable, true);
       assert.equal(notifications.length, 1);
-      assert.equal(mock.requests.length, 2);
+      // datasets.list pages 1 and 2, then one denied tables.get that isn't retried immediately.
+      assert.equal(mock.requests.length, 3);
+    } finally {
+      cache.clear();
+    }
+  });
+
+  it('returns metadata on the first lookup when consent is already stored', async () => {
+    const resource = 'file:///schema.bqsql';
+    await service.request('schema', { operation: 'datasets.list' }, resource);
+    // Settings changes and reloads recreate the in-memory authorizations; stored consent remains.
+    service.invalidate();
+    const cache = new SchemaCache({
+      scope: (resource) => host.scope(resource),
+      request: (request, resource, signal) => service.request('schema', request, resource, signal),
+      authorized: (request) => service.schemaAuthorized(request.project, request.resource),
+      report: (failure, resource) => service.report(failure, resource),
+    });
+    try {
+      const first = await cache.lookup({ resource, dataset: 'test_dataset', table: 'test_table' }, 60);
+      assert.equal(first.unavailable, undefined);
+      assert.equal(first.entries.length, 1);
+      assert.equal(prompts.length, 1);
     } finally {
       cache.clear();
     }
