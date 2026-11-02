@@ -172,6 +172,26 @@ describe('Schema cache scheduling', () => {
     }
   });
 
+  it('withholds metadata fetched while authorization was revoked', async () => {
+    let authorized = true;
+    const cache = new SchemaCache({
+      scope: (resource) => resource,
+      request: async () => {
+        // Consent is reset or trust is lost while the request is in flight.
+        authorized = false;
+        return { tables: [{ tableReference: { tableId: 'Orders' }, type: 'TABLE' }] };
+      },
+      authorized: () => authorized,
+      report: () => undefined,
+    });
+    try {
+      const result = await cache.lookup({ resource: 'file:///schema.sql', dataset: 'Analytics' }, 60);
+      assert.deepEqual(result, { unavailable: true, entries: [] });
+    } finally {
+      cache.clear();
+    }
+  });
+
   it('retries a failed lookup after a short back-off instead of the full cache TTL', async () => {
     let fail = true;
     let calls = 0;
