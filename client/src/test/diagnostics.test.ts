@@ -246,6 +246,61 @@ suite('Language server diagnostics', () => {
     }
   });
 
+  test('Preserves procedural scripts through formatting, Fix All and format-on-save', async () => {
+    const directory = await mkdtemp(path.join(getDocPath(''), 'procedural-'));
+    const uri = vscode.Uri.file(path.join(directory, 'query.bqsql'));
+    const settings = vscode.workspace.getConfiguration('editor', { uri, languageId: 'googlesql' });
+    const original = settings.inspect('formatOnSave')?.globalLanguageValue;
+    const source = 'declare n int64 default 5;\nset n = n + 1;\nbegin\n  select n;\nend;';
+    const expected = `${source}\n`;
+    try {
+      await writeFile(uri.fsPath, source);
+      const editor = await activate(uri);
+      for (const operation of ['document', 'selection', 'Fix All', 'save']) {
+        await editor.edit((edit) => edit.replace(new vscode.Range(0, 0, editor.document.lineCount, 0), source));
+        await waitForDiagnostics(uri, (diagnostics) =>
+          diagnostics.some((diagnostic) => {
+            const code = diagnostic.code;
+            return (typeof code === 'object' ? code.value : code) === 'LT12: end_of_file';
+          }),
+        );
+        if (operation === 'save') {
+          await settings.update('formatOnSave', true, vscode.ConfigurationTarget.Global, true);
+          assert.equal(await editor.document.save(), true);
+        } else if (operation === 'Fix All') {
+          await applyFixAll(editor.document);
+        } else {
+          const options = { tabSize: 2, insertSpaces: true };
+          const edits = await vscode.commands.executeCommand<vscode.TextEdit[]>(
+            operation === 'document' ? 'vscode.executeFormatDocumentProvider' : 'vscode.executeFormatRangeProvider',
+            uri,
+            ...(operation === 'document' ? [options] : [new vscode.Range(0, 0, editor.document.lineCount, 0), options]),
+          );
+          const edit = new vscode.WorkspaceEdit();
+          edit.set(uri, edits);
+          assert.equal(await vscode.workspace.applyEdit(edit), true);
+        }
+        assert.equal(editor.document.getText(), expected, operation);
+        await waitForDiagnostics(uri, (diagnostics) =>
+          diagnostics.every((diagnostic) => {
+            const code = diagnostic.code;
+            return !/^LT(02|12):/.test(String(typeof code === 'object' ? code.value : code));
+          }),
+        );
+        const repeated = await vscode.commands.executeCommand<vscode.TextEdit[] | undefined>(
+          'vscode.executeFormatDocumentProvider',
+          uri,
+          { tabSize: 2, insertSpaces: true },
+        );
+        assert.ok(!repeated || repeated.length === 0, `${operation} is idempotent`);
+      }
+    } finally {
+      await settings.update('formatOnSave', original, vscode.ConfigurationTarget.Global, true);
+      await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
   test('Formats documents/selections and applies formatting or Fix All on save', async () => {
     const directory = await mkdtemp(path.join(getDocPath(''), 'formatting-'));
     const uri = vscode.Uri.file(path.join(directory, 'query.bqsql'));

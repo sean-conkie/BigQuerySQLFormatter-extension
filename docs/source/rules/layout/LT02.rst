@@ -18,6 +18,13 @@ Alias alignment is skipped when multiple SELECT expressions start on the same
 line, since moving an earlier alias also moves later expressions. Incomplete
 comparison nodes and the contents of quoted literals are never indented.
 
+LT02 applies only to query statements beginning with ``SELECT`` or ``WITH``.
+Procedural statements such as ``DECLARE`` and ``SET``, block headers and closing
+keywords (``BEGIN``, ``IF``, ``LOOP``, ``WHILE``, ``FOR``, ``EXCEPTION`` and
+``END``), and DDL statements are left unchanged until their indentation is
+supported. Separately parsed queries within a script can still be indented.
+Indentation fixes never remove the last whitespace separating two tokens.
+
 Anti-pattern: Inconsistent Statement Indentation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

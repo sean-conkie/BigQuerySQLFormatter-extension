@@ -1,0 +1,18 @@
+export const proceduralFixtures = [
+  'declare n int64 default 5;',
+  'set n = n + 1;',
+  'declare n int64 default 5;\nset n = n + 1;\nselect n;',
+  'begin\n  select 1;\nend;',
+  'begin\n  declare n int64 default 5;\n  set n = n + 1;\n  select n;\nend;',
+  'if true then\n  select 1;\nelse\n  select 2;\nend if;',
+  'if true then\n  select 1;\nelseif false then\n  select 2;\nend if;',
+  'label: loop\n  select 1;\n  leave label;\nend loop label;',
+  'while false do\n  select 1;\nend while;',
+  'for row in (select 1 n) do\n  select row.n;\nend for;',
+  'repeat\n  select 1;\nuntil true\nend repeat;',
+  'begin\n  select 1;\nexception when error then\n  select 2;\nend;',
+  'begin\n  if true then\n    select 1;\n  end if;\nend;',
+  'create temp table tmp (n int64);\ninsert into tmp values (1);\nselect n\n  from tmp;',
+  "declare text string default 'begin; set n = 1; end;';\n-- select must not be inferred here\nset text = 'select 1';",
+  '/* select 1 */ declare n int64 default 5;\nset n = n + 1; -- keep',
+];
