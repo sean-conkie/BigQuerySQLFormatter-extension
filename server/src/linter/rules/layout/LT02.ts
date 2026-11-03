@@ -100,8 +100,6 @@ export class Indent extends ParserRule {
         ]);
         if (columnTokens.length > 0) {
           columnEndIndexes.push(columnTokens[columnTokens.length - 1].endIndex);
-        } else {
-          console.log(column);
         }
 
         // process leading indentation
