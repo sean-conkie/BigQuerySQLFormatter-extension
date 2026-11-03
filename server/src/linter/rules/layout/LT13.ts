@@ -50,7 +50,7 @@ export class StartOfFile extends RegexRule {
         this.createDiagnostic(
           {
             start: { line: 0, character: 0 },
-            end: { line: 0, character: 1 },
+            end: /^[\r\n]/.test(test) ? { line: 1, character: 0 } : { line: 0, character: 1 },
           },
           documentUri,
         ),

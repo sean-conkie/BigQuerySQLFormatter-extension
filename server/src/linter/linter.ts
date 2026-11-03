@@ -8,7 +8,7 @@ import {
   CodeActionKind,
   type Position,
   type TextEdit,
-  type Range,
+  Range,
   CancellationToken,
   DiagnosticSeverity,
 } from 'vscode-languageserver/node';
@@ -161,6 +161,22 @@ export class Linter {
         diagnostics.push(
           ...result
             .filter((diagnostic) => {
+              const validPosition = (position: Position): boolean =>
+                Number.isInteger(position.line) &&
+                position.line >= 0 &&
+                Number.isInteger(position.character) &&
+                position.character >= 0 &&
+                position.character <= (cache.get(position.line)?.value.length ?? -1);
+              if (
+                !Range.is(diagnostic.range) ||
+                !validPosition(diagnostic.range.start) ||
+                !validPosition(diagnostic.range.end) ||
+                comparePositions(diagnostic.range.start, diagnostic.range.end) > 0
+              ) {
+                // biome-ignore lint/suspicious/noConsole: Log only the registry rule code, never SQL or diagnostic contents.
+                console.warn(`Dropped invalid diagnostic from rule ${rule.code}.`);
+                return false;
+              }
               if (rule.type !== RuleType.PARSER && !cache.isCodeRange(diagnostic.range)) return false;
               if (extendedQuerySafeRules.has(rule.code)) return true;
               return !(supportsPipe ? unsupportedRanges : skippedRanges).some((range) =>

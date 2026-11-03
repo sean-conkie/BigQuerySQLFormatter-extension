@@ -73,6 +73,17 @@ export class Indent extends ParserRule {
       const where = ast[i].where;
 
       columns.forEach((column) => {
+        const columnTokens = excludeTokensWithMatchingScopes(column.tokens, [
+          'entity.name.tag',
+          'punctuation.whitespace.leading.sql',
+          'punctuation.whitespace.trailing.sql',
+          'punctuation.whitespace.sql',
+          'punctuation.separator.comma.sql',
+          'comment.line.double-dash.sql',
+        ]);
+        if (columnTokens.length === 0 || column.startLine === null || column.startIndex === null) return;
+        columnEndIndexes.push(columnTokens[columnTokens.length - 1].endIndex);
+
         // add alias and index details for later processing
         if (alignAliases && column.alias) {
           const aliasToken = findToken(column.tokens, 'entity.name.tag');
@@ -88,18 +99,6 @@ export class Indent extends ParserRule {
               },
             });
           }
-        }
-
-        const columnTokens = excludeTokensWithMatchingScopes(column.tokens, [
-          'entity.name.tag',
-          'punctuation.whitespace.leading.sql',
-          'punctuation.whitespace.trailing.sql',
-          'punctuation.whitespace.sql',
-          'punctuation.separator.comma.sql',
-          'comment.line.double-dash.sql',
-        ]);
-        if (columnTokens.length > 0) {
-          columnEndIndexes.push(columnTokens[columnTokens.length - 1].endIndex);
         }
 
         // process leading indentation
