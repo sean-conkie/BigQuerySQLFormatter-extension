@@ -38,7 +38,7 @@ suite('Language server diagnostics', () => {
     const code = diagnostics[0].code;
     assert.equal(typeof code === 'object' ? code.value : code, 'LT13: start_of_file');
     assert.equal(diagnostics[0].message, 'Files must not begin with newlines or whitespace.');
-    assert.deepEqual(diagnostics[0].range, new vscode.Range(0, 0, 0, 1));
+    assert.deepEqual(diagnostics[0].range, new vscode.Range(0, 0, 1, 0));
     assert.equal(diagnostics[0].severity, vscode.DiagnosticSeverity.Warning);
     assert.equal(diagnostics[0].source, 'BigQuery SQL Formatter');
 
@@ -55,6 +55,41 @@ suite('Language server diagnostics', () => {
     const reopened = waitForDiagnostics(docUri, (diagnostics) => diagnostics.length > 0);
     await vscode.languages.setTextDocumentLanguage(editor.document, 'googlesql');
     await reopened;
+  });
+
+  test('Keeps diagnostics visible while typing a partial FROM keyword', async () => {
+    const directory = await mkdtemp(path.join(getDocPath(''), 'partial-keyword-'));
+    const uri = vscode.Uri.file(path.join(directory, 'query.bqsql'));
+    try {
+      await writeFile(uri.fsPath, 'select * f');
+      const editor = await activate(uri);
+      const document = editor.document;
+      for (const text of ['select * f', 'select * fr', 'select * fro', 'select * from']) {
+        const received = waitForDiagnostics(uri, (diagnostics) =>
+          diagnostics.some((diagnostic) => {
+            const code = diagnostic.code;
+            return (
+              (typeof code === 'object' ? code.value : code) === 'LT12: end_of_file' &&
+              diagnostic.range.start.character === text.length
+            );
+          }),
+        );
+        if (document.getText() !== text) {
+          await editor.edit((edit) => edit.replace(new vscode.Range(0, 0, document.lineCount, 0), text));
+        }
+        const diagnostics = await received;
+        assert.ok(diagnostics.length > 0);
+        for (const diagnostic of diagnostics) {
+          for (const position of [diagnostic.range.start, diagnostic.range.end]) {
+            assert.ok(Number.isInteger(position.line) && Number.isInteger(position.character));
+            assert.deepEqual(document.positionAt(document.offsetAt(position)), position);
+          }
+        }
+      }
+    } finally {
+      await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
+      await rm(directory, { recursive: true, force: true });
+    }
   });
 
   test('Leaves generic SQL files in SQL language mode', async () => {

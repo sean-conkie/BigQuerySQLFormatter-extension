@@ -33,6 +33,9 @@
 
 - Stop LT02 from logging SQL AST objects while typing incomplete queries.
   Enforce server console log hygiene with a lint guard.
+- Keep diagnostics visible while typing incomplete SQL by skipping empty LT02
+  columns and dropping invalid diagnostic ranges individually, with rule-code-only
+  warnings. LT13 now uses a valid cross-line range for an initial newline.
 
 ## 0.7.1 - 2026-10-31
 

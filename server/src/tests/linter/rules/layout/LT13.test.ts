@@ -74,4 +74,13 @@ describe('StartOfFile', () => {
     const result = instance.evaluate('select *\n  from table');
     expect(result).to.be.null;
   });
+
+  for (const eol of ['\n', '\r\n', '\r']) {
+    it(`uses an in-document range for an initial ${JSON.stringify(eol)} newline`, () => {
+      expect(instance.evaluate(`${eol}select 1;`)![0].range).to.deep.equal({
+        start: { line: 0, character: 0 },
+        end: { line: 1, character: 0 },
+      });
+    });
+  }
 });
