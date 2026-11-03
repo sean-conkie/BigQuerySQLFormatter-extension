@@ -75,6 +75,8 @@ suite('BigQuery integration extension host', () => {
       const item = result.items.find((item) => item.label === 'CustomerID');
       assert.ok(item, 'Schema completions did not appear after consent');
       assert.equal(item.insertText, 'o.CustomerID');
+      // Editors filter by the text from the edit range start ("o."), not the label.
+      assert.ok(item.filterText?.startsWith('o.'), `filterText "${item.filterText}" must start with the typed "o."`);
       assert.ok(prompt.calledOnce);
       const requestsBefore = mock.requests.length;
       const latencies: number[] = [];
@@ -107,8 +109,21 @@ suite('BigQuery integration extension host', () => {
       assert.ok(
         mock.requests.every((request) => request.method === 'GET' && !request.body && !request.url.includes('/jobs')),
       );
+      // Settings changes recreate the integration but keep consent: the very next
+      // single request must return schema items without polling or retriggering.
+      await config.update('timeoutMs', 15000, vscode.ConfigurationTarget.Global);
+      const recreated = await complete();
+      assert.ok(
+        recreated.items.some((entry) => entry.label === 'CustomerID'),
+        'Schema completions missing from the first request after the integration was recreated',
+      );
+      const consentPrompts = prompt
+        .getCalls()
+        .filter((call) => String(call.args[0]).startsWith('Allow BigQuery access'));
+      assert.equal(consentPrompts.length, 1, 'stored consent must not be requested again');
     } finally {
       prompt.restore();
+      await config.update('timeoutMs', undefined, vscode.ConfigurationTarget.Global);
       await config.update('schema.enabled', undefined, vscode.ConfigurationTarget.Global);
       await config.update('projectId', undefined, vscode.ConfigurationTarget.Global);
       await config.update('defaultDataset', undefined, vscode.ConfigurationTarget.Global);

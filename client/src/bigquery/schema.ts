@@ -96,6 +96,7 @@ export class SchemaCache {
     private readonly host: SchemaHost,
     private readonly waitMs = 500,
     private readonly concurrency = 4,
+    private readonly failureRetryMs = 30000,
   ) {}
 
   clear(): void {
@@ -175,11 +176,15 @@ export class SchemaCache {
         } finally {
           release?.();
           current.fetching = undefined;
-          current.expires = Date.now() + ttlMinutes * 60000;
+          // Retry failures soon (for example after signing in) without hammering the API.
+          current.expires =
+            Date.now() + (current.failed ? Math.min(this.failureRetryMs, ttlMinutes * 60000) : ttlMinutes * 60000);
         }
       })();
     }
-    if (!this.host.authorized(request)) return { unavailable: true, entries: [] };
+    // Authorization is recorded once the fetch passes consent, so an unauthorized
+    // lookup may still be waiting on that fetch. Cached data needs authorization.
+    if (!entry.fetching && !this.host.authorized(request)) return { unavailable: true, entries: [] };
     let timer: ReturnType<typeof setTimeout> | undefined;
     try {
       const wait = Promise.race([
@@ -192,7 +197,9 @@ export class SchemaCache {
     } finally {
       clearTimeout(timer);
     }
-    if (entry.failed || !this.host.authorized(request)) return { unavailable: true, entries: [] };
+    if (entry.failed) return { unavailable: true, entries: [] };
+    if (!this.host.authorized(request))
+      return entry.fetching ? { pending: true, entries: [] } : { unavailable: true, entries: [] };
     return { entries: entry.entries.slice(), pending: Boolean(entry.fetching || entry.nextPage) };
   }
 }

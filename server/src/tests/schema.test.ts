@@ -236,6 +236,34 @@ describe('Schema completion and hover', () => {
     });
   }
 
+  // VS Code filters each item by the text from its range start to the cursor,
+  // so filterText must begin with exactly what the user has typed there.
+  for (const sql of [
+    'SELECT * FROM `other-project.Analytics.¦`',
+    'SELECT * FROM `other-project.Analytics.¦',
+    'select * from `other-project.Analytics.Or¦`',
+    'SELECT * FROM other-project.Analytics.¦',
+    'SELECT * FROM Analytics.¦',
+    'SELECT * FROM other-project.¦',
+    'SELECT * FROM ¦',
+    'SELECT o.¦ FROM Analytics.Orders o',
+    'SELECT o.Cust¦ FROM Analytics.Orders o',
+    'SELECT o.Address.¦ FROM Analytics.Orders o',
+    'SELECT Cust¦ FROM Analytics.Orders a JOIN Analytics.Other b ON a.CustomerID = b.CustomerID',
+  ]) {
+    it(`keeps items visible after editor filtering in ${sql}`, async () => {
+      const { builder, document, position } = build(sql);
+      const result = await builder.completions(position, CancellationToken.None);
+      assert.ok(result && result.items.length > 0, 'expected schema items');
+      for (const item of result.items) {
+        const edit = item.textEdit as TextEdit;
+        const typed = document.getText({ start: edit.range.start, end: position }).toLowerCase();
+        const filter = (item.filterText ?? item.label).toLowerCase();
+        assert.ok(filter.startsWith(typed), `${item.label}: filter "${filter}" does not start with typed "${typed}"`);
+      }
+    });
+  }
+
   it('treats a non-dataset qualifier as an explicitly named project', async () => {
     const result = await complete('SELECT * FROM other-project.¦');
     assert.ok(result.items.some((item) => item.label === 'Analytics'));
