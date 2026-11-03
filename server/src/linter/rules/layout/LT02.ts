@@ -22,7 +22,7 @@ import { findToken } from '../../parser/utils';
 import { excludeTokensWithMatchingScopes, includeTokensWithMatchingScopes } from '../../parser/token';
 import { ComparisonAST, ComparisonGroupAST } from '../../parser/ast';
 import { globalTokenCache } from '../../parser/tokenCache';
-import { comparePositions } from '../../parser/queryBlocks';
+import { comparePositions, isCode } from '../../parser/queryBlocks';
 import { sourceTokens } from '../source';
 
 type RangeCache = Map<string, number>;
@@ -62,6 +62,9 @@ export class Indent extends ParserRule {
     const cache = new Map<string, number>();
 
     for (const i in ast) {
+      const first = ast[i].tokens.find(isCode);
+      // The legacy AST also represents procedural and DDL tokens as SELECT columns.
+      if (!first || !/^(select|with)$/i.test(first.value) || !first.scopes.includes('keyword.select.sql')) continue;
       const offset = (ast[i].startIndex ?? 0) + 7;
       const columns = ast[i].columns;
       const aliasRanges: Range[] = [];
@@ -182,13 +185,19 @@ export class Indent extends ParserRule {
 
     const document = documentUri === null ? undefined : globalTokenCache.get(documentUri);
     const literals = document ? sourceTokens(document).filter((token) => token.literal) : [];
-    const safeErrors = errors.filter(
-      ({ range }) =>
-        !literals.some(
-          ({ range: literal }) =>
-            comparePositions(range.start, literal.end) < 0 && comparePositions(range.end, literal.start) > 0,
-        ),
-    );
+    const safeErrors = errors.filter(({ range }) => {
+      const line = document?.get(range.start.line)?.value;
+      if (
+        cache.get(this.createCacheKey(range)) === 0 &&
+        /\S/.test(line?.[range.start.character - 1] ?? '') &&
+        /\S/.test(line?.[range.end.character] ?? '')
+      )
+        return false;
+      return !literals.some(
+        ({ range: literal }) =>
+          comparePositions(range.start, literal.end) < 0 && comparePositions(range.end, literal.start) > 0,
+      );
+    });
     return safeErrors.length > 0 ? safeErrors : null;
   }
 

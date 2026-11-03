@@ -36,6 +36,10 @@
 - Keep diagnostics visible while typing incomplete SQL by skipping empty LT02
   columns and dropping invalid diagnostic ranges individually, with rule-code-only
   warnings. LT13 now uses a valid cross-line range for an initial newline.
+- Stop LT02 from treating procedural statements and DDL as SELECT lists, damaging
+  DECLARE/SET spacing or moving block-closing keywords. Unsupported statements
+  retain their indentation, and fixes preserve whitespace separating tokens.
+  Procedural scripts now format and Fix All without non-convergence warnings.
 
 ## 0.7.1 - 2026-10-31
 

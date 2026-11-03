@@ -7,6 +7,9 @@ import { formatDocument } from '../formatting';
 import { defaultSettings } from '../settings';
 import { Linter } from '../linter/linter';
 import { globalTokenCache } from '../linter/parser/tokenCache';
+import { tokenizeSource } from '../linter/rules/source';
+import { proceduralFixtures } from './proceduralFixtures';
+import { CodeActionKind } from 'vscode-languageserver/node';
 
 describe('Default-rule fixture convergence', function () {
   this.timeout(120000);
@@ -33,6 +36,7 @@ describe('Default-rule fixture convergence', function () {
     }
   }
   collect(resolve(__dirname, '../../src/tests/linter/rules'));
+  for (const text of proceduralFixtures) fixtures.set(text, 'procedural script');
 
   it('collects the existing rule fixture corpus', () => {
     expect(fixtures.size).to.be.greaterThan(300);
@@ -54,6 +58,20 @@ describe('Default-rule fixture convergence', function () {
             expect(source.positionAt(source.offsetAt(position))).to.deep.equal(position);
           }
           expect(source.offsetAt(range.start)).to.be.at.most(source.offsetAt(range.end));
+        }
+        const actions = await linter.createCodeActions({
+          textDocument: { uri: source.uri },
+          range: { start: source.positionAt(0), end: source.positionAt(text.length) },
+          context: {
+            diagnostics: diagnostics.filter((entry) => String(entry.code).startsWith('LT02:')),
+            only: [CodeActionKind.QuickFix],
+          },
+        });
+        for (const action of actions) {
+          const fixed = TextDocument.applyEdits(source, action.edit?.changes?.[source.uri] ?? []);
+          expect(tokenizeSource(fixed).map((token) => token.value)).to.deep.equal(
+            tokenizeSource(text).map((token) => token.value),
+          );
         }
       } finally {
         linter.closeDocument(source.uri);
