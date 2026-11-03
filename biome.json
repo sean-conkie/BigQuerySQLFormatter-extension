@@ -30,6 +30,16 @@
   "assist": { "actions": { "source": { "organizeImports": "off" } } },
   "overrides": [
     {
+      "includes": ["server/src/**", "!server/src/tests/**"],
+      "linter": { "rules": { "suspicious": { "noConsole": "error" } } }
+    },
+    {
+      "includes": ["server/src/formatting.ts"],
+      "linter": {
+        "rules": { "suspicious": { "noConsole": { "level": "error", "options": { "allow": ["warn"] } } } }
+      }
+    },
+    {
       "includes": ["server/src/completions/**"],
       "linter": { "rules": { "suspicious": { "noTemplateCurlyInString": "off" } } }
     }

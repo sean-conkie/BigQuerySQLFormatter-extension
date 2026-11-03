@@ -29,6 +29,11 @@
 - Ignore BigQuery keys in `.bqsqlformatter.json` with a warning without discarding
   valid offline rule settings.
 
+### Fixed
+
+- Stop LT02 from logging SQL AST objects while typing incomplete queries.
+  Enforce server console log hygiene with a lint guard.
+
 ## 0.7.1 - 2026-10-31
 
 ### Fixed
