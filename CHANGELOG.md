@@ -1,45 +1,65 @@
 # Changelog
 
-## Unreleased
+## 0.8.0 - 2026-11-04
 
 ### Notable changes
 
-- The extension now runs in Restricted Mode with offline linting and formatting.
-  BigQuery integration remains disabled in untrusted workspaces.
+- The extension now works in Restricted Mode (untrusted workspaces): linting and
+  formatting run as normal, and the BigQuery features stay disabled. Previously
+  VS Code disabled the whole extension there.
+- New, optional BigQuery features can send your SQL (dry runs) or dataset, table
+  and column lookups (completions) to Google BigQuery using your own Google
+  credentials. Both are **off by default** and only run after you enable them, in
+  a trusted workspace, once you've agreed to a prompt naming the project and
+  location. Nothing is sent otherwise.
 
 ### Added
 
-- Add opt-in BigQuery dry runs on save or demand for whole files and selections,
-  isolated syntax/schema/permission diagnostics cleared on edit, cancellable
-  requests, byte and optional cost estimates, script limitations, referenced-table
-  tooltips, named scalar parameter settings and template skipping.
-- Add the opt-in, client-only BigQuery foundation: ADC authentication,
-  cancellable REST calls with timeouts and rate-limit retries, project/location
-  consent, reset/retry commands, restricted settings, status UI and metadata-only
-  output. The Node runtime is lazy loaded separately; the language server stays
-  offline.
-- Add opt-in schema-aware dataset, table, column and nested STRUCT completions
-  and metadata hover, using only unbilled REST metadata calls. Includes lazy
-  pagination, in-memory TTL caching, Refresh Schema Cache, incomplete completion
-  lists while loading, and cancellation. Names preserve exact case and use only
-  required backticks; CP02's existing casing warnings remain unchanged.
-- Apply the integration spike's Node-20-compatible auth/client transport,
-  cached background credential check, optional quota-project setting, and
-  actionable quota-project and location-mismatch hints.
-- Ignore BigQuery keys in `.bqsqlformatter.json` with a warning without discarding
-  valid offline rule settings.
+- **Dry runs** (`bigquerySQLFormatter.bigquery.dryRun.enabled`): check a file or
+  selection against BigQuery without running it. Syntax errors, unknown tables
+  or columns and permission problems appear as diagnostics, and the status bar
+  shows the estimated bytes processed.
+  - Runs on save, or only from the **BigQuery SQL: Dry Run Current File** and
+    **Dry Run Selection** commands (`dryRun.trigger`: `onSave` or `onDemand`).
+  - Shows an estimated cost when you set `dryRun.costPerTiB`.
+  - Query parameters (`@name`, `?`) are treated as NULL unless you set typed
+    values in `dryRun.parameters`.
+  - Scripts are checked as a whole; statements inside `IF`, `LOOP` or `BEGIN`
+    blocks aren't included in the byte estimate. BigQuery reports one error at a
+    time. Dataform and dbt template files are skipped.
+- **Schema completions and hover** (`bigquerySQLFormatter.bigquery.schema.enabled`):
+  complete dataset, table, view, column and nested STRUCT field names, and hover
+  for table and column details (type, description, row count, size,
+  partitioning and clustering).
+  - Uses only free BigQuery metadata calls, never queries. Results are cached in
+    memory (`schema.cacheTtlMinutes`, default 60); use **BigQuery SQL: Refresh
+    Schema Cache** to reload.
+  - Inserted names keep their exact case and only get backticks where BigQuery
+    requires them. CP02 isn't schema-aware, so a mixed-case column such as
+    `CustomerID` can still get a casing warning.
+- Shared BigQuery settings: `projectId`, `location`, `defaultDataset`,
+  `timeoutMs` and `quotaProjectId` (only needed when your credentials bill a
+  different project). These can only be set in user or workspace settings.
+- **BigQuery SQL: BigQuery Actions**, **Retry BigQuery Connection** and **Reset
+  BigQuery Consent** commands, a status bar item, and a **BigQuery SQL
+  Formatter: BigQuery** output channel that logs request metadata only, never
+  query text or credentials.
+- Clear messages for missing credentials, permission and API-enablement errors,
+  and location mismatches.
+- BigQuery settings in `.bqsqlformatter.json` are ignored with a warning, so a
+  repository can't turn these features on; the file's rule settings still apply.
 
 ### Fixed
 
-- Stop LT02 from logging SQL AST objects while typing incomplete queries.
-  Enforce server console log hygiene with a lint guard.
-- Keep diagnostics visible while typing incomplete SQL by skipping empty LT02
-  columns and dropping invalid diagnostic ranges individually, with rule-code-only
-  warnings. LT13 now uses a valid cross-line range for an initial newline.
-- Stop LT02 from treating procedural statements and DDL as SELECT lists, damaging
-  DECLARE/SET spacing or moving block-closing keywords. Unsupported statements
-  retain their indentation, and fixes preserve whitespace separating tokens.
-  Procedural scripts now format and Fix All without non-convergence warnings.
+- Diagnostics no longer disappear while you type an unfinished query such as
+  `select * f`. LT02 and LT13 could report an invalid position, which made VS
+  Code drop every diagnostic in the file.
+- LT02 no longer damages BigQuery scripts. Its **Update Indentation** quick fix
+  could turn `declare n` into `declaren`, and formatting mis-spaced `SET`
+  statements and indented `END`. Scripts using `DECLARE`, `SET` and
+  `BEGIN … END` now format and Fix All without "non-converging rules" warnings.
+- LT02 no longer writes parts of your SQL to the **BigQuery Server** output
+  channel.
 
 ## 0.7.1 - 2026-10-31
 
