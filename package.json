@@ -5,7 +5,7 @@
   "icon": "images/BigQuerySQLFormatter_transparent_128.png",
   "author": "sean-conkie",
   "license": "MIT",
-  "version": "0.7.1",
+  "version": "0.8.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/sean-conkie/BigQuerySQLFormatter-extension.git"
@@ -47,12 +47,30 @@
   },
   "contributes": {
     "commands": [
-      { "command": "bigquerySQLFormatter.bigquery.dryRunFile", "title": "BigQuery SQL: Dry Run Current File" },
-      { "command": "bigquerySQLFormatter.bigquery.dryRunSelection", "title": "BigQuery SQL: Dry Run Selection" },
-      { "command": "bigquerySQLFormatter.bigquery.resetConsent", "title": "BigQuery SQL: Reset BigQuery Consent" },
-      { "command": "bigquerySQLFormatter.bigquery.retry", "title": "BigQuery SQL: Retry BigQuery Connection" },
-      { "command": "bigquerySQLFormatter.bigquery.actions", "title": "BigQuery SQL: BigQuery Actions" },
-      { "command": "bigquerySQLFormatter.bigquery.refreshSchema", "title": "BigQuery SQL: Refresh Schema Cache" }
+      {
+        "command": "bigquerySQLFormatter.bigquery.dryRunFile",
+        "title": "BigQuery SQL: Dry Run Current File"
+      },
+      {
+        "command": "bigquerySQLFormatter.bigquery.dryRunSelection",
+        "title": "BigQuery SQL: Dry Run Selection"
+      },
+      {
+        "command": "bigquerySQLFormatter.bigquery.resetConsent",
+        "title": "BigQuery SQL: Reset BigQuery Consent"
+      },
+      {
+        "command": "bigquerySQLFormatter.bigquery.retry",
+        "title": "BigQuery SQL: Retry BigQuery Connection"
+      },
+      {
+        "command": "bigquerySQLFormatter.bigquery.actions",
+        "title": "BigQuery SQL: BigQuery Actions"
+      },
+      {
+        "command": "bigquerySQLFormatter.bigquery.refreshSchema",
+        "title": "BigQuery SQL: Refresh Schema Cache"
+      }
     ],
     "configuration": {
       "type": "object",
@@ -99,13 +117,19 @@
         "bigquerySQLFormatter.bigquery.dryRun.trigger": {
           "scope": "resource",
           "type": "string",
-          "enum": ["onSave", "onDemand"],
+          "enum": [
+            "onSave",
+            "onDemand"
+          ],
           "default": "onSave",
           "description": "Run dry runs on save, or only through the dry-run commands."
         },
         "bigquerySQLFormatter.bigquery.dryRun.costPerTiB": {
           "scope": "resource",
-          "type": ["number", "null"],
+          "type": [
+            "number",
+            "null"
+          ],
           "default": null,
           "minimum": 0,
           "description": "Optional price per TiB for the dry-run cost estimate. No built-in price or currency."
@@ -116,10 +140,22 @@
           "description": "Optional named scalar query parameters. Each name requires a BigQuery type and value. Unspecified parameters are assumed NULL. Query parameter values are sent to Google.",
           "additionalProperties": {
             "type": "object",
-            "required": ["type", "value"],
+            "required": [
+              "type",
+              "value"
+            ],
             "properties": {
-              "type": { "type": "string" },
-              "value": { "type": ["string", "number", "boolean", "null"] }
+              "type": {
+                "type": "string"
+              },
+              "value": {
+                "type": [
+                  "string",
+                  "number",
+                  "boolean",
+                  "null"
+                ]
+              }
             },
             "additionalProperties": false
           }
