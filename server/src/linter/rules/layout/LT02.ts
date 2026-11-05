@@ -22,8 +22,11 @@ import { findToken } from '../../parser/utils';
 import { excludeTokensWithMatchingScopes, includeTokensWithMatchingScopes } from '../../parser/token';
 import { ComparisonAST, ComparisonGroupAST } from '../../parser/ast';
 import { globalTokenCache } from '../../parser/tokenCache';
-import { comparePositions, isCode } from '../../parser/queryBlocks';
-import { sourceTokens } from '../source';
+import { comparePositions, isCode, queryRange } from '../../parser/queryBlocks';
+import { closingBracket, keyword, sourceTokens, type SourceToken } from '../source';
+import { QueryScopeResolver } from '../../scope';
+import { topLevel } from '../../parser/pipe';
+import type { DocumentCache } from '../../parser/tokenCache';
 
 type RangeCache = Map<string, number>;
 const documentCache: Map<DocumentUri, RangeCache> = new Map<DocumentUri, RangeCache>();
@@ -60,19 +63,45 @@ export class Indent extends ParserRule {
 
     const errors: Diagnostic[] = [];
     const cache = new Map<string, number>();
+    const document = documentUri === null ? undefined : globalTokenCache.get(documentUri);
+    const tokens = document ? sourceTokens(document) : [];
+    const checkedJoins = new Set<string>();
 
     for (const i in ast) {
+      if (!ast[i].tokens.length) continue;
+      const range = queryRange(ast[i]);
+      const statementTokens = tokens.filter(
+        (token) =>
+          comparePositions(token.range.start, range.start) >= 0 && comparePositions(token.range.end, range.end) <= 0,
+      );
+      if (document) {
+        this.checkJoins(statementTokens, document, errors, cache, documentUri, checkedJoins);
+      }
       const first = ast[i].tokens.find(isCode);
       // The legacy AST also represents procedural and DDL tokens as SELECT columns.
-      if (!first || !/^(select|with)$/i.test(first.value) || !first.scopes.includes('keyword.select.sql')) continue;
+      if (
+        ast[i].hasExtendedQuerySyntax ||
+        !first ||
+        !/^(select|with)$/i.test(first.value) ||
+        !first.scopes.includes('keyword.select.sql')
+      )
+        continue;
       const offset = (ast[i].startIndex ?? 0) + 7;
-      const columns = ast[i].columns;
+      const fromIndex = topLevel(statementTokens, 0, statementTokens.length).find((index) =>
+        keyword(statementTokens[index], 'FROM'),
+      );
+      const selectEnd = fromIndex === undefined ? undefined : statementTokens[fromIndex].range.start;
+      // TextMate can classify plain JOIN bodies as SELECT expressions.
+      const columns = ast[i].columns.filter(
+        (column) =>
+          !selectEnd ||
+          comparePositions({ line: column.startLine ?? 0, character: column.startIndex ?? 0 }, selectEnd) < 0,
+      );
       const aliasRanges: Range[] = [];
       const columnEndIndexes: number[] = [];
       const columnLines = columns.map((column) => column.startLine);
       const alignAliases = new Set(columnLines).size === columnLines.length;
       const from = ast[i].from;
-      const joins = ast[i].joins;
       const where = ast[i].where;
 
       columns.forEach((column) => {
@@ -108,7 +137,7 @@ export class Indent extends ParserRule {
         this.checkIndentationError(column.startLine ?? 0, column.startIndex ?? 0, offset, errors, cache!, documentUri);
       });
 
-      const aliasIndex = Math.max(...columnEndIndexes) + 2;
+      const aliasIndex = Math.max(...columnEndIndexes) + 1;
 
       aliasRanges.map((aliasRange) =>
         this.checkIndentationError(
@@ -137,31 +166,6 @@ export class Indent extends ParserRule {
         );
       }
 
-      joins.forEach((join) => {
-        // find join type
-        const joinParts = join.join?.split(' ');
-        let joinOffset = joinParts != null && joinParts.length > 1 && joinParts[0] === 'left' ? 2 : 1;
-        joinOffset = offset - (offset - joinOffset);
-
-        this.checkIndentationError(join.startLine ?? 0, join.startIndex ?? 0, joinOffset, errors, cache!, documentUri);
-
-        if (join.on && join.on.tokens.length > 0) {
-          const onOffset = offset - 3;
-          this.checkIndentationError(
-            join.on.startLine ?? 0,
-            join.on.startIndex ?? 0,
-            onOffset,
-            errors,
-            cache!,
-            documentUri,
-          );
-
-          // process comparison groups
-          const comparisonResults = this.processComparisons(join.on.comparisons, offset);
-          this.processComparisonResults(comparisonResults, errors, cache!, documentUri);
-        }
-      });
-
       if (where) {
         const whereToken = findToken(where.tokens, 'keyword.where.sql');
         const whereOffset = offset - (offset - 1);
@@ -183,8 +187,7 @@ export class Indent extends ParserRule {
 
     documentCache.set(documentUri!, cache);
 
-    const document = documentUri === null ? undefined : globalTokenCache.get(documentUri);
-    const literals = document ? sourceTokens(document).filter((token) => token.literal) : [];
+    const literals = tokens.filter((token) => token.literal);
     const safeErrors = errors.filter(({ range }) => {
       const line = document?.get(range.start.line)?.value;
       if (
@@ -199,6 +202,86 @@ export class Indent extends ParserRule {
       );
     });
     return safeErrors.length > 0 ? safeErrors : null;
+  }
+
+  private checkJoins(
+    tokens: SourceToken[],
+    document: DocumentCache,
+    errors: Diagnostic[],
+    cache: RangeCache,
+    uri: string | null,
+    checked: Set<string>,
+  ): void {
+    const resolver = new QueryScopeResolver(tokens);
+    for (const scope of resolver.scopes) {
+      if (scope.kind !== 'query') continue;
+      const stage = scope.pipe;
+      if (stage) {
+        if (stage.kind !== 'source' || !stage.operator.endsWith('JOIN')) continue;
+        const offset = tokens[stage.start].range.start.character;
+        this.checkJoinBody(tokens.slice(stage.start + 2, stage.end), offset, document, errors, cache, uri, checked);
+        continue;
+      }
+      const indices = topLevel(tokens, scope.start, scope.end);
+      const select = indices.find((index) => keyword(tokens[index], 'SELECT'));
+      if (select === undefined) continue;
+      const from = scope.sources.find((source) => keyword(tokens[source.start - 1], 'FROM'));
+      const fromPosition = from ? tokens[from.start - 1].range.start : undefined;
+      const offset =
+        fromPosition && /^[ \t]*$/.test(document.get(fromPosition.line)!.value.slice(0, fromPosition.character))
+          ? fromPosition.character + 2
+          : tokens[select].range.start.character + 4;
+      const joins = indices.filter((index) => keyword(tokens[index], 'JOIN'));
+      for (const index of joins) {
+        let start = index;
+        while (start > scope.start && /^(INNER|LEFT|RIGHT|FULL|CROSS|OUTER|NATURAL)$/i.test(tokens[start - 1].value))
+          start--;
+        const end =
+          indices.find(
+            (next) =>
+              next > index &&
+              !tokens[next].literal &&
+              /^(JOIN|INNER|LEFT|RIGHT|FULL|CROSS|NATURAL|WHERE|GROUP|HAVING|QUALIFY|WINDOW|ORDER|LIMIT|;)$/.test(
+                tokens[next].value.toUpperCase(),
+              ),
+          ) ?? scope.end;
+        this.checkJoinBody(tokens.slice(start, end), offset, document, errors, cache, uri, checked);
+      }
+    }
+  }
+
+  private checkJoinBody(
+    tokens: SourceToken[],
+    offset: number,
+    document: DocumentCache,
+    errors: Diagnostic[],
+    cache: RangeCache,
+    uri: string | null,
+    checked: Set<string>,
+  ): void {
+    let condition = false;
+    let depth = 0;
+    for (let i = 0; i < tokens.length; i++) {
+      const token = tokens[i];
+      const clause = keyword(token, 'ON') || keyword(token, 'USING');
+      if (clause) condition = true;
+      if (keyword(token, ')') || keyword(token, ']')) depth = Math.max(0, depth - 1);
+      const { line, character } = token.range.start;
+      const key = `${line}:${character}`;
+      if (!checked.has(key) && /^[ \t]*$/.test(document.get(line)!.value.slice(0, character))) {
+        const desired = i === 0 ? offset : offset + (clause || !condition ? 2 : 4) + depth * 2;
+        this.checkIndentationError(line, character, desired, errors, cache, uri);
+        checked.add(key);
+      }
+      if (keyword(token, '(') || keyword(token, '[')) {
+        const close = closingBracket(tokens, i);
+        // Nested queries have their own FROM/JOIN offsets.
+        if (['SELECT', 'WITH', 'FROM'].some((word) => keyword(tokens[i + 1], word))) {
+          if (close < 0) break;
+          i = close;
+        } else depth++;
+      }
+    }
   }
 
   /**

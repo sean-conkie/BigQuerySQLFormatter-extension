@@ -37,6 +37,9 @@ describe('LT15 convergence', () => {
       'b.a = f.a and b.c < f.c or b.d > f.d',
       'b.a != f.a and b.c is null',
       'b.a < f.a or b.c > f.c and b.d != f.d',
+      'b.a = f.a\nand b.c = f.c',
+      '(b.a = f.a\nand b.c < f.c)\nor b.d > f.d',
+      'b.a = f.a and (b.c < f.c\nor b.d > f.d)',
     ])
       for (const [name, settings] of configurations)
         it(`converges within 12 passes: ${join} / ${condition} / ${name}`, async () => {
@@ -51,7 +54,9 @@ describe('LT15 convergence', () => {
           expect(warning.called).to.equal(false);
           expect(await formatDocument(document(formatted), settings, undefined, undefined, warning)).to.deep.equal([]);
           expect(warning.called).to.equal(false);
-          if (name === 'LT15 alone') expect(formatted).to.equal(source.getText());
+          if (name === 'LT15 alone') {
+            if (!condition.includes('\n')) expect(formatted).to.equal(source.getText());
+          } else expect(formatted.split('\n')[1]).to.match(/^ {4}(inner|left|full|cross) join\b/);
         });
 
   for (const eol of ['\n', '\r\n', '\r'])

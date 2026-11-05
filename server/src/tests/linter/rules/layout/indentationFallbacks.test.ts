@@ -5,7 +5,7 @@ import { Indent } from '../../../../linter/rules/layout/LT02';
 import { defaultSettings } from '../../../../settings';
 
 describe('Indentation fallbacks for incomplete syntax trees', () => {
-  it('defaults missing source locations to the start of the document', async () => {
+  it('retains source-based JOIN locations when legacy AST locations are missing', async () => {
     const uri = 'file:///incomplete-indentation.bqsql';
     const ast = await new Parser().parse({
       text:
@@ -57,7 +57,8 @@ describe('Indentation fallbacks for incomplete syntax trees', () => {
     if (!diagnostics || diagnostics.length === 0) {
       throw new Error('Expected diagnostics for nodes without source locations');
     }
-    for (const diagnostic of diagnostics) {
+    expect(diagnostics.slice(0, 3).map((diagnostic) => diagnostic.range.start.line)).to.deep.equal([3, 4, 5]);
+    for (const diagnostic of diagnostics.slice(3)) {
       expect(diagnostic.range.start.line).to.equal(0);
       expect(diagnostic.range.end.line).to.equal(0);
       expect(diagnostic.range.start.character).to.be.at.least(0);
