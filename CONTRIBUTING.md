@@ -54,6 +54,9 @@ formatter before comparing token percentages, so quote styles and line wrapping
 do not manufacture regressions. Comments and tests are excluded. Generated npm
 lockfiles and the generated function catalog are excluded because their repeated
 metadata is not hand-written source code.
+The Dependabot configuration is also excluded: directory-specific npm blocks
+must repeat shared update policies, and Dependabot's parser does not enable YAML
+aliases. This exception does not exclude other YAML files or change the 5% target.
 
 Actions are pinned to commit hashes. Lint results appear in the workflow summary
 without requiring permission to post pull request comments.
