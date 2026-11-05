@@ -21,7 +21,7 @@
 
 - The extension now works in Restricted Mode (untrusted workspaces): linting and
   formatting run as normal, and the BigQuery features stay disabled. Previously
-  VS Code disabled the whole extension there.
+  Visual Studio Code disabled the whole extension there.
 - New, optional BigQuery features can send your SQL (dry runs) or dataset, table
   and column lookups (completions) to Google BigQuery using your own Google
   credentials. Both are **off by default** and only run after you enable them, in
