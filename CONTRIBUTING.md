@@ -54,6 +54,9 @@ formatter before comparing token percentages, so quote styles and line wrapping
 do not manufacture regressions. Comments and tests are excluded. Generated npm
 lockfiles and the generated function catalog are excluded because their repeated
 metadata is not hand-written source code.
+The Dependabot configuration is also excluded: directory-specific npm blocks
+must repeat shared update policies, and Dependabot's parser does not enable YAML
+aliases. This exception does not exclude other YAML files or change the 5% target.
 
 Actions are pinned to commit hashes. Lint results appear in the workflow summary
 without requiring permission to post pull request comments.
@@ -306,11 +309,27 @@ to check tooling and runtime dependencies. Dependabot monitors all three npm
 manifests and GitHub Actions weekly, grouping minor and patch updates with a
 seven-day cooldown.
 
-Node types stay on 22.x. Chai and sinon-chai major upgrades are deferred until
-the assertion test harness migrates to ESM. The unused `@vscode/test-cli`
+Dependabot ignores major updates for these compatibility constraints while
+continuing to group minor and patch updates:
+
+- `google-auth-library` stays on 10.x, `gaxios` on 7.x, and the auth stack's
+  `gcp-metadata` on 8.x to support Node 20.9 in Visual Studio Code 1.91.
+- `@types/node` stays on 22.x.
+- Chai stays on 4.x and sinon-chai on 3.x until the assertion test harness
+  migrates to ESM.
+- TypeScript stays on 5.x in all directories; the TypeScript 7 native compiler
+  requires a deliberate migration.
+- Client Mocha stays on 11.x: Mocha 12 requires Node `^20.19.0 || >=22.12.0`,
+  but Visual Studio Code 1.91's extension host runs Node 20.9. Server tests
+  continue to use Mocha 12 through the root tooling.
+- The client's test-only `https-proxy-agent` stays on 7.x because 9.x is
+  ESM-only and client tests compile to CommonJS. `gaxios` retains its own 7.x
+  dependency, so runtime proxy support is unaffected.
+
+The client has a separate npm update block so its Mocha and
+`https-proxy-agent` ignores do not restrict root or server tooling.
+The unused `@vscode/test-cli`
 dependency has been removed; end-to-end tests use `@vscode/test-electron` directly.
-Server tests use Mocha 12; the client test runner uses Mocha 11 so it also works
-with the older embedded Node.js in the minimum supported Visual Studio Code version.
 Client-only Mocha overrides select patched `diff` and `serialize-javascript`
 versions until the compatible runner incorporates those updates upstream.
 
