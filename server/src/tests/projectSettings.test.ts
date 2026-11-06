@@ -325,6 +325,22 @@ describe('Project configuration discovery', function () {
     await rm(await directoryCreation, { recursive: true });
   });
 
+  it('loads LT03 line placement from the project file over editor options', async () => {
+    await writeFile(
+      join(directory, '.bqsqlformatter.json'),
+      JSON.stringify({ rules: { LT03: { options: { line_position: 'trailing' } } } }),
+    );
+    const project = await getProjectSettings(uri(join(directory, 'query.sql')), [uri(directory)]);
+    const settings = mergeSettings(
+      {
+        ...defaultSettings,
+        ...parseSettings({ rules: { LT03: { severity: 'error', options: { line_position: 'leading' } } } }),
+      },
+      project,
+    );
+    expect(settings.rules?.LT03).to.deep.equal({ severity: 'error', options: { line_position: 'trailing' } });
+  });
+
   it('uses the nearest config, respects workspace boundaries, and isolates multiple roots', async () => {
     const root = join(directory, 'one');
     const otherRoot = join(directory, 'two');

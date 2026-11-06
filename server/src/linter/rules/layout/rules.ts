@@ -10,6 +10,7 @@ import { instantiateRules, type Rule } from '../base';
 import type { ServerSettings } from '../../../settings';
 import { TrailingSpaces } from './LT01';
 import { Indent } from './LT02';
+import { OperatorLayout } from './LT03';
 import { TrailingComma } from './LT04';
 import { Functions } from './LT06';
 import { CteBracket } from './LT07';
@@ -27,6 +28,7 @@ import type { FileMap } from '../../parser';
 export const classes = [
   TrailingSpaces,
   Indent,
+  OperatorLayout,
   TrailingComma,
   Functions,
   CteBracket,
