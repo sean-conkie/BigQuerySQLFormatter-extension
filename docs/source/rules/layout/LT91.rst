@@ -1,0 +1,59 @@
+====================================
+Rule: Pipe Stages Start on New Lines
+====================================
+
+**Rule Code:** ``LT91``
+
+**Name:** ``pipe_stages`` (``layout.pipe_stages``)
+
+Overview
+--------
+
+Every ``|>`` starts its own line, aligned with the opening FROM or first
+token of its pipe input. This applies even to short queries, nested subqueries
+and CTEs. LT91 is project-specific and enabled by default.
+
+Anti-pattern
+------------
+
+.. code-block:: sql
+
+    from ds.orders |> where status = 1 |> select region;
+
+Best practice
+-------------
+
+.. code-block:: sql
+
+    from ds.orders
+    |> where status = 1
+    |> select region;
+
+Stage bodies are indented by :doc:`LT02`. Comments between stages are kept;
+inline block comments before a stage move onto a line before that stage.
+Trailing line comments remain on their original line. Literals and quoted
+identifiers are never treated as pipe operators. Unsupported query blocks
+such as MATCH_RECOGNIZE, GRAPH_TABLE and pipe WITH are left unchanged.
+
+Configuration and fixes
+-----------------------
+
+Quick Fix, Fix All and Format Document support this rule and preserve LF,
+CRLF or CR line endings. Rule and region ``noqa`` directives, layout group
+settings and severity settings apply as for other rules.
+
+To disable stage placement:
+
+.. code-block:: json
+
+    {
+      "bigquerySQLFormatter.rules": {
+        "LT91": { "enabled": false }
+      }
+    }
+
+Groups
+------
+
+- ``all``
+- ``layout``

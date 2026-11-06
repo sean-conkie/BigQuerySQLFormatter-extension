@@ -21,6 +21,7 @@ import { EndOfFile } from './LT12';
 import { StartOfFile } from './LT13';
 import { ComparisonOperators } from './LT15';
 import { JoinConditionParentheses } from './LT90';
+import { PipeStages } from './LT91';
 import type { FileMap } from '../../parser';
 
 export const classes = [
@@ -37,6 +38,7 @@ export const classes = [
   StartOfFile,
   ComparisonOperators,
   JoinConditionParentheses,
+  PipeStages,
 ];
 
 export function layoutRules(settings: ServerSettings, problems: number): Rule<string | FileMap>[] {

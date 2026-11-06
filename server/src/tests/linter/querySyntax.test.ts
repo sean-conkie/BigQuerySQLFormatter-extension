@@ -422,7 +422,16 @@ SELECT DISTINCT t.id FROM dataset.sales t GROUP BY t.id;\n`;
               ),
               AM04: { 9: 1 },
               AM05: { 12: 1 },
-              LT02: { 36: 1 },
+              LT02: { 29: 1, 36: 2 },
+              LT91: {
+                ...Object.fromEntries(Array.from({ length: 22 }, (_, i) => [i + 2, 1])),
+                1: 2,
+                27: 2,
+                28: 3,
+                29: 1,
+                34: 1,
+                36: 2,
+              },
               RF02: { 36: 1 },
               RF04: { 18: 1 },
             };
@@ -458,7 +467,7 @@ SELECT DISTINCT t.id FROM dataset.sales t GROUP BY t.id;\n`;
     for (const eol of ['\n', '\r\n', '\r']) {
       const text = `FROM dataset.sales |> WHERE amount = NULL AND active <> FALSE  ${eol}|> SELECT 'TRUE; |> SET x = NULL' AS text; -- FALSE${eol}`;
       const source = document(text);
-      const expected = `from dataset.sales |> where amount is null and active != false${eol}|> select 'TRUE; |> SET x = NULL' text; -- FALSE${eol}`;
+      const expected = `from dataset.sales${eol}|> where amount is null and active != false${eol}|> select 'TRUE; |> SET x = NULL' text; -- FALSE${eol}`;
       const formatted = TextDocument.applyEdits(source, await formatDocument(source, defaultSettings));
       expect(formatted).to.equal(expected);
       expect(await formatDocument(document(formatted), defaultSettings)).to.deep.equal([]);

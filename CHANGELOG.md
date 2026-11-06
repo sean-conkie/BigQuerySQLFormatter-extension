@@ -4,6 +4,12 @@
 
 ### Notable changes
 
+- New default-enabled LT91 (`layout.pipe_stages`) puts every pipe stage on its
+  own line, aligned with its input, including nested pipelines. Disable it with
+  `"LT91": { "enabled": false }` in rule settings to retain stage placement.
+  LT02 now indents supported pipe stage bodies, including wrapped projection
+  and grouping lists, WHERE conditions and nested inputs. Comments and line
+  endings are preserved; unsupported query blocks remain protected.
 - LT02 now re-indents existing JOIN lines two spaces under their FROM, with ON
   lines two spaces further in and wrapped predicates another two spaces in.
   Pipe JOIN stage bodies use the same continuation layout.

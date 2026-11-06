@@ -267,13 +267,16 @@ CV12 settings and `noqa` suppressions to AM02. CV12 continues checking EXCEPT an
 ### Pipe and temporal queries
 
 Pipe queries (including FROM-only inputs) and `FOR SYSTEM_TIME AS OF` support
-RF01-RF06, AL01, AL02, AL04, AL05, AL06, AL08, AL09, AM04, AM05, AM06 and AM07.
+RF01-RF06, AL01, AL02, AL04, AL05, AL06, AL08, AL09, AM04, AM05, AM06, AM07,
+LT02 and LT91.
 Checks follow each stage's visible table aliases, output aliases and JOIN USING
 columns. RF01 remains disabled by default. Quick fixes, Fix All and formatting
-preserve pipe placement and line endings.
-LT02 also indents pipe JOIN bodies: ON/USING lines are two spaces under
-the stage, and wrapped predicates are another two spaces in. Other pipe stage
-bodies and stage placement are not yet formatted.
+preserve line endings. LT91 (enabled by default) puts every `|>` on its own line,
+aligned with the opening FROM or first input token, including nested pipelines.
+LT02 aligns wrapped select/grouping lists and WHERE conditions; continuation
+clauses are three spaces under the stage. Pipe JOIN ON/USING lines use two
+spaces, with wrapped predicates another two spaces in.
+Disable stage placement with `"LT91": { "enabled": false }` in rule settings.
 
 `MATCH_RECOGNIZE`, `GRAPH_TABLE` and unmodelled pipe operators (such as pipe WITH)
 still skip structural checks in their own block and descendants; enclosing

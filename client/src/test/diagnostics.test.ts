@@ -21,6 +21,44 @@ async function applyFixAll(document: vscode.TextDocument): Promise<void> {
   assert.equal(await vscode.workspace.applyEdit(actions[0].edit), true);
 }
 
+async function assertFormattingAndFixAll(
+  uri: vscode.Uri,
+  source: string,
+  expected: string,
+  hasIssues: (diagnostics: readonly vscode.Diagnostic[]) => boolean,
+): Promise<void> {
+  await writeFile(uri.fsPath, source);
+  const ready = waitForDiagnostics(uri, hasIssues);
+  const editor = await activate(uri);
+  await ready;
+  const edits = await vscode.commands.executeCommand<vscode.TextEdit[]>('vscode.executeFormatDocumentProvider', uri, {
+    tabSize: 2,
+    insertSpaces: true,
+  });
+  const formatted = new vscode.WorkspaceEdit();
+  formatted.set(uri, edits);
+  const clean = waitForDiagnostics(uri, (diagnostics) => diagnostics.length === 0);
+  assert.equal(await vscode.workspace.applyEdit(formatted), true);
+  await clean;
+  assert.equal(editor.document.getText(), expected);
+  const repeated = await vscode.commands.executeCommand<vscode.TextEdit[] | undefined>(
+    'vscode.executeFormatDocumentProvider',
+    uri,
+    { tabSize: 2, insertSpaces: true },
+  );
+  assert.ok(repeated === undefined || repeated.length === 0);
+  const reset = waitForDiagnostics(uri, hasIssues);
+  assert.equal(
+    await editor.edit((edit) => edit.replace(new vscode.Range(0, 0, editor.document.lineCount, 0), source)),
+    true,
+  );
+  await reset;
+  const fixed = waitForDiagnostics(uri, (diagnostics) => diagnostics.length === 0);
+  await applyFixAll(editor.document);
+  await fixed;
+  assert.equal(editor.document.getText(), expected);
+}
+
 suite('Language server diagnostics', () => {
   const docUri = getDocUri('diagnostics.bqsql');
 
@@ -124,6 +162,24 @@ suite('Language server diagnostics', () => {
     assert.deepEqual(vscode.languages.getDiagnostics(uri), []);
   });
 
+  test('Formatting and Fix All lay out pipe stages and bodies idempotently', async () => {
+    const directory = await mkdtemp(path.join(getDocPath(''), 'pipe-layout-'));
+    const uri = vscode.Uri.file(path.join(directory, 'query.bqsql'));
+    const source = 'from ds.orders o |> select o.region,\no.status;\n';
+    const expected = 'from ds.orders o\n|> select o.region,\n          o.status;\n';
+    const hasPipeDiagnostic = (diagnostics: readonly vscode.Diagnostic[]) =>
+      diagnostics.some((diagnostic) => {
+        const code = diagnostic.code;
+        return (typeof code === 'object' ? code.value : code) === 'LT91: pipe_stages';
+      });
+    try {
+      await assertFormattingAndFixAll(uri, source, expected, hasPipeDiagnostic);
+    } finally {
+      await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
   test('Formatting and Fix All preserve case-sensitive table and UDF names', async () => {
     const directory = await mkdtemp(path.join(getDocPath(''), 'safe-names-'));
     const uri = vscode.Uri.file(path.join(directory, 'query.bqsql'));
@@ -212,34 +268,7 @@ suite('Language server diagnostics', () => {
         return /^(AL02|AM05):/.test(String(typeof code === 'object' ? code.value : code));
       });
     try {
-      await writeFile(uri.fsPath, source);
-      const ready = waitForDiagnostics(uri, hasPipeIssues);
-      const editor = await activate(uri);
-      await ready;
-      const edits = await vscode.commands.executeCommand<vscode.TextEdit[]>(
-        'vscode.executeFormatDocumentProvider',
-        uri,
-        { tabSize: 2, insertSpaces: true },
-      );
-      const formatted = new vscode.WorkspaceEdit();
-      formatted.set(uri, edits);
-      const clean = waitForDiagnostics(uri, (diagnostics) => diagnostics.length === 0);
-      assert.equal(await vscode.workspace.applyEdit(formatted), true);
-      assert.equal(editor.document.getText(), expected);
-      await clean;
-      const repeated = await vscode.commands.executeCommand<vscode.TextEdit[] | undefined>(
-        'vscode.executeFormatDocumentProvider',
-        uri,
-        { tabSize: 2, insertSpaces: true },
-      );
-      assert.ok(repeated === undefined || repeated.length === 0);
-      const reset = waitForDiagnostics(uri, hasPipeIssues);
-      await editor.edit((edit) => edit.replace(new vscode.Range(0, 0, editor.document.lineCount, 0), source));
-      await reset;
-      const fixed = waitForDiagnostics(uri, (diagnostics) => diagnostics.length === 0);
-      await applyFixAll(editor.document);
-      assert.equal(editor.document.getText(), expected);
-      await fixed;
+      await assertFormattingAndFixAll(uri, source, expected, hasPipeIssues);
     } finally {
       await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
       await rm(directory, { recursive: true, force: true });

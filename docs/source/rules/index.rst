@@ -5,10 +5,11 @@ Rules
 These rules aim to improve the readability and maintainability of code by ensuring that aliases are used correctly and consistently throughout the project.
 
 Pipe and temporal query support
-------------------------------
+-------------------------------
 
 Pipe queries and ``FOR SYSTEM_TIME AS OF`` support RF01-RF06, AL01, AL02, AL04,
-AL05, AL06, AL08, AL09, AM04, AM05, AM06 and AM07. RF01 remains opt-in.
+AL05, AL06, AL08, AL09, AM04, AM05, AM06, AM07, LT02 and LT91. RF01 remains opt-in.
+LT91 starts each pipe stage on a new line; LT02 indents its body.
 Sources, output aliases and USING columns are resolved at each stage. Rules
 without an equivalent construct do not apply: for example, AL01 does not remove
 the mandatory AS in ``|> AS``, and AM04 does not flag multiplication or COUNT(*).
@@ -122,6 +123,7 @@ Layout rules are guidelines that help developers maintain a consistent and reada
 	Rule: SQL Files Must Not Begin with Newlines or Whitespace <layout/LT13>
 	Rule: Align Equal (`=`) Sign in Comparison Blocks <layout/LT15>
 	Rule: Wrap JOIN Conditions (project-specific, disabled by default) <layout/LT90>
+	Rule: Pipe Stages Start on New Lines (project-specific) <layout/LT91>
 
 .. _references-rules:
 

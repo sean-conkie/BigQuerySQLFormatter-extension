@@ -35,7 +35,7 @@ describe('Default-rule fixture convergence', function () {
       }
     }
   }
-  collect(resolve(__dirname, '../../src/tests/linter/rules'));
+  collect(resolve(__dirname, '../../src/tests/linter'));
   for (const text of proceduralFixtures) fixtures.set(text, 'procedural script');
 
   it('collects the existing rule fixture corpus', () => {
