@@ -6,7 +6,8 @@ from dataset.sales s
 |> set adjusted = adjusted * 2
 |> rename adjusted as result
 |> select category, result
-|> union all (from dataset.other o |> select o.category, o.result)
+|> union all (from dataset.other o
+              |> select o.category, o.result)
 |> order by result desc
 |> limit 10;
 

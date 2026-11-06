@@ -96,7 +96,34 @@ RF01-RF06, AL01, AL02, AL04, AL05, AL06, AL08, AL09, AM04, AM05, AM06 and AM07
 opt into this model through `pipeQueryRules`. RF01 still requires explicit enabling.
 Operators without an equivalent for a rule are not applicable (for example,
 AL01 must not remove the mandatory AS in `|> AS`, and AM04 ignores multiplication
-and COUNT(\*)). Other LT and ST rules remain gated pending a pipe layout policy.
+and COUNT(\*)). LT02 and LT91 also opt in; other LT and ST rules remain gated.
+
+LT91 (`layout.pipe_stages`, enabled by default) starts every `|>` on its own
+line, aligned with the input's opening FROM (or first input token). LT02 aligns
+wrapped SELECT and AGGREGATE/GROUP BY items and WHERE conditions as in traditional
+clauses. Continuation clauses are three spaces under the stage; JOIN bodies use
+the settled two-space ON/USING and four-space predicate offsets. Nested pipes
+follow the same policy relative to their own input. Comments between stages
+are preserved; inline block comments before a stage move with it.
+
+Before:
+
+```sql
+from ds.orders o |> where o.status = 1 |> aggregate count(*) n
+group by o.region |> order by n desc;
+```
+
+After (with default alias and COUNT rules):
+
+```sql
+from ds.orders o
+|> where o.status = 1
+|> aggregate count(1) n
+   group by o.region
+|> order by n desc;
+```
+
+Set `"LT91": { "enabled": false }` to retain existing stage placement.
 
 MATCH_RECOGNIZE, GRAPH_TABLE and unmodelled pipe operators (including pipe WITH)
 still skip their own query block and its descendants, not enclosing traditional

@@ -18,7 +18,8 @@ Alias alignment is skipped when multiple SELECT expressions start on the same
 line, since moving an earlier alias also moves later expressions. Incomplete
 comparison nodes and the contents of quoted literals are never indented.
 
-LT02 applies only to query statements beginning with ``SELECT`` or ``WITH``.
+LT02 applies to traditional queries and supported pipe queries, including
+``FROM`` inputs.
 Procedural statements such as ``DECLARE`` and ``SET``, block headers and closing
 keywords (``BEGIN``, ``IF``, ``LOOP``, ``WHILE``, ``FOR``, ``EXCEPTION`` and
 ``END``), and DDL statements are left unchanged until their indentation is
@@ -45,8 +46,7 @@ inline. The existing SELECT/FROM alignment is unchanged.
           on f.a = c.a;
 
 Pipe JOIN stage bodies use the same two-space continuation levels, relative
-to the ``|>`` stage. LT02 does not yet place pipe stages on separate lines or
-indent other pipe stage bodies.
+to the ``|>`` stage.
 
 .. code-block:: sql
 
@@ -55,6 +55,37 @@ indent other pipe stage bodies.
       on f.a = b.a
         and f.c = b.c
     |> select f.a;
+
+Pipe layout
+~~~~~~~~~~~
+
+LT91 puts every stage on its own line and aligns it with its input. LT02
+aligns wrapped SELECT, EXTEND and AGGREGATE lists with the first expression,
+and GROUP BY lists with their first grouping expression. WHERE conditions
+align their operands, allowing for AND/OR. Other continuation lines and
+GROUP BY clauses start three spaces under ``|>``. Nested pipe inputs on a
+continuation line use the same indentation; their stages align with their
+own input. Strings and comments are preserved.
+
+Before:
+
+.. code-block:: sql
+
+    from ds.orders |> select region,
+    status |> aggregate count(*) as n
+    group by region,
+    status;
+
+After (with only LT02 and LT91 enabled):
+
+.. code-block:: sql
+
+    from ds.orders
+    |> select region,
+              status
+    |> aggregate count(*) as n
+       group by region,
+                status;
 
 Implicit column aliases are aligned one space after the longest expression.
 Removing AS with AL02 does not introduce a second separator space, including
