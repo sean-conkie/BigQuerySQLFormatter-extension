@@ -1,5 +1,5 @@
 LT90: JOIN Condition Parentheses
-===============================
+================================
 
 ``layout.join_condition_parentheses`` is a **project-specific** style rule
 with no SQLFluff equivalent. It is **disabled by default**. Codes 90-99 in each
@@ -31,9 +31,10 @@ Enable the rule in editor settings or the nearest ``.bqsqlformatter.json``:
 
 ``ON (a = b AND c = d)`` is already compliant, while
 ``ON (a = b) AND (c = d)`` still needs an enclosing pair.
-Single conditions, USING, WHERE and pipe JOIN stages are not checked.
+Single conditions, USING and WHERE are not checked. Pipe JOIN ON stages are
+checked with the same policy, stopping before the next stage.
 Nested queries and CTEs are checked in their own scopes.
 
 Quick fixes, Fix All and formatting only add parentheses, preserving comments
-and line endings. LT02 and the formatter determine indentation and line breaks;
+and LF/CRLF/CR line endings. LT02 and the formatter determine indentation and line breaks;
 no separate aligned style is required.

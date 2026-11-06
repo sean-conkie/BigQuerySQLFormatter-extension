@@ -6,6 +6,14 @@ Rule: Place Commas at the End of the Line
 
 **Name:** ``trailing_commas``
 
+Pipe queries
+------------
+
+LT04 checks comma positions in ``|> SELECT``, ``|> EXTEND``,
+``|> AGGREGATE`` and aggregate ``GROUP BY`` lists. Commas inside function
+arguments, literals and nested queries are not list separators.
+This rule reports diagnostics only; it does not move commas.
+
 Overview
 --------
 

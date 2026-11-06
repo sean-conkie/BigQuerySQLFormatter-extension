@@ -1,6 +1,11 @@
-import type { PipeClause } from '../../parser/pipe';
+import type { PipeClause, PipeItem } from '../../parser/pipe';
+import type { StatementAST } from '../../parser/ast';
 import { QueryScopeResolver } from '../../scope';
 import type { SourceToken } from '../source';
+
+export function pipeProjectionLists(statement: StatementAST): PipeItem[][] {
+  return statement.pipeClauses.flatMap((stage) => (stage.kind === 'projection' ? [stage.items, stage.groupBy] : []));
+}
 
 export function pipeLayouts(tokens: SourceToken[]): { input: SourceToken; stages: PipeClause[] }[] {
   const resolver = new QueryScopeResolver(tokens);

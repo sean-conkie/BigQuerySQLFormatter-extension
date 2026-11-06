@@ -20,7 +20,11 @@ export class CteNewline extends SourceFixRule {
         const comma = keyword(tokens[cte.close + 1], ',');
         const anchor = tokens[cte.close + (comma ? 1 : 0)];
         const next = tokens[j + 1 < ctes.length ? ctes[j + 1].start : cte.close + 1];
-        if (!next || (j === ctes.length - 1 && !keyword(next, 'SELECT') && !keyword(next, '('))) continue;
+        if (
+          !next ||
+          (j === ctes.length - 1 && !keyword(next, 'SELECT') && !keyword(next, 'FROM') && !keyword(next, '('))
+        )
+          continue;
         const gap = { start: anchor.range.end, end: next.range.start };
         const between = cache.getText(gap);
         if (/\n[ \t]*\n/.test(between)) continue;

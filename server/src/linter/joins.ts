@@ -40,6 +40,110 @@ export interface JoinCondition {
   comparisons: JoinComparison[];
 }
 
+export function parseCondition(
+  tokens: SourceToken[],
+  start: number,
+  end: number,
+  operand: (start: number, end: number) => JoinOperand = (start, end) => ({
+    start,
+    end,
+    range: { start: tokens[start].range.start, end: tokens[end - 1].range.end },
+    references: [],
+    sources: [],
+    safe: false,
+  }),
+): Pick<JoinCondition, 'expression' | 'comparisons'> {
+  const comparisons: JoinComparison[] = [];
+  const parse = (start: number, end: number): JoinExpression => {
+    if (keyword(tokens[start], '(') && closingBracket(tokens, start) === end - 1 && end > start + 2)
+      return { kind: 'group', start, end, expression: parse(start + 1, end - 1) };
+    const splits: number[] = [];
+    const operators: ('AND' | 'OR')[] = [];
+    const candidates: { start: number; end: number; operator: string }[] = [];
+    let between = false;
+    let caseDepth = 0;
+    let unsupported = false;
+    for (let i = start; i < end; i++) {
+      if (keyword(tokens[i], 'CASE')) caseDepth++;
+      if (keyword(tokens[i], 'END')) caseDepth--;
+      if (keyword(tokens[i], '(') || keyword(tokens[i], '[')) {
+        const close = closingBracket(tokens, i);
+        if (close < 0 || close >= end) {
+          unsupported = true;
+          break;
+        }
+        i = close;
+        continue;
+      }
+      if (caseDepth) continue;
+      if (keyword(tokens[i], 'BETWEEN')) {
+        between = true;
+        unsupported = true;
+      }
+      if (keyword(tokens[i], 'AND') && between) {
+        between = false;
+        continue;
+      }
+      if (keyword(tokens[i], 'AND') || keyword(tokens[i], 'OR')) {
+        splits.push(i);
+        operators.push(keyword(tokens[i], 'AND') ? 'AND' : 'OR');
+      }
+      if (keyword(tokens[i], 'LIKE') || keyword(tokens[i], 'IN') || keyword(tokens[i], 'NOT')) unsupported = true;
+      if (keyword(tokens[i], 'IS')) {
+        const stop = i + (keyword(tokens[i + 1], 'NOT') ? 4 : 3);
+        if (keyword(tokens[stop - 2], 'DISTINCT') && keyword(tokens[stop - 1], 'FROM')) {
+          candidates.push({
+            start: i,
+            end: stop,
+            operator: tokens
+              .slice(i, stop)
+              .map((token) => token.value.toUpperCase())
+              .join(' '),
+          });
+          i = stop - 1;
+        } else unsupported = true;
+      } else if (!tokens[i].literal && /^[=!<>]$/.test(tokens[i].value)) {
+        const first = i;
+        if (i + 1 < end && keyword(tokens[i + 1], '=') && tokens[i].value !== '=') i++;
+        else if (keyword(tokens[i], '<') && keyword(tokens[i + 1], '>')) i++;
+        const operator = tokens
+          .slice(first, i + 1)
+          .map((token) => token.value)
+          .join('');
+        if (['=', '!=', '<>', '<', '>', '<=', '>='].includes(operator))
+          candidates.push({ start: first, end: i + 1, operator });
+      }
+    }
+    if (splits.length && splits[0] > start && splits.at(-1)! < end - 1) {
+      const bounds = [start - 1, ...splits, end];
+      return {
+        kind: 'boolean',
+        start,
+        end,
+        operators,
+        children: bounds.slice(0, -1).map((bound, i) => parse(bound + 1, bounds[i + 1])),
+      };
+    }
+    const node: JoinExpression = { kind: 'predicate', start, end };
+    const candidate = candidates[0];
+    if (!unsupported && candidates.length === 1 && candidate.start > start && candidate.end < end) {
+      node.comparison = {
+        start,
+        end,
+        range: { start: tokens[start].range.start, end: tokens[end - 1].range.end },
+        left: operand(start, candidate.start),
+        right: operand(candidate.end, end),
+        operator: candidate.operator,
+        operatorStart: candidate.start,
+        operatorEnd: candidate.end,
+      };
+      comparisons.push(node.comparison);
+    }
+    return node;
+  };
+  return { expression: parse(start, end), comparisons };
+}
+
 export function joinConditions(
   tokens: SourceToken[],
   cache: DocumentCache,
@@ -53,7 +157,7 @@ export function joinConditions(
   });
   const result: JoinCondition[] = [];
   for (const scope of resolver.scopes) {
-    if (scope.kind !== 'query' || scope.pipe) continue;
+    if (scope.kind !== 'query' || (scope.pipe && scope.pipe.kind !== 'source')) continue;
     for (const source of scope.sources) {
       if (!keyword(tokens[source.start - 1], 'JOIN') || !keyword(tokens[source.end], 'ON')) continue;
       const start = source.end + 1;
@@ -78,7 +182,6 @@ export function joinConditions(
         }
       }
       if (end <= start) continue;
-      const comparisons: JoinComparison[] = [];
       const operand = (start: number, end: number): JoinOperand => {
         const refs = references.filter((reference) => {
           const index = indexes.get(identifierKey(reference.tokens[0]))!;
@@ -99,93 +202,6 @@ export function joinConditions(
         }
         return { start, end, range: range(start, end), references: refs, sources: [...sources], safe };
       };
-      const parse = (start: number, end: number): JoinExpression => {
-        if (keyword(tokens[start], '(') && closingBracket(tokens, start) === end - 1 && end > start + 2)
-          return { kind: 'group', start, end, expression: parse(start + 1, end - 1) };
-        const splits: number[] = [];
-        const operators: ('AND' | 'OR')[] = [];
-        const candidates: { start: number; end: number; operator: string }[] = [];
-        let between = false;
-        let caseDepth = 0;
-        let unsupported = false;
-        for (let i = start; i < end; i++) {
-          if (keyword(tokens[i], 'CASE')) caseDepth++;
-          if (keyword(tokens[i], 'END')) caseDepth--;
-          if (keyword(tokens[i], '(') || keyword(tokens[i], '[')) {
-            const close = closingBracket(tokens, i);
-            if (close < 0 || close >= end) {
-              unsupported = true;
-              break;
-            }
-            i = close;
-            continue;
-          }
-          if (caseDepth) continue;
-          if (keyword(tokens[i], 'BETWEEN')) {
-            between = true;
-            unsupported = true;
-          }
-          if (keyword(tokens[i], 'AND') && between) {
-            between = false;
-            continue;
-          }
-          if (keyword(tokens[i], 'AND') || keyword(tokens[i], 'OR')) {
-            splits.push(i);
-            operators.push(keyword(tokens[i], 'AND') ? 'AND' : 'OR');
-          }
-          if (keyword(tokens[i], 'LIKE') || keyword(tokens[i], 'IN') || keyword(tokens[i], 'NOT')) unsupported = true;
-          if (keyword(tokens[i], 'IS')) {
-            const stop = i + (keyword(tokens[i + 1], 'NOT') ? 4 : 3);
-            if (keyword(tokens[stop - 2], 'DISTINCT') && keyword(tokens[stop - 1], 'FROM')) {
-              candidates.push({
-                start: i,
-                end: stop,
-                operator: tokens
-                  .slice(i, stop)
-                  .map((token) => token.value.toUpperCase())
-                  .join(' '),
-              });
-              i = stop - 1;
-            } else unsupported = true;
-          } else if (!tokens[i].literal && /^[=!<>]$/.test(tokens[i].value)) {
-            const first = i;
-            if (i + 1 < end && keyword(tokens[i + 1], '=') && tokens[i].value !== '=') i++;
-            else if (keyword(tokens[i], '<') && keyword(tokens[i + 1], '>')) i++;
-            const operator = tokens
-              .slice(first, i + 1)
-              .map((token) => token.value)
-              .join('');
-            if (['=', '!=', '<>', '<', '>', '<=', '>='].includes(operator))
-              candidates.push({ start: first, end: i + 1, operator });
-          }
-        }
-        if (splits.length && splits[0] > start && splits.at(-1)! < end - 1) {
-          const bounds = [start - 1, ...splits, end];
-          return {
-            kind: 'boolean',
-            start,
-            end,
-            operators,
-            children: bounds.slice(0, -1).map((bound, i) => parse(bound + 1, bounds[i + 1])),
-          };
-        }
-        const node: JoinExpression = { kind: 'predicate', start, end };
-        const candidate = candidates[0];
-        if (!unsupported && candidates.length === 1 && candidate.start > start && candidate.end < end) {
-          node.comparison = {
-            start,
-            end,
-            range: range(start, end),
-            left: operand(start, candidate.start),
-            right: operand(candidate.end, end),
-            operator: candidate.operator,
-            operatorStart: candidate.start,
-            operatorEnd: candidate.end,
-          };
-          comparisons.push(node.comparison);
-        }
-        return node;
-      };
       result.push({
         scope,
         source,
@@ -193,8 +209,7 @@ export function joinConditions(
         start,
         end,
         range: range(start, end),
-        expression: parse(start, end),
-        comparisons,
+        ...parseCondition(tokens, start, end, operand),
       });
     }
   }

@@ -10,6 +10,8 @@ import type { ServerSettings } from '../../../settings';
 import type { Diagnostic, TextDocumentIdentifier } from 'vscode-languageserver/node';
 import { ParserRule } from '../base';
 import type { FileMap } from '../../parser';
+import { pipeProjectionLists } from './pipe';
+import { keyword } from '../source';
 
 /**
  * The TrailingComma rule
@@ -41,6 +43,16 @@ export class TrailingComma extends ParserRule {
 
     const errors: Diagnostic[] = [];
     for (const i in ast) {
+      for (const items of pipeProjectionLists(ast[i])) {
+        for (const item of items) {
+          const last = item.tokens.at(-1)!;
+          const comma = ast[i].sourceTokens[ast[i].sourceTokens.indexOf(last) + 1];
+          if (keyword(comma, ',') && comma.range.start.line !== last.range.end.line) {
+            errors.push(this.createDiagnostic(comma.range, documentUri));
+          }
+        }
+      }
+      if (ast[i].pipeClauses.length) continue;
       const columns = ast[i].columns;
       if (!columns) {
         continue;

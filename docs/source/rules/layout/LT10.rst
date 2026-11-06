@@ -6,6 +6,14 @@ Rule: select Modifiers Must Be on the Same Line as select
 
 **Name:** ``select_modifiers_check``
 
+Pipe queries
+------------
+
+Modifiers such as ``DISTINCT``, ``ALL`` and ``AS STRUCT`` must start on the
+same line as ``SELECT`` in a ``|> SELECT`` stage. Comments do not hide a
+modifier on a later line. A standalone ``|> DISTINCT`` stage is not a SELECT
+modifier. This rule reports diagnostics only.
+
 Overview
 --------
 

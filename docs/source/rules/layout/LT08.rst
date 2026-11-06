@@ -7,7 +7,8 @@ Rule: Add a Blank Line After Each CTE
 **Name:** ``cte_newline``
 
 Separate CTE definitions from each other and from the main SELECT with a
-blank line. A comma after a CTE remains attached to its closing bracket.
+blank line. This includes pipe CTEs and a main ``FROM`` query after the CTEs.
+A comma after a CTE remains attached to its closing bracket.
 
 .. code-block:: sql
 
