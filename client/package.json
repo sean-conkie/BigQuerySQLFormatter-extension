@@ -15,7 +15,7 @@
   "dependencies": {
     "google-auth-library": "^10.5.0",
     "gaxios": "^7.1.3",
-    "vscode-languageclient": "^10.1.2"
+    "vscode-languageclient": "^11.0.0"
   },
   "devDependencies": {
     "https-proxy-agent": "^7.0.6",
