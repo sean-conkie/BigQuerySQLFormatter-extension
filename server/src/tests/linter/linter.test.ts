@@ -54,7 +54,7 @@ describe('Linter', () => {
       version: 0,
     };
     const result = await linter.verify(source);
-    expect(result.length).to.be.equal(1);
+    expect(result.map((diagnostic) => diagnostic.code)).to.deep.equal(['AL02: column', 'LT02: indent']);
   });
 
   it('updates parser diagnostics when a block comment is opened and removed', async () => {

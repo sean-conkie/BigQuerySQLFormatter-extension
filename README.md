@@ -271,6 +271,9 @@ RF01-RF06, AL01, AL02, AL04, AL05, AL06, AL08, AL09, AM04, AM05, AM06 and AM07.
 Checks follow each stage's visible table aliases, output aliases and JOIN USING
 columns. RF01 remains disabled by default. Quick fixes, Fix All and formatting
 preserve pipe placement and line endings.
+LT02 also indents pipe JOIN bodies: ON/USING lines are two spaces under
+the stage, and wrapped predicates are another two spaces in. Other pipe stage
+bodies and stage placement are not yet formatted.
 
 `MATCH_RECOGNIZE`, `GRAPH_TABLE` and unmodelled pipe operators (such as pipe WITH)
 still skip structural checks in their own block and descendants; enclosing

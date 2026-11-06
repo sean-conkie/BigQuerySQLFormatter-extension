@@ -25,6 +25,41 @@ keywords (``BEGIN``, ``IF``, ``LOOP``, ``WHILE``, ``FOR``, ``EXCEPTION`` and
 supported. Separately parsed queries within a script can still be indented.
 Indentation fixes never remove the last whitespace separating two tokens.
 
+JOIN layout
+~~~~~~~~~~~
+
+A JOIN starting its own line is indented one level (two spaces) under its
+query's FROM. This applies to all JOIN types, multiple joins, CTEs and
+subqueries. An ON or USING line is another level in; wrapped predicates are
+one further level in. JOINs and conditions already on the same line stay
+inline. The existing SELECT/FROM alignment is unchanged.
+
+.. code-block:: sql
+
+    select f.a
+      from ds.foo f
+        inner join ds.bar b
+          on f.a = b.a
+            and f.c = b.c
+        left join ds.baz c
+          on f.a = c.a;
+
+Pipe JOIN stage bodies use the same two-space continuation levels, relative
+to the ``|>`` stage. LT02 does not yet place pipe stages on separate lines or
+indent other pipe stage bodies.
+
+.. code-block:: sql
+
+    from ds.foo f
+    |> inner join ds.bar b
+      on f.a = b.a
+        and f.c = b.c
+    |> select f.a;
+
+Implicit column aliases are aligned one space after the longest expression.
+Removing AS with AL02 does not introduce a second separator space, including
+after CASE simplification. Explicit aliases are retained when AL02 is disabled.
+
 Anti-pattern: Inconsistent Statement Indentation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

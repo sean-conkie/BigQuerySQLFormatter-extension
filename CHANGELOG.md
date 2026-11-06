@@ -1,12 +1,27 @@
 # Changelog
 
+## Unreleased
+
+### Notable changes
+
+- LT02 now re-indents existing JOIN lines two spaces under their FROM, with ON
+  lines two spaces further in and wrapped predicates another two spaces in.
+  Pipe JOIN stage bodies use the same continuation layout.
+
+### Fixed
+
+- Removing column alias `AS` with AL02 and LT02 leaves one space before the
+  alias, including after ST02 and ST04 CASE rewrites.
+- JOIN formatting converges with ST09, LT15 and LT90, including nested queries,
+  multiple joins and LF/CRLF/CR line endings.
+
 ## 0.8.0 - 2026-11-04
 
 ### Notable changes
 
 - The extension now works in Restricted Mode (untrusted workspaces): linting and
   formatting run as normal, and the BigQuery features stay disabled. Previously
-  VS Code disabled the whole extension there.
+  Visual Studio Code disabled the whole extension there.
 - New, optional BigQuery features can send your SQL (dry runs) or dataset, table
   and column lookups (completions) to Google BigQuery using your own Google
   credentials. Both are **off by default** and only run after you enable them, in

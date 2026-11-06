@@ -83,6 +83,7 @@ export function nestedQuerySlices(tokens: Token[]): { start: number; end: number
 }
 
 export const pipeQueryRules = new Set([
+  'LT02',
   'RF01',
   'RF02',
   'RF03',
