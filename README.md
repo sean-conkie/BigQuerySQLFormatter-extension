@@ -280,16 +280,16 @@ Disable stage placement with `"LT91": { "enabled": false }` in rule settings.
 
 Pipe layout rule coverage:
 
-| Rule | Pipe construct |
-| --- | --- |
-| LT03 | Wrapped operators in any stage |
-| LT04, LT09 | SELECT, EXTEND, AGGREGATE and aggregate GROUP BY lists (diagnostics only) |
-| LT06 | Function calls in any stage; fixes remove whitespace, not comments |
-| LT07, LT08 | CTEs containing pipe queries, including a main FROM query |
-| LT10 | Modifiers on the same line as pipe SELECT (diagnostics only) |
-| LT11 | LT91 owns pipe set-stage placement; traditional UNION operands are still checked |
-| LT15 | Multiline comparison alignment within each WHERE or JOIN ON stage |
-| LT90 | Parentheses around multiple JOIN ON conditions (disabled by default) |
+| Rule       | Pipe construct                                                                   |
+| ---------- | -------------------------------------------------------------------------------- |
+| LT03       | Wrapped operators in any stage                                                   |
+| LT04, LT09 | SELECT, EXTEND, AGGREGATE and aggregate GROUP BY lists (diagnostics only)        |
+| LT06       | Function calls in any stage; fixes remove whitespace, not comments               |
+| LT07, LT08 | CTEs containing pipe queries, including a main FROM query                        |
+| LT10       | Modifiers on the same line as pipe SELECT (diagnostics only)                     |
+| LT11       | LT91 owns pipe set-stage placement; traditional UNION operands are still checked |
+| LT15       | Multiline comparison alignment within each WHERE or JOIN ON stage                |
+| LT90       | Parentheses around multiple JOIN ON conditions (disabled by default)             |
 
 LT09 does not insert target line breaks; LT91 only moves stage boundaries.
 LT15 leaves groups with shared-line conditions unchanged.
