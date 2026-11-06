@@ -1,0 +1,71 @@
+===========================================
+Rule: Operators Before or After Line Breaks
+===========================================
+
+**Rule Code:** ``LT03``
+
+**Name:** ``operators`` (``layout.operators``)
+
+Overview
+--------
+
+Wrapped binary operators belong at the start of the next line by default.
+LT03 is enabled by default and checks arithmetic (``+ - * /``),
+concatenation (``||``), comparisons (``= != <> < > <= >=``), and boolean
+``AND`` / ``OR``, including WHERE, ON, HAVING, QUALIFY and pipe stages.
+Operators within a line are left unchanged.
+
+Anti-pattern
+------------
+
+.. code-block:: sql
+
+    select a +
+      b
+    from ds.t
+    where x = 1 and
+      y = 2;
+
+Best practice
+-------------
+
+.. code-block:: sql
+
+    select a
+      + b
+    from ds.t
+    where x = 1
+      and y = 2;
+
+Unary signs, wildcard stars (including ``COUNT(*)``), type angle brackets,
+strings, comments, quoted identifiers and the ``|>`` pipe operator are not
+treated as binary operators. LT91 handles pipe stage placement.
+An operator on a line of its own satisfies either position.
+
+Configuration and fixes
+-----------------------
+
+``line_position`` accepts ``leading`` (default) or ``trailing``. To retain
+operators at the end of the preceding line:
+
+.. code-block:: json
+
+    {
+      "bigquerySQLFormatter.rules": {
+        "LT03": { "options": { "line_position": "trailing" } }
+      }
+    }
+
+In ``.bqsqlformatter.json``, put the same LT03 object under ``rules``.
+Alternatively, disable the rule with ``"LT03": { "enabled": false }``.
+
+Quick Fix, Fix All and Format Document move operators without changing
+comments or LF, CRLF or CR line endings. LT02 handles indentation.
+Standard ``noqa`` directives, layout group settings and severity settings apply.
+Unsupported query blocks remain unchanged.
+
+Groups
+------
+
+- ``all``
+- ``layout``

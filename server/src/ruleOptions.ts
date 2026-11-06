@@ -86,7 +86,16 @@ export const joinParenthesesOptions = {
   },
 } as const satisfies OptionDefinitions;
 
+export const operatorLayoutOptions = {
+  line_position: {
+    type: 'string',
+    enum: ['leading', 'trailing'],
+    default: 'leading',
+  },
+} as const satisfies OptionDefinitions;
+
 export const ruleOptionSchemas: Readonly<Record<string, OptionDefinitions>> = {
+  LT03: operatorLayoutOptions,
   CP01: capitalisationOptions,
   CP02: capitalisationOptions,
   CP03: capitalisationOptions,

@@ -4,6 +4,12 @@
 
 ### Notable changes
 
+- New default-enabled LT03 (`layout.operators`) moves wrapped binary,
+  comparison and boolean operators to the start of the next line, including
+  pipe stages. Quick Fix, Fix All and formatting preserve comments and line
+  endings. Set `"LT03": { "options": { "line_position": "trailing" } }`
+  in rule settings to prefer trailing operators, or disable it with
+  `"LT03": { "enabled": false }`.
 - New default-enabled LT91 (`layout.pipe_stages`) puts every pipe stage on its
   own line, aligned with its input, including nested pipelines. Disable it with
   `"LT91": { "enabled": false }` in rule settings to retain stage placement.
