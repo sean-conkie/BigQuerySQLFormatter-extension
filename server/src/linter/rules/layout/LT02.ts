@@ -280,35 +280,14 @@ export class Indent extends ParserRule {
         for (let i = stage.start + 2; i < stage.end; i++) {
           const token = tokens[i];
           if (keyword(token, ')') || keyword(token, ']')) depth = Math.max(0, depth - 1);
-          const { line, character } = token.range.start;
-          const key = `${line}:${character}`;
-          if (!checked.has(key) && /^[ \t]*$/.test(document.get(line)!.value.slice(0, character))) {
-            let desired = aligned.get(token) ?? offset + 3 + depth * 2;
-            if (stage.kind === 'filter' && (keyword(token, 'AND') || keyword(token, 'OR')))
-              desired = offset + 9 - token.value.length - 1 + depth * 2;
-            this.checkIndentationError(line, character, desired, errors, cache, uri);
-            checked.add(key);
-          }
+          let desired = aligned.get(token) ?? offset + 3 + depth * 2;
+          if (stage.kind === 'filter' && (keyword(token, 'AND') || keyword(token, 'OR')))
+            desired = offset + 9 - token.value.length - 1 + depth * 2;
+          this.checkLineIndent(token, desired, document, errors, cache, uri, checked);
           if (keyword(token, '(') || keyword(token, '[')) {
             const close = closingBracket(tokens, i);
             if (['SELECT', 'WITH', 'FROM'].some((word) => keyword(tokens[i + 1], word))) {
-              const first = tokens[i + 1];
-              const position = first.range.start;
-              const nestedKey = `${position.line}:${position.character}`;
-              if (
-                !checked.has(nestedKey) &&
-                /^[ \t]*$/.test(document.get(position.line)!.value.slice(0, position.character))
-              ) {
-                this.checkIndentationError(
-                  position.line,
-                  position.character,
-                  offset + 3 + depth * 2,
-                  errors,
-                  cache,
-                  uri,
-                );
-                checked.add(nestedKey);
-              }
+              this.checkLineIndent(tokens[i + 1], offset + 3 + depth * 2, document, errors, cache, uri, checked);
               if (close < 0) break;
               i = close - 1;
             } else depth++;
@@ -380,13 +359,8 @@ export class Indent extends ParserRule {
       const clause = keyword(token, 'ON') || keyword(token, 'USING');
       if (clause) condition = true;
       if (keyword(token, ')') || keyword(token, ']')) depth = Math.max(0, depth - 1);
-      const { line, character } = token.range.start;
-      const key = `${line}:${character}`;
-      if (!checked.has(key) && /^[ \t]*$/.test(document.get(line)!.value.slice(0, character))) {
-        const desired = i === 0 ? offset : offset + (clause || !condition ? 2 : 4) + depth * 2;
-        this.checkIndentationError(line, character, desired, errors, cache, uri);
-        checked.add(key);
-      }
+      const desired = i === 0 ? offset : offset + (clause || !condition ? 2 : 4) + depth * 2;
+      this.checkLineIndent(token, desired, document, errors, cache, uri, checked);
       if (keyword(token, '(') || keyword(token, '[')) {
         const close = closingBracket(tokens, i);
         // Nested queries have their own FROM/JOIN offsets.
@@ -396,6 +370,22 @@ export class Indent extends ParserRule {
         } else depth++;
       }
     }
+  }
+
+  private checkLineIndent(
+    token: SourceToken,
+    desired: number,
+    document: DocumentCache,
+    errors: Diagnostic[],
+    cache: RangeCache,
+    uri: string | null,
+    checked: Set<string>,
+  ): void {
+    const { line, character } = token.range.start;
+    const key = `${line}:${character}`;
+    if (checked.has(key) || !/^[ \t]*$/.test(document.get(line)!.value.slice(0, character))) return;
+    this.checkIndentationError(line, character, desired, errors, cache, uri);
+    checked.add(key);
   }
 
   /**
