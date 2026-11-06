@@ -17,6 +17,33 @@ describe('IndentSelect', () => {
     expect(result).to.be.null;
   });
 
+  it('ignores an empty syntax tree when enabled', () => {
+    expect(instance.evaluate({ 0: new StatementAST() })).to.be.null;
+  });
+
+  it('evaluates legacy indentation without a document cache', async () => {
+    const ast = await new Parser().parse({
+      text: 'select a;',
+      uri: 'file:///indent-without-cache.sql',
+      languageId: 'googlesql',
+      version: 1,
+    });
+    expect(instance.evaluate(ast)).to.be.null;
+  });
+
+  it('stops at an unclosed nested query in a JOIN condition', async () => {
+    const uri = 'file:///indent-incomplete-join.sql';
+    const ast = await new Parser().parse({
+      text: 'select f.a\n  from ds.foo f\nleft join ds.bar b on exists (\nselect',
+      uri,
+      languageId: 'googlesql',
+      version: 1,
+    });
+    expect(instance.evaluate(ast, uri)).to.deep.equal([
+      instance.createDiagnostic({ start: { line: 2, character: 0 }, end: { line: 2, character: 0 } }, uri),
+    ]);
+  });
+
   it('reports exact ranges for SELECT, JOIN, ON and WHERE indentation', async () => {
     const uri = 'file:///indent-ranges.sql';
     const ast = await new Parser().parse({

@@ -166,7 +166,7 @@ suite('Language server diagnostics', () => {
     const directory = await mkdtemp(path.join(getDocPath(''), 'join-convergence-'));
     const uri = vscode.Uri.file(path.join(directory, 'query.bqsql'));
     const source = 'select f.a from ds.foo as f\njoin ds.bar as b on b.a = f.a and b.c < f.c;\n';
-    const expected = 'select f.a from ds.foo f\n inner join ds.bar b on f.a = b.a and f.c > b.c;\n';
+    const expected = 'select f.a from ds.foo f\n    inner join ds.bar b on f.a = b.a and f.c > b.c;\n';
     try {
       await writeFile(uri.fsPath, source);
       const ready = waitForDiagnostics(uri, (diagnostics) => diagnostics.length > 0);
@@ -356,7 +356,7 @@ suite('Language server diagnostics', () => {
       assert.ok(!second || second.length === 0);
       await settings.update('formatOnSave', true, vscode.ConfigurationTarget.Global, true);
       const joinSource = 'select f.a from ds.foo as f\njoin ds.bar as b on b.a = f.a and b.c < f.c;\n';
-      const joinExpected = 'select f.a from ds.foo f\n inner join ds.bar b on f.a = b.a and f.c > b.c;\n';
+      const joinExpected = 'select f.a from ds.foo f\n    inner join ds.bar b on f.a = b.a and f.c > b.c;\n';
       const formatInputReady = waitForDiagnostics(
         uri,
         (diagnostics) => hasRule(diagnostics, 'CP04'),
