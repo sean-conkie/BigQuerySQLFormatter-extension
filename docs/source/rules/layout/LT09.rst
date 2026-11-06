@@ -6,6 +6,15 @@ Rule: Select Targets Should Be on Separate Lines
 
 **Name:** ``select_targets``
 
+Pipe queries
+------------
+
+LT09 checks targets in ``|> SELECT``, ``|> EXTEND``, ``|> AGGREGATE``
+and aggregate ``GROUP BY`` lists. Function arguments and commas inside literals
+are not separate targets. This rule remains diagnostic-only: formatting and
+Fix All do not split targets. LT91 moves stage boundaries, while LT02 indents
+targets that are already on separate lines.
+
 Overview
 --------
 

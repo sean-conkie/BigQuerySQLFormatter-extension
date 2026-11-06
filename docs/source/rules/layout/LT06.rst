@@ -6,6 +6,16 @@ Rule: Function Names Must Be Immediately Followed by Parentheses
 
 **Name:** ``functions``
 
+Pipe queries
+------------
+
+Function calls are checked in every supported pipe stage, including nested
+calls and qualified user-defined functions. Quick Fix, Fix All and formatting
+remove whitespace between a function name and its opening parenthesis,
+preserving LF/CRLF/CR line endings. Comments between the name and parenthesis
+are left unchanged. Constructs such as ``IN (...)``, ``USING (...)`` and
+``PIVOT (...)`` are not function calls.
+
 Overview
 --------
 

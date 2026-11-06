@@ -19,3 +19,7 @@ CTEs are allowed. Ordinary subqueries and function brackets are not CTEs.
 
 Quick Fix, Fix All, and formatting move the closing bracket to a new line,
 using the indentation of the CTE definition and preserving comments.
+
+CTEs containing pipe queries are checked in the same way, including nested
+CTEs. LT91 places pipe stages on their own lines; LT07 only moves the CTE's
+closing bracket. Fixes preserve LF/CRLF/CR line endings.

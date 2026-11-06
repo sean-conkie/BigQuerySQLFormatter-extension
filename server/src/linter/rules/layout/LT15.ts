@@ -19,6 +19,9 @@ import { ParserRule } from '../base';
 import type { FileMap } from '../../parser';
 import { ComparisonAST, ComparisonGroupAST } from '../../parser/ast';
 import type { Token } from '../../parser/token';
+import { parseCondition, type JoinExpression } from '../../joins';
+import { keyword, type SourceToken } from '../source';
+import { topLevel } from '../../parser/pipe';
 
 type RangeCache = Map<string, number>;
 const documentCache: Map<DocumentUri, RangeCache> = new Map<DocumentUri, RangeCache>();
@@ -55,6 +58,20 @@ export class ComparisonOperators extends ParserRule {
     documentCache.delete(documentUri!);
     const errors: Diagnostic[] = [];
     for (const i in ast) {
+      if (ast[i].hasExtendedQuerySyntax) {
+        const tokens = ast[i].sourceTokens;
+        for (const stage of ast[i].pipeClauses) {
+          let start: number | undefined;
+          if (stage.kind === 'filter') start = stage.body;
+          if (stage.kind === 'source' && stage.condition.length) start = tokens.indexOf(stage.condition[0]);
+          if (start !== undefined && start < stage.end) {
+            errors.push(
+              ...this.processPipeGroup(parseCondition(tokens, start, stage.end).expression, tokens, documentUri),
+            );
+          }
+        }
+        if (ast[i].pipeClauses.length) continue;
+      }
       const where = ast[i].where;
 
       if (where instanceof ComparisonGroupAST && where.comparisons.length > 1) {
@@ -74,6 +91,46 @@ export class ComparisonOperators extends ParserRule {
     }
 
     return errors.length > 0 ? errors : null;
+  }
+
+  private processPipeGroup(group: JoinExpression, tokens: SourceToken[], uri: string | null): Diagnostic[] {
+    if (group.kind === 'group') return this.processPipeGroup(group.expression, tokens, uri);
+    if (group.kind !== 'boolean') return [];
+    const lines = group.children.map((child) => tokens[child.start].range.start.line);
+    if (new Set(lines).size !== lines.length) return [];
+    const errors = group.children.flatMap((child) =>
+      child.kind === 'predicate' ? [] : this.processPipeGroup(child, tokens, uri),
+    );
+    const comparisons = group.children.flatMap((child) =>
+      child.kind === 'predicate' && child.comparison && /^[=!<>]+$/.test(child.comparison.operator)
+        ? [child.comparison]
+        : [],
+    );
+    if (comparisons.length < 2) return errors;
+    if (
+      comparisons.some(
+        (comparison) =>
+          comparison.left.range.end.line !== tokens[comparison.operatorStart].range.start.line ||
+          topLevel(tokens, comparison.left.start, comparison.left.end).some((i) => keyword(tokens[i], 'SELECT')),
+      )
+    )
+      return errors;
+    const required = Math.max(...comparisons.map((comparison) => comparison.left.range.end.character)) + 2;
+    const cache = documentCache.get(uri!) ?? new Map<string, number>();
+    for (const comparison of comparisons) {
+      const operator = tokens[comparison.operatorStart];
+      const adjustment = comparison.operator.length > 1 || !comparison.operator.includes('=') ? 1 : 0;
+      const offset = required - operator.range.start.character - adjustment;
+      if (!offset) continue;
+      const [indentation, range] = this.createIndentErrorOutputs(offset, {
+        start: { ...operator.range.start },
+        end: { ...operator.range.start },
+      });
+      errors.push(this.createDiagnostic(range, uri));
+      cache.set(this.createCacheKey(range), indentation);
+    }
+    documentCache.set(uri!, cache);
+    return errors;
   }
 
   private processComparisonGroup(comparison: ComparisonGroupAST, documentUri: string | null = null): Diagnostic[] {

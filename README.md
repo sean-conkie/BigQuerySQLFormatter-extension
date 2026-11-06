@@ -268,7 +268,7 @@ CV12 settings and `noqa` suppressions to AM02. CV12 continues checking EXCEPT an
 
 Pipe queries (including FROM-only inputs) and `FOR SYSTEM_TIME AS OF` support
 RF01-RF06, AL01, AL02, AL04, AL05, AL06, AL08, AL09, AM04, AM05, AM06, AM07,
-LT02 and LT91.
+LT02-LT04, LT06-LT11, LT15, LT90 (opt-in) and LT91.
 Checks follow each stage's visible table aliases, output aliases and JOIN USING
 columns. RF01 remains disabled by default. Quick fixes, Fix All and formatting
 preserve line endings. LT91 (enabled by default) puts every `|>` on its own line,
@@ -278,11 +278,27 @@ clauses are three spaces under the stage. Pipe JOIN ON/USING lines use two
 spaces, with wrapped predicates another two spaces in.
 Disable stage placement with `"LT91": { "enabled": false }` in rule settings.
 
+Pipe layout rule coverage:
+
+| Rule | Pipe construct |
+| --- | --- |
+| LT03 | Wrapped operators in any stage |
+| LT04, LT09 | SELECT, EXTEND, AGGREGATE and aggregate GROUP BY lists (diagnostics only) |
+| LT06 | Function calls in any stage; fixes remove whitespace, not comments |
+| LT07, LT08 | CTEs containing pipe queries, including a main FROM query |
+| LT10 | Modifiers on the same line as pipe SELECT (diagnostics only) |
+| LT11 | LT91 owns pipe set-stage placement; traditional UNION operands are still checked |
+| LT15 | Multiline comparison alignment within each WHERE or JOIN ON stage |
+| LT90 | Parentheses around multiple JOIN ON conditions (disabled by default) |
+
+LT09 does not insert target line breaks; LT91 only moves stage boundaries.
+LT15 leaves groups with shared-line conditions unchanged.
+
 `MATCH_RECOGNIZE`, `GRAPH_TABLE` and unmodelled pipe operators (such as pipe WITH)
 still skip structural checks in their own block and descendants; enclosing
 queries and sibling blocks continue to be checked. CP01-CP05, CV01, CV02, CV04,
-CV05, CV13, LT01, LT12 and LT13 remain active throughout. Other layout and
-structure rules do not yet apply inside pipe queries.
+CV05, CV13, LT01, LT12 and LT13 remain active throughout. Structure rules do
+not yet apply inside pipe queries.
 
 ## Rule configuration
 

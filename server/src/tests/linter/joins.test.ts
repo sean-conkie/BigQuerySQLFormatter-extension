@@ -54,9 +54,14 @@ describe('JOIN condition model', () => {
     );
     expect(conditions[0].comparisons.map(({ right }) => right.safe)).to.deep.equal([false, false, false]);
   });
-  it('skips USING and pipe-stage joins', async () => {
+  it('skips USING and models pipe-stage joins', async () => {
     expect(await model('select * from a join b using(id);')).to.deep.equal([]);
-    expect(await model('from a |> join b on b.id=a.id;')).to.deep.equal([]);
+    const [condition] = await model('from a |> join b on b.id=a.id |> where a.id=1;');
+    expect(condition.scope.pipe?.operator).to.equal('JOIN');
+    expect(condition.comparisons).to.have.length(1);
+    expect(condition.comparisons[0].operator).to.equal('=');
+    expect(condition.comparisons[0].left.sources[0].alias).to.equal('b');
+    expect(condition.comparisons[0].right.sources[0].alias).to.equal('a');
   });
   for (const text of [
     'select a.id from a join b on',

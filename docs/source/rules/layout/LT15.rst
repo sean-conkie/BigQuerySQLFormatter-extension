@@ -14,6 +14,12 @@ In SQL queries, when multiple equality comparisons are used in `where` clauses o
 Explanation
 -----------
 
+Pipe ``WHERE`` and ``JOIN ... ON`` stages are checked independently, including
+parenthesised comparison groups. Alignment never crosses a stage boundary.
+Quick Fix, Fix All and formatting preserve comments and LF/CRLF/CR line
+endings, and work with LT03 operator placement and opt-in LT90 parentheses.
+Single comparisons and BETWEEN bounds are not alignment groups.
+
 LT15 aligns only comparison groups whose conditions start on different lines.
 If any two conditions in a group start on the same line, the whole group is
 left unchanged, including nested groups. This also applies to groups mixing

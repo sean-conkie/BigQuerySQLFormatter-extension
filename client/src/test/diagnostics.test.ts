@@ -140,12 +140,30 @@ suite('Language server diagnostics', () => {
     const uri = getDocUri('querySyntax.bqsql');
     const editor = await activate(uri);
     assert.equal(editor.document.languageId, 'googlesql');
-    const ready = waitForDiagnostics(uri, (diagnostics) => diagnostics.length > 0, 'query syntax provider readiness');
+    const expectedRanges = [new vscode.Range(7, 10, 7, 26), new vscode.Range(9, 24, 9, 44)];
+    const hasTargetWarnings = (diagnostics: readonly vscode.Diagnostic[]) =>
+      diagnostics.length === expectedRanges.length &&
+      diagnostics.every((diagnostic, index) => {
+        const code = diagnostic.code;
+        return (
+          (typeof code === 'object' ? code.value : code) === 'LT09: select_targets' &&
+          diagnostic.range.isEqual(expectedRanges[index])
+        );
+      });
+    const ready = waitForDiagnostics(
+      uri,
+      (diagnostics) =>
+        diagnostics.some((diagnostic) => {
+          const code = diagnostic.code;
+          return (typeof code === 'object' ? code.value : code) === 'LT13: start_of_file';
+        }),
+      'query syntax provider readiness',
+    );
     assert.equal(await editor.edit((edit) => edit.insert(new vscode.Position(0, 0), '\n')), true);
     await ready;
-    const clean = waitForDiagnostics(uri, (diagnostics) => diagnostics.length === 0, 'query syntax diagnostics');
+    const checked = waitForDiagnostics(uri, hasTargetWarnings, 'pipe target diagnostics');
     assert.equal(await editor.edit((edit) => edit.delete(new vscode.Range(0, 0, 1, 0))), true);
-    await clean;
+    await checked;
     const edits = await vscode.commands.executeCommand<vscode.TextEdit[] | undefined>(
       'vscode.executeFormatDocumentProvider',
       uri,
@@ -159,7 +177,7 @@ suite('Language server diagnostics', () => {
       vscode.CodeActionKind.SourceFixAll.value,
     );
     assert.ok(actions === undefined || actions.length === 0);
-    assert.deepEqual(vscode.languages.getDiagnostics(uri), []);
+    assert.ok(hasTargetWarnings(vscode.languages.getDiagnostics(uri)));
   });
 
   test('Formatting and Fix All lay out pipe stages and bodies idempotently', async () => {
