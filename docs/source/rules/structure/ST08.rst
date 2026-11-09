@@ -6,6 +6,13 @@ Rule: Do Not Use `DISTINCT` with Parentheses
 
 **Name:** ``distinct``
 
+Pipe queries
+------------
+
+The same DISTINCT-with-parentheses check applies to ``|> SELECT DISTINCT(a)``
+and qualified columns. This rule is diagnostic-only. A standalone
+``|> DISTINCT`` stage is valid and is not checked by this rule.
+
 Overview
 --------
 

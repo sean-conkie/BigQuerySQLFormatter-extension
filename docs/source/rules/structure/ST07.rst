@@ -6,6 +6,14 @@ Rule: Specify Join Keys Instead of Using `USING`
 
 **Name:** ``using``
 
+Pipe queries
+------------
+
+JOIN USING is checked in supported pipe stages, including joins to unqualified
+tables, quoted tables, derived queries and table-valued functions. This rule
+is diagnostic-only: rewriting USING as ON requires preserving output columns.
+JOIN ON and non-join stages are not applicable.
+
 Overview
 --------
 

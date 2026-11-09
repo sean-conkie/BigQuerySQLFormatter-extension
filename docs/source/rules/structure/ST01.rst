@@ -6,6 +6,13 @@ Rule: Do Not Specify Redundant `ELSE NULL` in a `CASE WHEN` Statement
 
 **Name:** ``else_null``
 
+Pipe queries
+------------
+
+CASE expressions are checked in every supported pipe stage, including SELECT,
+EXTEND, AGGREGATE and WHERE. Fixes preserve the document's line endings.
+When ST02 can simplify the whole CASE, its fix takes precedence.
+
 Overview
 --------
 

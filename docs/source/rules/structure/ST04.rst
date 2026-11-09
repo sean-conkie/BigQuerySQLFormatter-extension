@@ -28,3 +28,9 @@ Comments inside either CASE retain the diagnostic but prevent fixes.
 Quick fixes re-indent inner branches to the outer WHEN level without changing
 multiline literal contents or line endings. LT02 handles subsequent indentation;
 iterative Fix All and formatting flatten repeated nesting until stable.
+
+Pipe queries
+------------
+
+Nested CASE expressions are checked in every supported pipe stage. Flattening
+preserves aliases, comments, multiline literals and LF/CRLF/CR line endings.

@@ -31,4 +31,17 @@ Comments retain a diagnostic but prevent fixes.
 
 Unqualified columns, STRUCT fields, correlated references, USING, comma-join
 WHERE conditions and non-symmetric LIKE/IN/BETWEEN predicates are skipped.
-Pipe JOIN support remains separate.
+
+Pipe queries
+------------
+
+JOIN ON comparisons use each stage's local source order: pipe input sources
+come first, followed by earlier JOIN sources and the current JOIN source.
+The ``earlier``/``later`` option, whole-operand swaps and inequality mirroring
+work identically to traditional joins. Later stages never contribute sources.
+
+SELECT and AGGREGATE replace their input; CALL replaces its input relation.
+Old table aliases are no longer visible after these stages, so comparisons
+referencing them are skipped. ``|> AS q`` introduces a new input alias that can
+be ordered against subsequent joined sources. EXTEND retains input sources.
+Comments allow diagnostics but prevent fixes; fixes preserve LF/CRLF/CR.

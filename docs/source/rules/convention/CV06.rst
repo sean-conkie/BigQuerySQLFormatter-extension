@@ -20,3 +20,10 @@ and comments do not terminate statements. Comment-only files need no semicolon.
 Quick Fix, Fix All, and formatting insert missing terminators, move detached
 ones without deleting comments, and add a trailing newline while preserving
 the document's line-ending style.
+
+Pipe queries
+------------
+
+Pipe statements follow the same terminator policy. The semicolon belongs to
+the end of the whole pipeline, not to each stage. FROM-only inputs are checked
+too; strings and comments containing fake stage separators remain untouched.

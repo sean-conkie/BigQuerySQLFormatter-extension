@@ -268,7 +268,8 @@ CV12 settings and `noqa` suppressions to AM02. CV12 continues checking EXCEPT an
 
 Pipe queries (including FROM-only inputs) and `FOR SYSTEM_TIME AS OF` support
 RF01-RF06, AL01, AL02, AL04, AL05, AL06, AL08, AL09, AM04, AM05, AM06, AM07,
-LT02-LT04, LT06-LT11, LT15, LT90 (opt-in) and LT91.
+LT02-LT04, LT06-LT11, LT15, LT90 (opt-in), LT91, ST01, ST02, ST04, ST07-ST09,
+CV03, CV06, CV08 and CV12.
 Checks follow each stage's visible table aliases, output aliases and JOIN USING
 columns. RF01 remains disabled by default. Quick fixes, Fix All and formatting
 preserve line endings. LT91 (enabled by default) puts every `|>` on its own line,
@@ -294,11 +295,26 @@ Pipe layout rule coverage:
 LT09 does not insert target line breaks; LT91 only moves stage boundaries.
 LT15 leaves groups with shared-line conditions unchanged.
 
+Pipe structure and convention rule coverage:
+
+- ST01, ST02, ST04: CASE expressions in any stage.
+- ST07: JOIN USING, including derived sources (diagnostics only).
+- ST08: SELECT DISTINCT with parentheses (diagnostics only).
+- ST09: JOIN ON operands ordered by input sources and earlier joined stages.
+- CV03: trailing commas in SELECT, EXTEND and AGGREGATE projection lists.
+- CV06: attached statement semicolons and a trailing newline.
+- CV08: RIGHT [OUTER] JOIN (diagnostics only; changing the keyword changes results).
+- CV12: INTERSECT/EXCEPT require DISTINCT; UNION policy belongs to AM02.
+
+ST09 follows each JOIN stage's visible sources, including an alias introduced by
+`|> AS`. Projection and CALL stages reset the original source aliases. Fixes
+swap entire operands and mirror inequalities; comments prevent operand fixes.
+CV08 never rewrites pipe RIGHT joins automatically.
+
 `MATCH_RECOGNIZE`, `GRAPH_TABLE` and unmodelled pipe operators (such as pipe WITH)
 still skip structural checks in their own block and descendants; enclosing
 queries and sibling blocks continue to be checked. CP01-CP05, CV01, CV02, CV04,
-CV05, CV13, LT01, LT12 and LT13 remain active throughout. Structure rules do
-not yet apply inside pipe queries.
+CV05, CV13, ST03, LT01, LT12 and LT13 remain active throughout.
 
 ## Rule configuration
 

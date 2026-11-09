@@ -27,3 +27,9 @@ Comments inside CASE allow a diagnostic but prevent fixes.
 
 Quick fixes, Fix All and formatting preserve aliases and line endings.
 CP01/CP03 apply the configured keyword/function case during iterative formatting.
+
+Pipe queries
+------------
+
+Searched CASE expressions are checked in every supported pipe stage, with the
+same safety checks, comment protection and idempotent fixes as traditional SQL.
