@@ -67,11 +67,10 @@ describe('LT90 JOIN condition parentheses', () => {
       (await check('select a.id from a join b on a.id=b.id and a.x=b.x or a.y=b.y;', 'mixed')).diagnostics,
     ).to.have.length(1);
   });
-  it('skips USING, WHERE and pipe-stage JOIN', async () => {
+  it('skips USING and WHERE', async () => {
     for (const text of [
       'select a.id from a join b using(id) where a.x=b.x and a.y=b.y;',
       'select a.id from a, b where a.id=b.id and a.x=b.x;',
-      'from a |> join b on a.id=b.id and a.x=b.x;',
     ])
       expect((await check(text)).diagnostics).to.deep.equal([]);
   });

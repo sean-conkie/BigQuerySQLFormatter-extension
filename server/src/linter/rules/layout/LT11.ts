@@ -9,6 +9,9 @@
 import type { ServerSettings } from '../../../settings';
 import type { Diagnostic } from 'vscode-languageserver/node';
 import { RegexRule } from '../base';
+import { pipeLayouts } from './pipe';
+import { tokenizeSource } from '../source';
+import { rangesOverlap } from '../../parser/queryBlocks';
 
 /**
  * The UnionCheck rule
@@ -27,6 +30,23 @@ export class UnionCheck extends RegexRule {
   readonly relatedInformation: string =
     'The `UNION` operator should be placed on a separate line, surrounded by newlines before and after.';
   readonly ruleGroup: string = 'layout';
+
+  evaluate(text: string, documentUri: string | null = null): Diagnostic[] | null {
+    const tokens = tokenizeSource(text);
+    // Pipe set operators belong to their |> stage; LT91 owns stage placement.
+    const stages = pipeLayouts(tokens).flatMap(({ stages }) =>
+      stages
+        .filter((stage) => stage.kind === 'set')
+        .map((stage) => ({
+          start: tokens[stage.start + 2].range.start,
+          end: tokens[stage.body].range.end,
+        })),
+    );
+    const diagnostics = super
+      .evaluate(text, documentUri)
+      ?.filter(({ range }) => !stages.some((stage) => rangesOverlap(range, stage)));
+    return diagnostics?.length ? diagnostics : null;
+  }
 
   matches(test: string): number {
     let noOfMatches: number = 0;

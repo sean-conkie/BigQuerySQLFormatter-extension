@@ -6,6 +6,15 @@ Rule: UNION Operators Should Be Surrounded by Newlines
 
 **Name:** ``union_checks``
 
+Pipe queries
+------------
+
+LT11 is explicitly not applicable to pipe ``UNION``, ``INTERSECT`` and
+``EXCEPT`` stage operators: LT91 owns their stage boundaries. For example,
+``|> UNION ALL (FROM other)`` is a single stage and does not require line breaks
+around ``UNION ALL``. Traditional ``UNION`` queries inside parenthesised
+operands are still checked. LT11 remains diagnostic-only.
+
 Overview
 --------
 

@@ -3,6 +3,7 @@ import type { Diagnostic } from 'vscode-languageserver/node';
 import { ParserRule } from '../base';
 import type { FileMap } from '../../parser';
 import { ColumnAST } from '../../parser/ast';
+import { pipeProjectionLists } from './pipe';
 
 /**
  * The SelectTargets rule
@@ -34,6 +35,18 @@ export class SelectTargets extends ParserRule {
 
     const errors: Diagnostic[] = [];
     for (const i in ast) {
+      for (const items of pipeProjectionLists(ast[i])) {
+        for (let j = 0; j < items.length - 1; j++) {
+          const current = items[j].tokens;
+          const next = items[j + 1].tokens;
+          if (current[0].range.start.line === next[0].range.start.line) {
+            errors.push(
+              this.createDiagnostic({ start: current[0].range.start, end: next.at(-1)!.range.end }, documentUri),
+            );
+          }
+        }
+      }
+      if (ast[i].pipeClauses.length) continue;
       const columns = ast[i].columns;
       if (!columns) {
         continue;

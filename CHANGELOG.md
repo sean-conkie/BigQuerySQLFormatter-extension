@@ -4,6 +4,13 @@
 
 ### Notable changes
 
+- Remaining layout rules now support pipe queries: LT04/LT09 check projection
+  and aggregate grouping lists; LT06 fixes function spacing in every stage;
+  LT07/LT08 check pipe CTEs; LT10 checks SELECT modifiers; LT15 aligns multiline
+  WHERE/JOIN comparisons; opt-in LT90 wraps JOIN conditions. LT11 explicitly
+  leaves pipe set-stage placement to LT91 while checking traditional UNION
+  operands. Diagnostic-only rules remain diagnostic-only. Fixes preserve
+  comments and LF/CRLF/CR line endings and converge with LT03, LT02 and LT91.
 - New default-enabled LT03 (`layout.operators`) moves wrapped binary,
   comparison and boolean operators to the start of the next line, including
   pipe stages. Quick Fix, Fix All and formatting preserve comments and line

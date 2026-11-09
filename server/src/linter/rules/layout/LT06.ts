@@ -10,6 +10,13 @@ import {
 import { ParserRule } from '../base';
 import type { FileMap } from '../../parser';
 import { ColumnFunctionAST, ComparisonAST, ComparisonGroupAST } from '../../parser/ast';
+import { globalTokenCache } from '../../parser/tokenCache';
+import { keyword } from '../source';
+import functions from '../../../completions/functions.json';
+import keywords from '../../keywords.json';
+
+const builtins = new Set(functions.map(({ name }) => name.toUpperCase()));
+const syntaxWords = new Set([...keywords.reserved, ...keywords.nonReserved]);
 
 /**
  * The Functions rule
@@ -43,6 +50,26 @@ export class Functions extends ParserRule {
 
     const errors: Diagnostic[] = [];
     for (const i in ast) {
+      if (ast[i].hasExtendedQuerySyntax) {
+        const tokens = ast[i].sourceTokens;
+        const cache = documentUri === null ? undefined : globalTokenCache.get(documentUri);
+        for (let j = 0; j < tokens.length - 1; j++) {
+          const token = tokens[j];
+          if (
+            token.literal ||
+            !/^[a-z_][\w$]*$/i.test(token.value) ||
+            !keyword(tokens[j + 1], '(') ||
+            (!builtins.has(token.value.toUpperCase()) &&
+              !keyword(tokens[j - 1], '.') &&
+              syntaxWords.has(token.value.toLowerCase())) ||
+            ['AS', 'USING', 'IN', 'OVER'].some((word) => keyword(token, word))
+          )
+            continue;
+          const range = { start: token.range.end, end: tokens[j + 1].range.start };
+          if (/^\s+$/.test(cache?.getText(range) ?? '')) errors.push(this.createDiagnostic(range, documentUri));
+        }
+        continue;
+      }
       // check the columns for functions
       if (ast[i].columns) {
         ast[i].columns.forEach((column) => {
