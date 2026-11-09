@@ -112,6 +112,16 @@ export const pipeQueryRules = new Set([
   'AM05',
   'AM06',
   'AM07',
+  'ST01',
+  'ST02',
+  'ST04',
+  'ST07',
+  'ST08',
+  'ST09',
+  'CV03',
+  'CV06',
+  'CV08',
+  'CV12',
 ]);
 
 export function queryBlocks(ast: FileMap, supportsPipe = false): StatementAST[] {

@@ -6,6 +6,15 @@ Rule: Select Statements Should Not Include a Trailing Comma
 
 **Name:** ``select_trailing_comma``
 
+Pipe queries
+------------
+
+Trailing commas in SELECT, EXTEND and AGGREGATE projection lists are checked
+before the next stage, GROUP BY, WINDOW or the statement end. Commas inside
+functions, STRUCTs and subqueries are not projection-list separators.
+Quick Fix, Fix All and formatting remove only the comma, preserving comments
+and LF/CRLF/CR line endings.
+
 Overview
 --------
 

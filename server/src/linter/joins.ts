@@ -159,6 +159,7 @@ export function joinConditions(
   for (const scope of resolver.scopes) {
     if (scope.kind !== 'query' || (scope.pipe && scope.pipe.kind !== 'source')) continue;
     for (const source of scope.sources) {
+      if (scope.pipe && source !== scope.pipe.relation) continue;
       if (!keyword(tokens[source.start - 1], 'JOIN') || !keyword(tokens[source.end], 'ON')) continue;
       const start = source.end + 1;
       let end = start;

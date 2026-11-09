@@ -26,6 +26,7 @@ async function assertFormattingAndFixAll(
   source: string,
   expected: string,
   hasIssues: (diagnostics: readonly vscode.Diagnostic[]) => boolean,
+  isFixed: (diagnostics: readonly vscode.Diagnostic[]) => boolean = (diagnostics) => diagnostics.length === 0,
 ): Promise<void> {
   await writeFile(uri.fsPath, source);
   const ready = waitForDiagnostics(uri, hasIssues);
@@ -37,7 +38,7 @@ async function assertFormattingAndFixAll(
   });
   const formatted = new vscode.WorkspaceEdit();
   formatted.set(uri, edits);
-  const clean = waitForDiagnostics(uri, (diagnostics) => diagnostics.length === 0);
+  const clean = waitForDiagnostics(uri, isFixed);
   assert.equal(await vscode.workspace.applyEdit(formatted), true);
   await clean;
   assert.equal(editor.document.getText(), expected);
@@ -53,7 +54,7 @@ async function assertFormattingAndFixAll(
     true,
   );
   await reset;
-  const fixed = waitForDiagnostics(uri, (diagnostics) => diagnostics.length === 0);
+  const fixed = waitForDiagnostics(uri, isFixed);
   await applyFixAll(editor.document);
   await fixed;
   assert.equal(editor.document.getText(), expected);
@@ -286,7 +287,39 @@ suite('Language server diagnostics', () => {
         return /^(AL02|AM05):/.test(String(typeof code === 'object' ? code.value : code));
       });
     try {
-      await assertFormattingAndFixAll(uri, source, expected, hasPipeIssues);
+      await assertFormattingAndFixAll(
+        uri,
+        source,
+        expected,
+        hasPipeIssues,
+        (diagnostics) =>
+          diagnostics.length === 1 &&
+          diagnostics.every((diagnostic) => {
+            const code = diagnostic.code;
+            return String(typeof code === 'object' ? code.value : code) === 'ST07: using';
+          }),
+      );
+    } finally {
+      await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
+  test('Fixes pipe CASE, join ordering, projection commas and terminators through LSP providers', async () => {
+    const directory = await mkdtemp(path.join(getDocPath(''), 'pipe-structure-'));
+    const uri = vscode.Uri.file(path.join(directory, 'query.bqsql'));
+    const source =
+      'from dataset.sales s\n|> join dataset.other o on o.id <= s.id\n|> select case when s.amount is not null then s.amount else null end as value,';
+    const expected = 'from dataset.sales s\n|> inner join dataset.other o on s.id >= o.id\n|> select s.amount value;\n';
+    const hasIssues = (diagnostics: readonly vscode.Diagnostic[]) =>
+      ['ST02', 'ST09', 'CV03', 'CV06'].every((rule) =>
+        diagnostics.some((diagnostic) => {
+          const code = diagnostic.code;
+          return String(typeof code === 'object' ? code.value : code).startsWith(`${rule}:`);
+        }),
+      );
+    try {
+      await assertFormattingAndFixAll(uri, source, expected, hasIssues);
     } finally {
       await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
       await rm(directory, { recursive: true, force: true });

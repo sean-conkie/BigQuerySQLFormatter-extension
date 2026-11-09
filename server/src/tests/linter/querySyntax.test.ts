@@ -434,6 +434,7 @@ SELECT DISTINCT t.id FROM dataset.sales t GROUP BY t.id;\n`;
               },
               RF02: { 36: 1 },
               RF04: { 18: 1 },
+              ST07: { 12: 1, 13: 1, 14: 1, 36: 1 },
             };
             expect(diagnostics, `${code} corpus[${index}]: ${text}`).to.have.length(counts[code]?.[index] ?? 0);
           } else {

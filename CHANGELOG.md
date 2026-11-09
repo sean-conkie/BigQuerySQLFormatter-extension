@@ -4,6 +4,13 @@
 
 ### Notable changes
 
+- Structure and convention rules ST01, ST02, ST04, ST07-ST09, CV03, CV06,
+  CV08 and CV12 now support pipe queries. ST09 orders JOIN ON operands using
+  stage-local input and earlier joined sources, mirroring inequalities.
+  CV03 removes trailing projection commas from SELECT, EXTEND and AGGREGATE.
+  Pipe RIGHT [OUTER] JOIN is diagnostic-only: a keyword replacement would
+  change query results. CASE, comma, join-order and terminator fixes preserve
+  comments and LF/CRLF/CR line endings and converge with default formatting.
 - Remaining layout rules now support pipe queries: LT04/LT09 check projection
   and aggregate grouping lists; LT06 fixes function spacing in every stage;
   LT07/LT08 check pipe CTEs; LT10 checks SELECT modifiers; LT15 aligns multiline

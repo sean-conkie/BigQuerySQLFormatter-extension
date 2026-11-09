@@ -16,3 +16,11 @@ GoogleSQL requires an explicit ``DISTINCT`` modifier for EXCEPT and INTERSECT.
 
 Since 0.4.0, UNION modifiers are checked by :doc:`../ambiguous/AM02`.
 Move UNION-specific CV12 configuration and suppressions to AM02.
+
+Pipe queries
+------------
+
+INTERSECT and EXCEPT stages require DISTINCT, including when comments appear
+between the operator and modifier. Missing modifiers or ALL are diagnosed
+without an automatic fix. SELECT ``* EXCEPT (...)`` is not a set operator.
+UNION stages are not applicable to CV12; their modifier policy belongs to AM02.

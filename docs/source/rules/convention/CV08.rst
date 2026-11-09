@@ -6,6 +6,15 @@ Rule: Use ``left join`` Instead of ``right join``
 
 **Name:** ``left_join``
 
+Pipe queries
+------------
+
+``|> RIGHT JOIN`` and ``|> RIGHT OUTER JOIN`` are checked, including modifiers
+separated by comments. These pipe diagnostics have no automatic fix:
+replacing RIGHT with LEFT without exchanging the input and joined relation
+changes which rows are preserved. Rewrite the pipeline manually if appropriate.
+Quick Fix, Fix All and formatting leave pipe RIGHT joins unchanged.
+
 Overview
 --------
 
