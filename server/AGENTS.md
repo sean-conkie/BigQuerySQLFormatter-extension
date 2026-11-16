@@ -30,8 +30,9 @@ Follow the root [AGENTS.md](../AGENTS.md) first. Component map and invariants:
   forms: `-- noqa`, `-- noqa: ST01, LT02`, and the region directives
   `-- noqa: disable=CODE` / `-- noqa: enable=CODE` (including `all`).
 - Rules run on pipe syntax only via `pipeQueryRules`
-  (`src/linter/parser/queryBlocks.ts`) and inside unsupported blocks only via
-  `extendedQuerySafeRules` (`src/linter/linter.ts`); add either only with
+  (`src/linter/parser/queryBlocks.ts`), on modelled MATCH_RECOGNIZE/GRAPH_TABLE
+  blocks via `specialQueryRules` in the same module, and inside unsupported blocks only via
+  `extendedQuerySafeRules` (`src/linter/linter.ts`); extend these lists only with
   corpus tests.
 - Regenerate `functions.json`, `keywords.json` and grammar function scopes with
   `npm run generate:completions` / `npm run generate:keywords`; don't hand-edit.

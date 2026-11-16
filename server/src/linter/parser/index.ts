@@ -18,6 +18,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { sourceTokens } from '../rules/source';
 import { pipeClauses, unsupportedQuery } from './pipe';
 import { QueryScopeResolver } from '../scope';
+import { specialSources } from './specialSources';
 import {
   comparePositions,
   containsExtendedSyntax,
@@ -162,6 +163,7 @@ export class Parser {
             comparePositions(part.range.start, range.start) >= 0 && comparePositions(part.range.end, range.end) <= 0,
         );
         const resolver = new QueryScopeResolver(block.sourceTokens);
+        block.specialSources = specialSources(block.sourceTokens);
         block.pipeClauses = pipeClauses(block.sourceTokens).map(
           (stage) => resolver.scopes.find((scope) => scope.pipe?.start === stage.start && !scope.parent)?.pipe ?? stage,
         );

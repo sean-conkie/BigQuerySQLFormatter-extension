@@ -217,7 +217,7 @@ describe('Query scope resolver', () => {
 
   for (const sql of [
     'SELECT * FROM t MATCH_RECOGNIZE (PATTERN (a))',
-    'SELECT * FROM GRAPH_TABLE(g MATCH (n) COLUMNS(n.id))',
+    'SELECT * FROM GRAPH_TABLE(g MATCH (n))',
     'FROM t |> WITH c AS (SELECT 1)',
   ]) {
     it(`reports unsupported query syntax: ${sql}`, () => {

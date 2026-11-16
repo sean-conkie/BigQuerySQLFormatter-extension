@@ -1,6 +1,7 @@
 import { closingBracket, keyword, type SourceToken } from '../rules/source';
 import type { QuerySource } from '../scope';
 import keywords from '../keywords.json';
+import { specialSource } from './specialSources';
 
 const reserved = new Set(keywords.reserved);
 
@@ -241,7 +242,10 @@ export function unsupportedQuery(
 ): boolean {
   return (
     topLevel(tokens, start, end).some(
-      (i) => ['MATCH_RECOGNIZE', 'GRAPH_TABLE'].some((word) => keyword(tokens[i], word)) && keyword(tokens[i + 1], '('),
+      (i) =>
+        ['MATCH_RECOGNIZE', 'GRAPH_TABLE'].some((word) => keyword(tokens[i], word)) &&
+        keyword(tokens[i + 1], '(') &&
+        !specialSource(tokens, i, end),
     ) || pipeClauses(tokens, start, end, allowIncomplete).some((stage) => stage.kind === 'unsupported')
   );
 }

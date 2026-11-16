@@ -31,6 +31,8 @@ Outer-scope correlated references, wildcards, UNNEST value tables, and reference
 whose column name could be confused with the source's row value are unchanged.
 Select aliases in GROUP BY, HAVING, QUALIFY and ORDER BY are excluded.
 Statements with unsupported extended query syntax are skipped.
+MATCH_RECOGNIZE and GRAPH_TABLE output references are checked, but qualification
+inside their MEASURES/DEFINE/COLUMNS expressions is left unchanged.
 
 Configuration
 -------------

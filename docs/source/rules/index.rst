@@ -14,11 +14,18 @@ Sources, output aliases and USING columns are resolved at each stage. Rules
 without an equivalent construct do not apply: for example, AL01 does not remove
 the mandatory AS in ``|> AS``, and AM04 does not flag multiplication or COUNT(*).
 
-``MATCH_RECOGNIZE``, ``GRAPH_TABLE`` and unmodelled operators such as pipe WITH
-remain skipped in their own block and descendants. Enclosing traditional
-queries and sibling blocks remain checked. CP01-CP05, CV01, CV02, CV04, CV05,
-CV13, LT01, LT12 and LT13 remain safe throughout; other layout and structure
-rules are not yet enabled inside pipe queries.
+``MATCH_RECOGNIZE`` and ``GRAPH_TABLE`` support all aliasing, ambiguous and
+reference rules. Pattern variables are valid qualifiers in MEASURES/DEFINE;
+graph variables are valid in COLUMNS. The enclosing query sees the declared
+output columns, not those internal variables. Graph names keep their exact
+case, and the graph pattern (including WHERE) remains opaque. AL02/AL09 leave
+specialist output aliases unchanged, and RF03 leaves internal qualification
+unchanged. Other layout and structure rules remain deferred for these constructs.
+
+Malformed specialist clauses and unmodelled operators such as pipe WITH remain
+skipped in their own block and descendants. Enclosing traditional queries and
+sibling blocks remain checked. CP01-CP05, CV01, CV02, CV04, CV05, CV13, LT01,
+LT12 and LT13 remain safe throughout.
 ST03 is an exception: unused CTE detection uses lexical visibility throughout
 extended queries without changing their text.
 

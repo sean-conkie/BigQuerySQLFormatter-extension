@@ -124,23 +124,49 @@ export const pipeQueryRules = new Set([
   'CV12',
 ]);
 
-export function queryBlocks(ast: FileMap, supportsPipe = false): StatementAST[] {
+export const specialQueryRules = new Set([
+  'AL01',
+  'AL02',
+  'AL04',
+  'AL05',
+  'AL06',
+  'AL08',
+  'AL09',
+  'AM01',
+  'AM02',
+  'AM04',
+  'AM05',
+  'AM06',
+  'AM07',
+  'RF01',
+  'RF02',
+  'RF03',
+  'RF04',
+  'RF05',
+  'RF06',
+]);
+
+export function unsupportedBlock(statement: StatementAST, supportsPipe: boolean, supportsSpecial = false): boolean {
+  return (
+    statement.hasUnsupportedQuerySyntax ||
+    (!supportsSpecial && statement.specialSources.length > 0) ||
+    (!supportsPipe &&
+      statement.hasExtendedQuerySyntax &&
+      !(supportsSpecial && statement.specialSources.length > 0 && !statement.pipeClauses.length))
+  );
+}
+
+export function queryBlocks(ast: FileMap, supportsPipe = false, supportsSpecial = false): StatementAST[] {
   const visit = (statement: StatementAST): StatementAST[] => [
     statement,
-    ...((supportsPipe ? statement.hasUnsupportedQuerySyntax : statement.hasExtendedQuerySyntax)
-      ? []
-      : statement.queryBlocks.flatMap(visit)),
+    ...(unsupportedBlock(statement, supportsPipe, supportsSpecial) ? [] : statement.queryBlocks.flatMap(visit)),
   ];
   return Object.values(ast).flatMap(visit);
 }
 
-export function extendedQueryRanges(ast: FileMap, supportsPipe = false): Range[] {
-  return queryBlocks(ast, supportsPipe).flatMap((statement) => {
-    if (
-      !(supportsPipe ? statement.hasUnsupportedQuerySyntax : statement.hasExtendedQuerySyntax) ||
-      !statement.tokens.length
-    )
-      return [];
+export function extendedQueryRanges(ast: FileMap, supportsPipe = false, supportsSpecial = false): Range[] {
+  return queryBlocks(ast, supportsPipe, supportsSpecial).flatMap((statement) => {
+    if (!unsupportedBlock(statement, supportsPipe, supportsSpecial) || !statement.tokens.length) return [];
     return [tokenRange(statement.tokens)];
   });
 }

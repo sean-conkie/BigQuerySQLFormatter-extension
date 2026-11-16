@@ -25,7 +25,7 @@ export class Consistent extends SourceFixRule {
     const references = columnReferences(tokens, cache, resolver);
     const diagnostics: Diagnostic[] = [];
     for (const scope of resolver.scopes) {
-      if (scope.kind !== 'query' || scope.sources.length !== 1) continue;
+      if (scope.kind !== 'query' || scope.special || scope.sources.length !== 1) continue;
       const source = scope.sources[0];
       if (!source.alias || source.kind === 'unnest') continue;
       const alias = source.alias;

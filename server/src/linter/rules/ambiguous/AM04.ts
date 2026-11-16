@@ -31,7 +31,9 @@ export class ColumnCount extends RegexRule {
           token.range.start.line === diagnostic.range.start.line &&
           token.range.start.character === diagnostic.range.start.character,
       );
-      const stage = resolver.scopeAt(index)?.pipe;
+      const scope = resolver.scopeAt(index);
+      if (scope?.special) return false;
+      const stage = scope?.pipe;
       if (!stage) return true;
       // Multiplication and COUNT(*) are not output wildcards. Operators without
       // an output list have no SELECT-star equivalent.

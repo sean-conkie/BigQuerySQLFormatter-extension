@@ -73,8 +73,9 @@ Changes must preserve these; most have dedicated tests.
   never edit inside a skipped query block.
 - **Extended syntax.** Rules run on pipe syntax and `FOR SYSTEM_TIME AS OF` only
   if listed in `pipeQueryRules` (`server/src/linter/parser/queryBlocks.ts`), and
-  inside unsupported blocks (`MATCH_RECOGNIZE`, `GRAPH_TABLE`) only if listed in
-  `extendedQuerySafeRules` (`server/src/linter/linter.ts`). Add a rule to either
+  on modelled `MATCH_RECOGNIZE`/`GRAPH_TABLE` blocks only through `specialQueryRules`
+  in the same parser module. Unsupported blocks admit only
+  `extendedQuerySafeRules` (`server/src/linter/linter.ts`). Add a rule to an
   list only with corpus tests. See
   [Extended query coverage](../CONTRIBUTING.md#extended-query-coverage).
 - **Rule codes.** Use SQLFluff-compatible codes and names; codes 90-99 in each
