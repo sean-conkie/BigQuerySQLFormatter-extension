@@ -5,6 +5,7 @@ Follow the root [AGENTS.md](../AGENTS.md) first. Component map and invariants:
 
 ## Scope
 
+<!-- prettier-ignore -->
 | Path | Owns |
 | --- | --- |
 | `src/server.ts` | LSP handlers: document sync, configuration, code actions, formatting, completion, hover |
@@ -17,7 +18,7 @@ Follow the root [AGENTS.md](../AGENTS.md) first. Component map and invariants:
 
 ## Rules
 
-- No VS Code APIs, network access, credentials or SQL execution in the server.
+- No Visual Studio Code APIs, network access, credentials or SQL execution in the server.
 - Preserve SQL meaning, comments, string literals, quoted identifiers and
   BigQuery syntax. Never re-case dataset, table or user-defined function names.
 - Rules must not match inside strings, comments or quoted identifiers; use the
@@ -31,9 +32,9 @@ Follow the root [AGENTS.md](../AGENTS.md) first. Component map and invariants:
   `-- noqa: disable=CODE` / `-- noqa: enable=CODE` (including `all`).
 - Rules run on pipe syntax only via `pipeQueryRules`
   (`src/linter/parser/queryBlocks.ts`), on modelled MATCH_RECOGNIZE/GRAPH_TABLE
-  blocks via `specialQueryRules` in the same module, and inside unsupported blocks only via
-  `extendedQuerySafeRules` (`src/linter/linter.ts`); extend these lists only with
-  corpus tests.
+  blocks via `specialQueryRules` in the same module, and inside unsupported blocks
+  only via `extendedQuerySafeRules` (`src/linter/linter.ts`); extend these lists
+  only with corpus tests.
 - Regenerate `functions.json`, `keywords.json` and grammar function scopes with
   `npm run generate:completions` / `npm run generate:keywords`; don't hand-edit.
 - New rules follow [Adding a rule](../CONTRIBUTING.md#adding-a-rule): SQLFluff
