@@ -2,7 +2,8 @@ import type { Diagnostic } from 'vscode-languageserver/node';
 import type { DocumentCache } from '../../parser/tokenCache';
 import { readCtes } from '../queries';
 import { closingBracket, keyword, SourceRule, type SourceToken } from '../source';
-import { pipeClauses, topLevel, type PipeItem } from '../../parser/pipe';
+import { pipeClauses, pipeItems, topLevel, type PipeItem } from '../../parser/pipe';
+import { specialSources } from '../../parser/specialSources';
 
 export class SetColumns extends SourceRule {
   readonly is_fix_compatible = false;
@@ -107,6 +108,15 @@ export class SetColumns extends SourceRule {
     };
 
     const projectionCount = (start: number, end: number, ctes: Counts): number | null => {
+      const specialWidth = (from: number, qualifier?: string): number | null => {
+        const indices = topLevel(tokens, from + 1, end);
+        if (indices.some((i) => keyword(tokens[i], 'JOIN') || keyword(tokens[i], ','))) return null;
+        const models = specialSources(tokens, from + 1, end);
+        if (models.length !== 1) return null;
+        const model = models[0];
+        if (qualifier && model.alias?.value.replace(/^`|`$/g, '').toLowerCase() !== qualifier) return null;
+        return model.kind === 'graph-table' ? model.columns.length : model.partitionBy.length + model.measures.length;
+      };
       if (keyword(tokens[start], 'FROM')) {
         if (topLevel(tokens, start + 1, end).some((i) => keyword(tokens[i], 'JOIN') || keyword(tokens[i], ',')))
           return null;
@@ -114,7 +124,7 @@ export class SetColumns extends SourceRule {
           const close = closingBracket(tokens, start + 1);
           return close < 0 ? null : analyze(start + 2, close, ctes);
         }
-        return ctes.get(tokens[start + 1]?.value.toLowerCase()) ?? null;
+        return specialWidth(start) ?? ctes.get(tokens[start + 1]?.value.toLowerCase()) ?? null;
       }
       if (keyword(tokens[start], '(')) {
         const close = closingBracket(tokens, start);
@@ -187,6 +197,21 @@ export class SetColumns extends SourceRule {
         }
         // A single CTE source has a statically known schema; external schemas do not.
         if (from < 0) return null;
+        const qualifier =
+          star > 0
+            ? entry
+                .slice(0, star - 1)
+                .map((token) => token.value.replace(/^`|`$/g, ''))
+                .join('')
+                .toLowerCase()
+            : undefined;
+        const modelWidth = specialWidth(from, qualifier);
+        if (modelWidth !== null) {
+          const except = entry.findIndex((token) => keyword(token, 'EXCEPT'));
+          const removed = except < 0 ? 0 : pipeItems(entry, except + 2, closingBracket(entry, except + 1)).length;
+          count += modelWidth - removed;
+          continue;
+        }
         const sourceName = tokens[from + 1]?.value.toLowerCase();
         if (!sourceName) return null;
         const j = from + 2;

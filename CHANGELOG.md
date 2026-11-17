@@ -4,6 +4,12 @@
 
 ### Notable changes
 
+- Aliasing, ambiguous and reference rules now support `MATCH_RECOGNIZE` and
+  `GRAPH_TABLE` queries. Pattern variables resolve inside MEASURES/DEFINE,
+  graph variables resolve inside COLUMNS, and result columns come from the
+  declared outputs. Graph names retain their exact case. Graph patterns stay
+  opaque, mandatory specialist aliases are preserved, and other layout and
+  structure rules remain deferred for these constructs.
 - Structure and convention rules ST01, ST02, ST04, ST07-ST09, CV03, CV06,
   CV08 and CV12 now support pipe queries. ST09 orders JOIN ON operands using
   stage-local input and earlier joined sources, mirroring inequalities.

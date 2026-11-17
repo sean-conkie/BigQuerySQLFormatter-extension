@@ -125,16 +125,30 @@ from ds.orders o
 
 Set `"LT91": { "enabled": false }` to retain existing stage placement.
 
-MATCH_RECOGNIZE, GRAPH_TABLE and unmodelled pipe operators (including pipe WITH)
-still skip their own query block and its descendants, not enclosing traditional
+`StatementAST.specialSources` models MATCH_RECOGNIZE clauses (partition/order
+items, measures, skip policy, pattern, definitions and output alias) and
+GRAPH_TABLE sources (case-sensitive graph path, opaque pattern, variables,
+COLUMNS expressions and output alias). MATCH_RECOGNIZE has a separate input scope:
+pattern variables resolve in MEASURES/DEFINE, while the enclosing query sees
+only the partition/measure outputs and optional output alias. GRAPH_TABLE
+variables resolve inside COLUMNS; its pattern, including WHERE, remains opaque.
+AM07 uses these declared output widths, including through CTEs and pipe sets.
+
+AL01, AL02, AL04-AL06, AL08, AL09, AM01, AM02, AM04-AM07 and RF01-RF06
+opt in through `specialQueryRules`. Mandatory specialist AS syntax is not
+rewritten by AL02/AL09, and RF03 does not change pattern/graph expression
+qualification. Other layout/structure rules remain gated for specialist blocks.
+
+Malformed specialist constructs and unmodelled pipe operators (including pipe
+WITH) still skip their own query block and descendants, not enclosing traditional
 queries or sibling CTEs/subqueries. `hasExtendedQuerySyntax` identifies the current
-block's extended syntax; `hasUnsupportedQuerySyntax` distinguishes syntax still
-unsupported by the phase 2 rules. A scope statement reports `unsupported` if any
-of its blocks is unsupported, but supported sibling/enclosing scopes remain available.
+block's extended syntax; `hasUnsupportedQuerySyntax` distinguishes unmodelled or
+incomplete constructs. A scope statement reports `unsupported` if any of its
+blocks is unsupported, but supported sibling/enclosing scopes remain available.
 
 CP01-CP05, CV01, CV02, CV04, CV05, CV13, LT01, LT12 and LT13 remain safe even
 inside unsupported blocks through `extendedQuerySafeRules`. Add rules to either
-allow-list only with corpus tests for exact diagnostics, safe quick fixes,
+allow-list (or `specialQueryRules`) only with corpus tests for exact diagnostics, safe quick fixes,
 Fix All and idempotent formatting. Non-opted-in fixes cannot cross protected
 query ranges, including nested blocks.
 

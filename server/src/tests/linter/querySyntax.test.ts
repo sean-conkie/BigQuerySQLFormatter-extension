@@ -157,6 +157,29 @@ describe('Recent query syntax', () => {
             'LT01',
             'LT12',
             'LT13',
+            ...(body.includes('MATCH_RECOGNIZE') || body.includes('GRAPH_TABLE')
+              ? [
+                  'AL01',
+                  'AL02',
+                  'AL04',
+                  'AL05',
+                  'AL06',
+                  'AL08',
+                  'AL09',
+                  'AM01',
+                  'AM02',
+                  'AM04',
+                  'AM05',
+                  'AM06',
+                  'AM07',
+                  'RF01',
+                  'RF02',
+                  'RF03',
+                  'RF04',
+                  'RF05',
+                  'RF06',
+                ]
+              : []),
           ]);
           for (const diagnostic of diagnostics.filter((diagnostic) => !safe.has(code(diagnostic)))) {
             expect(
@@ -413,14 +436,10 @@ SELECT DISTINCT t.id FROM dataset.sales t GROUP BY t.id;\n`;
               AL06: Object.fromEntries(
                 corpus.map((_, i) => [
                   i,
-                  [24, 25, 30, 31, 32].includes(i)
-                    ? 0
-                    : [12, 13, 14, 15, 16, 20, 21, 22, 27, 28, 36].includes(i)
-                      ? 2
-                      : 1,
+                  [24, 25].includes(i) ? 0 : [12, 13, 14, 15, 16, 20, 21, 22, 27, 28, 30, 36].includes(i) ? 2 : 1,
                 ]),
               ),
-              AM04: { 9: 1 },
+              AM04: { 9: 1, 30: 1, 31: 1, 32: 1 },
               AM05: { 12: 1 },
               LT02: { 29: 1, 36: 2 },
               LT91: {

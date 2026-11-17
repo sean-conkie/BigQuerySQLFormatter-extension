@@ -392,7 +392,7 @@ describe('Pipe query models and rules', () => {
     for (const body of [
       'FROM input AS t |> WITH c AS (SELECT a AS x FROM nested AS n) |> SELECT t.*',
       'FROM input AS t |> FUTURE_OPERATOR a |> SELECT t.*',
-      'SELECT * FROM GRAPH_TABLE(g MATCH (n) COLUMNS(n.id))',
+      'SELECT * FROM GRAPH_TABLE(g MATCH (n))',
       'FROM input MATCH_RECOGNIZE (PATTERN (a))',
     ]) {
       const text = `WITH unsupported AS (${body}) SELECT a AS x FROM input AS t;`;

@@ -10,6 +10,8 @@ import {
 import { ParserRule } from '../base';
 import type { FileMap } from '../../parser';
 import { globalTokenCache } from '../../parser/tokenCache';
+import { topLevel } from '../../parser/pipe';
+import { keyword } from '../source';
 
 export class Distinct extends ParserRule {
   readonly name: string = 'column';
@@ -35,6 +37,16 @@ export class Distinct extends ParserRule {
     }
     const errors: Diagnostic[] = [];
     for (const i in ast) {
+      const block = ast[i];
+      if (block.specialSources.length) {
+        const tokens = block.sourceTokens;
+        const indices = topLevel(tokens, 0, tokens.length);
+        const select = indices.find((index) => keyword(tokens[index], 'SELECT'));
+        const group = indices.find((index) => keyword(tokens[index], 'GROUP') && keyword(tokens[index + 1], 'BY'));
+        if (select !== undefined && group !== undefined && keyword(tokens[select + 1], 'DISTINCT'))
+          errors.push(this.createDiagnostic(tokens[select + 1].range, documentUri));
+        continue;
+      }
       if (ast[i].distinct === true && ast[i].groupby.length > 0) {
         // find the distinct
         const distinctToken = ast[i].tokens.find((token) => token.scopes.includes('keyword.select.distinct.sql'));

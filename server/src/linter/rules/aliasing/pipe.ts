@@ -38,7 +38,7 @@ export function pipeAliasingDiagnostics(rule: ParserRule, ast: FileMap, uri: str
   if (uri === null) return [];
   const cache = globalTokenCache.get(uri)!;
   const ranges: Range[] = [];
-  for (const block of queryBlocks(ast, true)) {
+  for (const block of queryBlocks(ast, true, true)) {
     if (!block.hasExtendedQuerySyntax || block.hasUnsupportedQuerySyntax) continue;
     const tokens = block.sourceTokens;
     const resolver = new QueryScopeResolver(tokens);
@@ -55,7 +55,7 @@ export function pipeAliasingDiagnostics(rule: ParserRule, ast: FileMap, uri: str
             ...(scope.pipe?.kind === 'source' && scope.pipe.relation ? [scope.pipe.relation] : []),
           ])
           .filter((source) => source.kind !== 'pipe' && local(source.range))
-          .map((source) => [source.start, source]),
+          .map((source) => [`${source.start}:${source.end}`, source]),
       ).values(),
     ];
     if (rule.code === 'AL01') {
@@ -84,6 +84,7 @@ export function pipeAliasingDiagnostics(rule: ParserRule, ast: FileMap, uri: str
           .filter(
             (reference) =>
               reference.parts.length === 1 &&
+              !reference.scope.special &&
               !reference.wildcard &&
               reference.scope.sources.some((source) => source.aliasToken) &&
               !reference.scope.usingColumns.some(
@@ -97,10 +98,23 @@ export function pipeAliasingDiagnostics(rule: ParserRule, ast: FileMap, uri: str
       for (const scope of resolver.scopes) {
         const stage = scope.pipe;
         let items: PipeItem[];
-        if (stage?.kind === 'projection') items = [...stage.groupBy, ...stage.items];
-        else if (!stage && keyword(tokens[scope.start], 'SELECT')) {
-          const end = topLevel(tokens, scope.start + 1, scope.end).find((i) => keyword(tokens[i], 'FROM')) ?? scope.end;
-          items = pipeItems(tokens, scope.start + 1, end);
+        if (scope.special) {
+          // MATCH_RECOGNIZE requires AS in MEASURES/DEFINE; keep specialist
+          // output syntax intact rather than applying SELECT alias rewrites.
+          if (rule.code !== 'AL08') continue;
+          items =
+            scope.special.kind === 'graph-table'
+              ? scope.special.columns
+              : [...scope.special.partitionBy, ...scope.special.measures];
+        } else if (stage?.kind === 'projection') items = [...stage.groupBy, ...stage.items];
+        else if (!stage) {
+          const indices = topLevel(tokens, scope.start, scope.end);
+          const select = indices.find((i) => keyword(tokens[i], 'SELECT'));
+          if (select === undefined) continue;
+          let start = select + 1;
+          if (keyword(tokens[start], 'DISTINCT') || keyword(tokens[start], 'ALL')) start++;
+          const end = indices.find((i) => i > select && keyword(tokens[i], 'FROM')) ?? scope.end;
+          items = pipeItems(tokens, start, end);
         } else continue;
         items = items.filter((item) => local(rangeOf(item.tokens)));
         if (rule.code === 'AL08') {

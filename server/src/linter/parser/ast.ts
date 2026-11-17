@@ -7,6 +7,7 @@ import type { PipeClause } from './pipe';
 import type { SourceToken } from '../rules/source';
 import type { QuerySource } from '../scope';
 import { keyword } from '../rules/source';
+import type { SpecialTable } from './specialSources';
 
 // region base types
 
@@ -891,6 +892,7 @@ export class StatementAST extends AST {
   // These queries retain their source tokens instead of using the SELECT-only clause model.
   hasExtendedQuerySyntax: boolean = false;
   hasUnsupportedQuerySyntax: boolean = false;
+  specialSources: SpecialTable[] = [];
   pipeClauses: PipeClause[] = [];
   pipeInput: QuerySource[] = [];
   sourceTokens: SourceToken[] = [];

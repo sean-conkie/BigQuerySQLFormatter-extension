@@ -21,6 +21,10 @@ export function identifiers(tokens: SourceToken[], cache: DocumentCache): Identi
   const aliases = new Map<string, Identifier['role']>();
   const positions = new Map(tokens.map((token, index) => [identifierKey(token), index]));
   for (const scope of resolver.scopes) {
+    if (scope.special) {
+      const items = scope.special.kind === 'graph-table' ? scope.special.columns : scope.special.measures;
+      for (const item of items) if (item.alias) aliases.set(identifierKey(item.alias), 'column_alias');
+    }
     if (scope.pipe?.kind === 'alias' && scope.pipe.alias) aliases.set(identifierKey(scope.pipe.alias), 'table_alias');
     if (scope.pipe?.kind === 'relation') {
       if (scope.pipe.alias) aliases.set(identifierKey(scope.pipe.alias), 'table_alias');
@@ -89,10 +93,13 @@ export function identifiers(tokens: SourceToken[], cache: DocumentCache): Identi
                   !keyword(tokens[index + 1], '(')),
             ),
         );
-      const pipeColumn = resolver.scopeAt(index)?.pipe && !syntaxWords.has(token.value.toLowerCase());
+      const modelledColumn =
+        (resolver.scopeAt(index)?.pipe || resolver.scopeAt(index)?.special) &&
+        !syntaxWords.has(token.value.toLowerCase()) &&
+        !keyword(tokens[index + 1], '(');
       const scope = resolver.scopeAt(index);
       const qualifiedColumn = scope && keyword(tokens[index + 1], '.') && resolver.resolveSource(scope, token.value);
-      if (!quoted && !highlighted && !pipeColumn && !qualifiedColumn) continue;
+      if (!quoted && !highlighted && !modelledColumn && !qualifiedColumn) continue;
     }
     result.push({
       token,

@@ -9,7 +9,14 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import type { FileMap } from '../parser';
 import { type DocumentCache, globalTokenCache } from '../parser/tokenCache';
 import { ParserRule } from './base';
-import { comparePositions, pipeQueryRules, queryBlocks, queryRange } from '../parser/queryBlocks';
+import {
+  comparePositions,
+  pipeQueryRules,
+  queryBlocks,
+  queryRange,
+  specialQueryRules,
+  unsupportedBlock,
+} from '../parser/queryBlocks';
 
 export interface SourceToken {
   value: string;
@@ -75,9 +82,9 @@ export abstract class SourceRule extends ParserRule {
     const cache = globalTokenCache.get(documentUri)!;
     const tokens = sourceTokens(cache);
     const supportsPipe = pipeQueryRules.has(this.code);
-    const unsupported = (block: FileMap[number]) =>
-      supportsPipe ? block.hasUnsupportedQuerySyntax : block.hasExtendedQuerySyntax;
-    if (!this.queryScoped || !queryBlocks(ast, supportsPipe).some(unsupported)) {
+    const supportsSpecial = specialQueryRules.has(this.code);
+    const unsupported = (block: FileMap[number]) => unsupportedBlock(block, supportsPipe, supportsSpecial);
+    if (!this.queryScoped || !queryBlocks(ast, supportsPipe, supportsSpecial).some(unsupported)) {
       const diagnostics = this.evaluateSource(tokens, cache, documentUri);
       return diagnostics.length ? diagnostics : null;
     }
@@ -86,7 +93,7 @@ export abstract class SourceRule extends ParserRule {
     for (const block of Object.values(ast)) {
       if (!unsupported(block) && block.tokens.length) {
         const range = queryRange(block);
-        const hidden = queryBlocks({ 0: block }, supportsPipe).filter(unsupported).map(queryRange);
+        const hidden = queryBlocks({ 0: block }, supportsPipe, supportsSpecial).filter(unsupported).map(queryRange);
         const visible: SourceToken[] = [];
         for (const token of tokens) {
           if (comparePositions(token.range.start, range.start) < 0 || comparePositions(token.range.end, range.end) > 0)

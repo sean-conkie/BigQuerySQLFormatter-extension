@@ -44,6 +44,19 @@ export function columnReferences(
       continue;
     const scope = resolver.scopeAt(index);
     if (!scope) continue;
+    if (scope.special) {
+      const special = scope.special;
+      const expressions =
+        special.kind === 'graph-table'
+          ? special.columns.map((item) => item.expression)
+          : [
+              ...special.partitionBy.map((item) => item.expression),
+              ...special.orderBy.map((item) => item.expression),
+              ...special.measures.map((item) => item.expression),
+              ...special.definitions.map((item) => item.condition),
+            ];
+      if (!expressions.some((expression) => expression.includes(first))) continue;
+    }
     // UNPIVOT takes unqualified input column names and declares output names;
     // neither is an expression to which a table qualifier can be added.
     if (scope.pipe?.kind === 'relation' && scope.pipe.operator === 'UNPIVOT') continue;

@@ -16,6 +16,7 @@ import { readCtes, type CommonTableExpression } from './rules/queries';
 import { closingBracket, keyword, type SourceToken } from './rules/source';
 import keywords from './keywords.json';
 import { pipeClauses, unsupportedQuery, type PipeClause } from './parser/pipe';
+import { specialSource, type SpecialTable } from './parser/specialSources';
 
 export const identifierKey = (token: Pick<SourceToken, 'range'>) =>
   `${token.range.start.line}:${token.range.start.character}`;
@@ -29,7 +30,7 @@ export interface CteDefinition extends CommonTableExpression {
 }
 
 export interface QuerySource {
-  kind: 'table' | 'cte' | 'subquery' | 'unnest' | 'tvf' | 'dml-target' | 'pipe';
+  kind: 'table' | 'cte' | 'subquery' | 'unnest' | 'tvf' | 'dml-target' | 'pipe' | 'match-recognize' | 'graph-table';
   path: string[];
   alias?: string;
   explicitAlias: boolean;
@@ -39,6 +40,8 @@ export interface QuerySource {
   end: number;
   range: Range;
   cte?: CteDefinition;
+  special?: SpecialTable;
+  outputColumns?: SourceToken[];
 }
 
 export interface QueryClause {
@@ -61,6 +64,8 @@ export interface QueryScope {
   clauses: QueryClause[];
   pipe?: PipeClause;
   visibleAliases?: SourceToken[];
+  special?: SpecialTable;
+  qualifiers?: SourceToken[];
 }
 
 export interface ScopeStatement {
@@ -78,7 +83,7 @@ export type ReferenceClassification =
 const clauseBoundary =
   /^(WHERE|GROUP|HAVING|QUALIFY|WINDOW|ORDER|LIMIT|UNION|EXCEPT|INTERSECT|SET|VALUES|WHEN|RETURNING)$/i;
 const aliasBoundary =
-  /^(AS|ON|USING|WITH|JOIN|INNER|LEFT|RIGHT|FULL|CROSS|OUTER|NATURAL|FOR|TABLESAMPLE|PIVOT|UNPIVOT|FROM|SELECT|BY|ASC|DESC|NULLS|END)$/i;
+  /^(AS|ON|USING|WITH|JOIN|INNER|LEFT|RIGHT|FULL|CROSS|OUTER|NATURAL|FOR|TABLESAMPLE|PIVOT|UNPIVOT|MATCH_RECOGNIZE|FROM|SELECT|BY|ASC|DESC|NULLS|END)$/i;
 const reservedKeywords = new Set(keywords.reserved);
 const canBeAlias = (token: SourceToken | undefined): token is SourceToken =>
   isIdentifier(token) &&
@@ -197,12 +202,17 @@ export class QueryScopeResolver {
       current;
       current = current.cteBody ? current.parent?.parent : current.parent
     ) {
-      const source = current.sources.find(
-        (candidate) =>
-          (candidate.alias !== undefined && normalize(candidate.alias) === normalize(name)) ||
-          (candidate.offsetAlias !== undefined && normalize(candidate.offsetAlias) === normalize(name)),
-      );
+      const source =
+        current.special?.kind === 'graph-table'
+          ? undefined
+          : current.sources.find(
+              (candidate) =>
+                (candidate.alias !== undefined && normalize(candidate.alias) === normalize(name)) ||
+                (candidate.offsetAlias !== undefined && normalize(candidate.offsetAlias) === normalize(name)),
+            );
       if (source) return { source, correlated: current !== scope };
+      if (current.qualifiers?.some((token) => normalize(token.value) === normalize(name)) && current.sources[0])
+        return { source: current.sources[0], correlated: current !== scope };
     }
     return undefined;
   }
@@ -222,6 +232,22 @@ export class QueryScopeResolver {
     const excluded = new Set<string>();
     const ctes = new Map<string, SourceToken>();
     const tables = new Map<string, { token: SourceToken; first: boolean; dashed: boolean }>();
+    for (const scope of this.scopes) {
+      const special = scope.special;
+      if (!special) continue;
+      const expressions =
+        special.kind === 'graph-table'
+          ? special.columns
+          : [...special.partitionBy, ...special.orderBy, ...special.measures];
+      const visible = new Set(
+        [
+          ...expressions.flatMap((item) => item.expression),
+          ...(special.kind === 'match-recognize' ? special.definitions.flatMap((item) => item.condition) : []),
+        ].map(identifierKey),
+      );
+      for (let i = special.start; i <= special.close; i++)
+        if (!visible.has(identifierKey(source[i]))) excluded.add(identifierKey(source[i]));
+    }
     // Identifier casing remains safe for extended queries even though their
     // source scopes are unsupported. Keep lexical CTE visibility available.
     for (const environment of this.cteEnvironments) {
@@ -241,6 +267,14 @@ export class QueryScopeResolver {
     let tableDefinition = false;
     for (let i = 0; i < source.length; i++) {
       const token = source[i];
+      // Protect graph object paths even while an incomplete graph is being edited.
+      if (keyword(token, 'GRAPH_TABLE') && keyword(source[i + 1], '(')) {
+        for (let j = i + 2; j < source.length; j++) {
+          if (!isIdentifier(source[j]) && !keyword(source[j], '.') && !keyword(source[j], '-')) break;
+          if (keyword(source[j], 'MATCH')) break;
+          excluded.add(identifierKey(source[j]));
+        }
+      }
       if (keyword(token, 'SELECT') || keyword(token, ';')) tableDefinition = false;
       if (keyword(token, 'TABLE')) tableDefinition = true;
       if (keyword(token, '(')) contexts.push({ from: false, extract: keyword(source[i - 1], 'EXTRACT') });
@@ -437,6 +471,18 @@ export class QueryScopeResolver {
         if (source) {
           // DELETE FROM's target is also its FROM source.
           if (!scope.sources.some((existing) => existing.start === source.start)) scope.sources.push(source);
+          if (source.special) {
+            this.readNested(source.start, source.special.start, scope, statement);
+            const inner = this.scopeAt(source.special.start + 2);
+            if (source.special.kind === 'graph-table') {
+              for (const item of source.special.columns) {
+                const start = tokens.indexOf(item.expression[0]);
+                if (start >= 0) this.readNested(start, start + item.expression.length, inner, statement);
+              }
+            } else this.readNested(source.special.start + 2, source.special.close, inner, statement);
+            i = source.end - 1;
+            continue;
+          }
         }
       }
       if (keyword(token, '(') || keyword(token, '[')) {
@@ -568,6 +614,23 @@ export class QueryScopeResolver {
     let cursor = start;
     let kind: QuerySource['kind'] = target ? 'dml-target' : 'table';
     const path: string[] = [];
+    const graph = specialSource(tokens, start, end);
+    if (graph?.kind === 'graph-table') {
+      const source: QuerySource = {
+        kind: 'graph-table',
+        path: [],
+        alias: graph.alias ? unquote(graph.alias.value) : undefined,
+        aliasToken: graph.alias,
+        explicitAlias: !!graph.as,
+        start,
+        end: graph.end,
+        range: { start: tokens[start].range.start, end: tokens[graph.end - 1].range.end },
+        special: graph,
+        outputColumns: graph.outputColumns,
+      };
+      this.readSpecialScope(graph, scope, source);
+      return source;
+    }
     if (keyword(tokens[cursor], '(')) {
       const close = closingBracket(tokens, cursor);
       if (close < 0 || close >= end) return undefined;
@@ -639,7 +702,7 @@ export class QueryScopeResolver {
       kind === 'table' && path.length === 1
         ? this.visibleCtes(scope, start).find((definition) => normalize(definition.name) === normalize(path[0]))
         : undefined;
-    return {
+    const source: QuerySource = {
       kind: cte ? 'cte' : kind,
       path,
       alias,
@@ -651,6 +714,42 @@ export class QueryScopeResolver {
       range: { start: tokens[start].range.start, end: tokens[cursor - 1].range.end },
       cte,
     };
+    const match = specialSource(tokens, cursor, end);
+    if (match?.kind === 'match-recognize') {
+      this.readSpecialScope(match, scope, source);
+      return {
+        kind: 'match-recognize',
+        path: [],
+        alias: match.alias ? unquote(match.alias.value) : undefined,
+        aliasToken: match.alias,
+        explicitAlias: !!match.as,
+        start,
+        end: match.end,
+        range: { start: tokens[start].range.start, end: tokens[match.end - 1].range.end },
+        special: match,
+        outputColumns: match.outputColumns,
+      };
+    }
+    return source;
+  }
+
+  private readSpecialScope(special: SpecialTable, parent: QueryScope, input: QuerySource): void {
+    const scope: QueryScope = {
+      kind: 'query',
+      cteBody: false,
+      start: special.start + 2,
+      end: special.close,
+      parent: parent.parent,
+      sources: [input],
+      ctes: [],
+      selectAliases: [],
+      usingColumns: [],
+      clauses: [],
+      special,
+      qualifiers: special.kind === 'graph-table' ? special.variables : special.definitions.map((item) => item.variable),
+    };
+    this.scopes.push(scope);
+    this.statements.at(-1)!.scopes.push(scope);
   }
 
   private readSelectAliases(scope: QueryScope, start: number, end: number): void {

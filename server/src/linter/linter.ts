@@ -26,6 +26,8 @@ import {
   pipeQueryRules,
   queryBlocks,
   rangesOverlap,
+  specialQueryRules,
+  unsupportedBlock,
 } from './parser/queryBlocks';
 
 interface Directive extends Range {
@@ -68,8 +70,7 @@ export class Linter {
   parserRules: Rule<string | FileMap>[] = [];
   problems: number = 0;
   private readonly parser = new Parser();
-  private readonly skippedRanges = new Map<string, Range[]>();
-  private readonly unsupportedRanges = new Map<string, Range[]>();
+  private readonly skippedRanges = new Map<string, Map<string, Range[]>>();
 
   constructor(settings: ServerSettings) {
     this.settings = settings;
@@ -126,10 +127,8 @@ export class Linter {
     const diagnostics: Diagnostic[] = [];
     const cache = globalTokenCache.get(uri)!;
     const text = cache.getText();
-    const skippedRanges = extendedQueryRanges(ast);
+    const skippedRanges = new Map<string, Range[]>();
     this.skippedRanges.set(uri, skippedRanges);
-    const unsupportedRanges = extendedQueryRanges(ast, true);
-    this.unsupportedRanges.set(uri, unsupportedRanges);
     const traditionalAst = Object.fromEntries(
       queryBlocks(ast)
         .filter((statement) => !statement.hasExtendedQuerySyntax)
@@ -139,13 +138,17 @@ export class Linter {
       await yieldToEventLoop(token);
       if (!this.isRuleEnabled(rule)) continue;
       const supportsPipe = pipeQueryRules.has(rule.code);
-      const ruleAst = supportsPipe
-        ? Object.fromEntries(
-            queryBlocks(ast, true)
-              .filter((block) => !block.hasUnsupportedQuerySyntax)
-              .map((block, index) => [index, block]),
-          )
-        : traditionalAst;
+      const supportsSpecial = specialQueryRules.has(rule.code);
+      const protectedRanges = extendedQueryRanges(ast, supportsPipe, supportsSpecial);
+      skippedRanges.set(rule.code, protectedRanges);
+      const ruleAst =
+        supportsPipe || supportsSpecial
+          ? Object.fromEntries(
+              queryBlocks(ast, supportsPipe, supportsSpecial)
+                .filter((block) => !unsupportedBlock(block, supportsPipe, supportsSpecial))
+                .map((block, index) => [index, block]),
+            )
+          : traditionalAst;
       const result = rule.evaluate(
         rule.type === RuleType.PARSER ? (rule instanceof SourceRule ? ast : ruleAst) : text,
         uri,
@@ -179,9 +182,7 @@ export class Linter {
               }
               if (rule.type !== RuleType.PARSER && !cache.isCodeRange(diagnostic.range)) return false;
               if (extendedQuerySafeRules.has(rule.code)) return true;
-              return !(supportsPipe ? unsupportedRanges : skippedRanges).some((range) =>
-                rangesOverlap(diagnostic.range, range),
-              );
+              return !protectedRanges.some((range) => rangesOverlap(diagnostic.range, range));
             })
             .map((diagnostic) => ({
               ...diagnostic,
@@ -200,7 +201,6 @@ export class Linter {
 
   closeDocument(uri: string): void {
     this.skippedRanges.delete(uri);
-    this.unsupportedRanges.delete(uri);
     for (const rule of [...this.parserRules, ...this.regexRules]) {
       rule.closeDocument(uri);
     }
@@ -322,8 +322,7 @@ export class Linter {
 
     const safeActions = codeActions.filter((action) => {
       const code = String(action.diagnostics?.[0]?.code).split(':', 1)[0];
-      const protectedRanges =
-        (pipeQueryRules.has(code) ? this.unsupportedRanges : this.skippedRanges).get(params.textDocument.uri) ?? [];
+      const protectedRanges = this.skippedRanges.get(params.textDocument.uri)?.get(code) ?? [];
       return (
         extendedQuerySafeRules.has(code) ||
         !(action.edit?.changes?.[params.textDocument.uri] ?? []).some((edit) =>
