@@ -8,7 +8,8 @@ Pipe and temporal query support
 -------------------------------
 
 Pipe queries and ``FOR SYSTEM_TIME AS OF`` support RF01-RF06, AL01, AL02, AL04,
-AL05, AL06, AL08, AL09, AM04, AM05, AM06, AM07, LT02 and LT91. RF01 remains opt-in.
+AL05, AL06, AL08, AL09, AM04-AM07, LT02-LT04, LT06-LT11, LT15, LT90, LT91, ST01,
+ST02, ST04, ST07-ST09, CV03, CV06, CV08 and CV12. RF01 and LT90 remain opt-in.
 LT91 starts each pipe stage on a new line; LT02 indents its body.
 Sources, output aliases and USING columns are resolved at each stage. Rules
 without an equivalent construct do not apply: for example, AL01 does not remove

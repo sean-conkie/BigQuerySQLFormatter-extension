@@ -311,8 +311,11 @@ ST09 follows each JOIN stage's visible sources, including an alias introduced by
 swap entire operands and mirror inequalities; comments prevent operand fixes.
 CV08 never rewrites pipe RIGHT joins automatically.
 
-`MATCH_RECOGNIZE`, `GRAPH_TABLE` and unmodelled pipe operators (such as pipe WITH)
-still skip structural checks in their own block and descendants; enclosing
+`MATCH_RECOGNIZE` and `GRAPH_TABLE` support all aliasing (AL), ambiguous (AM) and
+references (RF) rules: pattern variables resolve in MEASURES and DEFINE, graph
+variables in COLUMNS, and the enclosing query sees the declared output columns.
+Graph names keep their exact case. Layout and structure rules, and unmodelled pipe
+operators (such as pipe WITH), still skip their own block and descendants; enclosing
 queries and sibling blocks continue to be checked. CP01-CP05, CV01, CV02, CV04,
 CV05, CV13, ST03, LT01, LT12 and LT13 remain active throughout.
 
