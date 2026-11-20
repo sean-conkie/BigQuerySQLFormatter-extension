@@ -12,20 +12,20 @@ from dataset.sales s
 |> limit 10;
 
 -- Pattern recognition.
-select * from dataset.sales
+select m.start_date from dataset.sales s
 match_recognize (
   order by sale_date
   measures first(low.sale_date) as start_date
   pattern (low+ high*)
   define low as amount < 100, high as amount >= 100
-);
+) m;
 
 -- Graph and temporal queries.
-select * from graph_table(
+select g.sender from graph_table(
   fingraph
   match (a:account)-[t:transfers]->(b:account)
   columns (a.id as sender, b.id as recipient)
-);
+) g;
 
 select s.amount from dataset.sales
 for system_time as of timestamp '2026-01-01 00:00:00+00' s;
