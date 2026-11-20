@@ -1,51 +1,48 @@
 # Changelog
 
-## Unreleased
+## 0.9.0 - 2026-11-20
 
 ### Notable changes
 
-- Aliasing, ambiguous and reference rules now support `MATCH_RECOGNIZE` and
-  `GRAPH_TABLE` queries. Pattern variables resolve inside MEASURES/DEFINE,
-  graph variables resolve inside COLUMNS, and result columns come from the
-  declared outputs. Graph names retain their exact case. Graph patterns stay
-  opaque, mandatory specialist aliases are preserved, and other layout and
-  structure rules remain deferred for these constructs.
-- Structure and convention rules ST01, ST02, ST04, ST07-ST09, CV03, CV06,
-  CV08 and CV12 now support pipe queries. ST09 orders JOIN ON operands using
-  stage-local input and earlier joined sources, mirroring inequalities.
-  CV03 removes trailing projection commas from SELECT, EXTEND and AGGREGATE.
-  Pipe RIGHT [OUTER] JOIN is diagnostic-only: a keyword replacement would
-  change query results. CASE, comma, join-order and terminator fixes preserve
-  comments and LF/CRLF/CR line endings and converge with default formatting.
-- Remaining layout rules now support pipe queries: LT04/LT09 check projection
-  and aggregate grouping lists; LT06 fixes function spacing in every stage;
-  LT07/LT08 check pipe CTEs; LT10 checks SELECT modifiers; LT15 aligns multiline
-  WHERE/JOIN comparisons; opt-in LT90 wraps JOIN conditions. LT11 explicitly
-  leaves pipe set-stage placement to LT91 while checking traditional UNION
-  operands. Diagnostic-only rules remain diagnostic-only. Fixes preserve
-  comments and LF/CRLF/CR line endings and converge with LT03, LT02 and LT91.
-- New default-enabled LT03 (`layout.operators`) moves wrapped binary,
-  comparison and boolean operators to the start of the next line, including
-  pipe stages. Quick Fix, Fix All and formatting preserve comments and line
-  endings. Set `"LT03": { "options": { "line_position": "trailing" } }`
-  in rule settings to prefer trailing operators, or disable it with
-  `"LT03": { "enabled": false }`.
-- New default-enabled LT91 (`layout.pipe_stages`) puts every pipe stage on its
-  own line, aligned with its input, including nested pipelines. Disable it with
-  `"LT91": { "enabled": false }` in rule settings to retain stage placement.
-  LT02 now indents supported pipe stage bodies, including wrapped projection
-  and grouping lists, WHERE conditions and nested inputs. Comments and line
-  endings are preserved; unsupported query blocks remain protected.
-- LT02 now re-indents existing JOIN lines two spaces under their FROM, with ON
-  lines two spaces further in and wrapped predicates another two spaces in.
-  Pipe JOIN stage bodies use the same continuation layout.
+Formatting and Fix All now change more of your SQL by default, mostly in pipe
+queries. Each rule can be turned off in the rule settings, for example
+`"LT91": { "enabled": false }`.
+
+- **Pipe stages on their own lines (new LT91, on by default).** Every `|>`
+  stage starts a new line, aligned with its input, including nested pipelines.
+  LT02 now also indents pipe stage bodies, such as wrapped SELECT lists,
+  GROUP BY lists and WHERE conditions.
+- **Operators at the start of wrapped lines (new LT03, on by default).** When
+  an expression wraps, `AND`, `OR`, comparison and arithmetic operators move to
+  the start of the next line. To keep them at the end of the line instead, set
+  `"LT03": { "options": { "line_position": "trailing" } }`.
+- **JOIN indentation (LT02).** JOIN lines are indented two spaces under their
+  FROM, ON lines two spaces further, and wrapped conditions two more. Existing
+  JOINs are re-indented when you format.
+- **More rules check pipe queries.** LT04, LT06-LT11, LT15 and the opt-in LT90,
+  plus ST01, ST02, ST04, ST07-ST09, CV03, CV06, CV08 and CV12, now check pipe
+  queries, and fix them where the rule has a fix. A pipe `RIGHT JOIN` is
+  reported but never rewritten, because swapping it would change the results.
+- **`MATCH_RECOGNIZE` and `GRAPH_TABLE` queries are now checked** by the
+  aliasing (AL), ambiguous (AM) and references (RF) rules. Pattern variables are
+  recognised in MEASURES and DEFINE, graph variables in COLUMNS, and the
+  enclosing query sees the declared output columns. You may see new warnings
+  here, for example AL06 when a `MATCH_RECOGNIZE` or `GRAPH_TABLE` source has
+  no alias. Graph names keep their exact case, and layout and structure rules
+  still leave these queries alone.
+
+### Added
+
+- LT03 (`layout.operators`): operator position on wrapped lines, with the
+  `line_position` option (`leading`, the default, or `trailing`).
+- LT91 (`layout.pipe_stages`): one pipe stage per line.
 
 ### Fixed
 
-- Removing column alias `AS` with AL02 and LT02 leaves one space before the
-  alias, including after ST02 and ST04 CASE rewrites.
-- JOIN formatting converges with ST09, LT15 and LT90, including nested queries,
-  multiple joins and LF/CRLF/CR line endings.
+- Removing `AS` from a column alias (AL02) no longer leaves a double space
+  before the alias, including after CASE rewrites by ST02 and ST04.
+- Formatting JOINs together with ST09, LT15 and LT90 now settles on one result
+  instead of changing on each run, including nested queries and multiple joins.
 
 ## 0.8.0 - 2026-11-04
 
