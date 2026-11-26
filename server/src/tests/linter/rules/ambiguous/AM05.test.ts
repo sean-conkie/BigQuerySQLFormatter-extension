@@ -55,7 +55,11 @@ describe('AM05 explicit inner joins', () => {
       const fix = actions.find((action) => action.kind === 'source.fixAll.bigquerySQLFormatter')!;
       const fixed = TextDocument.applyEdits(document, fix.edit!.changes![uri]);
       expect(fixed).to.equal(text.replaceAll(join, `${join === 'join' ? 'inner' : 'INNER'} ${join}`));
-      expect(actions.filter((action) => action.kind === CodeActionKind.QuickFix)).to.have.length(2);
+      expect(
+        actions.filter(
+          (action) => action.kind === CodeActionKind.QuickFix && !/^(Disable |Show documentation)/.test(action.title),
+        ),
+      ).to.have.length(2);
       expect(
         (await linter.verify({ uri, text: fixed, languageId: 'googlesql', version: 2 })).filter((d) =>
           String(d.code).startsWith('AM05:'),

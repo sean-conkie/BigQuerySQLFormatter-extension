@@ -20,6 +20,7 @@ import type { StatementAST } from './parser/ast';
 import { globalTokenCache } from './parser/tokenCache';
 import { checkCancellation, yieldToEventLoop } from '../cancellation';
 import { SourceRule } from './rules/source';
+import { GrammarLoader } from './grammarLoader';
 import {
   comparePositions,
   extendedQueryRanges,
@@ -286,6 +287,71 @@ export class Linter {
     return directives;
   }
 
+  private async createDiagnosticActions(uri: string, diagnostics: Diagnostic[]): Promise<CodeAction[]> {
+    const actions: CodeAction[] = [];
+    const suppressed = new Set<string>();
+    const documented = new Set<string>();
+    const cache = globalTokenCache.get(uri);
+    const grammar = cache ? await new GrammarLoader().loadGrammar('source.googlesql') : null;
+    for (const diagnostic of diagnostics) {
+      const rule = [...this.regexRules, ...this.parserRules].find(
+        (rule) => rule.diagnosticCode === diagnostic.code && this.isRuleEnabled(rule),
+      );
+      if (!rule) continue;
+      const lineNumber = diagnostic.range.start.line;
+      const line = cache?.get(lineNumber);
+      const key = `${lineNumber}:${rule.code}`;
+      if (line && grammar && !suppressed.has(key)) {
+        const comment = line.tokens.find((token) => token.scopes.some((scope) => scope.startsWith('comment.line')));
+        let newText: string | undefined;
+        let end = line.value.length;
+        if (comment) {
+          const match = /^--[ \t]*noqa[ \t]*:[ \t]*([A-Z][A-Z0-9]*(?:[ \t]*,[ \t]*[A-Z][A-Z0-9]*)*)[ \t]*$/i.exec(
+            line.value.substring(comment.startIndex),
+          );
+          if (match && !match[1].split(',').some((code) => code.trim().toUpperCase() === rule.code)) {
+            end = line.value.trimEnd().length;
+            newText = `, ${rule.code}`;
+          }
+        } else {
+          const suffix = `  -- noqa: ${rule.code}`;
+          // Retokenize the proposed line with its incoming state, including continued literals/comments.
+          const proposed = grammar.tokenizeLine(line.value + suffix, cache?.get(lineNumber - 1)?.ruleStack ?? null);
+          if (
+            proposed.tokens.some(
+              (token) =>
+                token.startIndex === line.value.length + 2 &&
+                token.scopes.some((scope) => scope.startsWith('comment.line')),
+            )
+          ) {
+            newText = suffix;
+          }
+        }
+        if (newText !== undefined) {
+          suppressed.add(key);
+          actions.push({
+            title: `Disable ${rule.code} for this line.`,
+            kind: CodeActionKind.QuickFix,
+            diagnostics: [diagnostic],
+            edit: { changes: { [uri]: [{ range: Range.create(lineNumber, end, lineNumber, end), newText }] } },
+          });
+        }
+      }
+      const href = diagnostic.codeDescription?.href;
+      if (href && !documented.has(rule.code)) {
+        documented.add(rule.code);
+        const title = `Show documentation for ${rule.code}.`;
+        actions.push({
+          title,
+          kind: CodeActionKind.QuickFix,
+          diagnostics: [diagnostic],
+          command: { title, command: 'bigquerySQLFormatter.openRuleDocumentation', arguments: [href] },
+        });
+      }
+    }
+    return actions;
+  }
+
   /**
    * Creates code actions based on the provided diagnostics and rules.
    *
@@ -301,7 +367,8 @@ export class Linter {
     const directives = globalTokenCache.get(params.textDocument.uri)
       ? this.createDirectives(params.textDocument.uri)
       : [];
-    this.filterDiagnostics(params.context.diagnostics, directives).forEach((diagnostic) => {
+    const requestedDiagnostics = this.filterDiagnostics(params.context.diagnostics, directives);
+    requestedDiagnostics.forEach((diagnostic) => {
       this.regexRules.forEach((rule) => {
         if (this.isRuleEnabled(rule) && rule.diagnosticCode === diagnostic.code && rule.is_fix_compatible) {
           const action = rule.createCodeAction(params.textDocument, structuredClone(diagnostic));
@@ -373,7 +440,15 @@ export class Linter {
           },
         ]
       : [];
-    const actions = [...combined, ...safeActions.filter((action) => action.kind === CodeActionKind.QuickFix)];
+    const helpers =
+      !params.context.only || params.context.only.includes(CodeActionKind.QuickFix)
+        ? await this.createDiagnosticActions(params.textDocument.uri, requestedDiagnostics)
+        : [];
+    const actions = [
+      ...combined,
+      ...safeActions.filter((action) => action.kind === CodeActionKind.QuickFix),
+      ...helpers,
+    ];
     return actions.filter(
       (action) =>
         !params.context.only ||

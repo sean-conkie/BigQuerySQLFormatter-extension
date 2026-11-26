@@ -107,7 +107,9 @@ for (const fixture of fixtures) {
             range: Range.create(0, 0, 100, 0),
             context: { diagnostics },
           });
-          const quickFixes = actions.filter((action) => action.kind === CodeActionKind.QuickFix);
+          const quickFixes = actions.filter(
+            (action) => action.kind === CodeActionKind.QuickFix && !/^(Disable |Show documentation)/.test(action.title),
+          );
           expect(quickFixes).to.have.length(diagnostics.length);
           const edits = quickFixes.flatMap((action) => action.edit!.changes![uri]);
           expect(TextDocument.applyEdits(input, edits)).to.equal(output);

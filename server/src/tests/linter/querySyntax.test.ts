@@ -280,7 +280,7 @@ SELECT DISTINCT t.id FROM dataset.sales t GROUP BY t.id;\n`;
           range: Range.create(0, 0, 1, 0),
           context: { diagnostics: [diagnostic] },
         });
-        expect(actions).to.deep.equal([]);
+        expect(actions.filter((action) => !/^(Disable |Show documentation)/.test(action.title))).to.deep.equal([]);
       }
     });
 

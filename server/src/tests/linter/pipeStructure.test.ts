@@ -104,12 +104,14 @@ describe('Pipe structure and convention rules', () => {
     );
     expect(diagnostics).to.have.length(2);
     expect(
-      await linter.createCodeActions({
-        textDocument: { uri },
-        range: diagnostics[0].range,
-        context: { diagnostics: [diagnostics[0]], only: [CodeActionKind.QuickFix] },
-      }),
-    ).to.deep.equal([]);
+      (
+        await linter.createCodeActions({
+          textDocument: { uri },
+          range: diagnostics[0].range,
+          context: { diagnostics: [diagnostics[0]], only: [CodeActionKind.QuickFix] },
+        })
+      ).map((action) => action.title),
+    ).to.deep.equal(['Disable ST09 for this line.', 'Show documentation for ST09.']);
   });
 
   it('uses stage-local join sources and honors the later-source option', async () => {
@@ -135,12 +137,14 @@ describe('Pipe structure and convention rules', () => {
     const { linter, diagnostics } = await check(text, ['CV08']);
     expect(diagnostics).to.have.length(1);
     expect(
-      await linter.createCodeActions({
-        textDocument: { uri },
-        range: Range.create(0, 0, 1, 0),
-        context: { diagnostics, only: [CodeActionKind.QuickFix] },
-      }),
-    ).to.deep.equal([]);
+      (
+        await linter.createCodeActions({
+          textDocument: { uri },
+          range: Range.create(0, 0, 1, 0),
+          context: { diagnostics, only: [CodeActionKind.QuickFix] },
+        })
+      ).map((action) => action.title),
+    ).to.deep.equal(['Disable CV08 for this line.', 'Show documentation for CV08.']);
     const document = TextDocument.create(uri, 'googlesql', 1, text);
     expect(await formatDocument(document, settings(['CV08']))).to.deep.equal([]);
     expect(

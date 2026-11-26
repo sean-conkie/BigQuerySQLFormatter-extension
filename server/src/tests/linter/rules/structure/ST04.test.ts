@@ -69,12 +69,14 @@ describe('ST04 nested CASE', () => {
       const { linter, diagnostics } = await check(`select ${source};`);
       expect(diagnostics).to.have.length(1);
       expect(
-        await linter.createCodeActions({
-          textDocument: { uri },
-          range: diagnostics[0].range,
-          context: { diagnostics, only: [CodeActionKind.QuickFix] },
-        }),
-      ).to.deep.equal([]);
+        (
+          await linter.createCodeActions({
+            textDocument: { uri },
+            range: diagnostics[0].range,
+            context: { diagnostics, only: [CodeActionKind.QuickFix] },
+          })
+        ).map((action) => action.title),
+      ).to.deep.equal(['Disable ST04 for this line.', 'Show documentation for ST04.']);
     });
   it('respects noqa, severity and group settings', async () => {
     const text = 'select case when a then 1 else case when b then 2 end end;';

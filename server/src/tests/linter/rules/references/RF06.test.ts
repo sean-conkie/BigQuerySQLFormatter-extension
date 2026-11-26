@@ -137,7 +137,7 @@ describe('RF06 unnecessary quoting', () => {
       range: diagnostics[0].range,
       context: { diagnostics, only: [CodeActionKind.QuickFix] },
     });
-    expect(actions).to.have.length(1);
+    expect(actions).to.have.length(3);
     expect(
       TextDocument.applyEdits(TextDocument.create(uri, 'googlesql', 1, text), actions[0].edit!.changes![uri]),
     ).to.equal('select MiXeD;');

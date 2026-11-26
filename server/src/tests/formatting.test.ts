@@ -129,7 +129,7 @@ describe('Formatting and document fixes', () => {
       range: diagnostic.range,
       context: { diagnostics: [diagnostic], only: [CodeActionKind.QuickFix] },
     });
-    expect(actions).to.have.length(1);
+    expect(actions).to.have.length(3);
     expect(actions[0].diagnostics).to.deep.equal([diagnostic]);
     expect(TextDocument.applyEdits(source, actions[0].edit!.changes![uri])).to.equal('select a is null, b = null;\n');
   });
@@ -152,7 +152,7 @@ describe('Formatting and document fixes', () => {
     const second = await createDocumentCodeActions(source, defaultSettings, params);
     expect(first).to.deep.equal(second);
     expect(diagnostics).to.deep.equal(original);
-    for (const action of first) {
+    for (const action of first.filter((action) => !/^(Disable |Show documentation)/.test(action.title))) {
       expect(TextDocument.applyEdits(source, action.edit!.changes![uri])).to.equal(
         'select t.col\n  from dataset.table t;\n',
       );

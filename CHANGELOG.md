@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Added
+
+- Diagnostic quick actions to disable a rule for its starting line using
+  `noqa`, and to open its rule documentation, including in pipe queries.
+
 ### Fixed
 
 - Corrected documentation title underlines to eliminate Sphinx build warnings.

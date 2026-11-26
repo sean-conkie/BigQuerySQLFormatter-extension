@@ -5,7 +5,16 @@ The language server is implemented in the server folder.
 */
 
 import * as path from 'node:path';
-import { workspace, window, type ExtensionContext, type LogOutputChannel, type ViewColumn } from 'vscode';
+import {
+  workspace,
+  window,
+  commands,
+  env,
+  Uri,
+  type ExtensionContext,
+  type LogOutputChannel,
+  type ViewColumn,
+} from 'vscode';
 
 import {
   LanguageClient,
@@ -15,6 +24,7 @@ import {
 } from 'vscode-languageclient/node';
 import { registerBigQuery, type BigQueryApi } from './bigquery/loader';
 import type { SchemaRequest } from '../../shared/schema';
+import { openRuleDocumentation } from './ruleDocumentation';
 
 let client: LanguageClient;
 
@@ -25,6 +35,11 @@ export interface ExtensionApi {
 }
 
 export function activate(context: ExtensionContext): ExtensionApi {
+  context.subscriptions.push(
+    commands.registerCommand('bigquerySQLFormatter.openRuleDocumentation', (href: unknown) =>
+      openRuleDocumentation(href, (url) => env.openExternal(Uri.parse(url))),
+    ),
+  );
   const bigquery = registerBigQuery(context, async (text) => {
     await started;
     return client.sendRequest('bigquerySQLFormatter/sourceTokens', { text });

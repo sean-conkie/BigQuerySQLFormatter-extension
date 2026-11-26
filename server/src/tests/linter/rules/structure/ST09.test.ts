@@ -112,12 +112,14 @@ describe('ST09 JOIN condition order', () => {
     const { linter, diagnostics } = await check('select a.id from a join b on b.id /*keep*/ = a.id;');
     expect(diagnostics).to.have.length(1);
     expect(
-      await linter.createCodeActions({
-        textDocument: { uri },
-        range: diagnostics[0].range,
-        context: { diagnostics, only: [CodeActionKind.QuickFix] },
-      }),
-    ).to.deep.equal([]);
+      (
+        await linter.createCodeActions({
+          textDocument: { uri },
+          range: diagnostics[0].range,
+          context: { diagnostics, only: [CodeActionKind.QuickFix] },
+        })
+      ).map((action) => action.title),
+    ).to.deep.equal(['Disable ST09 for this line.', 'Show documentation for ST09.']);
   });
   it('retains lexical source references across commented DISTINCT FROM operators', async () => {
     const { diagnostics } = await check('select a.id from a join b on b.id is distinct /*keep*/ from a.id;');

@@ -118,11 +118,13 @@ describe('RF04 keyword identifiers', () => {
     expect((await check('select x as date;', {}, rules)).names).to.deep.equal([]);
     const { linter, diagnostics } = await check('select x as timestamp;');
     expect(
-      await linter.createCodeActions({
-        textDocument: { uri },
-        range: diagnostics[0].range,
-        context: { diagnostics },
-      }),
-    ).to.deep.equal([]);
+      (
+        await linter.createCodeActions({
+          textDocument: { uri },
+          range: diagnostics[0].range,
+          context: { diagnostics },
+        })
+      ).map((action) => action.title),
+    ).to.deep.equal(['Disable RF04 for this line.', 'Show documentation for RF04.']);
   });
 });
