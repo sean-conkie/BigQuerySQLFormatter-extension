@@ -53,6 +53,8 @@ you package locally. Useful variables:
   `formattingCorpus.test.ts` (every default rule must converge); settings are in
   `settings.test.ts` and `projectSettings.test.ts`; LSP lifecycle is in
   `server*.test.ts`, `validationScheduler.test.ts` and `cancellation.test.ts`.
+- `client/src/test/unit/`: offline client unit tests, including documentation
+  URL validation and browser-opening behavior with a mock opener.
 - `client/src/test/`: end-to-end tests (`diagnostics.test.ts`,
   `bigquery.test.ts`) and BigQuery client unit tests
   (`bigquery/unit.test.ts`, against `bigquery/mockServer.ts`).
@@ -78,6 +80,10 @@ you package locally. Useful variables:
 ## Rules for tests
 
 - Never call Google services or use real credentials in tests; use the mock server.
+- Never launch a real browser in end-to-end tests. VS Code API objects are
+  extension-specific, so stubbing the test runner's `vscode` API does not
+  intercept calls from a separately installed VSIX. Test browser behavior with
+  a mock opener in unit tests and command rejection in packaged end-to-end tests.
 - Don't add fixed sleeps or automatic retries to end-to-end tests. Wait on the
   extension's `ready()` API and on diagnostics (see the helpers in
   `client/src/test/helper.ts`).

@@ -24,6 +24,7 @@ import {
 } from 'vscode-languageclient/node';
 import { registerBigQuery, type BigQueryApi } from './bigquery/loader';
 import type { SchemaRequest } from '../../shared/schema';
+import { openRuleDocumentation } from './ruleDocumentation';
 
 let client: LanguageClient;
 
@@ -35,14 +36,9 @@ export interface ExtensionApi {
 
 export function activate(context: ExtensionContext): ExtensionApi {
   context.subscriptions.push(
-    commands.registerCommand('bigquerySQLFormatter.openRuleDocumentation', async (href: unknown) => {
-      if (typeof href !== 'string' || !href.startsWith('https://bigquerysqlformatter.readthedocs.io/')) {
-        throw new Error('Rule documentation must use https://bigquerysqlformatter.readthedocs.io/.');
-      }
-      if (!(await env.openExternal(Uri.parse(href)))) {
-        throw new Error('Could not open rule documentation.');
-      }
-    }),
+    commands.registerCommand('bigquerySQLFormatter.openRuleDocumentation', (href: unknown) =>
+      openRuleDocumentation(href, (url) => env.openExternal(Uri.parse(url))),
+    ),
   );
   const bigquery = registerBigQuery(context, async (text) => {
     await started;

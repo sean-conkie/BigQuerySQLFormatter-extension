@@ -767,7 +767,7 @@
     "format": "biome format --write",
     "package:check": "node scripts/check-package.cjs",
     "postinstall": "npm ci --prefix client && npm ci --prefix server",
-    "test": "node --test scripts/generate-completions.test.cjs scripts/generate-keywords.test.cjs && mocha \"server/out/tests/**/*.test.js\" \"client/out/test/bigquery/*.test.js\"",
+    "test": "node --test scripts/generate-completions.test.cjs scripts/generate-keywords.test.cjs && mocha \"server/out/tests/**/*.test.js\" \"client/out/test/bigquery/*.test.js\" \"client/out/test/unit/*.test.js\"",
     "coverage": "nyc --check-coverage --branches 80 --reporter=lcov --reporter=text-summary npm test",
     "citest": "npm test && node ./client/out/test/runTest",
     "deploy": "vsce publish --no-yarn"
