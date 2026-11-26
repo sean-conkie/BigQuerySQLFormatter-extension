@@ -1,5 +1,5 @@
 RF06: Remove unnecessary backticks
-=================================
+==================================
 
 ``references.quoting`` is enabled by default. It checks column names, field
 references, column and table aliases, and CTE names. Backticks do not change

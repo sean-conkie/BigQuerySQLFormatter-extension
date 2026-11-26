@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Corrected documentation title underlines to eliminate Sphinx build warnings.
+
 ## 0.9.0 - 2026-11-20
 
 ### Notable changes

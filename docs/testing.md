@@ -25,6 +25,9 @@ needs `dist/`.
 | Generators | `node --test scripts/generate-completions.test.cjs scripts/generate-keywords.test.cjs` | Offline |
 | Sphinx docs | `make docs` | See [Documentation](../CONTRIBUTING.md#documentation) |
 
+After a Biome dependency update (including a Dependabot update), run
+`npx --no-install biome migrate --write` to keep `biome.json`'s schema in step.
+
 Without a global `markdownlint`, lint Markdown with the repository config:
 
 ```sh

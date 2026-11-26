@@ -1,5 +1,5 @@
 RF04: Avoid keywords as identifiers
-==================================
+===================================
 
 ``references.keywords`` is enabled by default. It checks unquoted aliases,
 including CTE names, against reserved and non-reserved GoogleSQL keywords.

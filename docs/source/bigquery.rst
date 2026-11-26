@@ -1,5 +1,5 @@
 BigQuery dry runs
-================
+=================
 
 BigQuery integration is off by default and requires a trusted workspace,
 Application Default Credentials and consent. Run

@@ -1,5 +1,5 @@
 ST03: Unused CTEs
-================
+=================
 
 ``structure.unused_cte`` is enabled by default with warning severity.
 The diagnostic marks the definition's name as unnecessary. No quick fix,

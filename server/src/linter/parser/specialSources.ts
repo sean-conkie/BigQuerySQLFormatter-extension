@@ -53,7 +53,6 @@ export function specialSource(tokens: SourceToken[], start: number, end = tokens
     const columns = [...indices].reverse().find((i) => keyword(tokens[i], 'COLUMNS') && keyword(tokens[i + 1], '('));
     if (match === undefined || match === start + 2 || columns === undefined) return undefined;
     const columnClose = closingBracket(tokens, columns + 1);
-    if (columnClose < 0 || columnClose >= close) return undefined;
     const items = pipeItems(tokens, columns + 2, columnClose);
     const variables: SourceToken[] = [];
     for (let i = match + 1; i < columns; i++) {

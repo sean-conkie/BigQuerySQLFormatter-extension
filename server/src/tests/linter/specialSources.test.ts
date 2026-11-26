@@ -7,7 +7,8 @@ import { globalTokenCache } from '../../linter/parser/tokenCache';
 import { ruleRegistry } from '../../linter/rules/rules';
 import { tokenizeSource } from '../../linter/rules/source';
 import { QueryScopeResolver } from '../../linter/scope';
-import { specialQueryRules } from '../../linter/parser/queryBlocks';
+import { extendedQueryRanges, specialQueryRules, unsupportedBlock } from '../../linter/parser/queryBlocks';
+import { specialSource } from '../../linter/parser/specialSources';
 import { defaultSettings, type RulesSettings } from '../../settings';
 
 describe('MATCH_RECOGNIZE and GRAPH_TABLE sources', () => {
@@ -68,6 +69,51 @@ describe('MATCH_RECOGNIZE and GRAPH_TABLE sources', () => {
     const text = 'SELECT sender FROM GRAPH_TABLE(Project.Dataset.FinGraph MATCH (a:Account) COLUMNS (a.id AS sender))';
     const { names } = await check(text, ['CP02'], { CP02: { options: { extended_capitalisation_policy: 'lower' } } });
     expect(names.some((name) => /Project|Dataset|FinGraph/.test(name))).to.equal(false);
+  });
+
+  it('protects incomplete dashed graph paths while still checking column casing', async () => {
+    const sql = 'SELECT MixedColumn FROM GRAPH_TABLE(Project.My-Dataset.FinGraph)';
+    expect(
+      (await check(sql, ['CP02'], { CP02: { options: { extended_capitalisation_policy: 'lower' } } })).names,
+    ).to.deep.equal(['MixedColumn']);
+  });
+
+  it('infers named graph outputs without inventing names for anonymous expressions', () => {
+    const model = specialSource(tokenizeSource('GRAPH_TABLE(g MATCH (n) COLUMNS(n.id, 1))'), 0);
+    expect(model?.kind).to.equal('graph-table');
+    expect(model?.outputColumns.map((token) => token.value)).to.deep.equal(['id']);
+  });
+
+  it('ignores malformed definitions while retaining valid pattern definitions', () => {
+    const tokens = tokenizeSource(pattern.replace('low AS amount < 100', 'low amount < 100'));
+    const model = specialSource(
+      tokens,
+      tokens.findIndex((token) => token.value === 'MATCH_RECOGNIZE'),
+    );
+    if (model?.kind !== 'match-recognize') throw new Error('Wrong source model');
+    expect(model.definitions.map((definition) => definition.variable.value)).to.deep.equal(['high']);
+  });
+
+  it('protects specialist blocks unless their rule explicitly supports them', async () => {
+    const ast = (await new Parser().parse(item(`SELECT * FROM ${graph}`)))[0];
+    expect(unsupportedBlock(ast, true)).to.equal(true);
+    expect(extendedQueryRanges({ 0: ast })).to.deep.equal([ast.sourceRange]);
+    expect(extendedQueryRanges({ 0: ast }, true, true)).to.deep.equal([]);
+  });
+
+  it('checks pipe output aliases without treating FROM-only input as a SELECT list', async () => {
+    const sql = `FROM ${graph} |> SELECT transfers.sender AS output`;
+    expect((await check(sql, ['AL02', 'AL08', 'AL09'])).names).to.deep.equal(['AS']);
+  });
+
+  it('skips SELECT modifiers when checking duplicate specialist output aliases', async () => {
+    for (const modifier of ['DISTINCT', 'ALL']) {
+      const sql = `SELECT ${modifier} transfers.sender AS output, transfers.recipient AS output FROM ${graph}`;
+      expect((await check(sql, ['AL08'])).names).to.deep.equal([
+        'transfers.sender AS output',
+        'transfers.recipient AS output',
+      ]);
+    }
   });
 
   it('models pattern clauses, output columns and input scope without leaking pattern variables', async () => {
@@ -205,6 +251,14 @@ SELECT q.sender FROM (SELECT * FROM ${graph}) q`;
     expect(
       (await check(`SELECT transfers.* EXCEPT (recipient) FROM ${graph} UNION ALL SELECT 1, 2`, ['AM07'])).names,
     ).to.deep.equal(['UNION']);
+  });
+
+  it('leaves unknown wildcard widths alone when specialist aliases do not match', async () => {
+    for (const source of [pattern, graph, graph.replace('AS transfers', '')]) {
+      expect(
+        (await check(`SELECT missing.* FROM ${source} UNION ALL SELECT 1, 2, 3, 4`, ['AM07'])).names,
+      ).to.deep.equal([]);
+    }
   });
 
   it('applies rule-specific noqa and region suppression inside modelled blocks', async () => {
