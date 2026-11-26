@@ -1,5 +1,5 @@
 ST02: Simplify CASE Expressions
-==============================
+===============================
 
 ``structure.simple_case`` is enabled by default. Only searched CASE with one
 WHEN and an explicit ELSE is checked.

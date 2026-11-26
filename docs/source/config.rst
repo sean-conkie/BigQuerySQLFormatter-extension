@@ -3,7 +3,7 @@ Configuration
 =============
 
 BigQuery schema metadata
-~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 Set ``bigquerySQLFormatter.bigquery.schema.enabled`` to ``true`` in VS Code user,
 workspace or workspace-folder settings, not ``.bqsqlformatter.json``. This opt-in

@@ -1,5 +1,5 @@
 ST09: JOIN Condition Source Order
-================================
+=================================
 
 ``structure.join_condition_order`` is enabled by default. Quick fixes, Fix All
 and formatting put the earlier FROM source on the left of JOIN ON comparisons.

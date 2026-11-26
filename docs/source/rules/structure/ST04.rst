@@ -1,5 +1,5 @@
 ST04: Flatten Nested CASE Expressions
-====================================
+=====================================
 
 ``structure.nested_case`` is enabled by default. An ELSE branch containing only
 another CASE, optionally parenthesised, can be merged into its enclosing CASE:

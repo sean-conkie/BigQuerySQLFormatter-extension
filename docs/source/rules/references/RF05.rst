@@ -1,5 +1,5 @@
 RF05: Avoid special characters in identifiers
-============================================
+=============================================
 
 ``references.special_chars`` is enabled by default. It checks each part of a
 backtick-quoted identifier for characters outside ``[A-Za-z0-9_]``.

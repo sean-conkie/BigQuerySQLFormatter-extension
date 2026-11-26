@@ -11,6 +11,7 @@ See also [architecture](architecture.md) and [local development](local-developme
 Build first: `npx tsc -b` for unit tests, `npm run compile` for anything that
 needs `dist/`.
 
+<!-- prettier-ignore -->
 | Purpose | Command | Notes |
 | --- | --- | --- |
 | One test file | `npx --no-install mocha server/out/tests/<path>.test.js` | Fast inner loop (about a second) |
@@ -19,11 +20,14 @@ needs `dist/`.
 | Lint and format | `npm run lint` | Biome; `npm run lint:fix` applies safe fixes |
 | Markdown | `make check` | Needs `markdownlint` on `PATH`; otherwise see below |
 | Package | `npx --no-install vsce package --no-yarn --out extension.vsix` | Then `npm run package:check` |
-| End-to-end | `npm run citest` | Unit tests, then VS Code end-to-end tests |
+| End-to-end | `npm run citest` | Unit tests, then Visual Studio Code end-to-end tests |
 | End-to-end only | `node client/out/test/runTest` | Needs `npm run compile` first |
 | Restricted Mode | `BQSQL_TEST_UNTRUSTED=1 node client/out/test/runTest` | Linting works; BigQuery features stay off |
 | Generators | `node --test scripts/generate-completions.test.cjs scripts/generate-keywords.test.cjs` | Offline |
 | Sphinx docs | `make docs` | See [Documentation](../CONTRIBUTING.md#documentation) |
+
+After a Biome dependency update (including a Dependabot update), run
+`npx --no-install biome migrate --write` to keep `biome.json`'s schema in step.
 
 Without a global `markdownlint`, lint Markdown with the repository config:
 
@@ -31,14 +35,14 @@ Without a global `markdownlint`, lint Markdown with the repository config:
 npx --yes markdownlint-cli -c .github/linters/.markdown-lint.yml <files>
 ```
 
-End-to-end tests download VS Code into `.vscode-test/` and need a display; on
+End-to-end tests download Visual Studio Code into `.vscode-test/` and need a display; on
 headless Linux prefix the command with `xvfb-run -a`. Delete any `extension.vsix`
 you package locally. Useful variables:
 
-- `BQSQL_TEST_VSCODE_VERSION=1.91.0`: test against the minimum supported VS Code.
+- `BQSQL_TEST_VSCODE_VERSION=1.91.0`: test against the minimum supported Visual Studio Code.
 - `BQSQL_TEST_VSIX=/absolute/path/extension.vsix`: test the packaged extension.
 - `BQSQL_TEST_TIMEOUT_MS`, `BQSQL_TEST_COLD_START_TIMEOUT_MS`: diagnostic wait limits.
-- `BQSQL_TEST_LOG_DIR`: keep VS Code and language-server logs on failure.
+- `BQSQL_TEST_LOG_DIR`: keep Visual Studio Code and language-server logs on failure.
 
 ## Where tests live
 
@@ -56,6 +60,7 @@ you package locally. Useful variables:
 
 ## Evidence by change
 
+<!-- prettier-ignore -->
 | Change | Minimum evidence |
 | --- | --- |
 | Docs only | Markdown lint; `make docs` if `docs/source/` changed |
