@@ -80,7 +80,7 @@ you package locally. Useful variables:
 ## Rules for tests
 
 - Never call Google services or use real credentials in tests; use the mock server.
-- Never launch a real browser in end-to-end tests. VS Code API objects are
+- Never launch a real browser in end-to-end tests. Visual Studio Code API objects are
   extension-specific, so stubbing the test runner's `vscode` API does not
   intercept calls from a separately installed VSIX. Test browser behavior with
   a mock opener in unit tests and command rejection in packaged end-to-end tests.
