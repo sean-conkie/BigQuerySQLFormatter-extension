@@ -481,6 +481,13 @@ The generic `"source.fixAll": "explicit"` setting also includes this extension.
 
 ### Disable Rules
 
+Each lint diagnostic offers **Disable CODE for this line.** and
+**Show documentation for CODE.** after any available fix. The disable action
+adds the rule to an inline `noqa` directive on the diagnostic's starting line.
+It is unavailable on lines with other line comments or ending inside an open
+string, quoted identifier or block comment. These actions never run in Fix All
+or formatting; documentation opens the rule's Read the Docs page in your browser.
+
 #### In-line directive
 
 To disable all rules for a line add comment `-- noqa`.

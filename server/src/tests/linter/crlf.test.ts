@@ -93,7 +93,7 @@ describe('Document line endings', () => {
         context: { diagnostics },
       });
       const document = TextDocument.create(uri, 'googlesql', 0, source);
-      for (const action of actions) {
+      for (const action of actions.filter((action) => !/^(Disable |Show documentation)/.test(action.title))) {
         expect(TextDocument.applyEdits(document, action.edit!.changes![uri])).to.equal(expected);
       }
     });

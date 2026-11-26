@@ -7,6 +7,7 @@ import * as vscode from 'vscode';
 import * as assert from 'node:assert';
 import { mkdtemp, writeFile, rm } from 'node:fs/promises';
 import * as path from 'node:path';
+import sinon from 'sinon';
 import { getDocUri, getDocPath, activate, waitForDiagnostics } from './helper';
 
 async function applyFixAll(document: vscode.TextDocument): Promise<void> {
@@ -135,6 +136,96 @@ suite('Language server diagnostics', () => {
     const document = await vscode.workspace.openTextDocument(getDocUri('diagnostics.sql'));
     await vscode.window.showTextDocument(document);
     assert.equal(document.languageId, 'sql');
+  });
+
+  test('Applies inline suppression without hiding other rules or lines', async () => {
+    const directory = await mkdtemp(path.join(getDocPath(''), 'diagnostic-actions-'));
+    const uri = vscode.Uri.file(path.join(directory, 'query.bqsql'));
+    const codeOf = (diagnostic: vscode.Diagnostic) =>
+      typeof diagnostic.code === 'object' ? diagnostic.code.value : diagnostic.code;
+    try {
+      await writeFile(uri.fsPath, 'select a = NULL;\nselect b = NULL;\n');
+      const ready = waitForDiagnostics(
+        uri,
+        (diagnostics) => diagnostics.filter((diagnostic) => codeOf(diagnostic) === 'CV05: is_null').length === 2,
+      );
+      const editor = await activate(uri);
+      const diagnostics = await ready;
+      const actions = await vscode.commands.executeCommand<vscode.CodeAction[]>(
+        'vscode.executeCodeActionProvider',
+        uri,
+        new vscode.Range(0, 0, 0, 16),
+        vscode.CodeActionKind.QuickFix.value,
+      );
+      const suppression = actions.find((action) => action.title === 'Disable CV05 for this line.')!;
+      const docs = actions.find((action) => action.title === 'Show documentation for CV05.')!;
+      assert.ok(suppression.edit);
+      assert.equal(docs.command?.command, 'bigquerySQLFormatter.openRuleDocumentation');
+      const relinted = waitForDiagnostics(
+        uri,
+        (received) =>
+          !received.some((diagnostic) => codeOf(diagnostic) === 'CV05: is_null' && diagnostic.range.start.line === 0),
+      );
+      assert.equal(await vscode.workspace.applyEdit(suppression.edit), true);
+      const remaining = await relinted;
+      const comparable = (diagnostic: vscode.Diagnostic) => ({
+        code: codeOf(diagnostic),
+        range: diagnostic.range,
+        message: diagnostic.message,
+        severity: diagnostic.severity,
+        source: diagnostic.source,
+      });
+      assert.deepEqual(
+        remaining.map(comparable),
+        diagnostics
+          .filter((diagnostic) => !(codeOf(diagnostic) === 'CV05: is_null' && diagnostic.range.start.line === 0))
+          .map(comparable),
+      );
+      assert.equal(editor.document.getText(), 'select a = NULL;  -- noqa: CV05\nselect b = NULL;\n');
+    } finally {
+      await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
+  test('Documentation command only opens the documentation site and is not in the Command Palette', async () => {
+    await activate(docUri);
+    const command = 'bigquerySQLFormatter.openRuleDocumentation';
+    const extension = vscode.extensions.getExtension('sean-conkie.bigquerysqlformatter')!;
+    assert.ok(
+      !extension.packageJSON.contributes.commands.some((entry: { command: string }) => entry.command === command),
+    );
+    const open = sinon.stub(vscode.env, 'openExternal').resolves(true);
+    try {
+      const href = 'https://bigquerysqlformatter.readthedocs.io/en/latest/rules/CV05/';
+      await vscode.commands.executeCommand(command, href);
+      assert.equal(open.callCount, 1);
+      assert.equal(open.firstCall.args[0].toString(), href);
+      for (const invalid of [
+        undefined,
+        42,
+        'not a URL',
+        'http://bigquerysqlformatter.readthedocs.io/',
+        'https://example.com/',
+        'https://bigquerysqlformatter.readthedocs.io.evil.test/',
+        'https://bigquerysqlformatter.readthedocs.io@evil.test/',
+        'https://bigquerysqlformatter.readthedocs.io:443/',
+        'file:///tmp/rule',
+      ]) {
+        await assert.rejects(
+          async () => vscode.commands.executeCommand(command, invalid),
+          /Rule documentation must use/,
+        );
+      }
+      assert.equal(open.callCount, 1);
+      open.resolves(false);
+      await assert.rejects(
+        async () => vscode.commands.executeCommand(command, href),
+        /Could not open rule documentation/,
+      );
+    } finally {
+      open.restore();
+    }
   });
 
   test('Preserves pipe, pattern, graph and temporal queries through formatting and Fix All', async () => {

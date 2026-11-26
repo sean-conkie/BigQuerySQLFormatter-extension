@@ -98,7 +98,9 @@ describe('RF01 known source qualifiers', () => {
     });
     expect(diagnostics[0].severity).to.equal(DiagnosticSeverity.Error);
     expect(
-      await linter.createCodeActions({ textDocument: { uri }, range: diagnostics[0].range, context: { diagnostics } }),
-    ).to.deep.equal([]);
+      (
+        await linter.createCodeActions({ textDocument: { uri }, range: diagnostics[0].range, context: { diagnostics } })
+      ).map((action) => action.title),
+    ).to.deep.equal(['Disable RF01 for this line.', 'Show documentation for RF01.']);
   });
 });

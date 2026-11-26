@@ -20,12 +20,14 @@ describe('ST03 unused CTEs', () => {
     expect(diagnostics[0].tags).to.deep.equal([DiagnosticTag.Unnecessary]);
     expect(diagnostics[0].severity).to.equal(DiagnosticSeverity.Warning);
     expect(
-      await linter.createCodeActions({
-        textDocument: { uri },
-        range: diagnostics[0].range,
-        context: { diagnostics, only: [CodeActionKind.QuickFix] },
-      }),
-    ).to.deep.equal([]);
+      (
+        await linter.createCodeActions({
+          textDocument: { uri },
+          range: diagnostics[0].range,
+          context: { diagnostics, only: [CodeActionKind.QuickFix] },
+        })
+      ).map((action) => action.title),
+    ).to.deep.equal(['Disable ST03 for this line.', 'Show documentation for ST03.']);
   });
   for (const body of [
     'select * from c',

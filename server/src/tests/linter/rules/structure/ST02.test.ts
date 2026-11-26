@@ -93,12 +93,14 @@ describe('ST02 simple CASE', () => {
     const { linter, diagnostics } = await check('select case when a /*keep*/ then true else false end;');
     expect(diagnostics).to.have.length(1);
     expect(
-      await linter.createCodeActions({
-        textDocument: { uri },
-        range: diagnostics[0].range,
-        context: { diagnostics, only: [CodeActionKind.QuickFix] },
-      }),
-    ).to.deep.equal([]);
+      (
+        await linter.createCodeActions({
+          textDocument: { uri },
+          range: diagnostics[0].range,
+          context: { diagnostics, only: [CodeActionKind.QuickFix] },
+        })
+      ).map((action) => action.title),
+    ).to.deep.equal(['Disable ST02 for this line.', 'Show documentation for ST02.']);
   });
   for (const expression of [
     'case when a then true -- keep condition\nelse false end',
