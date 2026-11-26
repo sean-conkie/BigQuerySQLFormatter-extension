@@ -10,8 +10,12 @@ Pipe queries
 ------------
 
 The same DISTINCT-with-parentheses check applies to ``|> SELECT DISTINCT(a)``
-and qualified columns. This rule is diagnostic-only. A standalone
-``|> DISTINCT`` stage is valid and is not checked by this rule.
+and qualified columns. Quick Fix, Fix All and formatting remove parentheses
+around a single expression. Parentheses containing a top-level comma build a
+STRUCT in BigQuery and are never removed. Scalar subqueries and parentheses
+that are part of a larger expression (for example ``DISTINCT (a) + 1``) also
+remain unchanged. A standalone ``|> DISTINCT`` stage is valid and is not
+checked by this rule.
 
 Overview
 --------

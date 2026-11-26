@@ -12,12 +12,15 @@ Pipe queries
 Modifiers such as ``DISTINCT``, ``ALL`` and ``AS STRUCT`` must start on the
 same line as ``SELECT`` in a ``|> SELECT`` stage. Comments do not hide a
 modifier on a later line. A standalone ``|> DISTINCT`` stage is not a SELECT
-modifier. This rule reports diagnostics only.
+modifier. Quick Fix, Fix All and formatting move ``DISTINCT``, ``ALL``,
+``AS STRUCT`` and ``AS VALUE`` onto the SELECT line, leaving the target on its
+original line. Comments between SELECT and the modifier prevent the fix.
 
 Overview
 --------
 
-In SQL queries, modifiers such as `DISTINCT`, `ALL`, or `TOP` should be placed on the same line as the `select` keyword. This best practice improves the readability and consistency of the query, ensuring that the modifier's relationship to the `select` statement is clear. Placing modifiers on a separate line can make the query harder to read and may lead to confusion.
+In GoogleSQL, modifiers such as ``DISTINCT``, ``ALL``, ``AS STRUCT`` and
+``AS VALUE`` should be placed on the same line as SELECT.
 
 Explanation
 -----------
@@ -31,7 +34,8 @@ When modifiers like `DISTINCT` are placed on a separate line from the `select` k
 
 .. code-block:: sql
 
-    select distinct
+    select
+           distinct
            foo.id,
            foo.name
       from foo;

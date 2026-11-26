@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Notable changes
+
+- LT09, LT10, LT11, AL05 and ST08 now offer Quick Fixes and participate in
+  formatting and Fix All by default: split SELECT and pipe projection targets,
+  move SELECT modifiers onto the SELECT line, put traditional set operators on
+  separate lines, qualify columns with an unambiguous table alias, and remove
+  redundant DISTINCT parentheses. Comments and ambiguous or result-changing
+  rewrites are left alone. AL05 respects RF03's unqualified-reference option.
+
 ### Added
 
 - Diagnostic quick actions to disable a rule for its starting line using

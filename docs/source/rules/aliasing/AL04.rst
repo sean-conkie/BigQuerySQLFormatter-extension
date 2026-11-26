@@ -6,6 +6,8 @@ Rule: Table Aliases Should Be Unique
 
 **Name:** ``unique_table``
 
+Diagnostic-only by design: a fix would have to invent a new table alias.
+
 Overview
 --------
 

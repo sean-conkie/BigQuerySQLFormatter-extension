@@ -248,7 +248,7 @@ describe('Language server validation queue', function () {
       textDocument: { uri },
       options: { tabSize: 2, insertSpaces: true },
     });
-    expect(TextDocument.applyEdits(document, edits ?? [])).to.equal('select true, null;\n');
+    expect(TextDocument.applyEdits(document, edits ?? [])).to.equal('select true,\n       null;\n');
   });
 
   it('validates edits and clears diagnostics, completions, and hover on close', async () => {

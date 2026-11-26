@@ -246,13 +246,13 @@ describe('Remaining pipe layout rules', () => {
       expect(TextDocument.applyEdits(document, actions[0].edit!.changes![uri])).to.equal(fixed);
       expect((await check(fixed, [...codes, 'LT02', 'LT91'])).diagnostics).to.deep.equal([]);
     });
-    it(`keeps LT09 diagnostic-only while LT91 lays out stages / ${JSON.stringify(eol)}`, async () => {
+    it(`combines LT09 target splitting with LT91 stage layout / ${JSON.stringify(eol)}`, async () => {
       const text = `FROM input |> SELECT a, b${eol}`;
       const document = TextDocument.create(uri, 'googlesql', 1, text);
-      const config = settings(['LT09', 'LT91']);
+      const config = settings(['LT02', 'LT09', 'LT91']);
       const fixed = TextDocument.applyEdits(document, await formatDocument(document, config));
-      expect(fixed).to.equal(`FROM input${eol}|> SELECT a, b${eol}`);
-      expect((await check(fixed, ['LT09'])).diagnostics).to.have.length(1);
+      expect(fixed).to.equal(`FROM input${eol}|> SELECT a,${eol}          b${eol}`);
+      expect((await check(fixed, ['LT09'])).diagnostics).to.have.length(0);
       expect(await formatDocument(TextDocument.create(uri, 'googlesql', 2, fixed), config)).to.deep.equal([]);
     });
   }

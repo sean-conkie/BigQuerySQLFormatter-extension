@@ -154,7 +154,9 @@ describe('LT91 pipe layout', () => {
         document,
         await formatDocument(document, defaultSettings, undefined, undefined, (message) => warnings.push(message)),
       );
-      expect(fixed).to.equal(`from ds.orders o${eol}|> where status=1${eol}|> select region,count(1)  n;${eol}`);
+      expect(fixed).to.equal(
+        `from ds.orders o${eol}|> where o.status=1${eol}|> select o.region,${eol}          count(1) n;${eol}`,
+      );
       expect(await formatDocument(TextDocument.create(uri, 'googlesql', 2, fixed), defaultSettings)).to.deep.equal([]);
       const actions = await createDocumentCodeActions(
         document,

@@ -6,6 +6,17 @@ Rule: All Columns Should Have a Table Alias
 
 **Name:** ``unused_alias``
 
+Automatic fixes
+---------------
+
+Quick Fix, Fix All and formatting prefix columns with the table alias only
+when exactly one source is in scope. Multiple sources are ambiguous and remain
+diagnostic-only. Output aliases, lambda parameters, UNNEST names, query
+parameters, system variables, INFORMATION_SCHEMA paths and pattern/graph
+internals are not qualified. The same safeguards apply in pipe queries.
+If RF03's ``single_table_references`` option is ``unqualified``, AL05 offers
+no fix, avoiding conflicting rewrites.
+
 Overview
 --------
 

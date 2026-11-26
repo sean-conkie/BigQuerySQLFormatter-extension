@@ -6,6 +6,9 @@ Rule: Avoid Using `select *`
 
 **Name:** ``column_count``
 
+Diagnostic-only by design: choosing the intended output columns is ambiguous
+and cannot be inferred safely.
+
 Overview
 --------
 

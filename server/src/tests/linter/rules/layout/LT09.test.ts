@@ -7,6 +7,7 @@ import { defaultSettings } from '../../../../settings';
 import { SelectTargets } from '../../../../linter/rules/layout/LT09';
 import { type FileMap, Parser } from '../../../../linter/parser';
 import { StatementAST } from '../../../../linter/parser/ast';
+import { globalTokenCache } from '../../../../linter/parser/tokenCache';
 
 describe('SelectTargets', () => {
   let instance: SelectTargets;
@@ -14,6 +15,11 @@ describe('SelectTargets', () => {
   beforeEach(() => {
     instance = new SelectTargets(defaultSettings, 0);
   });
+  afterEach(() => globalTokenCache.delete('test.sql'));
+
+  function evaluate(ast: FileMap) {
+    return instance.evaluate(ast, 'test.sql')?.map(({ relatedInformation, ...diagnostic }) => diagnostic) ?? null;
+  }
 
   it('should return null when rule is disabled', () => {
     instance.enabled = false;
@@ -26,7 +32,7 @@ describe('SelectTargets', () => {
 
     const parser = new Parser();
 
-    const result = instance.evaluate(
+    const result = evaluate(
       await parser.parse({ text: 'SELECT col1, col2\n FROM table', uri: 'test.sql', languageId: 'sql', version: 0 }),
     );
     expect(result).to.deep.equal([
@@ -49,7 +55,7 @@ describe('SelectTargets', () => {
 
     const parser = new Parser();
 
-    const result = instance.evaluate(
+    const result = evaluate(
       await parser.parse({ text: 'SELECT col1,\n col2\n FROM table', uri: 'test.sql', languageId: 'sql', version: 0 }),
     );
     expect(result).to.be.null;
