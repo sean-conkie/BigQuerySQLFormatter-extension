@@ -11,9 +11,12 @@ Pipe queries
 
 LT09 checks targets in ``|> SELECT``, ``|> EXTEND``, ``|> AGGREGATE``
 and aggregate ``GROUP BY`` lists. Function arguments and commas inside literals
-are not separate targets. This rule remains diagnostic-only: formatting and
-Fix All do not split targets. LT91 moves stage boundaries, while LT02 indents
-targets that are already on separate lines.
+are not separate targets. Quick Fix, Fix All and formatting keep the first
+target after SELECT (and its modifiers), and put later targets on new lines
+aligned with it. Only top-level commas are split, preserving existing leading
+comma style; LT04 currently diagnoses trailing-comma style only and has no
+comma-position option. A comment between same-line targets prevents that fix.
+LT91 moves stage boundaries and LT02 normalises indentation.
 
 Overview
 --------

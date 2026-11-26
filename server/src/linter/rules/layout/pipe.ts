@@ -1,7 +1,31 @@
-import type { PipeClause, PipeItem } from '../../parser/pipe';
+import { pipeItems, topLevel, type PipeClause, type PipeItem } from '../../parser/pipe';
 import type { StatementAST } from '../../parser/ast';
 import { QueryScopeResolver } from '../../scope';
-import type { SourceToken } from '../source';
+import { keyword, type SourceToken } from '../source';
+
+export function projectionLists(tokens: SourceToken[]): PipeItem[][] {
+  const resolver = new QueryScopeResolver(tokens);
+  return resolver.scopes.flatMap((scope) => {
+    if (scope.special || scope.kind !== 'query') return [];
+    if (scope.pipe) return scope.pipe.kind === 'projection' ? [scope.pipe.items, scope.pipe.groupBy] : [];
+    const indices = topLevel(tokens, scope.start, scope.end);
+    const select = indices.find((i) => keyword(tokens[i], 'SELECT'));
+    if (select === undefined) return [];
+    let start = select + 1;
+    if (keyword(tokens[start], 'DISTINCT') || keyword(tokens[start], 'ALL')) start++;
+    if (keyword(tokens[start], 'AS') && ['STRUCT', 'VALUE'].some((word) => keyword(tokens[start + 1], word)))
+      start += 2;
+    const end =
+      indices.find(
+        (i) =>
+          i >= start &&
+          ['FROM', 'WHERE', 'GROUP', 'HAVING', 'QUALIFY', 'WINDOW', 'ORDER', 'LIMIT', ';'].some((word) =>
+            keyword(tokens[i], word),
+          ),
+      ) ?? scope.end;
+    return [pipeItems(tokens, start, end)];
+  });
+}
 
 export function pipeProjectionLists(statement: StatementAST): PipeItem[][] {
   return statement.pipeClauses.flatMap((stage) => (stage.kind === 'projection' ? [stage.items, stage.groupBy] : []));

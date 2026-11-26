@@ -3,6 +3,14 @@ import type { DocumentCache } from '../../parser/tokenCache';
 import { identifierKey, isIdentifier, type QueryScopeResolver, type QueryScope } from '../../scope';
 import { closingBracket, keyword, type SourceToken } from '../source';
 import { identifiers } from './identifiers';
+import keywords from '../../keywords.json';
+import { topLevel } from '../../parser/pipe';
+
+const reserved = new Set(keywords.reserved);
+
+export function aliasPrefix(alias: string): string {
+  return /^[a-z_][a-z0-9_]*$/i.test(alias) && !reserved.has(alias.toLowerCase()) ? alias : `\`${alias}\``;
+}
 
 export interface ColumnReference {
   scope: QueryScope;
@@ -25,6 +33,20 @@ export function columnReferences(
       .map(({ token }) => identifierKey(token)),
   );
   const result: ColumnReference[] = [];
+  const lambdas = tokens.flatMap((token, i) => {
+    if (!['-', '='].some((word) => keyword(token, word)) || !keyword(tokens[i + 1], '>')) return [];
+    let start = i - 1;
+    if (keyword(tokens[start], ')')) {
+      while (start >= 0 && !keyword(tokens[start], '(')) start--;
+    }
+    const parameters = tokens.slice(start, i).filter(isIdentifier);
+    if (!parameters.length || start < 0) return [];
+    const end =
+      topLevel(tokens, i + 2, tokens.length).find((index) =>
+        [',', ')', ']', ';'].some((word) => keyword(tokens[index], word)),
+      ) ?? tokens.length;
+    return [{ start, end, names: new Set(parameters.map((parameter) => referenceName(parameter.value))) }];
+  });
   for (let index = 0; index < tokens.length; index++) {
     const first = tokens[index];
     if (keyword(first, 'EXCEPT') && keyword(tokens[index + 1], '(') && !keyword(tokens[index + 2], 'SELECT')) {
@@ -32,6 +54,13 @@ export function columnReferences(
       if (close >= 0) index = close;
       continue;
     }
+    if (
+      (!first.literal && reserved.has(first.value.toLowerCase())) ||
+      lambdas.some(
+        (lambda) => index >= lambda.start && index < lambda.end && lambda.names.has(referenceName(first.value)),
+      )
+    )
+      continue;
     if (
       ['AS', 'OVER', 'WINDOW'].some((word) => keyword(tokens[index - 1], word)) ||
       (keyword(tokens[index + 1], 'AS') && keyword(tokens[index + 2], '(')) ||

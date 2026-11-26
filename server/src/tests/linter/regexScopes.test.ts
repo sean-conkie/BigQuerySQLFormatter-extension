@@ -45,15 +45,15 @@ describe('Regex rule token scopes', () => {
     ]) {
       it(`ignores ${code} patterns inside a ${kind}`, async () => {
         const linter = new Linter(defaultSettings);
-        linter.parserRules = [];
+        linter.parserRules = linter.parserRules.filter((rule) => rule.code === code);
         linter.regexRules = linter.regexRules.filter((rule) => rule.code === code);
-        expect(linter.regexRules).to.have.length(1);
+        expect([...linter.regexRules, ...linter.parserRules]).to.have.length(1);
         expect(await linter.verify({ uri, text, languageId: 'googlesql', version: 1 })).to.deep.equal([]);
       });
     }
     it(`still reports ${code} in executable SQL after a string`, async () => {
       const linter = new Linter(defaultSettings);
-      linter.parserRules = [];
+      linter.parserRules = linter.parserRules.filter((rule) => rule.code === code);
       linter.regexRules = linter.regexRules.filter((rule) => rule.code === code);
       const text = `select '''${sql}''' as txt;\n${sql};\n`;
       const diagnostics = await linter.verify({ uri, text, languageId: 'googlesql', version: 1 });

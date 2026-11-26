@@ -6,6 +6,8 @@ Rule: Tables Must Use an Alias
 
 **Name:** ``table_alias``
 
+Diagnostic-only by design: a fix would have to invent a table alias.
+
 Overview
 --------
 

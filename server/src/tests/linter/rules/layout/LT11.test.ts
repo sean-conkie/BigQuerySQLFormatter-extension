@@ -32,7 +32,7 @@ describe('UnionCheck', () => {
         severity: instance.severity,
         range: {
           start: { line: 2, character: 0 },
-          end: { line: 2, character: 10 },
+          end: { line: 2, character: 9 },
         },
         source: instance.source,
       },
@@ -51,7 +51,7 @@ describe('UnionCheck', () => {
         message: instance.message,
         severity: instance.severity,
         range: {
-          start: { line: 1, character: 22 },
+          start: { line: 1, character: 23 },
           end: { line: 1, character: 32 },
         },
         source: instance.source,
@@ -71,7 +71,7 @@ describe('UnionCheck', () => {
         message: instance.message,
         severity: instance.severity,
         range: {
-          start: { line: 1, character: 22 },
+          start: { line: 1, character: 23 },
           end: { line: 1, character: 32 },
         },
         source: instance.source,

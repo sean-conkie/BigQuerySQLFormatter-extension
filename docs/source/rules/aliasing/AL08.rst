@@ -6,6 +6,8 @@ Rule: Column Names in the Query Should Be Unique
 
 **Name:** ``unique_column``
 
+Diagnostic-only by design: a fix would have to invent an output column name.
+
 Overview
 --------
 

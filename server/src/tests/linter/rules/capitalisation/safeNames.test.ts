@@ -173,12 +173,12 @@ describe('Case-sensitive BigQuery names (#403)', () => {
   it('preserves case-sensitive names with all default rules enabled', async () => {
     await check(
       'select Id from MyProject.SalesData.Orders o;\n',
-      'select id from MyProject.SalesData.Orders o;\n',
+      'select o.id from MyProject.SalesData.Orders o;\n',
       defaultSettings,
     );
     await check(
       'select MyDataset.ParseSku(sku), SUM(x) from Orders;\n',
-      'select MyDataset.ParseSku(sku), sum(x) from Orders;\n',
+      'select MyDataset.ParseSku(sku),\n       sum(x)\nfrom Orders;\n',
       defaultSettings,
     );
     await check('select o.Id from SalesData.Orders as o;\n', 'select o.id from SalesData.Orders o;\n', defaultSettings);

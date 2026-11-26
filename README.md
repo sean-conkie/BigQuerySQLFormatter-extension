@@ -284,22 +284,26 @@ Pipe layout rule coverage:
 | Rule       | Pipe construct                                                                   |
 | ---------- | -------------------------------------------------------------------------------- |
 | LT03       | Wrapped operators in any stage                                                   |
-| LT04, LT09 | SELECT, EXTEND, AGGREGATE and aggregate GROUP BY lists (diagnostics only)        |
+| LT04       | Comma position in SELECT, EXTEND, AGGREGATE and aggregate GROUP BY (diagnostics) |
+| LT09       | Splits SELECT, EXTEND, AGGREGATE and aggregate GROUP BY targets onto new lines   |
 | LT06       | Function calls in any stage; fixes remove whitespace, not comments               |
 | LT07, LT08 | CTEs containing pipe queries, including a main FROM query                        |
-| LT10       | Modifiers on the same line as pipe SELECT (diagnostics only)                     |
-| LT11       | LT91 owns pipe set-stage placement; traditional UNION operands are still checked |
+| LT10       | Moves modifiers onto the pipe SELECT line unless a comment intervenes            |
+| LT11       | LT91 owns pipe set stages; traditional UNION/INTERSECT/EXCEPT operands are fixed |
 | LT15       | Multiline comparison alignment within each WHERE or JOIN ON stage                |
 | LT90       | Parentheses around multiple JOIN ON conditions (disabled by default)             |
 
-LT09 does not insert target line breaks; LT91 only moves stage boundaries.
+LT09 leaves same-line targets separated by comments unchanged.
+AL05 qualifies columns only with one source in scope, unless RF03 requests
+unqualified references; multiple-source ownership stays diagnostic-only.
 LT15 leaves groups with shared-line conditions unchanged.
 
 Pipe structure and convention rule coverage:
 
 - ST01, ST02, ST04: CASE expressions in any stage.
 - ST07: JOIN USING, including derived sources (diagnostics only).
-- ST08: SELECT DISTINCT with parentheses (diagnostics only).
+- ST08: removes redundant SELECT DISTINCT parentheses around a single expression;
+  preserves STRUCT tuples, scalar subqueries and larger expressions.
 - ST09: JOIN ON operands ordered by input sources and earlier joined stages.
 - CV03: trailing commas in SELECT, EXTEND and AGGREGATE projection lists.
 - CV06: attached statement semicolons and a trailing newline.

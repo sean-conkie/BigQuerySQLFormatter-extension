@@ -1,12 +1,9 @@
 import { type Diagnostic, TextEdit } from 'vscode-languageserver/node';
 import type { DocumentCache } from '../../parser/tokenCache';
 import { QueryScopeResolver } from '../../scope';
-import keywords from '../../keywords.json';
 import { consistencyOptions, resolveOption } from '../../../ruleOptions';
 import { SourceFixRule, type SourceToken } from '../source';
-import { columnReferences, referenceName } from './columns';
-
-const reserved = new Set(keywords.reserved);
+import { aliasPrefix, columnReferences, referenceName } from './columns';
 
 export class Consistent extends SourceFixRule {
   readonly name = 'consistent';
@@ -29,7 +26,7 @@ export class Consistent extends SourceFixRule {
       const source = scope.sources[0];
       if (!source.alias || source.kind === 'unnest') continue;
       const alias = source.alias;
-      const prefix = /^[a-z_][a-z0-9_]*$/i.test(alias) && !reserved.has(alias.toLowerCase()) ? alias : `\`${alias}\``;
+      const prefix = aliasPrefix(alias);
       let desired = policy === 'consistent' ? undefined : policy;
       for (const reference of references.filter((reference) => reference.scope === scope)) {
         const { parts, range, tokens: path, wildcard } = reference;

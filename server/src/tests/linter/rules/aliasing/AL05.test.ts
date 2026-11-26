@@ -8,6 +8,7 @@ import { defaultSettings } from '../../../../settings';
 import { UnusedAlias } from '../../../../linter/rules/aliasing/AL05';
 import { type FileMap, Parser } from '../../../../linter/parser';
 import { StatementAST } from '../../../../linter/parser/ast';
+import { globalTokenCache } from '../../../../linter/parser/tokenCache';
 
 describe('UnusedAlias', () => {
   let instance: UnusedAlias;
@@ -15,6 +16,11 @@ describe('UnusedAlias', () => {
   beforeEach(() => {
     instance = new UnusedAlias(defaultSettings, 0);
   });
+  afterEach(() => globalTokenCache.delete('test.sql'));
+
+  function evaluate(ast: FileMap) {
+    return instance.evaluate(ast, 'test.sql')?.map(({ relatedInformation, ...diagnostic }) => diagnostic) ?? null;
+  }
 
   it('should return null when rule is disabled', () => {
     instance.enabled = false;
@@ -27,7 +33,7 @@ describe('UnusedAlias', () => {
 
     const parser = new Parser();
 
-    const result = instance.evaluate(
+    const result = evaluate(
       await parser.parse({
         text: 'SELECT col1 as c\n FROM dataset.table t',
         uri: 'test.sql',
@@ -43,7 +49,7 @@ describe('UnusedAlias', () => {
         severity: instance.severity,
         range: {
           start: { line: 0, character: 7 },
-          end: { line: 0, character: 16 },
+          end: { line: 0, character: 11 },
         },
         source: instance.source,
       },
@@ -55,7 +61,7 @@ describe('UnusedAlias', () => {
 
     const parser = new Parser();
 
-    const result = instance.evaluate(
+    const result = evaluate(
       await parser.parse({
         text: 'SELECT t.col1 as c\n FROM dataset.table t where col2 = 3',
         uri: 'test.sql',
@@ -83,7 +89,7 @@ describe('UnusedAlias', () => {
 
     const parser = new Parser();
 
-    const result = instance.evaluate(
+    const result = evaluate(
       await parser.parse({
         text: 'SELECT t.col1 as c\n       case when 1 = 1 then col2 end col2\n FROM dataset.table t;\n',
         uri: 'test.sql',
@@ -111,7 +117,7 @@ describe('UnusedAlias', () => {
 
     const parser = new Parser();
 
-    const result = instance.evaluate(
+    const result = evaluate(
       await parser.parse({
         text: 'SELECT t.col1 as c\n       lead(id,1) over (partition by col order by col2) col2\n FROM dataset.table t;\n',
         uri: 'test.sql',
@@ -161,7 +167,7 @@ describe('UnusedAlias', () => {
 
     const parser = new Parser();
 
-    const result = instance.evaluate(
+    const result = evaluate(
       await parser.parse({
         text: 'SELECT t.col1 as c\n       b.col1 as b FROM dataset.table t\n  left join dataset.table1 b on col1 = b.col2',
         uri: 'test.sql',
@@ -189,7 +195,7 @@ describe('UnusedAlias', () => {
 
     const parser = new Parser();
 
-    const result = instance.evaluate(
+    const result = evaluate(
       await parser.parse({
         text: 'SELECT t.col1 c\n FROM dataset.table t',
         uri: 'test.sql',

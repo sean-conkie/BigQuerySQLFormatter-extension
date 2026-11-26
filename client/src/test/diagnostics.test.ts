@@ -238,20 +238,80 @@ suite('Language server diagnostics', () => {
     const checked = waitForDiagnostics(uri, hasTargetWarnings, 'pipe target diagnostics');
     assert.equal(await editor.edit((edit) => edit.delete(new vscode.Range(0, 0, 1, 0))), true);
     await checked;
+    const source = editor.document.getText();
+    const expected = source
+      .replace('|> select category, result', '|> select category,\n          result')
+      .replace('|> select o.category, o.result)', '|> select o.category,\n                        o.result)');
     const edits = await vscode.commands.executeCommand<vscode.TextEdit[] | undefined>(
       'vscode.executeFormatDocumentProvider',
       uri,
       { tabSize: 2, insertSpaces: true },
     );
-    assert.ok(edits === undefined || edits.length === 0);
-    const actions = await vscode.commands.executeCommand<vscode.CodeAction[] | undefined>(
-      'vscode.executeCodeActionProvider',
-      uri,
-      new vscode.Range(0, 0, editor.document.lineCount, 0),
-      vscode.CodeActionKind.SourceFixAll.value,
+    assert.ok(edits && edits.length > 0);
+    const clean = waitForDiagnostics(uri, (diagnostics) => diagnostics.length === 0);
+    const formatted = new vscode.WorkspaceEdit();
+    formatted.set(uri, edits);
+    assert.equal(await vscode.workspace.applyEdit(formatted), true);
+    await clean;
+    assert.equal(editor.document.getText(), expected);
+    const reset = waitForDiagnostics(uri, hasTargetWarnings);
+    assert.equal(
+      await editor.edit((edit) => edit.replace(new vscode.Range(0, 0, editor.document.lineCount, 0), source)),
+      true,
     );
-    assert.ok(actions === undefined || actions.length === 0);
-    assert.ok(hasTargetWarnings(vscode.languages.getDiagnostics(uri)));
+    await reset;
+    const fixed = waitForDiagnostics(uri, (diagnostics) => diagnostics.length === 0);
+    await applyFixAll(editor.document);
+    await fixed;
+    assert.equal(editor.document.getText(), expected);
+    const repeated = await vscode.commands.executeCommand<vscode.TextEdit[] | undefined>(
+      'vscode.executeFormatDocumentProvider',
+      uri,
+      { tabSize: 2, insertSpaces: true },
+    );
+    assert.ok(repeated === undefined || repeated.length === 0);
+  });
+
+  test('Offers all five safe rule fixes through Quick Fix, formatting and Fix All', async () => {
+    const directory = await mkdtemp(path.join(getDocPath(''), 'safe-rule-fixes-'));
+    const uri = vscode.Uri.file(path.join(directory, 'query.bqsql'));
+    const source = 'select\n  distinct(a), b from foo f union all select f.a, f.b from foo f;\n';
+    const expected =
+      'select distinct\n       f.a,\n       f.b\nfrom foo f\nunion all\nselect f.a,\n       f.b\nfrom foo f;\n';
+    const codes = ['LT09', 'LT10', 'LT11', 'AL05', 'ST08'];
+    const codeOf = (diagnostic: vscode.Diagnostic) =>
+      String(typeof diagnostic.code === 'object' ? diagnostic.code.value : diagnostic.code).split(':')[0];
+    const hasIssues = (diagnostics: readonly vscode.Diagnostic[]) =>
+      codes.every((code) => diagnostics.some((diagnostic) => codeOf(diagnostic) === code));
+    try {
+      await writeFile(uri.fsPath, source);
+      const ready = waitForDiagnostics(uri, hasIssues);
+      await activate(uri);
+      const diagnostics = await ready;
+      for (const code of codes) {
+        const diagnostic = diagnostics.find((diagnostic) => codeOf(diagnostic) === code)!;
+        const actions = await vscode.commands.executeCommand<vscode.CodeAction[]>(
+          'vscode.executeCodeActionProvider',
+          uri,
+          diagnostic.range,
+          vscode.CodeActionKind.QuickFix.value,
+        );
+        assert.ok(
+          actions.some((action) => action.edit && !action.title.startsWith('Disable')),
+          `${code} Quick Fix`,
+        );
+      }
+      await assertFormattingAndFixAll(
+        uri,
+        source,
+        expected,
+        hasIssues,
+        (diagnostics) => !diagnostics.some((diagnostic) => codes.includes(codeOf(diagnostic))),
+      );
+    } finally {
+      await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
+      await rm(directory, { recursive: true, force: true });
+    }
   });
 
   test('Formatting and Fix All lay out pipe stages and bodies idempotently', async () => {
@@ -276,7 +336,7 @@ suite('Language server diagnostics', () => {
     const directory = await mkdtemp(path.join(getDocPath(''), 'safe-names-'));
     const uri = vscode.Uri.file(path.join(directory, 'query.bqsql'));
     const source = 'select MyDataset.ParseSku(Id), SUM(x) from MyProject.SalesData.Orders;\n';
-    const expected = 'select MyDataset.ParseSku(id), sum(x) from MyProject.SalesData.Orders;\n';
+    const expected = 'select MyDataset.ParseSku(id),\n       sum(x)\nfrom MyProject.SalesData.Orders;\n';
     const hasCasingDiagnostics = (diagnostics: readonly vscode.Diagnostic[]) =>
       diagnostics.some((diagnostic) => {
         const code = diagnostic.code;

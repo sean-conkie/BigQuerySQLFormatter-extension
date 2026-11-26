@@ -27,7 +27,7 @@ import { closingBracket, keyword, sourceTokens, type SourceToken } from '../sour
 import { QueryScopeResolver } from '../../scope';
 import { topLevel } from '../../parser/pipe';
 import type { DocumentCache } from '../../parser/tokenCache';
-import { pipeLayouts } from './pipe';
+import { pipeLayouts, projectionLists } from './pipe';
 
 type RangeCache = Map<string, number>;
 const documentCache: Map<DocumentUri, RangeCache> = new Map<DocumentUri, RangeCache>();
@@ -89,6 +89,9 @@ export class Indent extends ParserRule {
       )
         continue;
       const offset = (ast[i].startIndex ?? 0) + 7;
+      const firstTarget = projectionLists(statementTokens)[0]?.[0]?.tokens[0];
+      const targetOffset =
+        firstTarget?.range.start.line === first.lineNumber ? firstTarget.range.start.character : offset;
       const fromIndex = topLevel(statementTokens, 0, statementTokens.length).find((index) =>
         keyword(statementTokens[index], 'FROM'),
       );
@@ -136,7 +139,14 @@ export class Indent extends ParserRule {
         }
 
         // process leading indentation
-        this.checkIndentationError(column.startLine ?? 0, column.startIndex ?? 0, offset, errors, cache!, documentUri);
+        this.checkIndentationError(
+          column.startLine ?? 0,
+          column.startIndex ?? 0,
+          column.startLine === first.lineNumber ? offset : targetOffset,
+          errors,
+          cache!,
+          documentUri,
+        );
       });
 
       const aliasIndex = Math.max(...columnEndIndexes) + 1;
