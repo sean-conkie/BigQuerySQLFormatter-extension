@@ -210,67 +210,71 @@ suite('Language server diagnostics', () => {
     }
   });
 
-  test('Preserves pipe, pattern, graph and temporal queries through formatting and Fix All', async () => {
-    const uri = getDocUri('querySyntax.bqsql');
-    const editor = await activate(uri);
-    assert.equal(editor.document.languageId, 'googlesql');
-    const expectedRanges = [new vscode.Range(7, 10, 7, 26), new vscode.Range(9, 24, 9, 44)];
-    const hasTargetWarnings = (diagnostics: readonly vscode.Diagnostic[]) =>
-      diagnostics.length === expectedRanges.length &&
-      diagnostics.every((diagnostic, index) => {
-        const code = diagnostic.code;
-        return (
-          (typeof code === 'object' ? code.value : code) === 'LT09: select_targets' &&
-          diagnostic.range.isEqual(expectedRanges[index])
-        );
-      });
-    const ready = waitForDiagnostics(
-      uri,
-      (diagnostics) =>
-        diagnostics.some((diagnostic) => {
+  for (const eol of [vscode.EndOfLine.LF, vscode.EndOfLine.CRLF]) {
+    test(`Preserves pipe, pattern, graph and temporal queries through formatting and Fix All (${vscode.EndOfLine[eol]})`, async () => {
+      const uri = getDocUri('querySyntax.bqsql');
+      const editor = await activate(uri);
+      assert.equal(await editor.edit((edit) => edit.setEndOfLine(eol)), true);
+      assert.equal(editor.document.languageId, 'googlesql');
+      const expectedRanges = [new vscode.Range(7, 10, 7, 26), new vscode.Range(9, 24, 9, 44)];
+      const hasTargetWarnings = (diagnostics: readonly vscode.Diagnostic[]) =>
+        diagnostics.length === expectedRanges.length &&
+        diagnostics.every((diagnostic, index) => {
           const code = diagnostic.code;
-          return (typeof code === 'object' ? code.value : code) === 'LT13: start_of_file';
-        }),
-      'query syntax provider readiness',
-    );
-    assert.equal(await editor.edit((edit) => edit.insert(new vscode.Position(0, 0), '\n')), true);
-    await ready;
-    const checked = waitForDiagnostics(uri, hasTargetWarnings, 'pipe target diagnostics');
-    assert.equal(await editor.edit((edit) => edit.delete(new vscode.Range(0, 0, 1, 0))), true);
-    await checked;
-    const source = editor.document.getText();
-    const expected = source
-      .replace('|> select category, result', '|> select category,\n          result')
-      .replace('|> select o.category, o.result)', '|> select o.category,\n                        o.result)');
-    const edits = await vscode.commands.executeCommand<vscode.TextEdit[] | undefined>(
-      'vscode.executeFormatDocumentProvider',
-      uri,
-      { tabSize: 2, insertSpaces: true },
-    );
-    assert.ok(edits && edits.length > 0);
-    const clean = waitForDiagnostics(uri, (diagnostics) => diagnostics.length === 0);
-    const formatted = new vscode.WorkspaceEdit();
-    formatted.set(uri, edits);
-    assert.equal(await vscode.workspace.applyEdit(formatted), true);
-    await clean;
-    assert.equal(editor.document.getText(), expected);
-    const reset = waitForDiagnostics(uri, hasTargetWarnings);
-    assert.equal(
-      await editor.edit((edit) => edit.replace(new vscode.Range(0, 0, editor.document.lineCount, 0), source)),
-      true,
-    );
-    await reset;
-    const fixed = waitForDiagnostics(uri, (diagnostics) => diagnostics.length === 0);
-    await applyFixAll(editor.document);
-    await fixed;
-    assert.equal(editor.document.getText(), expected);
-    const repeated = await vscode.commands.executeCommand<vscode.TextEdit[] | undefined>(
-      'vscode.executeFormatDocumentProvider',
-      uri,
-      { tabSize: 2, insertSpaces: true },
-    );
-    assert.ok(repeated === undefined || repeated.length === 0);
-  });
+          return (
+            (typeof code === 'object' ? code.value : code) === 'LT09: select_targets' &&
+            diagnostic.range.isEqual(expectedRanges[index])
+          );
+        });
+      const ready = waitForDiagnostics(
+        uri,
+        (diagnostics) =>
+          diagnostics.some((diagnostic) => {
+            const code = diagnostic.code;
+            return (typeof code === 'object' ? code.value : code) === 'LT13: start_of_file';
+          }),
+        'query syntax provider readiness',
+      );
+      assert.equal(await editor.edit((edit) => edit.insert(new vscode.Position(0, 0), '\n')), true);
+      await ready;
+      const checked = waitForDiagnostics(uri, hasTargetWarnings, 'pipe target diagnostics');
+      assert.equal(await editor.edit((edit) => edit.delete(new vscode.Range(0, 0, 1, 0))), true);
+      await checked;
+      const source = editor.document.getText();
+      const newline = eol === vscode.EndOfLine.CRLF ? '\r\n' : '\n';
+      const expected = source
+        .replace('|> select category, result', `|> select category,${newline}          result`)
+        .replace('|> select o.category, o.result)', `|> select o.category,${newline}                        o.result)`);
+      const edits = await vscode.commands.executeCommand<vscode.TextEdit[] | undefined>(
+        'vscode.executeFormatDocumentProvider',
+        uri,
+        { tabSize: 2, insertSpaces: true },
+      );
+      assert.ok(edits && edits.length > 0);
+      const clean = waitForDiagnostics(uri, (diagnostics) => diagnostics.length === 0);
+      const formatted = new vscode.WorkspaceEdit();
+      formatted.set(uri, edits);
+      assert.equal(await vscode.workspace.applyEdit(formatted), true);
+      await clean;
+      assert.equal(editor.document.getText(), expected);
+      const reset = waitForDiagnostics(uri, hasTargetWarnings);
+      assert.equal(
+        await editor.edit((edit) => edit.replace(new vscode.Range(0, 0, editor.document.lineCount, 0), source)),
+        true,
+      );
+      await reset;
+      const fixed = waitForDiagnostics(uri, (diagnostics) => diagnostics.length === 0);
+      await applyFixAll(editor.document);
+      await fixed;
+      assert.equal(editor.document.getText(), expected);
+      const repeated = await vscode.commands.executeCommand<vscode.TextEdit[] | undefined>(
+        'vscode.executeFormatDocumentProvider',
+        uri,
+        { tabSize: 2, insertSpaces: true },
+      );
+      assert.ok(repeated === undefined || repeated.length === 0);
+    });
+  }
 
   test('Offers all five safe rule fixes through Quick Fix, formatting and Fix All', async () => {
     const directory = await mkdtemp(path.join(getDocPath(''), 'safe-rule-fixes-'));
