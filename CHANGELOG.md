@@ -4,6 +4,11 @@
 
 ### Notable changes
 
+- CV07 (`convention.statement_brackets`) is enabled by default. Quick Fix,
+  Fix All and formatting remove redundant brackets around whole statements,
+  including pipe queries and statements in scripting blocks, while preserving
+  comments and line endings.
+
 - LT09, LT10, LT11, AL05 and ST08 now offer Quick Fixes and participate in
   formatting and Fix All by default: split SELECT and pipe projection targets,
   move SELECT modifiers onto the SELECT line, put traditional set operators on

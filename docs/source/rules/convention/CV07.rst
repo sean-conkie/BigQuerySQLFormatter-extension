@@ -1,0 +1,58 @@
+================================================================================
+Rule: Statements Should Not Be Wrapped in Brackets
+================================================================================
+
+**Rule Code:** ``CV07``
+
+**Name:** ``statement_brackets``
+
+Overview
+--------
+
+Wrapping a whole statement in parentheses adds nothing in BigQuery and makes
+the start and end harder to read. This rule is enabled by default.
+
+Explanation
+-----------
+
+Anti-pattern: Redundant statement brackets
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: sql
+
+    (select foo from bar);
+    ((select foo from (select * from bar)));
+    (from t |> select a);
+
+Best Practice: Unwrapped statements
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: sql
+
+    select foo from bar;
+    select foo from (select * from bar);
+    from t |> select a;
+
+Only whole-statement wrappers are reported, including statements inside
+``BEGIN ... END``, conditional and loop blocks. Parentheses around subqueries,
+``EXISTS`` arguments, ``CREATE TABLE ... AS`` or ``INSERT`` query inputs are
+left alone. Set-operation operands and bracketed queries followed by
+``ORDER BY`` or ``LIMIT`` are also left alone.
+
+Quick Fix, Fix All and formatting remove every redundant outer pair and its
+inner edge whitespace. Comments and the document's line endings are preserved;
+a trailing line comment keeps its newline so it cannot swallow the terminator.
+Unsupported query blocks are not changed.
+
+Conclusion
+----------
+
+Keep parentheses that form part of a statement, not those wrapping all of it.
+Disable the rule with ``"CV07": { "enabled": false }`` in rule settings, or
+suppress individual statements with ``-- noqa: CV07`` on their starting line.
+
+Groups:
+-------
+
+- ``all``
+- ``convention``

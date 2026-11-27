@@ -14,6 +14,7 @@ import { SelectTrailingComma } from './CV03';
 import { Count } from './CV04';
 import { IsNull } from './CV05';
 import { Terminator } from './CV06';
+import { StatementBrackets } from './CV07';
 import { LeftJoin } from './CV08';
 import { AllDistinct } from './CV12';
 import { SpacesNotTabs } from './CV13';
@@ -26,6 +27,7 @@ export const classes = [
   Count,
   IsNull,
   Terminator,
+  StatementBrackets,
   LeftJoin,
   AllDistinct,
   SpacesNotTabs,

@@ -25,7 +25,7 @@ describe('Default-rule fixture convergence', function () {
           // Existing rule fixtures are embedded SQL literals rather than separate SQL files.
           if (
             (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) &&
-            /^\s*(select|with|from|create|insert|update|delete|merge)\b/i.test(node.text)
+            /^\s*\(*\s*(select|with|from|create|insert|update|delete|merge)\b/i.test(node.text)
           ) {
             fixtures.set(node.text, `${entry.name}:${source.getLineAndCharacterOfPosition(node.getStart()).line + 1}`);
           }
@@ -37,6 +37,9 @@ describe('Default-rule fixture convergence', function () {
   }
   collect(resolve(__dirname, '../../src/tests/linter'));
   for (const text of proceduralFixtures) fixtures.set(text, 'procedural script');
+  for (const text of ['begin\n  ((select 1));\nend;', 'begin\n  ((from t |> select a));\nend;']) {
+    fixtures.set(text, 'bracketed procedural statement');
+  }
 
   it('collects the existing rule fixture corpus', () => {
     expect(fixtures.size).to.be.greaterThan(300);

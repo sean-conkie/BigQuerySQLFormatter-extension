@@ -9,7 +9,7 @@ Pipe and temporal query support
 
 Pipe queries and ``FOR SYSTEM_TIME AS OF`` support RF01-RF06, AL01, AL02, AL04,
 AL05, AL06, AL08, AL09, AM04-AM07, LT02-LT04, LT06-LT11, LT15, LT90, LT91, ST01,
-ST02, ST04, ST07-ST09, CV03, CV06, CV08 and CV12. RF01 and LT90 remain opt-in.
+ST02, ST04, ST07-ST09, CV03, CV06, CV07, CV08 and CV12. RF01 and LT90 remain opt-in.
 LT91 starts each pipe stage on a new line; LT02 indents its body.
 Sources, output aliases and USING columns are resolved at each stage. Rules
 without an equivalent construct do not apply: for example, AL01 does not remove
@@ -103,6 +103,7 @@ By applying convention rules, teams can create a more collaborative and coherent
 	Rule: Use `count(1)` to Express “Count Number of Rows” <convention/CV04>
 	Rule: Comparisons with `NULL` Should Use `IS` or `IS NOT` <convention/CV05>
 	Rule: End Statements with a Semicolon and Newline <convention/CV06>
+	Rule: Statements Should Not Be Wrapped in Brackets <convention/CV07>
 	Rule: Use LEFT join Instead of RIGHT join <convention/CV08>
 	Rule: EXCEPT and INTERSECT Must Be Followed by DISTINCT <convention/CV12>
 	Rule: Use Spaces for Indentation, Not Tabs <convention/CV13>
