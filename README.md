@@ -269,7 +269,7 @@ CV12 settings and `noqa` suppressions to AM02. CV12 continues checking EXCEPT an
 Pipe queries (including FROM-only inputs) and `FOR SYSTEM_TIME AS OF` support
 RF01-RF06, AL01, AL02, AL04, AL05, AL06, AL08, AL09, AM04, AM05, AM06, AM07,
 LT02-LT04, LT06-LT11, LT15, LT90 (opt-in), LT91, ST01, ST02, ST04, ST07-ST09,
-CV03, CV06, CV08 and CV12.
+CV03, CV06, CV07, CV08 and CV12.
 Checks follow each stage's visible table aliases, output aliases and JOIN USING
 columns. RF01 remains disabled by default. Quick fixes, Fix All and formatting
 preserve line endings. LT91 (enabled by default) puts every `|>` on its own line,
@@ -307,6 +307,8 @@ Pipe structure and convention rule coverage:
 - ST09: JOIN ON operands ordered by input sources and earlier joined stages.
 - CV03: trailing commas in SELECT, EXTEND and AGGREGATE projection lists.
 - CV06: attached statement semicolons and a trailing newline.
+- CV07: removes redundant brackets around whole statements, including scripts
+  and pipe queries, without changing subqueries or set-operation operands.
 - CV08: RIGHT [OUTER] JOIN (diagnostics only; changing the keyword changes results).
 - CV12: INTERSECT/EXCEPT require DISTINCT; UNION policy belongs to AM02.
 

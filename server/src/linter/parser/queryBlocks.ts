@@ -120,6 +120,7 @@ export const pipeQueryRules = new Set([
   'ST09',
   'CV03',
   'CV06',
+  'CV07',
   'CV08',
   'CV12',
 ]);
